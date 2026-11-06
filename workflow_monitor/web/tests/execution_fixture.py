@@ -53,18 +53,24 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     (project / 'tracked').write_text('offline fixture\n')
     git(project, 'add', 'tracked'); git(project, 'commit', '-qm', 'fixture')
     base = git(project, 'rev-parse', 'HEAD').decode().strip()
-    presentation = descriptor({'tasks': [{'id': 'one', 'depends': []}, {'id': 'two', 'depends': ['one']}, {'id': 'three', 'depends': []}], 'monitor': {'tasks': {'one': {'label': 'T001'}, 'two': {'label': 'T002'}, 'three': {'label': 'T003'}}}}, {})
+    presentation = descriptor({'tasks': [{'id': 'one', 'depends': []}, {'id': 'two', 'depends': ['one']}, {'id': 'three', 'depends': []}], 'monitor': {'tasks': {'one': {'label': 'T001'}, 'two': {'label': 'Task data preparation'}, 'three': {'label': 'T003'}}}}, {})
     # Simulate already-retained prose; no producer behavior is changed.
     presentation['tasks'][0]['work_description'] = '<img src=x onerror=alert(1)> Recorded workflow explanation opaque-invocation-identity ' * 12
     presentation['tasks'][1]['work_description'] = None
+    presentation['tasks'][2]['work_description'] = '  \n  '
     with Authority(project) as owner:
+        owner.store.start('old-plan', base)
+        old = Recorder(owner.store, 'old-plan')
+        old.register({'version': 1, 'description_version': 2, 'tasks': [{'id': 'old-task', 'label': 'Old task'}]})
+        emit(old, 'old-worker', 'worker', 'returned', task='old-task', role='worker')
         class CorrectionAdapter:
             calls = 0
             def __init__(self, *_args, **_kwargs): pass
             def prompt(self, _prompt, **kwargs):
+                self.saved_session = self.opened_session = {'id': 'offline-correction-session', 'file': '/offline/correction.jsonl'}
                 self.last_interval = metric_record('engine-correction', 'supplied-interval', 'fresh', 'fresh')['interval']
                 if kwargs.get('read_only'):
-                    return '{"approved":true,"findings":[]}'
+                    return '{"approved":true,"findings":[],"coverage":["fixture correction"],"coverage_gaps":[]}'
                 CorrectionAdapter.calls += 1
                 kwargs['claim']('correction.txt')
                 (project/'correction.txt').write_text('broken' if CorrectionAdapter.calls == 1 else 'fixed')

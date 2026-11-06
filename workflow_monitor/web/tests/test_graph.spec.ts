@@ -1,13 +1,32 @@
 import { test, expect } from '@playwright/test'
-import { graphFor, outcomeText, qualificationText, type Occurrence, type Activity, type ChainExecution, type GraphSnapshot } from '../src/graph'
+import { graphFor, taskTitle, outcomeText, qualificationText, type Occurrence, type Activity, type ChainExecution, type GraphSnapshot } from '../src/graph'
 import { layoutNodes } from '../src/layout'
 
-const task = (ref: string, taskId: string | undefined, label: string, prerequisites: string[] = []) => ({ ref, run_ref: 'run', task_id: taskId, label, summary: `${label} work`, prerequisite_refs: prerequisites })
+const task = (ref: string, taskId: string | undefined, label: string, prerequisites: string[] = []) => ({ ref, run_ref: 'run', task_id: taskId, label, work_description: `${label} work`, prerequisite_refs: prerequisites })
 const call = (ref: string, taskRef: string | null, kind: Activity['invocation_kind'] = 'task_worker', chain = [ref], outcome: Activity['outcome'] = 'unknown'): Activity => ({ ref, run_ref: 'run', invocation_id: ref, occurrence_ref: `${ref}-occ`, task_ref: taskRef, role: kind === 'corrective_worker' ? 'fixing_worker' : 'worker', invocation_kind: kind, outcome, error_category: null, input_qualification: 'recorded', input_refs: [], correction_chain: chain, support_ref: null, stopped_by_ref: null, record_refs: [] })
 const review = (ref: string, ordinal: number, outcome: ChainExecution['outcome'] = 'unknown', occurrenceRefs: string[] = []): ChainExecution => ({ ref, run_ref: 'run', execution_id: ref, role: 'reviewer', review_ordinal: ordinal, fixing_round: null, outcome, trigger_ref: null, predecessor_ref: null, input_refs: [], occurrence_refs: occurrenceRefs, review_range: { base: null, head: null }, findings: [], commit_refs: {} })
 const snapshot = (activities: Activity[] = [], chain: ChainExecution[] = []): GraphSnapshot => ({
   runs: [{ ref: 'run' }], tasks: [task('alpha', 'T003', 'Task', []), task('opaque', undefined, 'Implement dispatch', ['alpha'])],
   review_definitions: [{ ref: 'final', run_ref: 'run', label: 'planned', prerequisite_refs: ['alpha', 'opaque'] }], occurrences: [], records: [], activities, chain
+})
+
+test('task titles use meaningful labels or faithful retained excerpts', () => {
+  const title = (label: string, work_description?: string | null) => taskTitle({ ...task('a', 'T001', label), work_description })
+  expect(title('Task scheduling improvements', 'Other work')).toBe('Task scheduling improvements')
+  expect(title('Useful label', null)).toBe('Useful label')
+  for (const label of ['', '  ', 'Task', 'Task 12', '123', 'T001', 'abc-12', '123e4567-e89b-12d3-a456-426614174000']) {
+    expect(title(label, '  Retained\n  work\ttext  ')).toBe('Retained work text')
+    expect(title(label, '  \n ')).toBe('Description unavailable')
+    expect(title(label, null)).toBe('Description unavailable')
+  }
+  expect(title('Task', 'x'.repeat(81))).toBe(`${'x'.repeat(79)}…`)
+  expect(title('x'.repeat(81))).toBe(`${'x'.repeat(79)}…`)
+  const graph = graphFor(snapshot([call('fix', 'alpha', 'corrective_worker', ['initial', 'fix'])]), [], [])
+  expect(graph.nodes.find(node => node.id === 'planned-task:run:alpha')?.data.label).toBe('Task 1 — Worker — Task work')
+  expect(graph.nodes.find(node => node.id === 'fix')?.data.label).toBe('Task 1 — Corrective worker — Fix 1 — Task work')
+  expect(graph.nodes.find(node => node.id === 'planned-task:run:opaque')?.data.label).toBe('Task 2 — Worker — Implement dispatch')
+  const old = { ...snapshot(), runs: [{ ref: 'run', plan_availability: 'unavailable' }], tasks: [], review_definitions: [] }
+  expect(graphFor(old, [], []).nodes).toHaveLength(0)
 })
 
 test('planned slots persist and reconcile only one exact initial root across lifecycle polls', () => {

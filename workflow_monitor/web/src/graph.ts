@@ -17,7 +17,8 @@ export function taskNumber(task: PlannedTask, tasks: PlannedTask[]) {
 }
 export function taskTitle(task: PlannedTask) {
   const candidate = task.label.trim()
-  const title = !candidate || /^task(?:\s|$)/i.test(candidate) || /^[A-Z]+[-_]?\d+$/i.test(candidate) ? 'Recorded task' : candidate
+  const generic = !candidate || /^task(?:\s*(?:\d+|[a-z]+[-_]?\d+))?$/i.test(candidate) || /^\d+$/.test(candidate) || /^[a-z]+[-_]?\d+$/i.test(candidate) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate)
+  const title = generic ? task.work_description?.replace(/\s+/g, ' ').trim() || 'Description unavailable' : candidate
   return title.length > 80 ? `${title.slice(0, 79)}…` : title
 }
 const roleName = (role: string) => role === 'worker' ? 'Worker' : role === 'fixing_worker' ? 'Corrective worker' : role === 'reviewer' ? 'Reviewer' : role === 'fixer' ? 'Fixing worker' : 'Stop'

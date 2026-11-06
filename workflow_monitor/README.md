@@ -146,12 +146,12 @@ paths are not retained. This does not grant owner approval of the design.
   no-absolute-path HTTP boundary and opaque API selectors unchanged;
   no absolute-path exception is needed or proposed.
 - Supported descriptor version 3 retains `label` and explicit `outcome`/`description`
-  as `work_description`. Generic/ID-only labels currently become `Recorded task` in
-  `graph.ts:taskTitle`; the helper does not use `work_description`. Later work can
-  display a short faithful excerpt of retained text with full text in Details. No
-  model summary or new detail system is needed. Missing text must remain unavailable;
-  never fetch current task files to invent historical text. Older descriptors may
-  lack the whole supported plan, not just a title.
+  as `work_description`. Meaningful labels remain titles; generic, number-only and
+  ID-only labels use a whitespace-collapsed leading excerpt of retained work text,
+  or **Description unavailable**. Details and history show the full original text,
+  or the same unavailable message for blank or missing text. Never fetch current task
+  files or generate summaries to invent historical text. Older descriptors may lack
+  the whole supported plan, not just a title.
 - Green in the current graph means a returned call, not accepted work. Keep task
   progress/checkpoints, reviewer verdict and full-range acceptance separate when
   mapping the four display colors. Do not infer new success from the simplified legend.

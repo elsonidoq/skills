@@ -38,6 +38,21 @@ test.afterAll(async () => {
   await exited
 })
 
+test('unsupported old plan does not invent tasks or work text', async ({ page }) => {
+  const headers = { 'X-Workflow-Monitor': '1', 'Sec-Fetch-Site': 'same-origin' }
+  const { runs } = await (await fetch(api(), { headers })).json()
+  const run = runs.find((item: { display_id: string }) => item.display_id === `${mainQualifier}-old-plan`)
+  expect(run.plan_availability).toBe('unavailable')
+  const view = await (await fetch(api(`/${run.ref}/snapshot`), { headers })).json()
+  expect(view.tasks).toEqual([])
+  await page.goto(runPage('old-plan'))
+  await expect(page.getByText('Complete graph unavailable')).toBeVisible()
+  await page.getByText('Loaded history', { exact: true }).click()
+  await expect(page.locator('main')).not.toContainText('Old task')
+  await expect(page.locator('main')).not.toContainText('Full retained work text:')
+  await expect(page.locator('.planned-call')).toHaveCount(0)
+})
+
 test('inspects every merged input and correction fact with readable action endpoints', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto(runPage('merged-edge'))
@@ -119,6 +134,9 @@ test('ordinary task correction reports its recorded metric role', async ({ page 
   await page.locator('.react-flow__node').filter({ hasText: 'Worker — Correction 1' }).first().click()
   const details = page.getByLabel('Selected execution details')
   await expect(details).toContainText('Role: Corrective worker; outcome: Recorded.')
+  const retained = '<img src=x onerror=alert(1)> Recorded workflow explanation opaque-invocation-identity '.repeat(12)
+  expect(await details.locator('p').filter({ hasText: 'Full retained work text:' }).textContent()).toBe(`Full retained work text: ${retained}`)
+  await expect(details.locator('img')).toHaveCount(0)
   await expect(details).toContainText('Total tokens: 12')
   await expect(details).toContainText('Total tokens: known subtotal 24; complete total Unavailable')
   await expect(details).not.toContainText('corrective_worker')
@@ -127,6 +145,7 @@ test('ordinary task correction reports its recorded metric role', async ({ page 
 })
 
 test('production computed lifecycle colors and declared recorded mixed connectors', async ({ page }, testInfo) => {
+  test.setTimeout(90_000) // Seven production navigations and measured layouts share this test.
   const colors = [['review-started', 'Review 2', 'rgb(220, 236, 255)'], ['review-waiting', 'Review 2', 'rgb(255, 240, 194)'], ['review-returned', 'Review 2', 'rgb(220, 245, 228)'], ['review-conflict', 'Review 2', 'rgb(238, 242, 246)'], ['before-agent', 'Final review', 'rgb(229, 231, 235)'], ['waiting', 'Task 1', 'rgb(255, 240, 194)']] as const
   for (const [run, title, color] of colors) {
     await page.goto(runPage(run))
@@ -180,7 +199,20 @@ test('renders scoped ordinary metrics from fixture JSONL through production HTTP
   await expect(details).toContainText('Task 1')
   await expect(details).toContainText('Full retained work text: <img src=x onerror=alert(1)> Recorded workflow explanation')
   await expect(details).toContainText('opaque-invocation-identity')
+  const retained = '<img src=x onerror=alert(1)> Recorded workflow explanation opaque-invocation-identity '.repeat(12)
+  expect(await details.locator('p').filter({ hasText: 'Full retained work text:' }).textContent()).toBe(`Full retained work text: ${retained}`)
   await expect(details.locator('img')).toHaveCount(0)
+  await page.getByText('Loaded history', { exact: true }).click()
+  const history = page.locator('details').filter({ has: page.getByText('Loaded history', { exact: true }) })
+  expect(await history.locator('p').filter({ hasText: 'Full retained work text:' }).first().textContent()).toBe(`Full retained work text: ${retained}`)
+  await expect(history.locator('img')).toHaveCount(0)
+  await expect(history.getByText('Full retained work text: Description unavailable', { exact: true })).toHaveCount(2)
+  await page.locator('.react-flow__node').filter({ hasText: 'Task 2' }).click()
+  await expect(details).toContainText('Task data preparation')
+  await expect(details).toContainText('Full retained work text: Description unavailable')
+  await page.locator('.react-flow__node').filter({ hasText: 'Task 3' }).click()
+  await expect(details).toContainText('Full retained work text: Description unavailable')
+  await worker.click()
   await expect(details).not.toContainText('Task ID:')
   for (const value of ['This call', 'Input tokens: 5', 'Output tokens: 7', 'Total tokens: 12', 'Cost: 0.25', 'Before session total', 'After session total', 'Available context: -30', 'Compaction enabled: false', 'Compaction enabled: true', 'This summary is already included in This call and is not added again.', 'Task total', 'Overall run — workers and corrective workers', 'Overall run — reviewers (not task spend)']) await expect(details).toContainText(value)
   for (const forbidden of ['invocation_interval', 'success-worker', 'session-one', 'branch-one', 'epoch-one', 'fixture-selection', 'compact-one', 'already_included_do_not_add', 'cacheWrite1h', 'sdk_cumulative_counters.input', '[fixture]', 'estimated_usd', 'provenance']) await expect(details).not.toContainText(forbidden)

@@ -6,7 +6,7 @@ let server: Server
 let vite: ViteDevServer
 const run = { ref: 'run', display_id: 'rendered-chain', label: 'Rendered activity chain', completeness: 'recorded', started_at: 1 }
 const snapshot = () => ({
-  runs: [run], phases: [], tasks: [{ ref: 'task', run_ref: 'run', task_id: 'T005', label: 'Task', summary: 'Measured activity rendering', prerequisite_refs: [] }], records: [], review_definitions: [], unknown_records: [], inventory: { phase_count: 0, occurrence_count: 1, observation_count: 0, total_count: 1, loaded_count: 1, hidden_count: 0, unsupported_count: 0 }, snapshot_ref: 'fixture', next_cursor: null,
+  runs: [run], phases: [], tasks: [{ ref: 'task', run_ref: 'run', task_id: 'T005', label: 'Task', work_description: 'Measured activity rendering', prerequisite_refs: [] }], records: [], review_definitions: [], unknown_records: [], inventory: { phase_count: 0, occurrence_count: 1, observation_count: 0, total_count: 1, loaded_count: 1, hidden_count: 0, unsupported_count: 0 }, snapshot_ref: 'fixture', next_cursor: null,
   occurrences: [{ ref: 'stop', run_ref: 'run', phase_ref: 'terminal', task_ref: null, role: 'non_model', outcome: 'failed', completeness: 'complete', record_refs: [], stopping: true, support_ref: 'fix' }],
   activities: [
     { ref: 'worker', run_ref: 'run', invocation_id: 'worker', occurrence_ref: 'worker-occ', task_ref: 'task', role: 'worker', invocation_kind: 'task_worker', outcome: 'returned', error_category: null, input_qualification: 'recorded', input_refs: [], correction_chain: ['worker'], support_ref: null, stopped_by_ref: null, record_refs: [] },
