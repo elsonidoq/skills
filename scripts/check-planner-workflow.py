@@ -342,6 +342,16 @@ def check_contracts(texts):
             "resume either conversation", "Parent evaluates the actual report",
             "corrections to producers", "resolves material findings before approval",
             "This is the correctness review", "Do not request a simplicity verdict")
+    require("coordinator-review-sequence", final_review,
+            "1. Write both bounded reviewer handoff instructions",
+            "2. Before launching either reviewer", "independently inspect that snapshot",
+            "Does the current plan induce scope creep or over complexities?",
+            "Do not defer this judgment to the reviewers",
+            "3. Launch both fresh independent read-only reviewers",
+            "Keep the coordinator's analysis out of both handoffs",
+            "4. After both reports return, assess all three analyses together",
+            "resume its existing context when useful", "launch a fresh correction",
+            "Do not launch a fixer when there are no supported corrections")
     simplicity = section(p, "### Shared simplicity-review contract")
     require("simplicity-review", simplicity, "In parallel with final correctness review", "same artifact snapshot",
             "before final owner approval", "references/simplicity-review.md", "subagent get",
