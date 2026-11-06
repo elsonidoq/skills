@@ -20,7 +20,7 @@ from starlette.routing import Route
 
 from .liveness import qualify
 from .mapping import normalize
-from .public import _ref, minimize, run_ref
+from .public import _display_text, _ref, minimize, run_ref
 
 _CSP = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 _ASSET_SUFFIXES = frozenset({".css", ".gif", ".html", ".ico", ".jpeg", ".jpg", ".js", ".png", ".svg", ".webp", ".woff", ".woff2"})
@@ -660,6 +660,9 @@ def _qualify_public(data: dict[str, Any], recording: Recording) -> dict[str, Any
         # regardless of the appearance/disappearance of another live recording.
         run["display_id"] = recording.ref.split("_", 1)[1] + "-" + run["display_id"]
         run["source"] = recording.label
+        run["worktree_name"] = (_display_text(recording.worktree.name)
+                                if recording.label in {"main", "linked"} and recording.reader is not None
+                                else None)
     return result
 
 

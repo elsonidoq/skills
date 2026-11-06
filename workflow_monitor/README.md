@@ -131,20 +131,14 @@ paths are not retained. This does not grant owner approval of the design.
 
 ### Existing data and later implementation boundaries
 
-- Current `Run`/`Recording` DTOs expose `main`/`linked`/`preserved`, opaque refs and
-  the generic `Recorded run` label (`public.py:minimize`). The owner-selected display
-  source is the existing original raw `run_id`, whether meaningful or generated.
-  `runtime/coherence_workflow/cli.py:main` accepts `--run` or generates `uuid.uuid4().hex`.
-  The proposed alignment uses that raw ID as the existing public `label`, before
-  `app.py:_qualify_public` adds the recording hash to the separate `display_id`.
-  Keep opaque refs and qualified routing IDs unchanged; do not parse them to invent
-  labels. Descriptor version 3 has no separate run-name field and needs none for this
-  choice. An old plan can lack task descriptions while its run ID remains available.
-  This resolves the display-source question without new persistence; application
-  mapping is still unimplemented by this mockup.
-- Live `projects.py:Recording.worktree` already holds the registered worktree path
-  internally, from which only its final folder name is needed for display. The current
-  DTO does not expose that basename. Preserved recordings bind `worktree` to the main
+- `public.py:minimize` uses the safe original `run_id` as the public `label`, whether
+  meaningful or generated; unsafe or missing display text is null. The separate
+  `display_id` retains its recording hash qualification and opaque refs remain unchanged.
+  No new run name is stored. An old plan can lack task descriptions while its run ID
+  remains available.
+- Live `projects.py:Recording.worktree` holds the registered worktree path internally;
+  run DTOs expose only its safe final folder name as nullable `worktree_name`.
+  Preserved recordings bind `worktree` to the main
   storage worktree; their `recording.json` retains opaque `recording_id`/`origin_id`,
   not the original worktree name (`recordings.py:PreservedBinding`). Do not label the
   storage folder as the original source worktree. Use **Worktree name unavailable**

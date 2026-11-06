@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "runtime"))
 
 from coherence_workflow.store import Authority, git
-from workflow_monitor.app import create_app
+from workflow_monitor.app import _qualify_public, create_app
 from workflow_monitor.projects import Projects
 from workflow_monitor.reader import Reader
 
@@ -100,6 +100,18 @@ class ProjectTests(unittest.TestCase):
         chosen = next(project for project in listed.inventory() if project.common_dir == alpha_project.common_dir)
         chosen_linked = next(recording for recording in chosen.recordings if recording.worktree == self.external)
         self.assertIs(listed.resolve_recording(chosen.ref, chosen_linked.ref), chosen_linked)
+
+    def test_qualification_rejects_unsafe_or_unbound_worktree_display(self):
+        recording = next(recording for project in Projects(self.root).inventory()
+                         for recording in project.recordings if recording.worktree == self.alpha)
+        data = {"runs": [{"ref": "run_opaque", "display_id": "same", "label": "same"}]}
+        for candidate in (replace(recording, worktree=Path('/tmp/bad\nname')),
+                          replace(recording, worktree=Path('/')),
+                          replace(recording, reader=None),
+                          replace(recording, label='preserved')):
+            self.assertIsNone(_qualify_public(data, candidate)["runs"][0]["worktree_name"])
+        self.assertEqual(_qualify_public(data, recording)["runs"][0]["worktree_name"], "alpha")
+        self.assertNotIn("worktree_name", data["runs"][0])
 
     def test_stale_registered_path_does_not_hide_healthy_main(self):
         # This is only an explicitly created linked fixture; a stale registration must
@@ -212,6 +224,8 @@ class ProjectTests(unittest.TestCase):
         from starlette.testclient import TestClient
         self._record(self.alpha, "same")
         self._record(self.external, "same")
+        generated = "1234567890abcdef1234567890abcdef"
+        self._record(self.alpha, generated)
         capture = self.alpha / ".coherence/preserved-recordings/capture-1"
         (capture / "metrics").mkdir(parents=True)
         shutil.copyfile(self.external / ".coherence/workflow/workflow.sqlite", capture / "monitor.sqlite")
@@ -228,6 +242,19 @@ class ProjectTests(unittest.TestCase):
         values = runs.json()["runs"]
         self.assertEqual(len({item["ref"] for item in values}), len(values))
         self.assertEqual(len({item["display_id"] for item in values}), len(values))
+        expected_names = {"main": "alpha", "linked": "external linked worktree", "preserved": None}
+        same = [item for item in values if item["label"] == "same"]
+        self.assertEqual({item["source"] for item in same}, set(expected_names))
+        self.assertEqual(len(same), 3)
+        self.assertIn(generated, [item["label"] for item in values])
+        for item in values:
+            self.assertEqual(item["worktree_name"], expected_names[item["source"]])
+            self.assertEqual(item["display_id"], item["ref"].split(".")[0].split("_", 1)[1] + "-" + item["label"])
+            response = client.get(f"/api/monitor/v1/projects/{alpha['ref']}/runs/{item['ref']}/snapshot", headers=headers)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(next(run for run in response.json()["runs"] if run["ref"] == item["ref"]), item)
+            for private in (str(self.alpha), str(self.external), str(capture), "runner_identity"):
+                self.assertNotIn(private, response.text)
         recording = next(item for item in alpha["recordings"] if item["label"] == "preserved")
         preserved = next(item for item in values if item["display_id"] == recording["ref"].split("_", 1)[1] + "-same")
         snapshot = client.get(f"/api/monitor/v1/projects/{alpha['ref']}/runs/{preserved['ref']}/snapshot", headers=headers)
@@ -473,8 +500,10 @@ class ProjectTests(unittest.TestCase):
         failed = client.get(route, headers=headers).json()
         self.assertEqual({run["ref"] for run in failed["runs"]}, {run["ref"] for run in first["runs"]})
         self.assertEqual([item["ref"] for item in failed["unavailable_recordings"]], [cached["ref"].split(".")[0]])
-        self.assertEqual(next(run for run in failed["runs"] if run["ref"] == cached["ref"])["runner_state"],
-                         {"state": "unknown", "reason": "read_unavailable"})
+        stale = next(run for run in failed["runs"] if run["ref"] == cached["ref"])
+        self.assertEqual((stale["label"], stale["worktree_name"], stale["display_id"]),
+                         (cached["label"], cached["worktree_name"], cached["display_id"]))
+        self.assertEqual(stale["runner_state"], {"state": "unknown", "reason": "read_unavailable"})
         self.assertEqual(before, self._bytes())
         database.chmod(0o600)
         recovered = client.get(route, headers=headers).json()

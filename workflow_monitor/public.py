@@ -25,6 +25,14 @@ def _text(value: object, fallback: str = "") -> str:
     return value if isinstance(value, str) and value else fallback
 
 
+def _display_text(value: object) -> str | None:
+    """Return display text only when it cannot disclose a path or control data."""
+    if (not isinstance(value, str) or not value.strip() or
+            any(char in "/\\" or not char.isprintable() for char in value)):
+        return None
+    return value
+
+
 def _sha(value: object) -> str | None:
     return value if isinstance(value, str) and _HASH.fullmatch(value) else None
 
@@ -51,7 +59,7 @@ def minimize(graph: dict[str, Any]) -> dict[str, Any]:
     for run in graph.get("runs", []):
         description = run.get("description") if isinstance(run.get("description"), dict) else {}
         requested = description.get("requested_executor") if isinstance(description.get("requested_executor"), dict) else {}
-        public_runs.append({"ref": _ref("run", run["run_id"]), "display_id": run["run_id"], "label": "Recorded run", "started_at": _time(run.get("started_at")),
+        public_runs.append({"ref": _ref("run", run["run_id"]), "display_id": run["run_id"], "label": _display_text(run.get("run_id")), "worktree_name": None, "started_at": _time(run.get("started_at")),
                             "description_version": description.get("description_version") if type(description.get("description_version")) is int else None,
                             "plan_availability": "complete" if run.get("plan_available") else "unavailable",
                             "requested_executor": {key: _text(requested.get(key), "unknown") for key in ("provider", "model", "effort")},

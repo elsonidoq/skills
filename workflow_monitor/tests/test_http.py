@@ -54,6 +54,8 @@ class HttpTests(unittest.TestCase):
         self.assert_safe(runs)
         run = runs.json()["runs"][0]
         self.assertEqual(run["display_id"], "run-a")
+        self.assertEqual(run["label"], "run-a")
+        self.assertIsNone(run["worktree_name"])
         run_ref = run["ref"]
         self.assertNotEqual(run_ref, run["display_id"])
         snapshot_path = f"/api/monitor/v1/runs/{run_ref}/snapshot"
@@ -61,6 +63,7 @@ class HttpTests(unittest.TestCase):
         view = self.client.get(snapshot_path, headers=self.api_headers)
         self.assertEqual(view.status_code, 200)
         self.assert_safe(view)
+        self.assertEqual(next(item for item in view.json()["runs"] if item["ref"] == run_ref), run)
         record = view.json()["records"][0]["ref"]
         snapshot_ref = view.json()["snapshot_ref"]
         history = self.client.get(f"/api/monitor/v1/runs/{run_ref}/history?snapshot={snapshot_ref}", headers=self.api_headers)
@@ -68,6 +71,26 @@ class HttpTests(unittest.TestCase):
         detail = self.client.get(f"/api/monitor/v1/runs/{run_ref}/records/{record}?snapshot={snapshot_ref}", headers=self.api_headers)
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(self.client.get("/").status_code, 200)
+
+    def test_generated_label_and_cached_single_reader_snapshot(self):
+        raw = copy.deepcopy(snapshot())
+        generated = "1234567890abcdef1234567890abcdef"
+        raw["runs"][0]["run_id"] = generated
+        raw["runs"][0]["private"] = "PRIVATE-SENTINEL"
+        raw["observations"] = []
+        self.reader.value = raw
+        listed = self.client.get("/api/monitor/v1/runs", headers=self.api_headers)
+        run = next(item for item in listed.json()["runs"] if item["display_id"] == generated)
+        self.assertEqual(run["label"], generated)
+        self.assertIsNone(run["worktree_name"])
+        self.assert_safe(listed)
+        self.reader.value = {"state": "unavailable"}
+        cached = self.client.get(f"/api/monitor/v1/runs/{run['ref']}/snapshot", headers=self.api_headers)
+        self.assertEqual(cached.status_code, 200)
+        self.assertEqual(cached.json()["observation"]["read_state"], "unavailable")
+        stale = next(item for item in cached.json()["runs"] if item["ref"] == run["ref"])
+        self.assertEqual((stale["label"], stale["display_id"], stale["worktree_name"]), (generated, generated, None))
+        self.assert_safe(cached)
 
     def test_unknown_null_sequences_are_paginated_without_a_server_error(self):
         malformed = copy.deepcopy(snapshot())

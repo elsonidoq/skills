@@ -3,7 +3,7 @@ import json
 import unittest
 
 from workflow_monitor.mapping import normalize
-from workflow_monitor.public import minimize
+from workflow_monitor.public import _display_text, minimize
 from workflow_monitor.tests.test_mapping import snapshot
 
 
@@ -19,6 +19,20 @@ class PublicTests(unittest.TestCase):
         self.assertEqual([run["display_id"] for run in result["runs"]], ["run-a", "run-b"])
         self.assertNotIn("PRIVATE-SENTINEL", repr(result))
         self.assertEqual(result["unknown_records"][0]["code"], "unsupported_observation")
+
+    def test_run_labels_use_safe_original_identifiers(self):
+        generated = "1234567890abcdef1234567890abcdef"
+        graph = {"state": "ok", "runs": [{"run_id": value} for value in
+                 ("review-convergence-20261024", generated, "/private/path", "", "bad\nname")]}
+        runs = minimize(graph)["runs"]
+        self.assertEqual([run["label"] for run in runs],
+                         ["review-convergence-20261024", generated, None, None, None])
+        self.assertEqual([run["display_id"] for run in runs], [row["run_id"] for row in graph["runs"]])
+        self.assertTrue(all(run["worktree_name"] is None for run in runs))
+        self.assertIsNone(_display_text(None))
+        self.assertIsNone(_display_text("  "))
+        self.assertIsNone(_display_text("bad\\name"))
+        self.assertEqual(_display_text("folder with spaces"), "folder with spaces")
 
     def test_recorded_prose_and_identities_are_not_hidden_by_presentation_limits(self):
         source = snapshot()
