@@ -59,6 +59,12 @@ with tempfile.TemporaryDirectory(prefix='monitor-execution-fixture-') as tempora
     presentation['tasks'][1]['work_description'] = None
     presentation['tasks'][2]['work_description'] = '  \n  '
     with Authority(project) as owner:
+        sparse_ids = ['T001', 'T003', 'T005', 'T006', 'T008', 'T010', 'T013', 'T014']
+        owner.store.start('sparse-task-ids', base)
+        Recorder(owner.store, 'sparse-task-ids').register(descriptor({'tasks': [
+            {'id': task_id, 'description': f'Retained work for {task_id}',
+             'depends': [sparse_ids[index - 1]] if index else []}
+            for index, task_id in enumerate(sparse_ids)]}, {}))
         owner.store.start('old-plan', base)
         old = Recorder(owner.store, 'old-plan')
         old.register({'version': 1, 'description_version': 2, 'tasks': [{'id': 'old-task', 'label': 'Old task'}]})

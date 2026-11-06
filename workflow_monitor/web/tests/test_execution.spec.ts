@@ -54,6 +54,37 @@ test('unsupported old plan does not invent tasks or work text', async ({ page })
   await expect(page.locator('.planned-call')).toHaveCount(0)
 })
 
+test('sparse task IDs agree in production graph, Details, history and edge endpoints', async ({ page }) => {
+  await page.goto(runPage('sparse-task-ids'))
+  const node = page.locator('.react-flow__node').filter({ hasText: /^T014 — Worker/ })
+  await expect(node).toContainText('Retained work for T014')
+  await expect(page.locator('.react-flow__node')).toHaveCount(9) // Eight tasks and final review.
+  await node.click()
+  const details = page.getByLabel('Selected execution details')
+  await expect(details.getByRole('heading', { name: 'T014 — Retained work for T014', exact: true })).toBeVisible()
+  await details.getByRole('button', { name: 'Close' }).click()
+  const sourceId = await page.locator('.react-flow__node').filter({ hasText: /^T013 — Worker/ }).getAttribute('data-id')
+  const targetId = await node.getAttribute('data-id')
+  const selectedPath = page.getByRole('group', { name: `Edge from ${sourceId} to ${targetId}`, exact: true }).locator('.react-flow__edge-interaction')
+  const point = await selectedPath.evaluate(element => {
+    const path = element as SVGPathElement
+    // Review connectors can cross the midpoint. Click a hit-tested portion of
+    // this specific edge rather than whichever connector is painted above it.
+    for (const fraction of [.9, .75, .5, .25, .1]) {
+      const position = path.getPointAtLength(path.getTotalLength() * fraction)
+      const screen = new DOMPoint(position.x, position.y).matrixTransform(path.getScreenCTM()!)
+      if (document.elementFromPoint(screen.x, screen.y) === element) return { x: screen.x, y: screen.y }
+    }
+    throw new Error('No exposed click target on the T013 → T014 connector')
+  })
+  await page.mouse.click(point.x, point.y)
+  await expect(details.locator('[aria-live] > p').first()).toHaveText('T013 — Worker — Retained work for T013 → T014 — Worker — Retained work for T014')
+  await page.locator('summary').filter({ hasText: /^Recorded evidence$/ }).click()
+  await page.getByText('Loaded history', { exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Selected run history', exact: true }).locator('..')).toContainText('T014 — Retained work for T014; state')
+  await expect(page.locator('main')).not.toContainText('Task 8')
+})
+
 test('full-range and rejection evidence remain visible before paging', async ({ page }) => {
   for (const [run, decision, change] of [['booleans-true', 'approved', 'no changes'], ['booleans-false', 'changes requested', 'changes recorded']] as const) {
     await page.goto(runPage(run))
@@ -87,7 +118,7 @@ test('inspects every merged input and correction fact with readable action endpo
   await page.mouse.click(point.x, point.y)
   const details = page.getByLabel('Selected execution details')
   await expect(details.getByRole('heading', { name: 'Recorded relationships', exact: true })).toBeVisible()
-  await expect(details.locator('[aria-live] > p').first()).toHaveText('Task 1 — Worker — Prepare result → Task 1 — Worker — Correction 1 — Prepare result')
+  await expect(details.locator('[aria-live] > p').first()).toHaveText('edge — Worker — Prepare result → edge — Worker — Correction 1 — Prepare result')
   await expect(details.getByText('Recorded input', { exact: true })).toBeVisible()
   await expect(details.getByText('Recorded correction', { exact: true })).toBeVisible()
   await expect(details).not.toContainText('producerRef')
@@ -167,7 +198,7 @@ test('ordinary task correction reports its recorded metric role', async ({ page 
 
 test('production computed lifecycle colors and declared recorded mixed connectors', async ({ page }, testInfo) => {
   test.setTimeout(90_000) // Seven production navigations and measured layouts share this test.
-  const colors = [['review-started', 'Review 2', 'rgb(220, 236, 255)'], ['review-waiting', 'Review 2', 'rgb(255, 229, 229)'], ['review-returned', 'Review 2', 'rgb(220, 245, 228)'], ['review-conflict', 'Review 2', 'rgb(255, 229, 229)'], ['before-agent', 'Final review', 'rgb(229, 231, 235)'], ['waiting', 'Task 1', 'rgb(255, 229, 229)']] as const
+  const colors = [['review-started', 'Review 2', 'rgb(220, 236, 255)'], ['review-waiting', 'Review 2', 'rgb(255, 229, 229)'], ['review-returned', 'Review 2', 'rgb(220, 245, 228)'], ['review-conflict', 'Review 2', 'rgb(255, 229, 229)'], ['before-agent', 'Final review', 'rgb(229, 231, 235)'], ['waiting', 'one — Worker', 'rgb(255, 229, 229)']] as const
   for (const [run, title, color] of colors) {
     await page.goto(runPage(run))
     const node = page.locator('.react-flow__node').filter({ hasText: title })
@@ -288,7 +319,7 @@ test('renders scoped ordinary metrics from fixture JSONL through production HTTP
   await expect(worker).toBeVisible()
   await worker.click()
   const details = page.getByLabel('Selected execution details')
-  await expect(details).toContainText('Task 1')
+  await expect(details).toContainText('one —')
   await expect(details).toContainText('Full retained work text: <img src=x onerror=alert(1)> Recorded workflow explanation')
   await expect(details).toContainText('opaque-invocation-identity')
   const retained = '<img src=x onerror=alert(1)> Recorded workflow explanation opaque-invocation-identity '.repeat(12)
@@ -300,10 +331,10 @@ test('renders scoped ordinary metrics from fixture JSONL through production HTTP
   expect(await history.locator('p').filter({ hasText: 'Full retained work text:' }).first().textContent()).toBe(`Full retained work text: ${retained}`)
   await expect(history.locator('img')).toHaveCount(0)
   await expect(history.getByText('Full retained work text: Description unavailable', { exact: true })).toHaveCount(2)
-  await page.locator('.react-flow__node').filter({ hasText: 'Task 2' }).click()
+  await page.locator('.react-flow__node').filter({ hasText: 'two — Worker' }).click()
   await expect(details).toContainText('Task data preparation')
   await expect(details).toContainText('Full retained work text: Description unavailable')
-  await page.locator('.react-flow__node').filter({ hasText: 'Task 3' }).click()
+  await page.locator('.react-flow__node').filter({ hasText: 'three — Worker' }).click()
   await expect(details).toContainText('Full retained work text: Description unavailable')
   await worker.click()
   await details.locator('summary').filter({ hasText: /^Metrics$/ }).click()

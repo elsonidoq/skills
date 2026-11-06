@@ -11,9 +11,8 @@ export type ReviewDefinition = { ref: string; run_ref: string; label: string; pr
 export type GraphSnapshot = { runs: Array<{ ref: string; plan_availability?: string }>; tasks: PlannedTask[]; review_definitions?: ReviewDefinition[]; occurrences: Occurrence[]; records: Observation[]; edges?: GraphEdge[]; chain?: ChainExecution[]; activities?: Activity[] }
 export type Followup = { run_ref: string; source_run_ref: string; review_occurrence_ref: string; resolution: string }
 
-export function taskNumber(task: PlannedTask, tasks: PlannedTask[]) {
-  const index = tasks.filter(item => item.run_ref === task.run_ref).findIndex(item => item.ref === task.ref)
-  return index < 0 ? 'Task' : `Task ${index + 1}`
+export function taskNumber(task: PlannedTask) {
+  return typeof task.task_id === 'string' && task.task_id.trim() ? task.task_id : 'Task ID unavailable'
 }
 export function taskTitle(task: PlannedTask) {
   const candidate = task.label.trim()
@@ -56,7 +55,7 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
   const definitions = snapshots.flatMap(snapshot => snapshot.review_definitions ?? [])
   const key = (runRef: string, ref: string) => `${runRef}\u0000${ref}`
   const taskFor = (activity: Activity) => activity.task_ref ? tasks.find(task => task.ref === activity.task_ref && task.run_ref === activity.run_ref) : undefined
-  const designation = (task: PlannedTask) => taskNumber(task, tasks)
+  const designation = (task: PlannedTask) => taskNumber(task)
   const occurrenceFor = (activity: Activity) => occurrences.find(item => item.run_ref === activity.run_ref && item.ref === activity.occurrence_ref)
   const presentation = (summary: ExecutionSummary | undefined, outcome: string, rejected = false) => {
     const state = summary?.state ?? (['returned', 'approved', 'rejected'].includes(outcome) ? 'success' : outcome === 'failed' ? 'failure' : 'unknown')

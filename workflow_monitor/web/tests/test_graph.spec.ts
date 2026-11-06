@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { graphFor, taskTitle, outcomeText, qualificationText, type Occurrence, type Activity, type ChainExecution, type GraphSnapshot } from '../src/graph'
+import { graphFor, taskNumber, taskTitle, outcomeText, qualificationText, type Occurrence, type Activity, type ChainExecution, type GraphSnapshot } from '../src/graph'
 import { layoutNodes } from '../src/layout'
 
 const task = (ref: string, taskId: string | undefined, label: string, prerequisites: string[] = []) => ({ ref, run_ref: 'run', task_id: taskId, label, work_description: `${label} work`, prerequisite_refs: prerequisites })
@@ -22,11 +22,27 @@ test('task titles use meaningful labels or faithful retained excerpts', () => {
   expect(title('Task', 'x'.repeat(81))).toBe(`${'x'.repeat(79)}…`)
   expect(title('x'.repeat(81))).toBe(`${'x'.repeat(79)}…`)
   const graph = graphFor(snapshot([call('fix', 'alpha', 'corrective_worker', ['initial', 'fix'])]), [], [])
-  expect(graph.nodes.find(node => node.id === 'planned-task:run:alpha')?.data.label).toBe('Task 1 — Worker — Task work')
-  expect(graph.nodes.find(node => node.id === 'fix')?.data.label).toBe('Task 1 — Corrective worker — Fix 1 — Task work')
-  expect(graph.nodes.find(node => node.id === 'planned-task:run:opaque')?.data.label).toBe('Task 2 — Worker — Implement dispatch')
+  expect(graph.nodes.find(node => node.id === 'planned-task:run:alpha')?.data.label).toBe('T003 — Worker — Task work')
+  expect(graph.nodes.find(node => node.id === 'fix')?.data.label).toBe('T003 — Corrective worker — Fix 1 — Task work')
+  expect(graph.nodes.find(node => node.id === 'planned-task:run:opaque')?.data.label).toBe('Task ID unavailable — Worker — Implement dispatch')
   const old = { ...snapshot(), runs: [{ ref: 'run', plan_availability: 'unavailable' }], tasks: [], review_definitions: [] }
   expect(graphFor(old, [], []).nodes).toHaveLength(0)
+})
+
+test('sparse retained task IDs are verbatim labels, never array ordinals or opaque refs', () => {
+  const ids = ['T001', 'T003', 'T005', 'T006', 'T008', 'T010', 'T013', 'T014']
+  const input = snapshot([call('fix', 'opaque-7', 'corrective_worker', ['initial', 'fix'])])
+  input.tasks = ids.map((id, index) => task(`opaque-${index}`, id, 'Retained work', index ? [`opaque-${index - 1}`] : []))
+  input.review_definitions = []
+  const graph = graphFor(input, [], [])
+  expect(graph.nodes.slice(0, ids.length).map(node => node.data.label)).toEqual(ids.map(id => `${id} — Worker — Retained work`))
+  expect(graph.nodes.find(node => node.id === 'fix')?.data.label).toBe('T014 — Corrective worker — Fix 1 — Retained work')
+  const relabeled = graphFor({ ...input, tasks: input.tasks.map(item => ({ ...item, task_id: 'Other ID' })) }, [], [])
+  expect(graph.topology).toBe(relabeled.topology)
+  expect(graph.edges).toEqual(relabeled.edges)
+  expect(graph.nodes.map(node => [node.id, node.className, node.data.status])).toEqual(relabeled.nodes.map(node => [node.id, node.className, node.data.status]))
+  for (const id of [undefined, '', '  ']) expect(taskNumber(task('T999-opaque-ref', id, 'T888 label'))).toBe('Task ID unavailable')
+  expect(taskNumber(task('opaque-ref', '  custom-ID  ', 'Label'))).toBe('  custom-ID  ')
 })
 
 test('planned slots persist and reconcile only one exact initial root across lifecycle polls', () => {
@@ -60,8 +76,8 @@ test('exact run/task/kind/chain matching retains resumes, collisions and ambigui
   const graph = graphFor(snapshot([initial, resumed, corrective, collision, otherTask]), [], [])
   expect(graph.nodes.map(node => node.id).sort()).toEqual(['fix', 'other-run', 'planned-review:run:final', 'planned-task:run:alpha', 'planned-task:run:opaque', 'resume'])
   expect(graph.nodes.find(node => node.id === 'planned-task:run:alpha')?.data.identity).toMatchObject({ invocationId: 'initial' })
-  expect(graph.nodes.find(node => node.id === 'fix')?.data.label).toContain('Task 1 — Corrective worker — Fix 1')
-  expect(graph.nodes.find(node => node.id === 'planned-task:run:opaque')?.data.label).toContain('Task 2 — Worker')
+  expect(graph.nodes.find(node => node.id === 'fix')?.data.label).toContain('T003 — Corrective worker — Fix 1')
+  expect(graph.nodes.find(node => node.id === 'planned-task:run:opaque')?.data.label).toContain('Task ID unavailable — Worker')
 
   const ambiguous = graphFor(snapshot([call('root-a', 'alpha'), call('root-b', 'alpha')]), [], [])
   expect(ambiguous.nodes.map(node => node.id)).toContain('root-a')
@@ -107,7 +123,7 @@ test('all observed calls use qualified lifecycle without successful fallback or 
       expect(graph.nodes.find(node => node.id === id)?.data.status).toContain(state)
       expect(graph.nodes.find(node => node.id === id)?.data.status).not.toContain(qualification)
     }
-    expect(graph.nodes.find(node => node.id === 'correction')?.data.label).toContain('Task 1 — Worker — Correction 1')
+    expect(graph.nodes.find(node => node.id === 'correction')?.data.label).toContain('T003 — Worker — Correction 1')
     expect(outcomeText(input.occurrences[0], [])).not.toContain(qualification)
   }
   expect(qualificationText('private.schema.value')).toBe('Unknown')
