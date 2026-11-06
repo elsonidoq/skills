@@ -9,7 +9,7 @@ const run = { ref: 'run_live', display_id: 'observed-run', label: 'Observed run'
 function view() {
   snapshots++
   const unavailable = snapshots > 1
-  return { runs: [run], phases: [{ ref: 'phase', run_ref: run.ref, label: 'Worker' }], tasks: [], occurrences: [{ ref: 'occ', run_ref: run.ref, phase_ref: 'phase', task_ref: null, role: 'worker', outcome: null, completeness: 'incomplete', record_refs: ['record'] }], records: [{ ref: 'record', run_ref: run.ref, occurrence_ref: 'occ', kind: 'started', source_seq: 0, recorded_at: 0, exit_code: null, finding_count: null, review_base: null, review_head: null }], unknown_records: [], edges: [], snapshot_ref: 'snapshot_live', next_cursor: null, inventory: { phase_count: 1, occurrence_count: 1, observation_count: 1, total_count: 1, loaded_count: 1, hidden_count: 0, unsupported_count: 0 }, observation: { read_at: snapshots, last_success_at: 0, last_recorded_at: 0, read_state: unavailable ? 'unavailable' : 'current', warnings: unavailable ? ['read_unavailable', 'incomplete_history'] : ['incomplete_history'] } }
+  return { runs: [run], phases: [{ ref: 'phase', run_ref: run.ref, label: 'Worker' }], tasks: [], occurrences: [{ ref: 'occ', run_ref: run.ref, phase_ref: 'phase', task_ref: null, role: 'worker', outcome: null, completeness: 'incomplete', record_refs: ['record'] }], activities: [{ ref: 'activity', run_ref: run.ref, invocation_id: 'call', occurrence_ref: 'occ', task_ref: null, role: 'worker', invocation_kind: 'task_worker', outcome: 'running', error_category: null, input_qualification: 'recorded', input_refs: [], correction_chain: [], support_ref: null, stopped_by_ref: null, record_refs: ['record'] }], records: [{ ref: 'record', run_ref: run.ref, occurrence_ref: 'occ', kind: 'started', source_seq: 0, recorded_at: 0, exit_code: null, finding_count: null, review_base: null, review_head: null }], unknown_records: [], edges: [], snapshot_ref: 'snapshot_live', next_cursor: null, inventory: { phase_count: 1, occurrence_count: 1, observation_count: 1, total_count: 1, loaded_count: 1, hidden_count: 0, unsupported_count: 0 }, observation: { read_at: snapshots, last_success_at: 0, last_recorded_at: 0, read_state: unavailable ? 'unavailable' : 'current', warnings: unavailable ? ['read_unavailable', 'incomplete_history'] : ['incomplete_history'] } }
 }
 test.beforeAll(async () => {
   server = createServer(async (request, response) => {
@@ -24,9 +24,17 @@ test.beforeAll(async () => {
 test.afterAll(() => new Promise<void>(resolve => server.close(() => resolve())))
 test('displays read freshness, incomplete history, and qualified liveness without control requests', async ({ page }) => {
   await page.clock.install(); await page.goto('http://127.0.0.1:4175/')
+  await expect(page.getByLabel('Read warning')).toContainText('Incomplete history')
+  await page.clock.runFor(1000)
+  await expect(page.locator('.react-flow__node')).toHaveCount(1)
+  await page.locator('summary').filter({ hasText: /^Recorded evidence$/ }).click()
   await expect(page.getByLabel('Read freshness')).toContainText('last successful read 0; last recorded activity 0')
   await expect(page.getByLabel('Runner liveness')).toHaveText(/Recorded runner Live.*does not prove progress/)
+  await page.locator('summary').filter({ hasText: /^Recorded evidence$/ }).click()
   await page.clock.fastForward(60_000)
+  await expect(page.getByLabel('Read warning')).toContainText('Read unavailable')
+  await expect(page.locator('.react-flow__node')).toHaveCount(1)
+  await page.locator('summary').filter({ hasText: /^Recorded evidence$/ }).click()
   await expect(page.getByLabel('Read freshness')).toContainText('Read unavailable')
   await expect(page.getByLabel('Read freshness')).toContainText('Read unavailable, Incomplete history')
 })
