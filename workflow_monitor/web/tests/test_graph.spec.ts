@@ -36,7 +36,7 @@ test('planned slots persist and reconcile only one exact initial root across lif
   const failed = graphFor(snapshot([call('initial', 'alpha', 'task_worker', ['initial'], 'failed')]), [], [])
   const ids = ['planned-review:run:final', 'planned-task:run:alpha', 'planned-task:run:opaque']
   for (const graph of [before, running, returned, failed]) expect(graph.nodes.map(node => node.id).sort()).toEqual(ids)
-  expect(before.nodes.find(node => node.id === 'planned-task:run:alpha')?.data.status).toContain('planned')
+  expect(before.nodes.find(node => node.id === 'planned-task:run:alpha')?.data.status).toBe('Not started')
   expect(returned.nodes.find(node => node.id === 'planned-task:run:alpha')?.data.status).toContain('returned')
   expect(failed.nodes.find(node => node.id === 'planned-task:run:alpha')?.data.status).toBe('failed')
   expect(returned.edges.map(edge => [edge.source, edge.target, edge.data?.classification])).toEqual([
@@ -98,7 +98,7 @@ test('all observed calls use qualified lifecycle without successful fallback or 
   const correction = { ...call('correction', 'alpha', 'corrective_worker', ['initial', 'correction'], 'returned'), role: 'worker' as const }
   const reviewer = { ...call('review-activity', null), role: 'reviewer' as const, invocation_id: 'private-review', occurrence_ref: 'review-occ' }
   const execution = { ...review('public-review', 2, 'approved', ['review-occ']), execution_id: 'private-review' }
-  for (const [state, qualification, css] of [['running', 'recorded_running', 'running'], ['waiting', 'outstanding_input', 'waiting'], ['unknown', 'conflicting_terminal_evidence', 'neutral']] as const) {
+  for (const [state, qualification, css] of [['running', 'recorded_running', 'running'], ['waiting', 'outstanding_input', 'failed'], ['unknown', 'conflicting_terminal_evidence', 'failed']] as const) {
     const input = snapshot([initial, correction, reviewer], [execution])
     input.occurrences = [initial, correction, reviewer].map(activity => ({ ref: activity.occurrence_ref!, run_ref: 'run', phase_ref: 'phase', task_ref: activity.task_ref, role: activity.role, outcome: null, completeness: 'complete', record_refs: [], execution_summary: { state, qualification } }))
     const graph = graphFor(input, [], [])
@@ -114,6 +114,37 @@ test('all observed calls use qualified lifecycle without successful fallback or 
   const stopped = snapshot()
   stopped.occurrences = [{ ref: 'terminal', run_ref: 'run', phase_ref: 'terminal', phase: 'terminal', task_ref: null, role: 'non_model', outcome: 'failed', completeness: 'complete', record_refs: [] } as Occurrence]
   expect(graphFor(stopped, [], []).nodes.find(node => node.id === 'planned-review:run:final')?.data.status).toBe('Not started; run stopped')
+})
+
+test('four presentation classes preserve exceptional states and topology', () => {
+  const base = snapshot()
+  const project = (progress: string, annotation?: { code: string; label: string }) => {
+    const input = snapshot()
+    input.tasks[0] = { ...input.tasks[0], progress: { state: progress, qualification: null }, annotation }
+    return graphFor(input, [], [])
+  }
+  const reference = project('pending')
+  const structure = (graph: ReturnType<typeof graphFor>) => ({ ids: graph.nodes.map(node => node.id), edges: graph.edges.map(({ id, source, target, type, className, data }) => ({ id, source, target, type, className, data })) })
+  for (const [progress, css, text] of [['pending', 'pending', 'Not started'], ['completed', 'pending', 'Not started'], ['failed', 'failed', 'failed'], ['blocked', 'failed', 'blocked'], ['unknown', 'failed', 'unknown'], ['waiting', 'failed', 'waiting']] as const) {
+    const graph = project(progress)
+    const node = graph.nodes[0]
+    expect(node.className?.split(' ').at(-1)).toBe(css)
+    expect(node.data.status).toContain(text)
+    expect(structure(graph)).toEqual(structure(reference))
+  }
+  const waiting = project('running', { code: 'waiting_for_input', label: 'Waiting for input' }).nodes[0]
+  expect(waiting.className).toContain('failed')
+  expect(waiting.data.status).toBe('Waiting for input')
+  const rejected = graphFor(snapshot([], [review('first', 1, 'rejected')]), [], []).nodes.find(node => node.id === 'planned-review:run:final')!
+  expect(rejected.className).toContain('success')
+  expect(rejected.data.status).toBe('returned — changes requested')
+  const interrupted = graphFor(snapshot([call('initial', 'alpha', 'task_worker', ['initial'], 'interrupted')]), [], []).nodes[0]
+  expect(interrupted.className).toContain('failed')
+  expect(interrupted.data.status).toBe('interrupted')
+  base.occurrences = [{ ref: 'stop', run_ref: 'run', phase_ref: 'terminal', phase: 'terminal', task_ref: null, role: 'non_model', outcome: 'interrupted', completeness: 'complete', record_refs: [], stopping: true }]
+  const stopped = graphFor(base, [], [])
+  expect(stopped.nodes.find(node => node.id === 'stop')?.className).toContain('failed')
+  expect(stopped.nodes[0].data.status).toBe('Not started; run stopped')
 })
 
 test('declared and recorded relations have different semantics and reject missing or cyclic endpoints', async () => {

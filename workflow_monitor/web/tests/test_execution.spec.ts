@@ -146,12 +146,12 @@ test('ordinary task correction reports its recorded metric role', async ({ page 
 
 test('production computed lifecycle colors and declared recorded mixed connectors', async ({ page }, testInfo) => {
   test.setTimeout(90_000) // Seven production navigations and measured layouts share this test.
-  const colors = [['review-started', 'Review 2', 'rgb(220, 236, 255)'], ['review-waiting', 'Review 2', 'rgb(255, 240, 194)'], ['review-returned', 'Review 2', 'rgb(220, 245, 228)'], ['review-conflict', 'Review 2', 'rgb(238, 242, 246)'], ['before-agent', 'Final review', 'rgb(229, 231, 235)'], ['waiting', 'Task 1', 'rgb(255, 240, 194)']] as const
+  const colors = [['review-started', 'Review 2', 'rgb(220, 236, 255)'], ['review-waiting', 'Review 2', 'rgb(255, 229, 229)'], ['review-returned', 'Review 2', 'rgb(220, 245, 228)'], ['review-conflict', 'Review 2', 'rgb(255, 229, 229)'], ['before-agent', 'Final review', 'rgb(229, 231, 235)'], ['waiting', 'Task 1', 'rgb(255, 229, 229)']] as const
   for (const [run, title, color] of colors) {
     await page.goto(runPage(run))
     const node = page.locator('.react-flow__node').filter({ hasText: title })
     await expect(node).toHaveCSS('background-color', color)
-    expect((await node.getAttribute('class'))?.split(' ').filter(value => ['pending', 'running', 'success', 'failed', 'waiting', 'neutral'].includes(value))).toHaveLength(1)
+    expect((await node.getAttribute('class'))?.split(' ').filter(value => ['pending', 'running', 'success', 'failed'].includes(value))).toHaveLength(1)
   }
   await page.goto(runPage('relation-styles'))
   for (const [kind, stroke, dash] of [['declared', 'rgb(95, 75, 182)', '6px, 4px'], ['recorded', 'rgb(23, 105, 170)', 'none'], ['mixed', 'rgb(40, 117, 107)', '8px, 3px, 2px, 3px']] as const) {

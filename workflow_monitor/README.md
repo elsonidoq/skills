@@ -244,10 +244,11 @@ checkpoints, reviewer approval/findings/ranges, and the existing full-range acce
 qualification. These facts are retained independently of the loaded history page;
 Details explicitly display `true`/`false` for approval and no-change (or `unknown`
 when absent), including when the evidence is beyond the first 50 records. The
-status legend distinguishes grey planned/pending calls, blue recorded-running calls,
-green execution success, red execution failure, amber evidence-backed waiting/blocked,
-and neutral qualified unknown/incomplete state. A green reviewer may still reject;
-worker return is **not acceptance**.
+graph projects calls into four colors: grey not-started, blue qualified recorded-running,
+green returned, and red failed or exceptional states, including waiting, blocked and
+unknown. Node text retains the actual state and qualification; red does not mean every
+exception is a failure. A green reviewer may still reject; worker return is **not acceptance**.
+An unexecuted slot remains not started even when a checkpoint records task completion.
 
 For a complete retained descriptor, each public task also has pre-page `progress`,
 `reason`, and `annotation` facts. Pending means no task work or impediment; running is

@@ -60,8 +60,8 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
   const occurrenceFor = (activity: Activity) => occurrences.find(item => item.run_ref === activity.run_ref && item.ref === activity.occurrence_ref)
   const presentation = (summary: ExecutionSummary | undefined, outcome: string, rejected = false) => {
     const state = summary?.state ?? (['returned', 'approved', 'rejected'].includes(outcome) ? 'success' : outcome === 'failed' ? 'failure' : 'unknown')
-    return { lifecycle: state === 'failure' ? 'failed' : state === 'unknown' ? 'neutral' : state,
-      status: state === 'success' ? rejected ? 'returned — changes requested' : 'returned — acceptance not established' : state === 'failure' ? 'failed' : `${state}${summary?.qualification ? ` — ${qualificationText(summary.qualification)}` : ''}` }
+    return { lifecycle: state === 'success' ? 'success' : state === 'running' && summary?.qualification === 'recorded_running' ? 'running' : 'failed',
+      status: state === 'success' ? rejected ? 'returned — changes requested' : 'returned — acceptance not established' : state === 'failure' ? 'failed' : `${!summary && outcome === 'interrupted' ? 'interrupted' : state}${summary?.qualification ? ` — ${qualificationText(summary.qualification)}` : ''}` }
   }
   const reviewPresentation = (execution: ChainExecution) => {
     const observed = occurrences.filter(item => item.run_ref === execution.run_ref && (execution.occurrence_refs.includes(item.ref) || activities.some(activity => activity.run_ref === execution.run_ref && activity.role === 'reviewer' && activity.invocation_id === execution.execution_id && activity.occurrence_ref === item.ref)))
@@ -85,9 +85,11 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     const unresolved = matches.length > 1 || (!matched && possibleRoots.length > 0)
     const occurrence = matched?.occurrence_ref ? occurrences.find(item => item.run_ref === matched.run_ref && item.ref === matched.occurrence_ref) : undefined
     const qualified = occurrence?.execution_summary
-    const state = matched ? qualified ? outcomeText(occurrence!, root.records) : matched.outcome === 'returned' ? 'returned — acceptance not established' : matched.outcome : unresolved ? 'unknown — initial worker reconciliation ambiguous' : task.annotation?.label ?? task.progress?.state ?? 'planned — not started'
+    const progress = task.progress?.state ?? 'pending'
+    const waiting = task.annotation?.code === 'waiting_for_input' || task.progress?.qualification === 'waiting_for_input'
+    const state = matched ? qualified ? outcomeText(occurrence!, root.records) : matched.outcome === 'returned' ? 'returned — acceptance not established' : matched.outcome : unresolved ? 'unknown — initial worker reconciliation ambiguous' : waiting ? task.annotation?.label ?? 'Waiting for input' : progress === 'pending' || progress === 'completed' ? task.annotation?.label ?? (runStopped(task.run_ref) ? 'Not started; run stopped' : 'Not started') : task.annotation?.label ?? progress
     const qualification = unresolved ? 'Initial worker reconciliation ambiguous or incomplete; distinct recorded calls remain separate.' : qualified?.qualification ? qualificationText(qualified.qualification) : null
-    const lifecycle = matched ? presentation(qualified, matched.outcome).lifecycle : unresolved ? 'neutral' : task.annotation?.code === 'waiting_for_input' || task.progress?.state === 'blocked' ? 'waiting' : task.progress?.state === 'running' ? 'running' : task.progress?.state === 'unknown' ? 'neutral' : 'pending'
+    const lifecycle = matched ? presentation(qualified, matched.outcome).lifecycle : unresolved || waiting || !['pending', 'completed'].includes(progress) ? 'failed' : 'pending'
     return { id: slotFor(task), position: { x: 0, y: 0 }, data: { label: `${designation(task)} — Worker — ${taskTitle(task)}`, status: state, identity: { ref: task.ref, runRef: task.run_ref, taskId: task.task_id ?? null, planned: true, invocationId: matched?.invocation_id ?? null }, relationQualification: qualification }, className: `execution-node planned-call ${lifecycle}` } satisfies Node
   })
   const reviewFor = (definition: ReviewDefinition) => `planned-review:${definition.run_ref}:${definition.ref}`
@@ -98,8 +100,8 @@ export function graphFor(root: GraphSnapshot, lineage: GraphSnapshot[], _relatio
     const matched = executionIds.size === 1 ? candidates[0] : undefined
     if (matched) boundReview.set(matched.ref, reviewFor(definition))
     const observed = matched ? reviewPresentation(matched) : undefined
-    const state = observed?.status ?? (candidates.length > 1 ? 'unknown — initial review reconciliation ambiguous' : runStopped(definition.run_ref) ? 'Not started; run stopped' : 'planned — not started')
-    return { id: reviewFor(definition), position: { x: 0, y: 0 }, data: { label: 'Final review — Independent reviewer', status: state, identity: { ref: definition.ref, runRef: definition.run_ref, planned: true, executionId: matched?.execution_id ?? null }, relationQualification: candidates.length > 1 ? 'Initial review reconciliation ambiguous; distinct recorded reviews remain separate.' : null }, className: `execution-node planned-review ${observed?.lifecycle ?? (candidates.length > 1 ? 'neutral' : 'pending')}` } satisfies Node
+    const state = observed?.status ?? (candidates.length > 1 ? 'unknown — initial review reconciliation ambiguous' : runStopped(definition.run_ref) ? 'Not started; run stopped' : 'Not started')
+    return { id: reviewFor(definition), position: { x: 0, y: 0 }, data: { label: 'Final review — Independent reviewer', status: state, identity: { ref: definition.ref, runRef: definition.run_ref, planned: true, executionId: matched?.execution_id ?? null }, relationQualification: candidates.length > 1 ? 'Initial review reconciliation ambiguous; distinct recorded reviews remain separate.' : null }, className: `execution-node planned-review ${observed?.lifecycle ?? (candidates.length > 1 ? 'failed' : 'pending')}` } satisfies Node
   })
 
   // A review dispatch may be unobserved. Its retained execution ID is still the
