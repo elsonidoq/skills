@@ -751,9 +751,9 @@ class Engine:
             raise _ReviewFormat('reviewer result needs boolean approved, findings string list, and optional suggestions string list')
         # Findings are repair dispatch inputs, not a severity vocabulary.  Each must say
         # where the defect is, its concrete impact, and why it violates accepted work.
-        pattern = re.compile(r'^\S+:\d+(?:-\d+)?\s+-\s+\S')
+        pattern = re.compile(r'^\S+:\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*\s+-\s+\S')
         if any(not pattern.match(item.strip()) for item in findings):
-            raise _ReviewFormat('review blocker needs a path:line or path:start-end location and concrete defect/impact')
+            raise _ReviewFormat('review blocker needs a path:line or path:start-end[,start-end] location and concrete defect/impact')
         # Basis is described in ordinary defect prose, not a mandatory suffix.
         result = {'approved': value['approved'], 'findings': findings, 'suggestions': suggestions}
         if require_coverage or 'coverage' in value or 'coverage_gaps' in value:

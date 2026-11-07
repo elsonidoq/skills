@@ -1324,6 +1324,12 @@ class ReviewBoundaryRegressionTests(ProjectTest):
             self.assertEqual(observed['review_chain']['executions'][-1]['findings'], [])
             self.assertNotIn('PRIVATE-SAVED-SESSION', rendered)
 
+    def test_compound_finding_locations_preserve_verdict(self):
+        finding = 'file.py:12-14,20-22 - missing validation crashes requests'
+        verdict = {'approved': False, 'findings': [finding], 'coverage': ['checked producer'],
+                   'coverage_gaps': ['consumer not checked'], 'suggestions': ['rename later']}
+        self.assertEqual(Engine._review_value(json.dumps(verdict), require_coverage=True), verdict)
+
     def test_compatible_findings_need_no_literal_basis_suffix(self):
         finding = 'file.py:12 - dereferencing the missing record crashes requests'
         self.assertEqual(Engine._review_value(json.dumps({'approved': False, 'findings': [finding]})),
