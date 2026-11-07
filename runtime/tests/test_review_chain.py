@@ -2,6 +2,7 @@
 import contextlib
 import io
 import json
+import re
 from pathlib import Path
 from unittest.mock import patch
 
@@ -309,7 +310,7 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
 
     def _start(self, verdicts):
         test = self
-        self.verdicts, self.calls = list(verdicts), []
+        self.verdicts, self.calls, self.review_outputs = list(verdicts), [], []
         self.contract = admit({'review_base': self.base, 'tasks': [{
             'id': 'task', 'description': 'local fixture', 'owned_paths': ['owned.txt'],
             'checks': [{'command': 'test -f owned.txt && printf PRIVATE-CHECK-$(printf COMMAND)'},
@@ -321,6 +322,7 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     test.calls.append(('reviewer', prompt))
+                    test.review_outputs.append([Path(path).read_text() for path in re.findall(r'private full output file (\S+\.txt)', prompt)])
                     return json.dumps(test.verdicts.pop(0))
                 repair = 'Actionable findings:' in prompt
                 test.calls.append(('fixer' if repair else 'worker', prompt))
@@ -602,10 +604,12 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
             self.assertIn('worker-reported', prompt)
             self.assertIn('task task', prompt)
             self.assertIn('result checkpoint ' + self.head.decode().strip(), prompt)
-            self.assertIn('output "PRIVATE-CHECK-COMMAND"', prompt)
-            self.assertIn('output "PRIVATE-CHECK-ARGV"', prompt)
+            self.assertIn('output private full output file ', prompt)
             self.assertNotIn('GAP: no retained execution', prompt)
             self.assertIn('verified checkpoint ' + self.head.decode().strip(), prompt)
+        for outputs in self.review_outputs:
+            self.assertIn('PRIVATE-CHECK-COMMAND', outputs)
+            self.assertIn('PRIVATE-CHECK-ARGV', outputs)
         prompt = self.calls[-1][1]
         self.assertIn('Evidence reassessment:', prompt)
         self.assertIn('source inspected', prompt)
@@ -938,7 +942,7 @@ class BoundedChainTests(ProjectTest):
                 self.assertIn(finding, repair_inputs[0])
 
     def test_actionable_rejection_repairs_once_then_fresh_rereview(self):
-        project, calls = self.project, []
+        project, calls, review_outputs = self.project, [], []
         project.joinpath('unrelated.txt').write_text('intervening\n')
         from coherence_workflow.store import git
         git(project, 'add', '--', 'unrelated.txt')
@@ -954,6 +958,7 @@ class BoundedChainTests(ProjectTest):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
                     calls.append(('review', id(self), kwargs, _prompt))
+                    review_outputs.append([Path(path).read_text() for path in re.findall(r'private full output file (\S+\.txt)', _prompt)])
                     return '```json\n{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - synthetic defect [basis: correctness]"]}\n```' if Adapter.reviews == 1 else '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if 'Actionable findings:' in _prompt:
                     Adapter.fixer_prompts += 1
@@ -1000,9 +1005,10 @@ class BoundedChainTests(ProjectTest):
                       ', changed paths ["owned.txt"]', review_prompts[1])
         for prompt in review_prompts:
             self.assertIn('Retained required-check evidence (private', prompt)
-            self.assertIn('REVIEW-OUTPUT-SENTINEL', prompt)
+            self.assertIn('output private full output file ', prompt)
             self.assertIn('verified checkpoint', prompt)
             self.assertIn('read-only inability to rerun does not negate a valid retained pass', prompt)
+        self.assertTrue(all('REVIEW-OUTPUT-SENTINEL' in outputs for outputs in review_outputs))
         self.assertNotIn('REVIEW-OUTPUT-SENTINEL', json.dumps(status(project, 'repaired')))
         self.assertNotIn('REVIEW-OUTPUT-SENTINEL', json.dumps(observations))
 

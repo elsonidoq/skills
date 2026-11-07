@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import stat
+import tempfile
 import uuid
 
 from .git_effects import FocusedGit, MetricArtifactFinalizer, _commit_result, path_has_preexisting_changes
@@ -785,7 +786,7 @@ class Engine:
             selected.append(value)
         return selected
 
-    def _review_check_evidence(self):
+    def _review_check_evidence(self, *, output_dir=None):
         """Give reviewers private retained check facts, never inferred completion claims."""
         rows = []
         for row in self.authority.store.db.execute(
@@ -838,8 +839,18 @@ class Engine:
                     continue
                 for attempt in matching:
                     fact = attempt['details']
+                    output = fact.get('output')
+                    if output_dir is None:
+                        output_ref = canonical(output)
+                    else:
+                        if not isinstance(output, str):
+                            raise Blocked('retained check output is missing or invalid; inspect required check history before review')
+                        path = Path(output_dir) / ('check-' + str(attempt['seq']) + '.txt')
+                        if not path.exists():
+                            path.write_text(output, encoding='utf-8')
+                        output_ref = 'private full output file ' + str(path)
                     section.append('Retained ' + attempt['state'] + ' execution: command ' + canonical(fact.get('command')) +
-                                   ', exit ' + str(fact.get('exit_code')) + ', output ' + canonical(fact.get('output')) + '.')
+                                   ', exit ' + str(fact.get('exit_code')) + ', output ' + output_ref + '.')
                 if not any(attempt['state'] == 'passed' for attempt in matching):
                     section.append('GAP: required command has no retained passing execution; a zero exit or clean tree is not substituted.')
             sections.append('\n'.join(section))
@@ -929,7 +940,7 @@ class Engine:
 
     def _review(self, *, recorder, review_base, head, ordinal, fixing_round=0,
                 trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None,
-                execution_id=None, refresh_target=False):
+                execution_id=None, refresh_target=False, retry_limit=None):
         """Dispatch exactly one fresh read-only reviewer and retain its actual outcome."""
         store = self.authority.store
         execution_id = execution_id or uuid.uuid4().hex
@@ -938,7 +949,7 @@ class Engine:
                                                              review_head=head)
             ordinal, fixing_round = refreshed['review_ordinal'], refreshed['fixing_round']
             trigger_execution_id = predecessor_execution_id = refreshed['trigger_execution_id']
-        else:
+        elif retry_limit is None:
             store.review_dispatch(self.run, execution_id, role='reviewer', review_ordinal=ordinal,
                                   fixing_round=fixing_round, trigger_execution_id=trigger_execution_id,
                                   predecessor_execution_id=predecessor_execution_id,
@@ -992,8 +1003,10 @@ class Engine:
                     'summary': prior_summary if prior_summary is not None else {
                         'coverage': [], 'coverage_gaps': ['Historical review has no explicit coverage; establish original coverage before approval.']}}) + '\n')
         diff = git(self.authority.project, 'diff', '--no-ext-diff', '--no-textconv', diff_base + '..' + head).decode(errors='replace')
+        evidence_dir = tempfile.mkdtemp(prefix='coherence-review-')
+        retry_dispatched = False
         try:
-            text = reviewer.prompt('Independently review the actual committed range below against the requested tasks. '
+            prompt = ('Independently review the actual committed range below against the requested tasks. '
                 'You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, '
                 'so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. '
                 + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority()
@@ -1009,10 +1022,18 @@ class Engine:
                 'Evaluate retained check evidence semantically: distinguish actual passing execution, failed or missing required execution, and an inability to rerun because you are read-only. Do not invent a live check; a read-only inability to rerun does not negate a valid retained pass.\n'
                 'Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
                 '\nReview delta: ' + diff_base + '..' + head + '\nDiff:\n' + diff + '\n' + self._review_attribution(review_base, head) +
-                '\n' + self._review_check_evidence() + '\n' + self._review_worker_evidence()[0],
-                read_only=True)
+                '\nFull check outputs are in the private files referenced below; read relevant files with the read tool and continue long reads with offsets. '
+                + self._review_check_evidence(output_dir=evidence_dir) + '\n' + self._review_worker_evidence()[0])
+            if retry_limit is not None:
+                if len(prompt) > retry_limit:
+                    raise Blocked('corrected review payload still exceeds the reported provider field limit; inspect retained evidence delivery')
+                store.review_size_retry_dispatch(self.run, execution_id, review_base=review_base, review_head=head)
+                retry_dispatched = True
+            text = reviewer.prompt(prompt, read_only=True)
             value = self._review_value(text, require_coverage=True)
         except BaseException as exc:
+            if retry_limit is not None and not retry_dispatched:
+                raise
             state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
             store.review_outcome(self.run, execution_id, state, findings=[], suggestions=[],
                                  uncertainty=state != 'failed' or isinstance(exc, _ReviewFormat),
@@ -1192,6 +1213,37 @@ class Engine:
                         recovered=recovered)
                 continue
             review = value(last)
+            if (self.resume and last['role'] == 'reviewer' and last['state'] == 'failed' and
+                    not last['uncertain'] and last['attempt_count'] == 2 and
+                    last['references'].get('failure_category') == 'transport'):
+                failure = store.db.execute("SELECT details,recorded_at FROM execution_history WHERE run_id=? AND kind='invocation' AND state='failed' ORDER BY seq DESC LIMIT 1", (self.run,)).fetchone()
+                try:
+                    details = json.loads(failure['details']) if failure else {}
+                except (TypeError, ValueError):
+                    details = {}
+                match = re.fullmatch(r"SDK operation failed: Codex error: Invalid response\.create payload: Invalid 'input\[0\]\.content\[0\]\.text': string too long\. Expected a string with maximum length (\d+), but got a string with length (\d+) instead\.", details.get('error', ''))
+                head = last['references'].get('head')
+                attempts = store.db.execute('SELECT state,uncertainty,recorded_at FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq', (self.run, last['execution_id'])).fetchall()
+                dispatch = store.db.execute('SELECT review_base,review_head FROM execution_review_executions WHERE run_id=? AND execution_id=?', (self.run, last['execution_id'])).fetchone()
+                saved = store.input(self.run)
+                predecessor = executions[-2] if len(executions) > 1 else None
+                causal = ((predecessor is None and last['review_ordinal'] == 1 and last['fixing_round'] == 0 and last['trigger_execution_id'] is None and last['predecessor_execution_id'] is None) or
+                          (predecessor is not None and predecessor['role'] == 'fixer' and predecessor['state'] == 'approved' and
+                           last['trigger_execution_id'] == predecessor['execution_id'] and last['predecessor_execution_id'] == predecessor['execution_id'] and
+                           last['review_ordinal'] == predecessor['review_ordinal'] + 1 and last['fixing_round'] == predecessor['fixing_round'] and
+                           predecessor['references'].get('head') == head))
+                if (match and int(match.group(2)) > int(match.group(1)) and
+                        [tuple(row)[:2] for row in attempts] == [('dispatched', 0), ('failed', 0)] and
+                        dispatch is not None and tuple(dispatch) == (review_base, head) and failure['recorded_at'] >= attempts[-1]['recorded_at'] and
+                        details.get('result') == head and last['references'].get('base') == review_base and
+                        saved and saved['contract'] == self.contract and saved['review_base'] == review_base and causal):
+                    if git(self.authority.project, 'rev-parse', 'HEAD').decode().strip() != head or git(self.authority.project, 'status', '--porcelain=v1', '--untracked-files=no'):
+                        raise Blocked('review delivery target drifted; inspect the reviewed target before continuation')
+                    self._review(recorder=recorder, review_base=review_base, head=head, ordinal=last['review_ordinal'],
+                                 fixing_round=last['fixing_round'], trigger_execution_id=last['trigger_execution_id'],
+                                 predecessor_execution_id=last['predecessor_execution_id'], input_checkpoints=last.get('input_checkpoints'),
+                                 execution_id=last['execution_id'], retry_limit=int(match.group(1)))
+                    continue
             if last['role'] == 'reviewer':
                 if last['state'] == 'approved':
                     return complete(last, review)
