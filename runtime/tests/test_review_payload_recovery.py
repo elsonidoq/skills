@@ -76,6 +76,40 @@ class ReviewPayloadRecoveryTests(ProjectTest):
         self.assertEqual(chain['executions'][-1]['review_ordinal'], 2)
         self.assertEqual(chain['executions'][-1]['fixing_round'], 1)
 
+    def test_local_pre_dispatch_failure_does_not_replace_original_size_cause(self):
+        adapter = self.start_failed()
+        target = self.project / 'owned.txt'
+        original = target.read_bytes()
+        head = git(self.project, 'rev-parse', 'HEAD')
+        target.write_bytes(original + b'local uncommitted change\n')
+        with Authority(self.project) as owner:
+            owner.store.resume('run')
+            with self.assertRaisesRegex(Blocked, 'target drifted'):
+                Engine(owner, 'run', self.contract, EXECUTOR, adapter=adapter, resume=True).invoke()
+            chain = owner.store.review_chain('run', private=True)
+            review_id = chain['executions'][-1]['execution_id']
+            self.assertEqual(chain['executions'][-1]['attempt_count'], 2)
+            failures = [json.loads(row['details'])['error'] for row in owner.store.db.execute(
+                "select details from execution_history where run_id='run' and kind='invocation' and state='failed' order by seq")]
+            self.assertIn('string too long', failures[-2])
+            self.assertIn('target drifted', failures[-1])
+        target.write_bytes(original)
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), head)
+        with Authority(self.project) as owner:
+            owner.store.resume('run')
+            result = Engine(owner, 'run', self.contract, EXECUTOR, adapter=adapter, resume=True).invoke()
+            chain = owner.store.review_chain('run', private=True)
+            attempts = [row['state'] for row in owner.store.db.execute(
+                'select state from execution_review_attempts where run_id=? and execution_id=? order by seq',
+                ('run', review_id))]
+            failures_after = [json.loads(row['details'])['error'] for row in owner.store.db.execute(
+                "select details from execution_history where run_id='run' and kind='invocation' and state='failed' order by seq")]
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(chain['executions'][-1]['execution_id'], review_id)
+        self.assertEqual(attempts, ['dispatched', 'failed', 'dispatched', 'approved'])
+        self.assertEqual(failures_after, failures)
+        self.assertEqual(self.calls, ['worker', 'review', 'fixer', 'review', 'review'])
+
     def test_unknown_transport_and_wrong_scope_remain_blocked(self):
         adapter = self.start_failed()
         with Authority(self.project) as owner:
@@ -87,6 +121,36 @@ class ReviewPayloadRecoveryTests(ProjectTest):
             with self.assertRaisesRegex(Blocked, 'not an actionable rejection'):
                 Engine(owner, 'run', self.contract, EXECUTOR, adapter=adapter, resume=True).invoke()
         self.assertEqual(self.calls, ['worker', 'review', 'fixer', 'review'])
+
+    def test_missing_associated_invocation_failure_stays_blocked(self):
+        adapter = self.start_failed()
+        with Authority(self.project) as owner:
+            owner.store.db.execute("delete from execution_history where run_id='run' and kind='invocation' and state='failed'")
+            owner.store.resume('run')
+            with self.assertRaisesRegex(Blocked, 'not an actionable rejection'):
+                Engine(owner, 'run', self.contract, EXECUTOR, adapter=adapter, resume=True).invoke()
+        self.assertEqual(self.calls, ['worker', 'review', 'fixer', 'review'])
+
+    def test_new_unknown_provider_failure_is_not_retried(self):
+        adapter = self.start_failed()
+        fixture = self
+        class FailedRetry(adapter):
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    fixture.calls.append('unknown review failure')
+                    raise Blocked('SDK operation failed: unknown transport')
+                return super().prompt(prompt, **kwargs)
+        with Authority(self.project) as owner:
+            owner.store.resume('run')
+            with self.assertRaisesRegex(Blocked, 'unknown transport'):
+                Engine(owner, 'run', self.contract, EXECUTOR, adapter=FailedRetry, resume=True).invoke()
+            chain = owner.store.review_chain('run', private=True)
+            self.assertEqual(chain['executions'][-1]['attempt_count'], 4)
+        with Authority(self.project) as owner:
+            owner.store.resume('run')
+            with self.assertRaisesRegex(Blocked, 'not an actionable rejection'):
+                Engine(owner, 'run', self.contract, EXECUTOR, adapter=FailedRetry, resume=True).invoke()
+        self.assertEqual(self.calls, ['worker', 'review', 'fixer', 'review', 'unknown review failure'])
 
     def test_missing_check_output_remains_blocked_before_dispatch(self):
         adapter = self.start_failed()

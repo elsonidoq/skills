@@ -1216,14 +1216,16 @@ class Engine:
             if (self.resume and last['role'] == 'reviewer' and last['state'] == 'failed' and
                     not last['uncertain'] and last['attempt_count'] == 2 and
                     last['references'].get('failure_category') == 'transport'):
-                failure = store.db.execute("SELECT details,recorded_at FROM execution_history WHERE run_id=? AND kind='invocation' AND state='failed' ORDER BY seq DESC LIMIT 1", (self.run,)).fetchone()
+                head = last['references'].get('head')
+                attempts = store.db.execute('SELECT state,uncertainty,recorded_at FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq', (self.run, last['execution_id'])).fetchall()
+                # The first invocation boundary after this review attempt is its
+                # outcome; later resume failures must not replace its cause.
+                failure = store.db.execute("SELECT state,details,recorded_at FROM execution_history WHERE run_id=? AND kind='invocation' AND recorded_at>=? ORDER BY seq LIMIT 1", (self.run, attempts[-1]['recorded_at'])).fetchone() if attempts else None
                 try:
-                    details = json.loads(failure['details']) if failure else {}
+                    details = json.loads(failure['details']) if failure and failure['state'] == 'failed' else {}
                 except (TypeError, ValueError):
                     details = {}
                 match = re.fullmatch(r"SDK operation failed: Codex error: Invalid response\.create payload: Invalid 'input\[0\]\.content\[0\]\.text': string too long\. Expected a string with maximum length (\d+), but got a string with length (\d+) instead\.", details.get('error', ''))
-                head = last['references'].get('head')
-                attempts = store.db.execute('SELECT state,uncertainty,recorded_at FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq', (self.run, last['execution_id'])).fetchall()
                 dispatch = store.db.execute('SELECT review_base,review_head FROM execution_review_executions WHERE run_id=? AND execution_id=?', (self.run, last['execution_id'])).fetchone()
                 saved = store.input(self.run)
                 predecessor = executions[-2] if len(executions) > 1 else None
