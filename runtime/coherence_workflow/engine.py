@@ -4,6 +4,7 @@ import inspect
 import json
 import math
 import os
+from pathlib import Path
 import re
 import stat
 import uuid
@@ -1015,7 +1016,8 @@ class Engine:
             state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
             store.review_outcome(self.run, execution_id, state, findings=[], suggestions=[],
                                  uncertainty=state != 'failed' or isinstance(exc, _ReviewFormat),
-                                 references={'base': review_base, 'head': head})
+                                 references={'base': review_base, 'head': head,
+                                             'failure_category': 'malformed' if isinstance(exc, _ReviewFormat) else _failure(exc)})
             recorder.emit(execution_id, 'review', state, facts={
                 'role': 'reviewer', 'execution_id': execution_id, 'review_ordinal': ordinal,
                 'review_base': review_base, 'review_head': head, 'outcome': state,
@@ -1044,6 +1046,106 @@ class Engine:
         recorder.emit(execution_id, 'review', 'passed' if state == 'approved' else 'failed', facts=review_facts)
         return execution_id, value, state
 
+    def _recover_format_rejection(self, chain, review_base):
+        """Recover only an explicitly supplied compatible completed initial review artifact."""
+        items = chain['executions']
+        if not self.resume or len(items) != 1:
+            return False
+        item = items[0]
+        if (item['role'] != 'reviewer' or item['review_ordinal'] != 1 or item['fixing_round'] != 0 or
+                item['state'] != 'failed' or not item['uncertain'] or item['attempt_count'] != 2 or
+                item['references'].get('base') != review_base):
+            return False
+        head = item['references'].get('head')
+        store = self.authority.store
+        dispatch = store.db.execute('SELECT review_base,review_head,trigger_execution_id,predecessor_execution_id '
+            'FROM execution_review_executions WHERE run_id=? AND execution_id=?',
+            (self.run, item['execution_id'])).fetchone()
+        attempts = store.db.execute('SELECT state,uncertainty FROM execution_review_attempts '
+            'WHERE run_id=? AND execution_id=? ORDER BY seq', (self.run, item['execution_id'])).fetchall()
+        if (dispatch is None or tuple(dispatch) != (review_base, head, None, None) or
+                [tuple(row) for row in attempts] != [('dispatched', 0), ('failed', 1)]):
+            raise Blocked('review recovery dispatch or failed attempt mismatch; inspect retained review history')
+        # A retained failure category establishes the cause, not session identity.
+        # Older attempts may have only an observation of that category.
+        categories = [item['references'].get('failure_category')]
+        observations = store.db.execute('SELECT facts FROM execution_observations WHERE run_id=? '
+            "AND occurrence_id=? AND phase='review' AND kind='failed'", (self.run, item['execution_id'])).fetchall()
+        for row in observations:
+            try:
+                categories.append(json.loads(row['facts']).get('error_category'))
+            except (ValueError, TypeError, AttributeError):
+                pass
+        categories = [category for category in categories if category is not None]
+        if not categories or any(category != 'malformed' for category in categories):
+            raise Blocked('review recovery failure cause is not known to be format-related; inspect the original transport')
+        project = self.authority.project
+        if not isinstance(head, str) or git(project, 'rev-parse', 'HEAD').decode().strip() != head:
+            raise Blocked('review recovery target drifted; inspect the original reviewed head before continuation')
+        if git(project, 'status', '--porcelain=v1', '--untracked-files=no'):
+            raise Blocked('review recovery target has tracked changes; preserve and reconcile them before continuation')
+        path = self.question('A first read-only review has an uncertain failed outcome. If inspection found its exact completed '
+            'reviewer transcript with a compound-location format failure, provide its path; otherwise leave empty to stop. '
+            'The artifact will be checked against the original task scope, review range and committed diff; this does not '
+            'assert a historically retained session link. Execution: ' + item['execution_id'])
+        if not isinstance(path, str) or not path.strip():
+            raise Blocked('review recovery needs the exact completed reviewer transcript; inspect the failed invocation')
+        try:
+            entries = [json.loads(line) for line in Path(path.strip()).read_text(encoding='utf-8').splitlines()]
+            if len(entries) < 3 or entries[0].get('type') != 'session' or Path(entries[0].get('cwd', '')).resolve() != Path(project).resolve():
+                raise ValueError('session or project mismatch')
+            previous = None
+            for entry in entries[1:]:
+                if not isinstance(entry, dict) or not isinstance(entry.get('id'), str) or entry.get('parentId') != previous:
+                    raise ValueError('ambiguous transcript chain')
+                previous = entry['id']
+            messages = [entry.get('message') for entry in entries if entry.get('type') == 'message']
+            if not all(isinstance(message, dict) for message in messages):
+                raise ValueError('invalid transcript message')
+            users = [message for message in messages if message.get('role') == 'user']
+            final = messages[-1]
+            if len(users) != 1 or final.get('role') != 'assistant' or final.get('stopReason') != 'stop':
+                raise ValueError('missing completed reviewer return')
+            user_content, final_content = users[0].get('content'), final.get('content')
+            if (not isinstance(user_content, list) or len(user_content) != 1 or user_content[0].get('type') != 'text' or
+                    not isinstance(final_content, list) or len(final_content) != 1 or final_content[0].get('type') != 'text'):
+                raise ValueError('ambiguous reviewer prompt or return')
+            prompt, text = user_content[0]['text'], final_content[0]['text']
+            if not isinstance(prompt, str) or not isinstance(text, str):
+                raise ValueError('invalid reviewer prompt or return')
+            for message in messages:
+                if message.get('role') == 'assistant':
+                    for part in message.get('content', []):
+                        if part.get('type') == 'toolCall' and part.get('name') not in ('read', 'grep', 'find', 'ls'):
+                            raise ValueError('review used a non-read-only tool')
+            diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', review_base + '..' + head).decode(errors='replace')
+            scope = ('Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
+                     '\nReview delta: ' + review_base + '..' + head + '\nDiff:\n' + diff + '\n')
+            if (not prompt.startswith('Independently review the actual committed range below against the requested tasks.') or
+                    'You are read-only and are NOT the implementation conversation.' not in prompt or
+                    'Initial review: examine the complete requested change' not in prompt or prompt.count(scope) != 1):
+                raise ValueError('initial review scope, range, or diff mismatch')
+            raw = text.strip()
+            if raw.startswith('```') and raw.endswith('```'):
+                raw = raw.split('\n', 1)[1].rsplit('```', 1)[0].strip()
+            original = json.loads(raw)
+            value = self._review_value(text, require_coverage=True)
+            legacy = re.compile(r'^\S+:\d+(?:-\d+)?\s+-\s+\S')
+            if (original.get('approved') is not False or not value['findings'] or
+                    any(original.get(key) != value[key] for key in ('coverage', 'coverage_gaps')) or
+                    all(legacy.match(finding.strip()) for finding in value['findings'])):
+                raise ValueError('not an actionable compound-location rejection')
+        except (OSError, UnicodeError, ValueError, TypeError, KeyError, IndexError, AttributeError, _ReviewFormat) as exc:
+            raise Blocked('review recovery artifact is invalid or incompatible; inspect the exact completed reviewer transcript: ' + str(exc)) from None
+        if git(project, 'rev-parse', 'HEAD').decode().strip() != head or git(project, 'status', '--porcelain=v1', '--untracked-files=no'):
+            raise Blocked('review recovery target drifted during inspection; reconcile before continuation')
+        store.review_outcome(self.run, item['execution_id'], 'rejected', findings=value['findings'],
+            suggestions=value['suggestions'], references={'base': review_base, 'head': head,
+                'review_summary': {key: value[key] for key in ('coverage', 'coverage_gaps')},
+                'diff_base': review_base, 'prior_review': None,
+                'recovery': 'coordinator supplied compatible completed initial review artifact; original session linkage not retained'})
+        return True
+
     def _finish_reviews(self, *, recorder, terminal, checkpoints, base, review_base, terminal_stop=None):
         """Select the last eligible persisted stage; owner grants add one pair only."""
         store = self.authority.store
@@ -1068,6 +1170,8 @@ class Engine:
         while True:
             chain = store.review_chain(self.run, private=True)
             if chain['uncertain']:
+                if self._recover_format_rejection(chain, review_base):
+                    continue
                 raise Blocked('review invocation outcome is uncertain; inspect it before any replay')
             executions = chain['executions']
             if not executions:
