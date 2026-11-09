@@ -278,6 +278,64 @@ processes or provisions/signals cgroups.
 
 `resume --project ROOT --run ID` is explicit only for a retained failed or interrupted run. Under the ordinary writer lock it inspects retained invocation/cause and original inputs, preserves the original contract/order, executor, paid scope, review base and attempts, skips only checkpointed tasks with matching operation history, and continues unfinished work or the exact eligible review/fix stage. It never compares the worktree, HEAD, index or outputs as admission, repeats a completed checkpoint, replaces a known live writer, resets consumed review slots, or asks again for unchanged paid scope. Missing original/checkpoint history, uncertain completed effects, or uncertain review invocation reports that precise limit. An unfinished task may continue only with its retained task-local source paths and known generated artifacts; those facts permit a selective file cleanup, never adoption or deletion of unknown output. Its exact saved worker-session dispatch history also retains the initial-plus-two allowance across reopen; missing/uncertain identity or history stops that continuation for inspection rather than resetting the allowance.
 
+### Accept an owner-authorized external same-task completion
+
+When an inspected task session is exhausted and an explicitly owner-authorized external worker has
+already completed that **same task**, use `recover-task`, then normal `resume`. Do not replay the
+old session, change the retained executor, edit SQLite, create a replacement workflow, or make a fake
+source edit. This action launches no model. It checkpoints only the next unfinished task, after its
+dependencies, with the original required commands and manual gates. Independent full-range review
+still follows normal continuation; a supplied external summary is a worker report, not acceptance proof.
+
+First settle the failed invocation and writer, inspect its actual cause/session and the external diff
+and original semantic acceptance, and obtain actual owner authority for the exact file transfer.
+Prepare private JSON outside task-owned source paths:
+
+```json
+{
+  "task_id": "EXACT_UNFINISHED_TASK",
+  "invocation_id": "LATEST_RETAINED_TASK_INVOCATION_ID",
+  "head": "FULL_CURRENT_GIT_HEAD",
+  "diagnosis": "Inspected failure/cause and why the completed external correction addresses it.",
+  "worker": "Actual external worker identity and provider/model/effort, as known",
+  "summary": "Actual original semantic/manual acceptance outcomes and evidence references; remaining runner stages.",
+  "paths": {"src/exact-file.py": {"sha256": "64_LOWERCASE_HEX_DIGITS_OF_WORKING_FILE", "mode": 420}}
+}
+```
+
+`history` exposes ordinary invocation IDs, not saved private sessions. For each explicitly selected
+regular dirty file, compute SHA256 from its **working bytes** and mode with Python
+`hashlib.sha256(path.read_bytes()).hexdigest()` and `stat.S_IMODE(path.stat().st_mode)` (`420` is
+`0644`). `head` is `git -C ROOT rev-parse HEAD`. Do not infer transfer authority from dirty state or
+prior partial claims. The exact `paths` map alone transfers these already-complete bytes, subject to
+the original optional `owned_paths`; other dirty/staged files remain untouched.
+
+```sh
+scripts/coordinate-implementation history --project /absolute/project --run RETAINED_RUN
+# Only after the actual owner authorizes this inspected exact transfer:
+scripts/coordinate-implementation recover-task --project /absolute/project --run RETAINED_RUN \
+  --recovery /private/same-task-recovery.json --owner-authorized
+# Only after recover-task succeeds; uses original retained executor and review base:
+scripts/coordinate-implementation resume --project /absolute/project --run RETAINED_RUN
+```
+
+`--owner-authorized` asserts actual authority; it does not authenticate a conversation or authorize
+new scope, paid APIs, external effects, or acceptance waivers. The action retains new private
+append-only recovery facts and separate external attribution, never changes old invocation/dispatch
+outcomes or resets their initial-plus-two allowance. It verifies exact source bytes/modes, selected
+index entries and HEAD around checks, and uses normal focused Git hooks/signing. Changed transfer,
+uncertain/live worker, failed check/manual gate or unsafe ownership stops before completion, without
+a provider retry. Correct an ordinary failure within authority, inspect any partial Git effect, and
+explicitly supply the current authorized transfer again. It can reconcile its own exact already-made
+checkpoint after a result-write interruption without recommitting; repeating an identical transfer
+for that checkpoint while the run remains stopped is idempotent. It does not accept deleted files,
+unknown bytes, a different task, or a separately precommitted external change. No schema migration,
+historical backfill, external-worker metric, or fabricated SDK producer is created. Optional monitor
+producer links remain unknown for this external completion. The source CLI supports this action;
+the parent bridge has no new recovery tool. Use the reviewed source launcher explicitly; an installed
+runtime snapshot needs separately authorized updating. For changed global skill discovery in Paseo,
+prepare a fresh-session handoff, not an automatic reload/restart.
+
 For an uncertain failed initial read-only review, explicit resume can ask the coordinator for the exact completed reviewer transcript when inspection identifies the compound-location format failure. The supplied artifact must contain the initial independent read-only prompt, the retained task scope and original range, the exact committed diff, and a complete actionable rejection that the current parser accepts but the former single-range parser rejected. It must contain no writer tool calls. The target HEAD and tracked state must remain unchanged. The runner appends the recovered rejection and preserves the failed attempt, findings, suggestions, coverage and gaps; it does not claim that a session link was historically retained. Missing, ambiguous, interrupted, incompatible or approving artifacts and target drift remain blocked. The retained failure cause must be format-related; absent or conflicting cause evidence leaves transport uncertainty blocked. New attempts retain that cause in required review history; older attempts can use an available failure observation, not a session-identity claim. The normal scoped fixer and fresh cumulative review, including later owner grants, remain required. The coordinator supplies the artifact path through the existing technical question; this is not permission to resume any particular run.
 
 Review prompts summarize retained checks with command, status, exit and checkpoint context, and provide private read-only file paths for complete raw outputs. The reviewer must read relevant outputs, continuing long reads as needed; the original outputs remain in workflow history. Delivery files use a private temporary directory outside the source checkout and are not source checkpoints. On explicit resume only, an exactly retained provider rejection of an oversized single input text field may continue the same failed read-only review stage with a freshly constructed compact payload. The runner verifies the original scope, causal predecessor, reviewed target and reported field limit before dispatch. It appends the new dispatch and result to the same stage; it does not replay tasks or repairs, reuse a failed verdict/session, or grant a new repair. Unknown transport errors, missing output, target drift and an uncorrected payload remain blocked.

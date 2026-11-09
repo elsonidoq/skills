@@ -1379,6 +1379,108 @@ class Engine:
             self._review(recorder=recorder, review_base=review_base, head=head, ordinal=ordinal, fixing_round=round_,
                          trigger_execution_id=last['execution_id'], predecessor_execution_id=last['execution_id'], execution_id=reviewer_id)
 
+    def recover_task(self, recovery, *, owner_authorized=False):
+        """Verify/checkpoint an explicit external same-task completion; never replay its SDK call."""
+        from .processes import inspect_recorded_writers
+        if owner_authorized is not True:
+            raise Blocked('external task recovery requires actual owner authorization; obtain it and supply --owner-authorized')
+        project, store = self.authority.project, self.authority.store
+        inspect_recorded_writers(store.db, 'external task recovery')
+        saved = store.input(self.run)
+        run = store.db.execute('SELECT state FROM execution_runs WHERE run_id=?', (self.run,)).fetchone()
+        if not saved or not run or run['state'] not in ('failed', 'interrupted'):
+            raise Blocked('external task recovery needs a retained failed/interrupted run; inspect status/history first')
+        store.review_policy(self.run)
+        if not isinstance(recovery, dict) or any(not isinstance(recovery.get(key), str) or not recovery[key].strip()
+                for key in ('task_id', 'invocation_id', 'head', 'diagnosis', 'worker', 'summary')):
+            raise Blocked('external task recovery needs task_id, invocation_id, head, inspected diagnosis, external worker attribution and acceptance summary; correct --recovery JSON')
+        paths = recovery.get('paths')
+        if not isinstance(paths, dict) or not paths or any(not isinstance(name, str) or not name or
+                not isinstance(value, dict) or set(value) != {'sha256', 'mode'} or
+                not isinstance(value['sha256'], str) or not re.fullmatch('[0-9a-f]{64}', value['sha256']) or
+                type(value['mode']) is not int for name, value in paths.items()):
+            raise Blocked('external task recovery needs exact regular-file paths with sha256 and mode; correct the explicit transfer')
+        task_id = recovery['task_id']
+        task = next((task for task in saved['contract']['tasks'] if task['id'] == task_id), None)
+        if task is None:
+            raise Blocked('external recovery task is not in retained input; select the exact unfinished task')
+        recovery_id = hashlib.sha256(canonical(recovery).encode()).hexdigest()
+        prior = [(row['state'], json.loads(row['details'])) for row in store.db.execute(
+            "SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='external_recovery' ORDER BY seq",
+            (self.run, task_id))]
+        completed = store.completed_checkpoints(self.run)
+        if task_id in completed:
+            if any(state == 'authorized' and facts.get('recovery_id') == recovery_id for state, facts in prior) and completed[task_id].get('external_recovery_id') == recovery_id:
+                return completed[task_id]
+            raise Blocked('external recovery cannot replace a completed task; retain its checkpoint')
+        first = next((item['id'] for item in saved['contract']['tasks'] if item['id'] not in completed), None)
+        if first != task_id or any(dep not in completed for dep in task.get('depends', [])):
+            raise Blocked('external recovery must checkpoint the next unfinished task after its dependencies; inspect retained progress')
+        calls = {}
+        for row in store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker_invocation' ORDER BY seq", (self.run, task_id)):
+            facts = json.loads(row['details'])
+            calls[facts.get('invocation_id')] = (row['state'], facts)
+        if not calls or any(state not in ('failed', 'interrupted', 'returned') for state, _ in calls.values()):
+            raise Blocked('external recovery has uncertain worker terminal history; reconcile the saved invocation before transfer')
+        last_id = next(reversed(calls))
+        if last_id != recovery['invocation_id']:
+            raise Blocked('external recovery invocation is not the latest inspected task call; correct the transfer reference')
+        # A checkpoint may have completed before its result write. Reconcile only this
+        # retained operation's exact parent, paths and content, never arbitrary HEAD.
+        intent = next((facts for state, facts in reversed(prior) if state == 'checkpoint_started'), None)
+        head = git(project, 'rev-parse', 'HEAD').decode().strip()
+        if head != recovery['head']:
+            if not intent or intent.get('recovery_id') != recovery_id:
+                raise Blocked('external recovery HEAD drifted; inspect the target before a new exact transfer')
+            focused = FocusedGit(project, {**task, 'handoff_paths': []})
+            focused.base = recovery['head']
+            focused.checkpoint_parent, focused.checkpoint_paths = recovery['head'], sorted(paths)
+            checkpoint = focused.reconcile_checkpoint()
+            if checkpoint is None or any(git(project, 'rev-parse', head + ':' + name).decode().strip() != blob
+                                         for name, blob in intent['blobs'].items()):
+                raise Blocked('external recovery checkpoint does not match retained intent; inspect actual Git effects without replay')
+            checks = intent['checks']
+        else:
+            # No prior claim is restored here: every transferred byte is explicitly
+            # selected anew by the owner, including same-task partial work.
+            focused = FocusedGit(project, {**task, 'handoff_paths': sorted(paths)})
+            focused.accept_completed_handoff(paths)
+            index = self._repair_index_state(project, paths)
+            store.history(self.run, task_id, 'external_recovery', 'authorized', {
+                'recovery_id': recovery_id, 'decision': 'affirmative_actual_owner', 'transfer': recovery})
+            manual_gates(task, self.question)
+            checks = run_checks(project, task, lock_fd=self.authority.lock.fileno(),
+                completed=lambda state, attempt: store.history(self.run, task_id, 'check', state, attempt))
+            focused.accept_completed_handoff(paths)
+            if git(project, 'rev-parse', 'HEAD').decode().strip() != recovery['head'] or self._repair_index_state(project, paths) != index:
+                raise Blocked('external recovery target/index drifted during verification; inspect before checkpointing')
+            blobs = self._repair_blobs(project, paths)
+            store.history(self.run, task_id, 'external_recovery', 'checkpoint_started', {
+                'recovery_id': recovery_id, 'checks': checks, 'blobs': blobs})
+            try:
+                checkpoint = focused.checkpoint()
+            except BaseException:
+                checkpoint = focused.reconcile_checkpoint()
+                if checkpoint is None:
+                    raise
+            if any(git(project, 'rev-parse', checkpoint['sha'] + ':' + name).decode().strip() != blob
+                   for name, blob in blobs.items()):
+                raise Blocked('external recovery committed bytes differ from the transfer; inspect actual Git effects without replay')
+        if self._repair_source_state(project, paths) != paths:
+            raise Blocked('external recovery working bytes drifted at checkpoint; inspect actual Git effects before continuation')
+        for name, expected in paths.items():
+            mode = git(project, 'ls-tree', checkpoint['sha'], '--', name).split()[0].decode()
+            if mode != ('100755' if expected['mode'] & 0o111 else '100644'):
+                raise Blocked('external recovery committed mode differs for ' + name + '; inspect actual Git effects before continuation')
+        summary = 'External recovery by ' + recovery['worker'] + ': ' + recovery['summary']
+        checkpoint.update({'parent': recovery['head'], 'task_id': task_id, 'external_recovery_id': recovery_id})
+        store.history(self.run, task_id, 'checkpoint', 'passed', checkpoint)
+        store.task(self.run, task_id, 'complete', focused.base, checkpoint['sha'], {
+            'summary': summary,
+            'external_recovery_id': recovery_id, 'checks': checks, 'paths': checkpoint['paths'], 'generated_artifacts': []})
+        store.history(self.run, task_id, 'external_recovery', 'completed', {'recovery_id': recovery_id, 'sha': checkpoint['sha']})
+        return checkpoint
+
     def refresh_review_target(self):
         """Freshly review current HEAD after a stopped, unreserved stale pair grant drifted."""
         store = self.authority.store

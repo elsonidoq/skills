@@ -697,8 +697,16 @@ class Store:
             # task tools merely to repair the interrupted completion write.
             git(self.authority.project, 'cat-file', '-e', details['sha'] + '^{commit}')
             if row['state'] != 'complete':
-                self.task(run, row['task_id'], 'complete', row['baseline'], details['sha'],
-                          {'recovered_checkpoint': details})
+                recovered = {'recovered_checkpoint': details}
+                if details.get('external_recovery_id'):
+                    for event in self.db.execute(
+                            "SELECT details FROM execution_history WHERE run_id=? AND task_id=? AND kind='external_recovery' AND state='authorized' ORDER BY seq",
+                            (run, row['task_id'])):
+                        facts = json.loads(event['details'])
+                        if facts.get('recovery_id') == details['external_recovery_id']:
+                            transfer = facts['transfer']
+                            recovered['summary'] = 'External recovery by ' + transfer['worker'] + ': ' + transfer['summary']
+                self.task(run, row['task_id'], 'complete', row['baseline'], details['sha'], recovered)
             completed[row['task_id']] = details
         return completed
 

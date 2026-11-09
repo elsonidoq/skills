@@ -4,7 +4,6 @@ import os
 import sqlite3
 import subprocess
 import sys
-import time
 
 from fixtures.support import ProjectTest
 
@@ -55,6 +54,13 @@ with Authority(sys.argv[1]):
     def cli(self, run):
         code = """\
 import coherence_workflow.cli as cli
+import sys
+class ObservedAuthority(cli.Authority):
+    def __init__(self, *args, **kwargs):
+        # main() has installed cancellation handling before constructing Authority.
+        print('waiting-for-lock', file=sys.stderr, flush=True)
+        super().__init__(*args, **kwargs)
+cli.Authority = ObservedAuthority
 class Offline:
     def __init__(self, project, profile, **kwargs): pass
     def prompt(self, prompt, **kwargs):
@@ -70,7 +76,7 @@ raise SystemExit(cli.main())
         holder = self.hold_lock()
         waiting = self.cli('waiting-cancelled')
         try:
-            time.sleep(.1)  # Fixture observation only: the CLI must still be in kernel lock wait.
+            self.assertEqual(waiting.stderr.readline().strip(), 'waiting-for-lock')
             self.assertIsNone(waiting.poll())
             waiting.terminate()
             output, errors = waiting.communicate(timeout=10)
@@ -87,7 +93,7 @@ raise SystemExit(cli.main())
         holder = self.hold_lock()
         waiting = self.cli('waiting-release')
         try:
-            time.sleep(.1)  # Fixture observation only, never a workflow timeout.
+            self.assertEqual(waiting.stderr.readline().strip(), 'waiting-for-lock')
             self.assertIsNone(waiting.poll())
             self.stop(holder)
             output, errors = waiting.communicate(timeout=10)

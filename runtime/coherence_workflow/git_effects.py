@@ -150,6 +150,23 @@ class FocusedGit:
         else:
             self.task_edited.add(name)
 
+    def accept_completed_handoff(self, source_state):
+        """Transfer exact owner-selected already-complete bytes, without a fake edit."""
+        import hashlib
+        import stat
+        if not source_state or set(source_state) != set(self.handoff):
+            raise Blocked('external recovery needs exact handoff paths; supply the completed file transfer')
+        for name, expected in source_state.items():
+            self.claim(name)
+            if name not in self.task_edited:
+                raise Blocked('external recovery cannot checkpoint generated artifact ' + name + '; transfer source deliverables only')
+            path = editable_path(self.project, name)
+            actual = {'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                      'mode': stat.S_IMODE(path.stat().st_mode)}
+            if actual != expected:
+                raise Blocked('external recovery bytes drifted for ' + name + '; inspect and authorize the current exact transfer')
+        self.completed_handoff = source_state
+
     def cleanup_artifact(self, name):
         """Delete only one task-known generated file, never an output tree."""
         path = safe_path(self.project, name)
@@ -178,7 +195,10 @@ class FocusedGit:
         # discover, adopt, or stage arbitrary command output.
         owned = sorted(name for name in self.task_edited
                        if path_has_preexisting_changes(self.project, name))
-        for name in set(owned) & set(self.handoff):
+        completed = getattr(self, 'completed_handoff', {})
+        if completed:
+            self.accept_completed_handoff(completed)
+        for name in (set(owned) & set(self.handoff)) - set(completed):
             if editable_path(self.project, name).read_bytes() == self.handoff[name]['bytes']:
                 raise Blocked('cannot checkpoint handoff path ' + name + ': operation checkpoint found no intended edit; make the intended correction or do not claim the transfer')
         if not owned:
