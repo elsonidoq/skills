@@ -161,9 +161,14 @@ rules above for reusable skills and commands.
   Split independently testable concerns rather than bundling milestones into implementation tasks.
   Product bindings remain selected-config driven; the planning model is not an implementation assignment.
   Every workflow launch in this repository, including continuations and corrective runs, uses
-  `.pi/workflow-executor.json`: Terra/medium workers and `openai-codex/gpt-6.1-sol`
-  at medium effort for every fresh reviewer session. Do not reuse historical Terra-only
-  executor files for new launches or rewrite historical reviewer records.
+  `.pi/workflow-executor.json`: Terra/medium workers, with `openai-codex/gpt-6.1-sol`
+  at medium effort as the explicit implementation fallback and for every fresh reviewer session.
+  The coordinator may select inspected, cause-specific recovery or escalation without renewed
+  operational permission. Prefer useful retained context; an incomplete return alone does not
+  prove model incapability. If the Sol implementation escalation fails, stop and notify the owner
+  with the diagnosis, preserved work and unmet checks; no further dispatch without owner direction.
+  Preserve actual scope, manual, paid, security, data and external-action gates. Do not reuse
+  historical Terra-only executor files for new launches or rewrite historical reviewer records.
   Historical approvals stay historical. The latest owner direction supersedes older graph/SQL/
   custody/evidence eligibility mandates: task startup linter has only readable file, parsed list,
   ID/work description, unique IDs, existing dependency references and acyclic dependencies.

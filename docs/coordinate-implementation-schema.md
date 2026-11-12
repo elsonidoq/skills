@@ -230,13 +230,19 @@ history separately records each distinct exact task-worker session invocation be
 binds a fresh initial reservation to the session actually opened by the adapter. For each task/session,
 the initial call plus two further calls is the only worker dispatch allowance: starts/terminals and
 duplicate records count once, failures/interruption/reopen do not reset it, and a fourth is refused
-before adapter/provider invocation with inspected-recovery or owner-authorized-fresh-context guidance.
+before adapter/provider invocation with targeted coordinator-recovery guidance. An explicit fresh
+recovery reservation additionally retains its settled predecessor, action and cause-specific diagnosis;
+old reservations and bindings remain unchanged. Private `worker_recovery` history records the
+coordinator selection, and invocation facts record the actual selected executor. Private
+`implementation_escalation` history retains the fallback selection and any failure; an unfinished
+escalation stops ordinary resume for owner attention. These use existing history, not new tables.
 Explicit supplied identity takes precedence over adapter-held identity exactly as `PiAdapter.prompt` does. Existing invocation IDs must have retained dispatch reservations and existing reservations must have settled invocation history; missing or uncertain facts stop continuation for inspection instead of restoring an initial allowance.
 This does not apply to reviewer/fixer lifecycle calls. Explicit resume supplies that prior context,
 not an unchanged original assignment. A missing terminal outcome or legacy invocation data
 cannot authorize replay. A terminal expensive failure requires inspection of the saved call/session
-and an explicit diagnosed, targeted correction through current owner input before continuation;
-unknown cause or absent saved identity stops that launch. Genuine interrupted unfinished work
+and an explicit diagnosed, targeted correction from the coordinator before continuation;
+unknown cause stops that launch. Context replacement requires settled session history rather than
+reusing an absent or uncertain identity; routine recovery does not need renewed owner consent. Genuine interrupted unfinished work
 may continue with the retained context and compatible saved identity when available.
 Worker-only `cleanup_artifact` transports one path to the runner's selective known-file cleanup;
 errors return to the SDK tool, and reviewer tools remain read/search-only. Boundary headroom uses

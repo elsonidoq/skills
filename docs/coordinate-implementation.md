@@ -28,9 +28,13 @@ An optional `reviewer` object selects the fresh read-only review executor separa
 Without `reviewer`, review retains the selected worker profile for compatibility.
 An explicitly malformed reviewer profile fails with a corrective diagnostic, never a
 silent fallback. These are selections, not proof of provider availability or actual usage.
+An optional `implementation_fallback` object uses the same provider/model/effort fields and
+explicitly permits a stronger implementation worker during inspected recovery. A reviewer profile
+alone grants no implementation fallback. Availability errors remain actual errors; do not install,
+authenticate or silently substitute another model.
 For **this repository**, every launch (including continuations/corrections) supplies
 `--executor .pi/workflow-executor.json`, or that file's absolute path through the parent
-bridge: Terra/medium workers and Sol 6.1/medium reviewers. Other projects retain their own
+bridge: Terra/medium workers, Sol 6.1/medium implementation fallback, and Sol 6.1/medium reviewers. Other projects retain their own
 configuration. Existing historical reviewer nodes are not changed retroactively.
 
 The canonical project-local configuration is `<project-root>/.pi/workflow-executor.json`.
@@ -174,6 +178,7 @@ scope, actual checks and retained effects, prepare a targeted correction or evid
 supported history/resume or evidence-only reassessment paths. Before continuing a failed expensive worker or
 reviewer, inspect its recorded cause and invocation; never repeat an unchanged expensive failure.
 Respect the retained initial-plus-two same-task/session allowance and compact diagnosis context;
+exhaustion calls for inspected coordinator recovery, not renewed routine owner permission.
 evidence-only review reassessment uses the existing retained evidence and only its supported eligibility,
 never a task replay. Unknown cause or a real permission boundary stops the affected operation with its
 exact capability/access/paid/data/external operation and corrective action.
@@ -196,8 +201,8 @@ For an exact task-worker saved session, the initial dispatch plus at most two fu
 in required history before adapter/provider dispatch. This narrow allowance includes required-check and
 checkpoint corrections and survives process/storage reopen; terminal rows and duplicate observations do
 not consume it again. Missing reservation history for retained invocations, or unsettled invocation history for reservations, stops continuation for inspection rather than resetting the allowance. A fourth call is refused before transport with the task/session identity and
-inspect-recovery-or-authorized-fresh-context action. It does not create fresh-context authority or cap
-reviewer/fixer lifecycle calls.
+targeted-coordinator-recovery action. The approved scope permits justified context replacement through
+the explicit recovery route below; it does not erase prior attempts or cap reviewer/fixer lifecycle calls.
 
 The final reviewer is a fresh, read-only SDK session, not the worker context. A routine reviewer early
 return or evidence gap is a diagnosis/recovery event, not completion or an owner-debugging request:
@@ -277,6 +282,32 @@ processes or provisions/signals cgroups.
 ## History, explicit resume and abandon
 
 `resume --project ROOT --run ID` is explicit only for a retained failed or interrupted run. Under the ordinary writer lock it inspects retained invocation/cause and original inputs, preserves the original contract/order, executor, paid scope, review base and attempts, skips only checkpointed tasks with matching operation history, and continues unfinished work or the exact eligible review/fix stage. It never compares the worktree, HEAD, index or outputs as admission, repeats a completed checkpoint, replaces a known live writer, resets consumed review slots, or asks again for unchanged paid scope. Missing original/checkpoint history, uncertain completed effects, or uncertain review invocation reports that precise limit. An unfinished task may continue only with its retained task-local source paths and known generated artifacts; those facts permit a selective file cleanup, never adoption or deletion of unknown output. Its exact saved worker-session dispatch history also retains the initial-plus-two allowance across reopen; missing/uncertain identity or history stops that continuation for inspection rather than resetting the allowance.
+
+### Coordinator-selected worker recovery
+
+Routine recovery is part of approved implementation, not an owner debugging request. Inspect the
+failed invocation, useful saved context, partial work and actual checks. Prefer continuing useful
+context. Select a new context or the explicitly permitted implementation fallback only when the
+next action addresses the diagnosed obstacle; incomplete returns alone do not establish model incapability.
+
+```sh
+scripts/coordinate-implementation resume --project /absolute/project --run RETAINED_RUN \
+  --recovery-action fresh --diagnosis 'Inspected cause; targeted correction using retained work'
+# Use continue for the retained session, or escalate for its implementation_fallback profile.
+```
+
+The parent `coordinate_implementation_start` tool accepts `resume: true`, `run`, `recovery_action`
+and `diagnosis`. These are coordinator decisions, not fabricated owner answers. The route keeps
+original inputs, scope, source claims, completed checkpoints and attempt history. Fresh dispatch
+requires a settled exact predecessor and known session effects; uncertain calls and unknown bytes
+are not adopted. Rerun affected required checks and keep independent review. Existing runs retain
+their launch configuration: no fallback is inferred from a later file change or reviewer profile.
+
+If implementation escalation fails—including an unsuccessful worker return, required check or
+checkpoint failure—stop and notify the owner with the diagnosis, preserved work and unmet checks.
+No corrective worker, fresh replacement or further escalation follows that failure. Ordinary resume
+also stops; continuation needs a new owner direction, not repeated routine authorization questions.
+A completed escalation task does not alter the normal worker or independent reviewer for later tasks.
 
 “No automatic resume” means no blind retry, replay, daemon, or historical restart. When an inspected failure identifies an authorized repair outside the current worker's paths, the coordinator first settles that invocation and its lock, then delegates a separate repair with exact paths and the retained executor. The coordinator inspects the repair diff, runs relevant checks, and verifies its focused checkpoint before an explicit supported continuation of the retained unfinished run. The original worker never gains the repair path or launches a nested CLI. A failed or unknown repair cause is investigated rather than relaunched; a later routine technical question is coordinator-triaged without renewed routine consent. Manual, product, material-scope, spending, security and data boundaries still stop/escalate normally.
 

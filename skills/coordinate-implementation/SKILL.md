@@ -45,7 +45,9 @@ and validation; do not repeat discovery. Explicit resume retains its recorded ex
 Never search neighboring repositories, home directories, other worktrees or historical task files,
 fall back after a failed override, create/copy configuration, authenticate providers or invoke a
 model merely to resolve it. Supply project, task file and executor JSON containing the
-owner-selected executor/effort (provider, model, effort), without silent substitutions. There is no owner catalog or binding
+owner-selected executor/effort (provider, model, effort), without silent substitutions.
+An optional `implementation_fallback` profile permits stronger implementation recovery separately
+from the reviewer assignment; never infer that permission from `reviewer` alone. There is no owner catalog or binding
 assessment. SDK/dependency/authentication errors report the actual failed operation. Routine scoped technical
 fixes, isolated tests/servers, necessary local/in-project dependency setup, and current-task artifact
 lifecycle need no owner question; prompt delivery is text-contract evidence, not proof of model obedience or passed
@@ -77,6 +79,10 @@ that work. Do not add a risk schema, scoring, admission checklist, or parent ack
   launching an agent or repairing old intent records.
 - `resume --project ROOT --run ID`: explicitly continue a retained failed/interrupted run after inspecting
   its recorded cause and operation history; retain original input/scope/baseline and never replay completed checkpoints.
+  Supply `--recovery-action continue|fresh|escalate --diagnosis TEXT` for a coordinator-selected
+  cause-specific continuation. `fresh` replaces the unfinished task's context; `escalate` uses its
+  retained `implementation_fallback`. Neither needs renewed routine operational approval.
+  The parent start tool accepts the equivalent `recovery_action` and `diagnosis` fields with `resume: true`.
 - `abandon --project ROOT --run ID`: explicitly label abandoned work, never completed effects.
 - `authorize-routine-repairs --project ROOT --run ID --scope SCOPE`: after an actual current owner affirmative, append scope-bound authority for routine later repair/review pairs in that retained `owner-pair-v1` run. It preserves original inputs, historical questions/grants/rejections, and all per-rejection causal reservations; it does not authorize material scope, paid, security, data, or external actions.
 - `refresh-review-target --project ROOT --run ID`: after a stopped run's exact unreserved pair grant has drifted, dispatch exactly one fresh read-only review of current HEAD over the retained original range before any new repair pair. It does not rebind or consume the stale grant, edit files, replay tasks, or accept a rejected target.
@@ -104,7 +110,15 @@ unfinished scope, actual checks, and retained effects; prepare a targeted correc
 handoff; then use supported history/resume or evidence-only reassessment paths. Before continuing a failed
 expensive worker or reviewer, inspect its recorded cause and invocation; never blindly retry an
 unchanged expensive failure. Respect the retained initial-plus-two same-task/session allowance and
-compact diagnosis context; evidence-only review reassessment uses the existing retained evidence and only
+compact diagnosis context; exhaustion is not an owner permission question. Select a justified fresh
+context or permitted implementation escalation through the supported recovery route, without resetting
+history. Prefer useful retained context. Each replacement must address the inspected obstacle; an
+incomplete return alone does not prove model incapability. If the implementation escalation fails,
+stop and notify the owner with the diagnosis, preserved work and unmet checks. Do not resume, replace
+or escalate it again without owner direction; ordinary resume remains stopped. Preserve established
+source ownership and reconcile uncertain effects before editing or checkpointing. No justified safe
+next action means a concrete blocker, not an unchanged retry.
+Evidence-only review reassessment uses the existing retained evidence and only
 its supported eligibility, never a task replay. Unknown cause or a real permission boundary stops the
 affected operation with its exact capability/access/paid/data/external operation and corrective action.
 
@@ -143,7 +157,8 @@ Its task brief carries applicable accepted outcomes, explicit mechanism constrai
 those complement rather than replace task requirements or existing execution authority. Harmless
 read/argument/edit errors can be corrected in the same conversation. SDK automatic compaction
 and output continuation remain normal behavior, not fatal workflow conditions. No arbitrary workflow
-size caps, deadlines, lifetime quotas or repair budgets. The narrow exception is a durable per-task,
+size caps, deadlines, lifetime quotas or repair budgets. Coordinator recovery selects a cause-specific
+next action; it is not an automatic retry loop. The narrow exception is a durable per-task,
 per-exact-worker-session allowance of the initial dispatch plus two further worker calls; it includes
 check/checkpoint corrections and survives reopen, but does not apply to reviewer/fixer lifecycle calls.
 Do not autonomously loop expensive failed runs.
