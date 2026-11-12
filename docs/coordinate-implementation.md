@@ -307,6 +307,8 @@ If implementation escalation fails—including an unsuccessful worker return, re
 checkpoint failure—stop and notify the owner with the diagnosis, preserved work and unmet checks.
 No corrective worker, fresh replacement or further escalation follows that failure. Ordinary resume
 also stops; continuation needs a new owner direction, not repeated routine authorization questions.
+A subsequent successful owner-authorized `recover-task` completion for that exact task releases the
+stop for normal resume and independent review. Authorization alone or a failed transfer does not.
 A completed escalation task does not alter the normal worker or independent reviewer for later tasks.
 
 ### Accept an owner-authorized external same-task completion

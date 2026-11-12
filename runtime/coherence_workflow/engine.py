@@ -1516,12 +1516,26 @@ class Engine:
     def invoke(self):
         project, store = self.authority.project, self.authority.store
         if self.resume:
-            failed_escalation = store.db.execute(
-                "SELECT task_id FROM execution_history WHERE run_id=? AND kind='implementation_escalation' "
-                "AND state='failed' ORDER BY seq DESC LIMIT 1", (self.run,)).fetchone()
-            if failed_escalation:
-                # A passed checkpoint can survive a failed completion write. Enforce the
-                # owner stop before checkpoint recovery can skip that task or dispatch review.
+            failures = store.db.execute(
+                "SELECT seq,task_id FROM execution_history WHERE run_id=? AND kind='implementation_escalation' "
+                "AND state='failed' ORDER BY seq DESC", (self.run,)).fetchall()
+            for failed_escalation in failures:
+                subsequent = [(row['kind'], row['state'], json.loads(row['details'])) for row in store.db.execute(
+                    "SELECT kind,state,details FROM execution_history WHERE run_id=? AND task_id=? AND seq>? "
+                    "AND kind IN ('external_recovery','checkpoint') ORDER BY seq",
+                    (self.run, failed_escalation['task_id'], failed_escalation['seq']))]
+                # recover_task emits completed only after actual owner authority, original
+                # checks and its exact external checkpoint. Mere authorization is insufficient.
+                completions = [facts for kind, state, facts in subsequent
+                               if kind == 'external_recovery' and state == 'completed']
+                if any(checkpoint.get('external_recovery_id') == completion.get('recovery_id')
+                       and isinstance(completion.get('recovery_id'), str)
+                       and checkpoint.get('sha') == completion.get('sha')
+                       for kind, state, checkpoint in subsequent if kind == 'checkpoint' and state == 'passed'
+                       for completion in completions):
+                    continue
+                # A passed ordinary checkpoint can survive a failed completion write. Enforce
+                # the owner stop before recovery can skip that task or dispatch review.
                 reason = ('implementation escalation failed for task ' + failed_escalation['task_id'] +
                           '; stop and notify the owner with the retained failure and partial work; owner direction required')
                 store.finish(self.run, 'failed', git(project, 'rev-parse', 'HEAD').decode().strip(), reason)

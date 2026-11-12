@@ -1,6 +1,7 @@
 """Inspected coordinator recovery in disposable projects; no live models or owner replies."""
 import contextlib
 import io
+import hashlib
 import json
 import os
 import sys
@@ -223,6 +224,62 @@ class WorkerRecoveryTests(ProjectTest):
 
     def test_post_checkpoint_escalation_interruption_blocks_final_review(self):
         self.post_checkpoint_failure(interrupt=True, dependent=False)
+
+    def external_completion_after_escalation(self, *, check_passes):
+        calls = []
+        check = [sys.executable, '-c', 'from pathlib import Path; assert Path("owned.txt").read_text() == "external\\n"']
+        contract = self.contract([check])
+        adapter = self.adapter(calls, failure='strong worker failed')
+        with Authority(self.project) as owner:
+            self.start_failure(owner, contract, adapter)
+            owner.store.resume('recovery')
+            with self.assertRaisesRegex(Blocked, 'escalation failed'):
+                Engine(owner, 'recovery', contract, EXECUTOR, adapter=adapter, resume=True,
+                       worker_recovery={'action': 'escalate', 'diagnosis': DIAGNOSIS}).invoke()
+            last = owner.store.db.execute(
+                "SELECT details FROM execution_history WHERE kind='worker_invocation' ORDER BY seq DESC LIMIT 1").fetchone()
+            content = b'external\n' if check_passes else b'still broken\n'
+            self.project.joinpath('owned.txt').write_bytes(content)
+            transfer = {'task_id': 'one', 'invocation_id': json.loads(last['details'])['invocation_id'],
+                        'head': self.base, 'diagnosis': DIAGNOSIS, 'worker': 'owner-authorized external fixture',
+                        'summary': 'External implementation with original acceptance; independent review remains.',
+                        'paths': {'owned.txt': {'sha256': hashlib.sha256(content).hexdigest(), 'mode': 420}}}
+            runner = Engine(owner, 'recovery', contract, EXECUTOR, resume=True)
+            if check_passes:
+                checkpoint = runner.recover_task(transfer, owner_authorized=True)
+                self.assertEqual(checkpoint['paths'], ['owned.txt'])
+            else:
+                with self.assertRaises(Blocked):
+                    runner.recover_task(transfer, owner_authorized=True)
+            owner.store.resume('recovery')
+            test = self
+            class Healthy:
+                def __init__(self, *_args, **_kwargs): pass
+                def prompt(self, _prompt, **kwargs):
+                    if kwargs.get('read_only'):
+                        calls.append(('review', 'reviewer'))
+                        return json.dumps({'approved': True, 'findings': [], 'coverage': ['original range'], 'coverage_gaps': []})
+                    calls.append(('dependent', 'worker'))
+                    test.assertTrue(check_passes, 'unchecked external completion must not dispatch')
+                    return 'dependent no-change'
+            continuation = Engine(owner, 'recovery', contract, EXECUTOR, adapter=Healthy, resume=True,
+                                  question=self.no_owner_question)
+            if check_passes:
+                self.assertEqual(continuation.invoke()['status'], 'complete')
+                self.assertEqual(calls, [('worker', 'worker'), ('worker', 'strong'),
+                                         ('dependent', 'worker'), ('review', 'reviewer')])
+                self.assertTrue(owner.store.db.execute(
+                    "SELECT 1 FROM execution_history WHERE kind='implementation_escalation' AND state='failed'").fetchone())
+            else:
+                with self.assertRaisesRegex(Blocked, 'owner direction required'):
+                    continuation.invoke()
+                self.assertEqual(calls, [('worker', 'worker'), ('worker', 'strong')])
+
+    def test_owner_authorized_checked_external_completion_releases_escalation_stop(self):
+        self.external_completion_after_escalation(check_passes=True)
+
+    def test_failed_external_completion_does_not_release_escalation_stop(self):
+        self.external_completion_after_escalation(check_passes=False)
 
     def test_recovery_requires_diagnosis_and_exact_settled_history(self):
         with Authority(self.project) as owner:
