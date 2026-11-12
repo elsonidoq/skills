@@ -401,21 +401,12 @@ class Engine:
                                   trigger_execution_id=trigger_execution_id, predecessor_execution_id=predecessor_execution_id,
                                   review_base=review_base, review_head=head)
         focused = FocusedGit(project, fix_task, resume_facts=(recovered or {}).get('facts'))
-        edit_only_paths = set()
-        for original in original_tasks:
-            edit_only_paths.update(store.task_facts(self.run, original['id']).get('edit_only', {}))
-        if not set(focused.edit_only) <= edit_only_paths:
-            raise Blocked('repair edit-only claims lack original task authority; inspect retained claims before continuation')
         if recovered and recovered.get('baseline'):
             focused.base = recovered['baseline']
         claimed_paths = set()
         def claim(name):
             if name not in claimed_paths:
-                if name in edit_only_paths and name not in focused.edit_only_authority:
-                    focused.authorize_edit_only([name])
                 focused.claim(name)
-                store.history(self.run, fix_task['id'], 'fixer_mutation', 'claimed',
-                              {'execution_id': execution_id, **focused.facts()})
                 claimed_paths.add(name)
         def gate_question(text):
             return self.question(text)
@@ -556,16 +547,13 @@ class Engine:
                             'unrelated work. Actual failed attempt: ' + canonical(failure.attempt),
                             claim=claim, command=focused.command, cleanup=focused.cleanup_artifact, reuse_key=reuse_key)
             check_results = correct_checks()
-            focused.checkpoint_intent = lambda facts: store.history(
-                self.run, None, 'fixer_edit_only_checkpoint', 'started', {'execution_id': execution_id, **facts})
             checkpoint_error = None
             while True:
                 checkpoint_occurrence = recorder.occurrence()
                 recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=fix_task['id'], facts={
                     'baseline': focused.base, 'execution_id': execution_id})
                 try:
-                    selected = sorted(name for name in focused.task_edited
-                                      if name in focused.edit_only or path_has_preexisting_changes(project, name))
+                    selected = sorted(name for name in focused.task_edited if path_has_preexisting_changes(project, name))
                     blobs = self._repair_blobs(project, selected)
                     store.history(self.run, None, 'fixer_checkpoint', 'started', {
                         'execution_id': execution_id, 'baseline': focused.base,
@@ -580,9 +568,6 @@ class Engine:
                     checkpoint = focused.reconcile_checkpoint()
                     if checkpoint is not None:
                         break
-                    if hasattr(focused, 'checkpoint_tree') and git(project, 'rev-parse', 'HEAD').decode().strip() == focused.checkpoint_parent:
-                        store.history(self.run, None, 'fixer_edit_only_checkpoint', 'aborted',
-                                      {'execution_id': execution_id, 'parent': focused.checkpoint_parent})
                     if isinstance(exc, (KeyboardInterrupt, SystemExit)) or str(exc) == checkpoint_error:
                         raise
                     checkpoint_error = str(exc)
@@ -597,9 +582,6 @@ class Engine:
             checkpoint['parent'] = (None if checkpoint['no_change'] else
                                     git(project, 'rev-parse', checkpoint['sha'] + '^').decode().strip())
             store.history(self.run, None, 'fixer_checkpoint', 'passed', {'execution_id': execution_id, **checkpoint})
-            if hasattr(focused, 'checkpoint_tree'):
-                store.history(self.run, None, 'fixer_edit_only_checkpoint', 'resolved',
-                              {'execution_id': execution_id, 'sha': checkpoint['sha']})
             checkpoint_facts = {'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change'],
                                 'execution_id': execution_id}
             if last_fixer_invocation[0] is not None:
@@ -633,23 +615,6 @@ class Engine:
             facts = json.loads(row['details'])
             if facts.get('execution_id') == execution_id:
                 events.append((row['kind'], row['state'], facts))
-        pending = [(index, state) for index, (kind, state, _) in enumerate(events)
-                   if kind == 'fixer_edit_only_checkpoint']
-        if pending and pending[-1][1] == 'started' and not any(
-                kind == 'fixer_checkpoint' and state == 'passed'
-                for kind, state, _ in events[pending[-1][0] + 1:]):
-            raise Blocked('unfinished edit-only repair checkpoint; inspect retained parent/tree, HEAD and index before continuation')
-        claims = {}
-        for kind, state, facts in events:
-            if kind != 'fixer_mutation' or state != 'claimed':
-                continue
-            saved = facts.get('edit_only', {})
-            if not isinstance(saved, dict):
-                raise Blocked('repair edit-only mutation facts are invalid; inspect retained ownership')
-            for name, fact in saved.items():
-                if not isinstance(name, str) or not isinstance(fact, dict) or (name in claims and claims[name] != fact):
-                    raise Blocked('repair edit-only mutation baseline is invalid or changed; inspect retained ownership')
-                claims[name] = fact
         calls = {}
         for kind, state, facts in events:
             if kind == 'fixer_invocation':
@@ -676,8 +641,6 @@ class Engine:
                 raise Blocked('settled repair failure target/source bytes drifted; preserve them and inspect ownership before continuation')
             if self._repair_index_state(project, selected) != failure['index_state']:
                 raise Blocked('settled repair failure index entries drifted; preserve staged and working bytes and inspect ownership before continuation')
-            if failure.get('edit_only', {}) != claims:
-                raise Blocked('settled repair edit-only facts do not match its saved claims; inspect retained ownership')
             # Explicit resume selects this same settled assignment, not an automatic
             # retry. Feed the actual cause and reconciled effects to its corrective
             # context; routine diagnosis never requires human terminal input.
@@ -691,7 +654,7 @@ class Engine:
                 'Required/manual acceptance is not waived. Actual failed fixer: ' + canonical(failure) +
                 '\nRetained partial diff:\n' + (git(project, 'diff', 'HEAD', '--', *selected).decode() if selected else ''))
             return {'failed': True, 'baseline': failure['baseline'], 'invocations': list(calls),
-                    'facts': {'paths': failure['paths'], 'artifacts': failure['artifacts'], 'edit_only': claims},
+                    'facts': {'paths': failure['paths'], 'artifacts': failure['artifacts']},
                     'diagnosis': correction}
         head = git(project, 'rev-parse', 'HEAD').decode().strip()
         if not calls:
@@ -706,10 +669,8 @@ class Engine:
             if any(not any(name == path.rstrip('/') or name.startswith(path.rstrip('/') + '/') for path in limits)
                    for name in returned['paths']):
                 raise Blocked('retained repair paths exceed original scope; inspect ownership before continuation')
-        if returned.get('edit_only', {}) != claims:
-            raise Blocked('returned repair edit-only facts do not match its saved claims; inspect retained ownership')
         recovered = {'returned': True, 'baseline': returned['baseline'], 'invocations': list(calls),
-                     'facts': {'paths': returned['paths'], 'artifacts': returned['artifacts'], 'edit_only': claims}}
+                     'facts': {'paths': returned['paths'], 'artifacts': returned['artifacts']}}
         # Earlier local failures remain history, not stages of this returned
         # correction. Only reconcile checks/checkpoints begun after its return;
         # every call above still participates in the uncertain-call guard.

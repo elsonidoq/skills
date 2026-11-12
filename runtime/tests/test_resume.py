@@ -1,5 +1,4 @@
 """Synthetic same-run resume fixtures; no real workflow run is replayed."""
-import base64
 import contextlib
 import io
 import json
@@ -12,7 +11,7 @@ from unittest.mock import patch
 from coherence_workflow import cli, engine
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
-from coherence_workflow.pi_adapter import PiAdapter, TaskOutcome, effective_saved_session
+from coherence_workflow.pi_adapter import PiAdapter, effective_saved_session
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 
@@ -292,112 +291,6 @@ class SameRunResumeTests(ProjectTest):
             with self.assertRaisesRegex(Blocked, 'unfinished edit-only checkpoint.*inspect retained parent/tree'):
                 Engine(owner, 'pending-edit', contract, EXECUTOR, adapter=Adapter, resume=True).invoke()
         self.assertEqual(calls, ['worker'])
-        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
-
-    def test_assigned_fixer_resumes_edit_only_from_original_task_authority(self):
-        self._assigned_fixer_edit_only(fail_before_doc=False)
-
-    def test_assigned_fixer_first_claims_edit_only_after_failed_partial_repair(self):
-        self._assigned_fixer_edit_only(fail_before_doc=True)
-
-    def _assigned_fixer_edit_only(self, *, fail_before_doc):
-        project = self.project
-        self.write('owned.txt', 'first\nsecond\nend\n')
-        git(project, 'add', '--', 'owned.txt')
-        git(project, 'commit', '-qm', 'fixture baseline')
-        self.write('owned.txt', 'first\nsecond\nend\ninherited-private\n')
-        self.write('other.txt', 'unrelated staged\n')
-        git(project, 'add', '--', 'other.txt')
-        staged = git(project, 'show', ':other.txt')
-        contract = {'tasks': [{'id': 'task', 'description': 'fixture',
-                               'owned_paths': ['owned.txt', 'clean.txt', 'other.txt']}]}
-        identity = {'id': 'fix-edit-only', 'file': '/private/fix-edit-only.jsonl'}
-        calls = {'task': 0, 'review': 0, 'fix': 0}
-        class Adapter:
-            def __init__(self, *_args, **_kwargs): self.saved_session = identity
-            def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'):
-                    calls['review'] += 1
-                    if calls['review'] == 1:
-                        return '{"approved":false,"coverage":["fixture"],"coverage_gaps":[],"findings":["owned.txt:2 - repair required"]}'
-                    return '{"approved":true,"coverage":["fixture"],"coverage_gaps":[],"findings":[]}'
-                if 'Actionable findings:' in prompt:
-                    calls['fix'] += 1
-                    with self_test.assertRaisesRegex(Blocked, 'pre-existing dirty'):
-                        kwargs['claim']('other.txt')
-                    kwargs['claim']('clean.txt')
-                    if calls['fix'] == 1:
-                        project.joinpath('clean.txt').write_text('partial clean\n')
-                        if fail_before_doc:
-                            return TaskOutcome('failed', 'fixture needs final correction')
-                    kwargs['claim']('owned.txt')
-                    if calls['fix'] == 1 or fail_before_doc:
-                        row = owner.store.db.execute("SELECT details FROM execution_history WHERE kind='fixer_mutation' AND state='claimed' ORDER BY seq DESC LIMIT 1").fetchone()
-                        claim = json.loads(row['details'])['edit_only']['owned.txt']
-                        self_test.assertEqual(base64.b64decode(claim['start']), project.joinpath('owned.txt').read_bytes())
-                        if calls['fix'] == 1:
-                            project.joinpath('owned.txt').write_text('task first\nrepair partial\nend\ninherited-private\n')
-                            return TaskOutcome('failed', 'fixture needs final correction')
-                    project.joinpath('owned.txt').write_text('task first\nrepair complete\nend\ninherited-private\n')
-                    return 'repair complete'
-                calls['task'] += 1
-                kwargs['claim']('owned.txt')
-                project.joinpath('owned.txt').write_text('task first\nsecond\nend\ninherited-private\n')
-                return 'task complete'
-        self_test = self
-        with Authority(project) as owner:
-            with self.assertRaisesRegex(Blocked, 'pre-existing dirty'):
-                Engine(owner, 'fix-edit', contract, EXECUTOR, adapter=Adapter).invoke()
-            owner.store.resume('fix-edit')
-            with self.assertRaisesRegex(Blocked, 'fixture needs final correction'):
-                Engine(owner, 'fix-edit', contract, EXECUTOR, adapter=Adapter, resume=True,
-                       question=lambda _: json.dumps({'diagnosis': 'scoped edit', 'edit_only_paths': ['owned.txt']})).invoke()
-            first_commit = git(project, 'rev-parse', 'HEAD').decode().strip()
-            self.assertEqual(git(project, 'show', first_commit + ':owned.txt'), b'task first\nsecond\nend\n')
-            row = owner.store.db.execute("SELECT details FROM execution_history WHERE kind='fixer_invocation' AND state='failed' ORDER BY seq DESC LIMIT 1").fetchone()
-            saved = json.loads(row['details'])['edit_only'].get('owned.txt')
-            if fail_before_doc:
-                self.assertIsNone(saved)
-            else:
-                self.assertEqual(base64.b64decode(saved['start']), b'task first\nsecond\nend\ninherited-private\n')
-        with Authority(project) as owner:
-            owner.store.resume('fix-edit')
-            result = Engine(owner, 'fix-edit', contract, EXECUTOR, adapter=Adapter, resume=True).invoke()
-            rows = owner.store.db.execute("SELECT details FROM execution_history WHERE kind='fixer_mutation' AND state='claimed' ORDER BY seq").fetchall()
-            facts = [json.loads(row['details']) for row in rows]
-            found = [fact['edit_only']['owned.txt'] for fact in facts if 'owned.txt' in fact.get('edit_only', {})]
-            self.assertTrue(found)
-            if saved is not None:
-                self.assertTrue(all(fact == saved for fact in found))
-            saved = found[0]
-            self.assertEqual(base64.b64decode(saved['start']), b'task first\nsecond\nend\ninherited-private\n')
-        self.assertEqual(result['status'], 'complete')
-        self.assertEqual(calls, {'task': 2, 'review': 2, 'fix': 2})
-        self.assertEqual(git(project, 'show', 'HEAD:owned.txt'), b'task first\nrepair complete\nend\n')
-        self.assertEqual(git(project, 'show', 'HEAD:clean.txt'), b'partial clean\n')
-        self.assertEqual(project.joinpath('owned.txt').read_bytes(), b'task first\nrepair complete\nend\ninherited-private\n')
-        self.assertEqual(git(project, 'show', ':other.txt'), staged)
-        self.assertNotIn(saved['start'], json.dumps(cli.status(project, 'fix-edit')))
-
-    def test_unresolved_edit_only_fixer_checkpoint_stops_recovery(self):
-        contract = {'tasks': [{'id': 'task', 'description': 'fixture'}]}
-        with Authority(self.project) as owner:
-            store = owner.store
-            store.start('pending-fix', self.base, contract=contract, executor=EXECUTOR,
-                        authority={'review_policy': 'owner-pair-v1'}, review_base=self.base)
-            store.review_dispatch('pending-fix', 'review', review_base=self.base, review_head=self.base)
-            store.review_outcome('pending-fix', 'review', 'rejected', findings=['owned.txt:1 - fixture'],
-                                 references={'base': self.base, 'head': self.base})
-            store.review_dispatch('pending-fix', 'fix', role='fixer', review_ordinal=1, fixing_round=1,
-                                  trigger_execution_id='review', predecessor_execution_id='review',
-                                  review_base=self.base, review_head=self.base)
-            store.history('pending-fix', None, 'fixer_edit_only_checkpoint', 'started',
-                          {'execution_id': 'fix', 'parent': self.base, 'tree': 'fixture', 'paths': ['owned.txt']})
-            item = next(item for item in store.review_chain('pending-fix', private=True)['executions']
-                        if item['execution_id'] == 'fix')
-            runner = Engine(owner, 'pending-fix', contract, EXECUTOR, resume=True)
-            with self.assertRaisesRegex(Blocked, 'unfinished edit-only repair checkpoint'):
-                runner._recover_assigned_fix(item, self.base)
         self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
     def test_resume_checkpoints_already_edited_established_handoff_without_second_edit(self):
