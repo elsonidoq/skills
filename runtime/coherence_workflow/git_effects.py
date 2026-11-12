@@ -19,23 +19,6 @@ def _commit_result(project, sha, parent, path):
     return {'sha': sha, 'parent': parent, 'path': path, 'no_change': False}
 
 
-def _equivalent_edit_positions(lines, start, end, replacement):
-    """Find locations that produce the identical single-edit result."""
-    width = end - start
-    for other in range(len(lines) - width + 1):
-        if other == start:
-            continue
-        lo, hi = sorted((start, other))
-        if replacement + lines[lo + width:hi + width] == lines[lo:hi] + replacement:
-            yield other
-
-
-def _unique_span(lines, span):
-    """A context must occur once, including overlapping occurrences."""
-    return bool(span) and sum(lines[i] == span[0] and lines[i:i + len(span)] == span
-                              for i in range(len(lines) - len(span) + 1)) == 1
-
-
 class MetricArtifactFinalizer:
     """One runner-only end-of-run commit for an already-reserved metric artifact."""
     def __init__(self, project, relative, validate, *, expected_identity=None, expected_bytes=None):
@@ -209,30 +192,22 @@ class FocusedGit:
         for tag, a, b, c, d in sw:
             if tag == 'equal':
                 continue
-            matches = [(i + a - x, i + b - x, x, y) for kind, i, j, x, y in hs
+            matches = [(i + a - x, i + b - x) for kind, i, j, x, y in hs
                        if kind == 'equal' and x <= a <= b <= y and (a != b or x < a < y)]
             # Insertion at a file boundary is safe only if that boundary is not inherited.
             if a == b and not matches:
-                if a == 0 and hs and hs[0][0] == 'equal': matches = [(0, 0, hs[0][3], hs[0][4])]
-                if a == len(s) and hs and hs[-1][0] == 'equal': matches = [(len(h), len(h), hs[-1][3], hs[-1][4])]
+                if a == 0 and hs and hs[0][0] == 'equal': matches = [(0, 0)]
+                if a == len(s) and hs and hs[-1][0] == 'equal': matches = [(len(h), len(h))]
             if len(matches) != 1:
                 raise Blocked('edit-only checkpoint has overlapping or ambiguous changes in ' + name + '; separate the edits and retry')
-            left, right, context_start, context_end = matches[0]
-            context = s[context_start:context_end]
-            if not _unique_span(s, context) or not _unique_span(h, context):
-                raise Blocked('edit-only checkpoint has ambiguous source context in ' + name + '; separate the edits and retry')
-            if next(_equivalent_edit_positions(s, a, b, w[c:d]), None) is not None:
-                raise Blocked('edit-only checkpoint has ambiguous repeated task changes in ' + name + '; separate the edits and retry')
-            # A repeated inherited insertion/deletion may align to several identical
-            # source locations. Do not attribute a task edit within that shifted range.
-            for inherited, i, j, x, y in hs:
-                if inherited == 'equal':
-                    continue
-                for other in _equivalent_edit_positions(h, i, j, s[x:y]):
-                    lo = min(i, other) + x - i
-                    hi = max(i, other) + x - i + max(j - i, y - x)
-                    if a <= hi and b >= lo:
-                        raise Blocked('edit-only checkpoint has ambiguous inherited changes in ' + name + '; separate the edits and retry')
+            left, right = matches[0]
+            if a == b:
+                anchors = s[max(0, a - 1):min(len(s), a + 1)]
+                if not anchors or any(s.count(line) != 1 or h.count(line) != 1 for line in anchors):
+                    raise Blocked('edit-only checkpoint has ambiguous insertion in ' + name + '; separate the edits and retry')
+            # Repeated lines have multiple possible attributions, even if a diff picked one.
+            if a != b and any(s.count(line) != 1 or h.count(line) != 1 for line in s[a:b]):
+                raise Blocked('edit-only checkpoint has ambiguous repeated lines in ' + name + '; separate the edits and retry')
             edits.append((left, right, w[c:d]))
         candidate = h[:]
         for left, right, replacement in reversed(edits):
