@@ -1255,6 +1255,17 @@ class Engine:
 
     def invoke(self):
         project, store = self.authority.project, self.authority.store
+        if self.resume:
+            failed_escalation = store.db.execute(
+                "SELECT task_id FROM execution_history WHERE run_id=? AND kind='implementation_escalation' "
+                "AND state='failed' ORDER BY seq DESC LIMIT 1", (self.run,)).fetchone()
+            if failed_escalation:
+                # A passed checkpoint can survive a failed completion write. Enforce the
+                # owner stop before checkpoint recovery can skip that task or dispatch review.
+                reason = ('implementation escalation failed for task ' + failed_escalation['task_id'] +
+                          '; stop and notify the owner with the retained failure and partial work; owner direction required')
+                store.finish(self.run, 'failed', git(project, 'rev-parse', 'HEAD').decode().strip(), reason)
+                raise Blocked(reason)
         recovered = store.completed_checkpoints(self.run) if self.resume else {}
         base = store.db.execute('SELECT baseline FROM execution_runs WHERE run_id=?', (self.run,)).fetchone()['baseline'] if self.resume else git(project, 'rev-parse', 'HEAD').decode().strip()
         requested_review_base = store.input(self.run)['review_base'] if self.resume else self.contract.get('review_base', base)

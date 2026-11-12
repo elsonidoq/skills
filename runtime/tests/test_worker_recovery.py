@@ -185,6 +185,45 @@ class WorkerRecoveryTests(ProjectTest):
         self.assertEqual(calls, [('worker', 'worker'), ('worker', 'strong')])
         self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
+    def post_checkpoint_failure(self, *, interrupt, dependent):
+        calls, contract = [], self.contract()
+        if not dependent:
+            contract['tasks'] = contract['tasks'][:1]
+        adapter = self.adapter(calls)
+        with Authority(self.project) as owner:
+            self.start_failure(owner, contract, adapter)
+            owner.store.resume('recovery')
+            original_task = owner.store.task
+            def failed_completion(*args, **kwargs):
+                if args[1:3] == ('one', 'complete'):
+                    if interrupt:
+                        raise KeyboardInterrupt('fixture post-checkpoint interruption')
+                    raise OSError('fixture task-completion write failed')
+                return original_task(*args, **kwargs)
+            expected = KeyboardInterrupt if interrupt else Blocked
+            with patch.object(owner.store, 'task', side_effect=failed_completion), self.assertRaises(expected):
+                Engine(owner, 'recovery', contract, EXECUTOR, adapter=adapter, resume=True,
+                       worker_recovery={'action': 'escalate', 'diagnosis': DIAGNOSIS}).invoke()
+            checkpoint = git(self.project, 'rev-parse', 'HEAD')
+            self.assertNotEqual(checkpoint.decode().strip(), self.base)
+            self.assertTrue(owner.store.db.execute(
+                "SELECT 1 FROM execution_history WHERE kind='checkpoint' AND state='passed'").fetchone())
+        with Authority(self.project) as owner:
+            owner.store.resume('recovery')
+            with self.assertRaisesRegex(Blocked, 'stop and notify the owner.*owner direction required'):
+                Engine(owner, 'recovery', contract, EXECUTOR, adapter=adapter, resume=True,
+                       question=self.no_owner_question).invoke()
+            state = owner.store.db.execute("SELECT state FROM execution_runs WHERE run_id='recovery'").fetchone()[0]
+        self.assertEqual(state, 'failed')
+        self.assertEqual(calls, [('worker', 'worker'), ('worker', 'strong')])
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), checkpoint)
+
+    def test_post_checkpoint_escalation_completion_failure_blocks_dependent_dispatch(self):
+        self.post_checkpoint_failure(interrupt=False, dependent=True)
+
+    def test_post_checkpoint_escalation_interruption_blocks_final_review(self):
+        self.post_checkpoint_failure(interrupt=True, dependent=False)
+
     def test_recovery_requires_diagnosis_and_exact_settled_history(self):
         with Authority(self.project) as owner:
             for diagnosis in ('', 'retry', 'unknown'):
