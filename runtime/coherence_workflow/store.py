@@ -406,7 +406,7 @@ class Store:
 
     def task_facts(self, run, task):
         """Return only paths/artifacts recorded before an unfinished task interruption."""
-        paths, artifacts = set(), set()
+        paths, artifacts, edit_only = set(), set(), {}
         for row in self.db.execute("SELECT details FROM execution_history WHERE run_id=? AND task_id=? AND kind='mutation' AND state='claimed' ORDER BY seq", (run, task)):
             try:
                 facts = json.loads(row['details'])
@@ -417,7 +417,16 @@ class Store:
                 if not isinstance(values, list) or any(not isinstance(value, str) or not value for value in values):
                     raise Blocked('resume cannot continue task ' + task + ': saved mutation facts are invalid')
                 target.update(values)
-        return {'paths': sorted(paths), 'artifacts': sorted(artifacts)}
+            saved = facts.get('edit_only', {})
+            if not isinstance(saved, dict) or any(not isinstance(k, str) or not isinstance(v, dict) for k, v in saved.items()):
+                raise Blocked('resume cannot continue task ' + task + ': saved edit-only facts are invalid')
+            for name, fact in saved.items():
+                if name in edit_only and edit_only[name] != fact:
+                    raise Blocked('resume cannot continue task ' + task + ': edit-only baseline changed for ' + name)
+                edit_only[name] = fact
+        if not set(edit_only) <= paths:
+            raise Blocked('resume cannot continue task ' + task + ': edit-only claim is missing its path')
+        return {'paths': sorted(paths), 'artifacts': sorted(artifacts), 'edit_only': edit_only}
 
     def input(self, run):
         row = self.db.execute('SELECT contract,executor,authority,review_base FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()

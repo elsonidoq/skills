@@ -1581,6 +1581,14 @@ class Engine:
                             "AND kind='implementation_escalation' LIMIT 1", (self.run, task['id'])).fetchone():
                         raise Blocked('implementation escalation did not complete task ' + task['id'] +
                                       '; stop and notify the owner with the retained failure and partial work; owner direction required')
+                    if self.resume:
+                        pending = store.db.execute(
+                            "SELECT state FROM execution_history WHERE run_id=? AND task_id=? "
+                            "AND kind='edit_only_checkpoint' ORDER BY seq DESC LIMIT 1",
+                            (self.run, task['id'])).fetchone()
+                        if pending and pending['state'] == 'started':
+                            raise Blocked('unfinished edit-only checkpoint for task ' + task['id'] +
+                                          '; inspect retained parent/tree, HEAD and index before continuation')
                     focused = FocusedGit(project, task, store.task_facts(self.run, task['id']) if self.resume else None)
                     store.task(self.run, task['id'], 'running', focused.base)
                     recorder.emit(preparation, 'prepare', 'passed', task_id=task['id'])
@@ -1639,6 +1647,7 @@ class Engine:
                                 correction = self.worker_recovery['diagnosis'] if self.worker_recovery else self.question(
                                     'As coordinating agent, inspect this terminal worker failure and its saved session before continuing. '
                                     'Provide the inspected diagnosis and a targeted correction justifying safe continuation '
+                                    '(optional JSON: {\"diagnosis\":\"...\",\"edit_only_paths\":[\"exact/path\"]} for authorized edit-only dirty source paths) '
                                     '(not an unchanged retry); do not ask the owner to debug routine technical failures; leave empty if unknown. '
                                     'Unfinished task: ' + task['id'] + '. Preserve its existing requirements, authority, and acceptance constraints. '
                                     'Retained history reference: ' + canonical({
@@ -1648,6 +1657,18 @@ class Engine:
                                         'diagnostic': continuation.get('diagnostic'),
                                         'saved_session_id': (continuation.get('saved_session') or {}).get('id'),
                                     }))
+                                try:
+                                    structured = json.loads(correction)
+                                except (TypeError, ValueError):
+                                    structured = None
+                                    if '"edit_only_paths"' in correction:
+                                        raise Blocked('invalid structured continuation answer; supply diagnosis and exact edit_only_paths') from None
+                                if isinstance(structured, dict) and 'edit_only_paths' in structured:
+                                    if (set(structured) != {'diagnosis', 'edit_only_paths'}
+                                            or not isinstance(structured['diagnosis'], str) or not structured['diagnosis'].strip()):
+                                        raise Blocked('structured continuation answer requires diagnosis and edit_only_paths')
+                                    focused.authorize_edit_only(structured['edit_only_paths'])
+                                    correction = structured['diagnosis']
                                 if not correction.strip() or correction.strip().lower() in ('unknown', 'retry', 'yes'):
                                     raise Blocked('terminal worker cause/targeted correction remains unknown; no worker relaunched')
                                 continuation['targeted_correction'] = correction
@@ -1869,6 +1890,7 @@ class Engine:
                                 store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
 
                     checks = correct_required_checks()
+                    focused.checkpoint_intent = lambda facts: store.history(self.run, task['id'], 'edit_only_checkpoint', 'started', facts)
                     previous_checkpoint_error = None
                     while True:
                         checkpoint_occurrence = recorder.occurrence()
@@ -1882,6 +1904,8 @@ class Engine:
                             checkpoint = focused.reconcile_checkpoint()
                             if checkpoint is not None:
                                 break
+                            if hasattr(focused, 'checkpoint_tree') and git(project, 'rev-parse', 'HEAD').decode().strip() == focused.checkpoint_parent:
+                                store.history(self.run, task['id'], 'edit_only_checkpoint', 'aborted', {'parent': focused.checkpoint_parent})
                             if isinstance(exc, (KeyboardInterrupt, SystemExit)):
                                 raise
                             if escalated:
@@ -1915,6 +1939,8 @@ class Engine:
                                                  'correction_chain': list(invocation_chain)})
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts=checkpoint_facts)
                     store.history(self.run, task['id'], 'checkpoint', 'passed', checkpoint)
+                    if hasattr(focused, 'checkpoint_tree'):
+                        store.history(self.run, task['id'], 'edit_only_checkpoint', 'resolved', {'sha': checkpoint['sha']})
                     checkpoints.append(checkpoint)
                     if not escalated:
                         self._settle_session(task, worker, session_request, reuse_key, checkpoint)

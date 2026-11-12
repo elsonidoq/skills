@@ -137,7 +137,31 @@ same bytes, then permits the intended edit and focused checkpoint. A resumed tas
 claimed exact transfer, so it checkpoints that intended edit without resnapshotting it or requiring a second edit. This is a narrow transfer, not an
 `owned_paths` extension: directory/glob/broad coverage never adopts dirty content. A changed, missing,
 symlinked, or unapproved target is refused with its filename, operation, and the corrective action
-(restoring its authorized bytes or supplying a current exact handoff entry). Optional `generated_outputs`
+(restoring its authorized bytes or supplying a current exact handoff entry).
+
+For a failed task continuation, the coordinator's existing diagnosis question also accepts exactly
+`{"diagnosis":"inspected cause and targeted correction","edit_only_paths":["path/to/file"]}`.
+Use this only for exact dirty source paths with actual edit-only authority; it does not transfer or
+approve inherited content, widen `owned_paths`, or change the original task. Plain-text diagnosis
+remains supported. At first claim the runner privately retains the original worktree bytes/mode and
+committed/index identity; subsequent resume uses that same baseline. The path must be a tracked
+regular file with index equal to HEAD and no inherited mode change. Binary, filtered, overlapping,
+ambiguous or drifted changes stop for inspection; repeated lines can make attribution conservative.
+The runner applies only the task delta to the committed source and commits the resulting candidate
+using normal hooks/signing and an internal temporary index and source materialization. Hooks run
+against candidate source, so dependencies needed by a hook must be available there. The mixed worktree stays in place, with
+inherited content left unstaged; unrelated staged entries remain intact. A pending checkpoint after
+an abrupt restart stops for inspection of its recorded parent/tree, HEAD and index, rather than replay.
+
+Tests against the mixed worktree do **not** establish candidate behavior. Independently check the
+candidate snapshot: after the focused checkpoint, extract its exact SHA into an isolated directory
+(for example `git archive SHA | tar -x -C /path/to/empty-directory`) and run the applicable checks
+there, with any necessary test dependencies supplied separately. This creates no branch or Git
+worktree. Before checkpoint, `FocusedGit.materialize_candidates(directory)` can overlay the selected
+source changes on an external directory populated from the current HEAD; do not target the checkout.
+Neither extraction nor a passing mixed-worktree check is an acceptance verdict.
+
+Optional `generated_outputs`
 names expected task artifacts for selective regeneration/cleanup guidance, not a registration, allowlist,
 permission prerequisite, or automatic commit target.
 

@@ -1,5 +1,8 @@
 """Action-scoped focused commits preserve unrelated Git and filesystem work."""
 import os
+import subprocess
+import sys
+import tempfile
 from unittest.mock import patch
 
 from coherence_workflow.git_effects import FocusedGit, editable_path
@@ -85,6 +88,179 @@ class FocusedCheckpointTests(ProjectTest):
                 self.assertEqual(git(self.project, 'show', 'HEAD:' + name), before + b'intended correction\n')
                 self.assertEqual(git(self.project, 'show', ':other.txt'), staged)
                 self.assertEqual((self.project/'unrelated.txt').read_bytes(), b'unrelated unstaged\n')
+
+    def test_edit_only_checkpoint_excludes_inherited_bytes_and_preserves_staged_work(self):
+        self.write('owned.txt', 'base\ninherited\n')
+        self.write('other.txt', 'unrelated staged\n')
+        git(self.project, 'add', '--', 'other.txt')
+        staged = git(self.project, 'show', ':other.txt')
+        f = self.focused(owned_paths=['owned.txt'])
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        self.write('owned.txt', 'task change\ninherited\n')
+        result = f.checkpoint()
+        self.assertEqual(git(self.project, 'show', result['sha'] + ':owned.txt'), b'task change\n')
+        self.assertEqual((self.project/'owned.txt').read_bytes(), b'task change\ninherited\n')
+        self.assertEqual(git(self.project, 'show', ':other.txt'), staged)
+        self.assertEqual(git(self.project, 'show', ':owned.txt'), b'task change\n')
+        self.assertTrue(git(self.project, 'diff', '--', 'owned.txt'))
+
+    def test_edit_only_resume_retains_start_and_clean_claim_and_materializes_candidate(self):
+        self.write('owned.txt', 'base\ninherited\n')
+        f = self.focused(owned_paths=['owned.txt', 'clean.txt'])
+        f.claim('clean.txt')
+        self.write('clean.txt', 'clean task\n')
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        original = f.facts()
+        self.write('owned.txt', 'task change\ninherited\n')
+        resumed = FocusedGit(self.project, {'id': 'fix', 'owned_paths': ['owned.txt', 'clean.txt']}, original)
+        resumed.claim('owned.txt')
+        self.assertEqual(resumed.facts()['edit_only'], original['edit_only'])
+        with tempfile.TemporaryDirectory() as temp:
+            resumed.materialize_candidates(temp)
+            from pathlib import Path
+            self.assertEqual((Path(temp)/'owned.txt').read_bytes(), b'task change\n')
+            self.assertEqual((Path(temp)/'clean.txt').read_bytes(), b'clean task\n')
+        result = resumed.checkpoint()
+        self.assertEqual(set(result['paths']), {'owned.txt', 'clean.txt'})
+        self.assertEqual(git(self.project, 'show', 'HEAD:owned.txt'), b'task change\n')
+        self.assertEqual(git(self.project, 'show', 'HEAD:clean.txt'), b'clean task\n')
+        self.assertEqual((self.project/'owned.txt').read_bytes(), b'task change\ninherited\n')
+
+    def test_materialized_edit_only_candidate_runs_without_inherited_behavior(self):
+        self.write('script.py', 'value = 1\nprint(value)\n')
+        git(self.project, 'add', '--', 'script.py')
+        git(self.project, 'commit', '-qm', 'script baseline')
+        self.write('script.py', 'value = 1\nprint(value)\nprint("inherited")\n')
+        f = self.focused(owned_paths=['script.py'])
+        f.authorize_edit_only(['script.py'])
+        f.claim('script.py')
+        self.write('script.py', 'value = 2\nprint(value)\nprint("inherited")\n')
+        with tempfile.TemporaryDirectory() as temp:
+            f.materialize_candidates(temp)
+            from pathlib import Path
+            candidate = subprocess.run([sys.executable, str(Path(temp)/'script.py')], capture_output=True, check=True).stdout
+        mixed = subprocess.run([sys.executable, str(self.project/'script.py')], capture_output=True, check=True).stdout
+        self.assertEqual(candidate, b'2\n')
+        self.assertEqual(mixed, b'2\ninherited\n')
+        result = f.checkpoint()
+        self.assertEqual(git(self.project, 'show', result['sha'] + ':script.py'), b'value = 2\nprint(value)\n')
+
+    def test_edit_only_rejects_overlap_index_mode_and_symlink_without_losing_work(self):
+        for kind in ('overlap', 'index', 'mode', 'symlink'):
+            with self.subTest(kind=kind):
+                self.write('owned.txt', 'inherited\n')
+                f = self.focused(owned_paths=['owned.txt'])
+                f.authorize_edit_only(['owned.txt'])
+                f.claim('owned.txt')
+                self.write('owned.txt', 'task\n')
+                path = self.project/'owned.txt'
+                if kind == 'index':
+                    git(self.project, 'add', '--', 'owned.txt')
+                elif kind == 'mode':
+                    path.chmod(0o755)
+                elif kind == 'symlink':
+                    path.unlink()
+                    path.symlink_to(self.project/'other.txt')
+                before = git(self.project, 'rev-parse', 'HEAD')
+                with self.assertRaises(Blocked):
+                    f.checkpoint()
+                self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), before)
+                if kind == 'symlink':
+                    self.assertTrue(path.is_symlink())
+                    path.unlink()
+                else:
+                    self.assertEqual(path.read_text(), 'task\n')
+                    path.chmod(0o644)
+                if kind == 'index':
+                    git(self.project, 'restore', '--staged', '--', 'owned.txt')
+
+    def test_edit_only_hook_failure_and_post_commit_reconciliation_preserve_state(self):
+        self.write('owned.txt', 'base\ninherited\n')
+        f = self.focused(owned_paths=['owned.txt'])
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        self.write('owned.txt', 'task\ninherited\n')
+        hook = self.project/'.git/hooks/pre-commit'
+        hook.write_text('#!/bin/sh\necho edit-only-hook-failure >&2\nexit 1\n')
+        hook.chmod(0o755)
+        with self.assertRaisesRegex(Blocked, 'edit-only-hook-failure'):
+            f.checkpoint()
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
+        self.assertEqual((self.project/'owned.txt').read_bytes(), b'task\ninherited\n')
+        hook.unlink()
+        original = f._advance_real_index
+        with patch.object(f, '_advance_real_index', side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
+            f.checkpoint()
+        self.assertNotEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
+        with patch.object(f, '_advance_real_index', wraps=original):
+            result = f.reconcile_checkpoint()
+        self.assertEqual(git(self.project, 'show', result['sha'] + ':owned.txt'), b'task\n')
+        self.assertEqual(git(self.project, 'show', ':owned.txt'), b'task\n')
+        self.assertEqual((self.project/'owned.txt').read_bytes(), b'task\ninherited\n')
+
+    def test_edit_only_cannot_hide_removal_of_inherited_changes_as_no_change(self):
+        self.write('owned.txt', 'base\ninherited\n')
+        f = self.focused(owned_paths=['owned.txt'])
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        self.write('owned.txt', 'base\n')
+        with self.assertRaisesRegex(Blocked, 'overlapping or ambiguous'):
+            f.checkpoint()
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
+        self.assertEqual(f.facts()['edit_only']['owned.txt']['start'], 'YmFzZQppbmhlcml0ZWQK')
+
+    def test_edit_only_hook_sees_candidate_not_inherited_worktree(self):
+        self.write('owned.txt', 'base\ninherited\n')
+        f = self.focused(owned_paths=['owned.txt'])
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        self.write('owned.txt', 'task\ninherited\n')
+        hook = self.project/'.git/hooks/pre-commit'
+        hook.write_text('#!/bin/sh\ngrep -q inherited owned.txt && exit 1\ngit add -- owned.txt\n')
+        hook.chmod(0o755)
+        result = f.checkpoint()
+        self.assertEqual(git(self.project, 'show', result['sha'] + ':owned.txt'), b'task\n')
+        self.assertEqual((self.project/'owned.txt').read_bytes(), b'task\ninherited\n')
+
+    def test_edit_only_signing_failure_preserves_work_and_index(self):
+        self.write('owned.txt', 'base\ninherited\n')
+        self.write('other.txt', 'staged elsewhere\n')
+        git(self.project, 'add', '--', 'other.txt')
+        staged = git(self.project, 'show', ':other.txt')
+        signer = self.root/'fail-signer'
+        signer.write_text('#!/bin/sh\necho fixture-signing-failure >&2\nexit 1\n')
+        signer.chmod(0o755)
+        git(self.project, 'config', 'commit.gpgsign', 'true')
+        git(self.project, 'config', 'gpg.program', str(signer))
+        f = self.focused(owned_paths=['owned.txt'])
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        self.write('owned.txt', 'task\ninherited\n')
+        with self.assertRaises(Blocked):
+            f.checkpoint()
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
+        self.assertEqual(git(self.project, 'show', ':other.txt'), staged)
+        self.assertEqual(git(self.project, 'show', ':owned.txt'), b'base\n')
+        self.assertEqual((self.project/'owned.txt').read_bytes(), b'task\ninherited\n')
+
+    def test_edit_only_rejects_scope_and_head_drift(self):
+        self.write('owned.txt', 'base\ninherited\n')
+        f = self.focused(owned_paths=['owned.txt'])
+        with self.assertRaisesRegex(Blocked, 'outside owned_paths'):
+            f.authorize_edit_only(['other.txt'])
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        self.write('owned.txt', 'task\ninherited\n')
+        self.write('owned.txt', 'incoming\n')
+        git(self.project, 'add', '--', 'owned.txt')
+        git(self.project, 'commit', '-qm', 'incoming')
+        self.write('owned.txt', 'task\ninherited\n')
+        with self.assertRaisesRegex(Blocked, 'HEAD/index drift'):
+            f.checkpoint()
+        self.assertEqual((self.project/'owned.txt').read_bytes(), b'task\ninherited\n')
+        self.assertEqual(git(self.project, 'show', 'HEAD:owned.txt'), b'incoming\n')
 
     def test_handoff_refuses_broad_scope_and_pretransfer_drift(self):
         (self.project/'recovery').mkdir()
