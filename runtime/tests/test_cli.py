@@ -109,7 +109,7 @@ class CliTests(ProjectTest):
         cases = [({'TOKEN': 'partial'}, 'run mismatch'),
                  ({'RUN': 'attached'}, 'bridge unavailable'),
                  ({'RUN': 'attached', 'SOCKET': str(self.root/'absent.sock'),
-                   'SESSION': 'parent', 'TOKEN': 'token'}, 'bridge unavailable')]
+                   'SESSION': 'parent', 'TOKEN': 'token'}, 'parent channel was lost; reconnect through the parent-session bridge')]
         for values, error in cases:
             with self.subTest(values=values):
                 env = base_env | {prefix+k: v for k, v in values.items()}

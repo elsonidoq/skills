@@ -4,8 +4,10 @@ import inspect
 import json
 import math
 import os
+from pathlib import Path
 import re
 import stat
+import tempfile
 import uuid
 
 from .git_effects import FocusedGit, MetricArtifactFinalizer, _commit_result, path_has_preexisting_changes
@@ -763,9 +765,9 @@ class Engine:
             raise _ReviewFormat('reviewer result needs boolean approved, findings string list, and optional suggestions string list')
         # Findings are repair dispatch inputs, not a severity vocabulary.  Each must say
         # where the defect is, its concrete impact, and why it violates accepted work.
-        pattern = re.compile(r'^\S+:\d+(?:-\d+)?\s+-\s+\S')
+        pattern = re.compile(r'^\S+:\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*\s+-\s+\S')
         if any(not pattern.match(item.strip()) for item in findings):
-            raise _ReviewFormat('review blocker needs a path:line or path:start-end location and concrete defect/impact')
+            raise _ReviewFormat('review blocker needs a path:line or path:start-end[,start-end] location and concrete defect/impact')
         # Basis is described in ordinary defect prose, not a mandatory suffix.
         result = {'approved': value['approved'], 'findings': findings, 'suggestions': suggestions}
         if require_coverage or 'coverage' in value or 'coverage_gaps' in value:
@@ -796,7 +798,7 @@ class Engine:
             selected.append(value)
         return selected
 
-    def _review_check_evidence(self):
+    def _review_check_evidence(self, *, output_dir=None):
         """Give reviewers private retained check facts, never inferred completion claims."""
         rows = []
         for row in self.authority.store.db.execute(
@@ -849,8 +851,18 @@ class Engine:
                     continue
                 for attempt in matching:
                     fact = attempt['details']
+                    output = fact.get('output')
+                    if output_dir is None:
+                        output_ref = canonical(output)
+                    else:
+                        if not isinstance(output, str):
+                            raise Blocked('retained check output is missing or invalid; inspect required check history before review')
+                        path = Path(output_dir) / ('check-' + str(attempt['seq']) + '.txt')
+                        if not path.exists():
+                            path.write_text(output, encoding='utf-8')
+                        output_ref = 'private full output file ' + str(path)
                     section.append('Retained ' + attempt['state'] + ' execution: command ' + canonical(fact.get('command')) +
-                                   ', exit ' + str(fact.get('exit_code')) + ', output ' + canonical(fact.get('output')) + '.')
+                                   ', exit ' + str(fact.get('exit_code')) + ', output ' + output_ref + '.')
                 if not any(attempt['state'] == 'passed' for attempt in matching):
                     section.append('GAP: required command has no retained passing execution; a zero exit or clean tree is not substituted.')
             sections.append('\n'.join(section))
@@ -940,7 +952,7 @@ class Engine:
 
     def _review(self, *, recorder, review_base, head, ordinal, fixing_round=0,
                 trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None,
-                execution_id=None, refresh_target=False):
+                execution_id=None, refresh_target=False, retry_limit=None):
         """Dispatch exactly one fresh read-only reviewer and retain its actual outcome."""
         store = self.authority.store
         execution_id = execution_id or uuid.uuid4().hex
@@ -949,7 +961,7 @@ class Engine:
                                                              review_head=head)
             ordinal, fixing_round = refreshed['review_ordinal'], refreshed['fixing_round']
             trigger_execution_id = predecessor_execution_id = refreshed['trigger_execution_id']
-        else:
+        elif retry_limit is None:
             store.review_dispatch(self.run, execution_id, role='reviewer', review_ordinal=ordinal,
                                   fixing_round=fixing_round, trigger_execution_id=trigger_execution_id,
                                   predecessor_execution_id=predecessor_execution_id,
@@ -1003,8 +1015,10 @@ class Engine:
                     'summary': prior_summary if prior_summary is not None else {
                         'coverage': [], 'coverage_gaps': ['Historical review has no explicit coverage; establish original coverage before approval.']}}) + '\n')
         diff = git(self.authority.project, 'diff', '--no-ext-diff', '--no-textconv', diff_base + '..' + head).decode(errors='replace')
+        evidence_dir = tempfile.mkdtemp(prefix='coherence-review-')
+        retry_dispatched = False
         try:
-            text = reviewer.prompt('Independently review the actual committed range below against the requested tasks. '
+            prompt = ('Independently review the actual committed range below against the requested tasks. '
                 'You are read-only and are NOT the implementation conversation. Skills are disabled for this reviewer, '
                 'so locate and read the canonical contract as a file with read/search tools; continue long reads with offsets. '
                 + _DECISION_CONSTRAINTS + _ROUTINE_AUTHORITY + self.paid_authority()
@@ -1020,14 +1034,23 @@ class Engine:
                 'Evaluate retained check evidence semantically: distinguish actual passing execution, failed or missing required execution, and an inability to rerun because you are read-only. Do not invent a live check; a read-only inability to rerun does not negate a valid retained pass.\n'
                 'Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
                 '\nReview delta: ' + diff_base + '..' + head + '\nDiff:\n' + diff + '\n' + self._review_attribution(review_base, head) +
-                '\n' + self._review_check_evidence() + '\n' + self._review_worker_evidence()[0],
-                read_only=True)
+                '\nFull check outputs are in the private files referenced below; read relevant files with the read tool and continue long reads with offsets. '
+                + self._review_check_evidence(output_dir=evidence_dir) + '\n' + self._review_worker_evidence()[0])
+            if retry_limit is not None:
+                if len(prompt) > retry_limit:
+                    raise Blocked('corrected review payload still exceeds the reported provider field limit; inspect retained evidence delivery')
+                store.review_size_retry_dispatch(self.run, execution_id, review_base=review_base, review_head=head)
+                retry_dispatched = True
+            text = reviewer.prompt(prompt, read_only=True)
             value = self._review_value(text, require_coverage=True)
         except BaseException as exc:
+            if retry_limit is not None and not retry_dispatched:
+                raise
             state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
             store.review_outcome(self.run, execution_id, state, findings=[], suggestions=[],
                                  uncertainty=state != 'failed' or isinstance(exc, _ReviewFormat),
-                                 references={'base': review_base, 'head': head})
+                                 references={'base': review_base, 'head': head,
+                                             'failure_category': 'malformed' if isinstance(exc, _ReviewFormat) else _failure(exc)})
             recorder.emit(execution_id, 'review', state, facts={
                 'role': 'reviewer', 'execution_id': execution_id, 'review_ordinal': ordinal,
                 'review_base': review_base, 'review_head': head, 'outcome': state,
@@ -1056,6 +1079,106 @@ class Engine:
         recorder.emit(execution_id, 'review', 'passed' if state == 'approved' else 'failed', facts=review_facts)
         return execution_id, value, state
 
+    def _recover_format_rejection(self, chain, review_base):
+        """Recover only an explicitly supplied compatible completed initial review artifact."""
+        items = chain['executions']
+        if not self.resume or len(items) != 1:
+            return False
+        item = items[0]
+        if (item['role'] != 'reviewer' or item['review_ordinal'] != 1 or item['fixing_round'] != 0 or
+                item['state'] != 'failed' or not item['uncertain'] or item['attempt_count'] != 2 or
+                item['references'].get('base') != review_base):
+            return False
+        head = item['references'].get('head')
+        store = self.authority.store
+        dispatch = store.db.execute('SELECT review_base,review_head,trigger_execution_id,predecessor_execution_id '
+            'FROM execution_review_executions WHERE run_id=? AND execution_id=?',
+            (self.run, item['execution_id'])).fetchone()
+        attempts = store.db.execute('SELECT state,uncertainty FROM execution_review_attempts '
+            'WHERE run_id=? AND execution_id=? ORDER BY seq', (self.run, item['execution_id'])).fetchall()
+        if (dispatch is None or tuple(dispatch) != (review_base, head, None, None) or
+                [tuple(row) for row in attempts] != [('dispatched', 0), ('failed', 1)]):
+            raise Blocked('review recovery dispatch or failed attempt mismatch; inspect retained review history')
+        # A retained failure category establishes the cause, not session identity.
+        # Older attempts may have only an observation of that category.
+        categories = [item['references'].get('failure_category')]
+        observations = store.db.execute('SELECT facts FROM execution_observations WHERE run_id=? '
+            "AND occurrence_id=? AND phase='review' AND kind='failed'", (self.run, item['execution_id'])).fetchall()
+        for row in observations:
+            try:
+                categories.append(json.loads(row['facts']).get('error_category'))
+            except (ValueError, TypeError, AttributeError):
+                pass
+        categories = [category for category in categories if category is not None]
+        if not categories or any(category != 'malformed' for category in categories):
+            raise Blocked('review recovery failure cause is not known to be format-related; inspect the original transport')
+        project = self.authority.project
+        if not isinstance(head, str) or git(project, 'rev-parse', 'HEAD').decode().strip() != head:
+            raise Blocked('review recovery target drifted; inspect the original reviewed head before continuation')
+        if git(project, 'status', '--porcelain=v1', '--untracked-files=no'):
+            raise Blocked('review recovery target has tracked changes; preserve and reconcile them before continuation')
+        path = self.question('A first read-only review has an uncertain failed outcome. If inspection found its exact completed '
+            'reviewer transcript with a compound-location format failure, provide its path; otherwise leave empty to stop. '
+            'The artifact will be checked against the original task scope, review range and committed diff; this does not '
+            'assert a historically retained session link. Execution: ' + item['execution_id'])
+        if not isinstance(path, str) or not path.strip():
+            raise Blocked('review recovery needs the exact completed reviewer transcript; inspect the failed invocation')
+        try:
+            entries = [json.loads(line) for line in Path(path.strip()).read_text(encoding='utf-8').splitlines()]
+            if len(entries) < 3 or entries[0].get('type') != 'session' or Path(entries[0].get('cwd', '')).resolve() != Path(project).resolve():
+                raise ValueError('session or project mismatch')
+            previous = None
+            for entry in entries[1:]:
+                if not isinstance(entry, dict) or not isinstance(entry.get('id'), str) or entry.get('parentId') != previous:
+                    raise ValueError('ambiguous transcript chain')
+                previous = entry['id']
+            messages = [entry.get('message') for entry in entries if entry.get('type') == 'message']
+            if not all(isinstance(message, dict) for message in messages):
+                raise ValueError('invalid transcript message')
+            users = [message for message in messages if message.get('role') == 'user']
+            final = messages[-1]
+            if len(users) != 1 or final.get('role') != 'assistant' or final.get('stopReason') != 'stop':
+                raise ValueError('missing completed reviewer return')
+            user_content, final_content = users[0].get('content'), final.get('content')
+            if (not isinstance(user_content, list) or len(user_content) != 1 or user_content[0].get('type') != 'text' or
+                    not isinstance(final_content, list) or len(final_content) != 1 or final_content[0].get('type') != 'text'):
+                raise ValueError('ambiguous reviewer prompt or return')
+            prompt, text = user_content[0]['text'], final_content[0]['text']
+            if not isinstance(prompt, str) or not isinstance(text, str):
+                raise ValueError('invalid reviewer prompt or return')
+            for message in messages:
+                if message.get('role') == 'assistant':
+                    for part in message.get('content', []):
+                        if part.get('type') == 'toolCall' and part.get('name') not in ('read', 'grep', 'find', 'ls'):
+                            raise ValueError('review used a non-read-only tool')
+            diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', review_base + '..' + head).decode(errors='replace')
+            scope = ('Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
+                     '\nReview delta: ' + review_base + '..' + head + '\nDiff:\n' + diff + '\n')
+            if (not prompt.startswith('Independently review the actual committed range below against the requested tasks.') or
+                    'You are read-only and are NOT the implementation conversation.' not in prompt or
+                    'Initial review: examine the complete requested change' not in prompt or prompt.count(scope) != 1):
+                raise ValueError('initial review scope, range, or diff mismatch')
+            raw = text.strip()
+            if raw.startswith('```') and raw.endswith('```'):
+                raw = raw.split('\n', 1)[1].rsplit('```', 1)[0].strip()
+            original = json.loads(raw)
+            value = self._review_value(text, require_coverage=True)
+            legacy = re.compile(r'^\S+:\d+(?:-\d+)?\s+-\s+\S')
+            if (original.get('approved') is not False or not value['findings'] or
+                    any(original.get(key) != value[key] for key in ('coverage', 'coverage_gaps')) or
+                    all(legacy.match(finding.strip()) for finding in value['findings'])):
+                raise ValueError('not an actionable compound-location rejection')
+        except (OSError, UnicodeError, ValueError, TypeError, KeyError, IndexError, AttributeError, _ReviewFormat) as exc:
+            raise Blocked('review recovery artifact is invalid or incompatible; inspect the exact completed reviewer transcript: ' + str(exc)) from None
+        if git(project, 'rev-parse', 'HEAD').decode().strip() != head or git(project, 'status', '--porcelain=v1', '--untracked-files=no'):
+            raise Blocked('review recovery target drifted during inspection; reconcile before continuation')
+        store.review_outcome(self.run, item['execution_id'], 'rejected', findings=value['findings'],
+            suggestions=value['suggestions'], references={'base': review_base, 'head': head,
+                'review_summary': {key: value[key] for key in ('coverage', 'coverage_gaps')},
+                'diff_base': review_base, 'prior_review': None,
+                'recovery': 'coordinator supplied compatible completed initial review artifact; original session linkage not retained'})
+        return True
+
     def _finish_reviews(self, *, recorder, terminal, checkpoints, base, review_base, terminal_stop=None):
         """Select the last eligible persisted stage; owner grants add one pair only."""
         store = self.authority.store
@@ -1080,6 +1203,8 @@ class Engine:
         while True:
             chain = store.review_chain(self.run, private=True)
             if chain['uncertain']:
+                if self._recover_format_rejection(chain, review_base):
+                    continue
                 raise Blocked('review invocation outcome is uncertain; inspect it before any replay')
             executions = chain['executions']
             if not executions:
@@ -1100,6 +1225,39 @@ class Engine:
                         recovered=recovered)
                 continue
             review = value(last)
+            if (self.resume and last['role'] == 'reviewer' and last['state'] == 'failed' and
+                    not last['uncertain'] and last['attempt_count'] == 2 and
+                    last['references'].get('failure_category') == 'transport'):
+                head = last['references'].get('head')
+                attempts = store.db.execute('SELECT state,uncertainty,recorded_at FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq', (self.run, last['execution_id'])).fetchall()
+                # The first invocation boundary after this review attempt is its
+                # outcome; later resume failures must not replace its cause.
+                failure = store.db.execute("SELECT state,details,recorded_at FROM execution_history WHERE run_id=? AND kind='invocation' AND recorded_at>=? ORDER BY seq LIMIT 1", (self.run, attempts[-1]['recorded_at'])).fetchone() if attempts else None
+                try:
+                    details = json.loads(failure['details']) if failure and failure['state'] == 'failed' else {}
+                except (TypeError, ValueError):
+                    details = {}
+                match = re.fullmatch(r"SDK operation failed: Codex error: Invalid response\.create payload: Invalid 'input\[0\]\.content\[0\]\.text': string too long\. Expected a string with maximum length (\d+), but got a string with length (\d+) instead\.", details.get('error', ''))
+                dispatch = store.db.execute('SELECT review_base,review_head FROM execution_review_executions WHERE run_id=? AND execution_id=?', (self.run, last['execution_id'])).fetchone()
+                saved = store.input(self.run)
+                predecessor = executions[-2] if len(executions) > 1 else None
+                causal = ((predecessor is None and last['review_ordinal'] == 1 and last['fixing_round'] == 0 and last['trigger_execution_id'] is None and last['predecessor_execution_id'] is None) or
+                          (predecessor is not None and predecessor['role'] == 'fixer' and predecessor['state'] == 'approved' and
+                           last['trigger_execution_id'] == predecessor['execution_id'] and last['predecessor_execution_id'] == predecessor['execution_id'] and
+                           last['review_ordinal'] == predecessor['review_ordinal'] + 1 and last['fixing_round'] == predecessor['fixing_round'] and
+                           predecessor['references'].get('head') == head))
+                if (match and int(match.group(2)) > int(match.group(1)) and
+                        [tuple(row)[:2] for row in attempts] == [('dispatched', 0), ('failed', 0)] and
+                        dispatch is not None and tuple(dispatch) == (review_base, head) and failure['recorded_at'] >= attempts[-1]['recorded_at'] and
+                        details.get('result') == head and last['references'].get('base') == review_base and
+                        saved and saved['contract'] == self.contract and saved['review_base'] == review_base and causal):
+                    if git(self.authority.project, 'rev-parse', 'HEAD').decode().strip() != head or git(self.authority.project, 'status', '--porcelain=v1', '--untracked-files=no'):
+                        raise Blocked('review delivery target drifted; inspect the reviewed target before continuation')
+                    self._review(recorder=recorder, review_base=review_base, head=head, ordinal=last['review_ordinal'],
+                                 fixing_round=last['fixing_round'], trigger_execution_id=last['trigger_execution_id'],
+                                 predecessor_execution_id=last['predecessor_execution_id'], input_checkpoints=last.get('input_checkpoints'),
+                                 execution_id=last['execution_id'], retry_limit=int(match.group(1)))
+                    continue
             if last['role'] == 'reviewer':
                 if last['state'] == 'approved':
                     return complete(last, review)
@@ -1232,6 +1390,108 @@ class Engine:
                 raise Blocked('review target drifted after repair; inspect affected continuation before dispatch')
             self._review(recorder=recorder, review_base=review_base, head=head, ordinal=ordinal, fixing_round=round_,
                          trigger_execution_id=last['execution_id'], predecessor_execution_id=last['execution_id'], execution_id=reviewer_id)
+
+    def recover_task(self, recovery, *, owner_authorized=False):
+        """Verify/checkpoint an explicit external same-task completion; never replay its SDK call."""
+        from .processes import inspect_recorded_writers
+        if owner_authorized is not True:
+            raise Blocked('external task recovery requires actual owner authorization; obtain it and supply --owner-authorized')
+        project, store = self.authority.project, self.authority.store
+        inspect_recorded_writers(store.db, 'external task recovery')
+        saved = store.input(self.run)
+        run = store.db.execute('SELECT state FROM execution_runs WHERE run_id=?', (self.run,)).fetchone()
+        if not saved or not run or run['state'] not in ('failed', 'interrupted'):
+            raise Blocked('external task recovery needs a retained failed/interrupted run; inspect status/history first')
+        store.review_policy(self.run)
+        if not isinstance(recovery, dict) or any(not isinstance(recovery.get(key), str) or not recovery[key].strip()
+                for key in ('task_id', 'invocation_id', 'head', 'diagnosis', 'worker', 'summary')):
+            raise Blocked('external task recovery needs task_id, invocation_id, head, inspected diagnosis, external worker attribution and acceptance summary; correct --recovery JSON')
+        paths = recovery.get('paths')
+        if not isinstance(paths, dict) or not paths or any(not isinstance(name, str) or not name or
+                not isinstance(value, dict) or set(value) != {'sha256', 'mode'} or
+                not isinstance(value['sha256'], str) or not re.fullmatch('[0-9a-f]{64}', value['sha256']) or
+                type(value['mode']) is not int for name, value in paths.items()):
+            raise Blocked('external task recovery needs exact regular-file paths with sha256 and mode; correct the explicit transfer')
+        task_id = recovery['task_id']
+        task = next((task for task in saved['contract']['tasks'] if task['id'] == task_id), None)
+        if task is None:
+            raise Blocked('external recovery task is not in retained input; select the exact unfinished task')
+        recovery_id = hashlib.sha256(canonical(recovery).encode()).hexdigest()
+        prior = [(row['state'], json.loads(row['details'])) for row in store.db.execute(
+            "SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='external_recovery' ORDER BY seq",
+            (self.run, task_id))]
+        completed = store.completed_checkpoints(self.run)
+        if task_id in completed:
+            if any(state == 'authorized' and facts.get('recovery_id') == recovery_id for state, facts in prior) and completed[task_id].get('external_recovery_id') == recovery_id:
+                return completed[task_id]
+            raise Blocked('external recovery cannot replace a completed task; retain its checkpoint')
+        first = next((item['id'] for item in saved['contract']['tasks'] if item['id'] not in completed), None)
+        if first != task_id or any(dep not in completed for dep in task.get('depends', [])):
+            raise Blocked('external recovery must checkpoint the next unfinished task after its dependencies; inspect retained progress')
+        calls = {}
+        for row in store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker_invocation' ORDER BY seq", (self.run, task_id)):
+            facts = json.loads(row['details'])
+            calls[facts.get('invocation_id')] = (row['state'], facts)
+        if not calls or any(state not in ('failed', 'interrupted', 'returned') for state, _ in calls.values()):
+            raise Blocked('external recovery has uncertain worker terminal history; reconcile the saved invocation before transfer')
+        last_id = next(reversed(calls))
+        if last_id != recovery['invocation_id']:
+            raise Blocked('external recovery invocation is not the latest inspected task call; correct the transfer reference')
+        # A checkpoint may have completed before its result write. Reconcile only this
+        # retained operation's exact parent, paths and content, never arbitrary HEAD.
+        intent = next((facts for state, facts in reversed(prior) if state == 'checkpoint_started'), None)
+        head = git(project, 'rev-parse', 'HEAD').decode().strip()
+        if head != recovery['head']:
+            if not intent or intent.get('recovery_id') != recovery_id:
+                raise Blocked('external recovery HEAD drifted; inspect the target before a new exact transfer')
+            focused = FocusedGit(project, {**task, 'handoff_paths': []})
+            focused.base = recovery['head']
+            focused.checkpoint_parent, focused.checkpoint_paths = recovery['head'], sorted(paths)
+            checkpoint = focused.reconcile_checkpoint()
+            if checkpoint is None or any(git(project, 'rev-parse', head + ':' + name).decode().strip() != blob
+                                         for name, blob in intent['blobs'].items()):
+                raise Blocked('external recovery checkpoint does not match retained intent; inspect actual Git effects without replay')
+            checks = intent['checks']
+        else:
+            # No prior claim is restored here: every transferred byte is explicitly
+            # selected anew by the owner, including same-task partial work.
+            focused = FocusedGit(project, {**task, 'handoff_paths': sorted(paths)})
+            focused.accept_completed_handoff(paths)
+            index = self._repair_index_state(project, paths)
+            store.history(self.run, task_id, 'external_recovery', 'authorized', {
+                'recovery_id': recovery_id, 'decision': 'affirmative_actual_owner', 'transfer': recovery})
+            manual_gates(task, self.question)
+            checks = run_checks(project, task, lock_fd=self.authority.lock.fileno(),
+                completed=lambda state, attempt: store.history(self.run, task_id, 'check', state, attempt))
+            focused.accept_completed_handoff(paths)
+            if git(project, 'rev-parse', 'HEAD').decode().strip() != recovery['head'] or self._repair_index_state(project, paths) != index:
+                raise Blocked('external recovery target/index drifted during verification; inspect before checkpointing')
+            blobs = self._repair_blobs(project, paths)
+            store.history(self.run, task_id, 'external_recovery', 'checkpoint_started', {
+                'recovery_id': recovery_id, 'checks': checks, 'blobs': blobs})
+            try:
+                checkpoint = focused.checkpoint()
+            except BaseException:
+                checkpoint = focused.reconcile_checkpoint()
+                if checkpoint is None:
+                    raise
+            if any(git(project, 'rev-parse', checkpoint['sha'] + ':' + name).decode().strip() != blob
+                   for name, blob in blobs.items()):
+                raise Blocked('external recovery committed bytes differ from the transfer; inspect actual Git effects without replay')
+        if self._repair_source_state(project, paths) != paths:
+            raise Blocked('external recovery working bytes drifted at checkpoint; inspect actual Git effects before continuation')
+        for name, expected in paths.items():
+            mode = git(project, 'ls-tree', checkpoint['sha'], '--', name).split()[0].decode()
+            if mode != ('100755' if expected['mode'] & 0o111 else '100644'):
+                raise Blocked('external recovery committed mode differs for ' + name + '; inspect actual Git effects before continuation')
+        summary = 'External recovery by ' + recovery['worker'] + ': ' + recovery['summary']
+        checkpoint.update({'parent': recovery['head'], 'task_id': task_id, 'external_recovery_id': recovery_id})
+        store.history(self.run, task_id, 'checkpoint', 'passed', checkpoint)
+        store.task(self.run, task_id, 'complete', focused.base, checkpoint['sha'], {
+            'summary': summary,
+            'external_recovery_id': recovery_id, 'checks': checks, 'paths': checkpoint['paths'], 'generated_artifacts': []})
+        store.history(self.run, task_id, 'external_recovery', 'completed', {'recovery_id': recovery_id, 'sha': checkpoint['sha']})
+        return checkpoint
 
     def refresh_review_target(self):
         """Freshly review current HEAD after a stopped, unreserved stale pair grant drifted."""

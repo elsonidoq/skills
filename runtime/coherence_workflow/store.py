@@ -706,8 +706,16 @@ class Store:
             # task tools merely to repair the interrupted completion write.
             git(self.authority.project, 'cat-file', '-e', details['sha'] + '^{commit}')
             if row['state'] != 'complete':
-                self.task(run, row['task_id'], 'complete', row['baseline'], details['sha'],
-                          {'recovered_checkpoint': details})
+                recovered = {'recovered_checkpoint': details}
+                if details.get('external_recovery_id'):
+                    for event in self.db.execute(
+                            "SELECT details FROM execution_history WHERE run_id=? AND task_id=? AND kind='external_recovery' AND state='authorized' ORDER BY seq",
+                            (run, row['task_id'])):
+                        facts = json.loads(event['details'])
+                        if facts.get('recovery_id') == details['external_recovery_id']:
+                            transfer = facts['transfer']
+                            recovered['summary'] = 'External recovery by ' + transfer['worker'] + ': ' + transfer['summary']
+                self.task(run, row['task_id'], 'complete', row['baseline'], details['sha'], recovered)
             completed[row['task_id']] = details
         return completed
 
@@ -929,6 +937,23 @@ class Store:
                                   (run, execution_id)).fetchone()
             return dispatched and row is not None and row['input_checkpoints'] == saved_inputs
         self._required_write('review dispatch history', write, completed)
+
+    def review_size_retry_dispatch(self, run, execution_id, *, review_base, review_head):
+        """Append one corrected-delivery invocation to the same failed review stage."""
+        chain = self.review_chain(run, private=True)
+        item = chain['executions'][-1] if chain['executions'] else None
+        if (chain['uncertain'] or item is None or item['execution_id'] != execution_id or
+                item['role'] != 'reviewer' or item['state'] != 'failed' or item['attempt_count'] != 2 or
+                item['references'].get('base') != review_base or item['references'].get('head') != review_head):
+            raise Blocked('review delivery continuation no longer matches the failed stage; inspect review history')
+        refs = canonical({'base': review_base, 'head': review_head, 'delivery': 'corrected-private-check-output-references'})
+        def write():
+            with self.transaction() as db:
+                db.execute('INSERT INTO execution_review_attempts(run_id,execution_id,state,uncertainty,findings,reference_json,recorded_at) VALUES(?,?,?,?,?,?,?)',
+                           (run, execution_id, 'dispatched', 0, None, refs, time.time()))
+        self._required_write('corrected review delivery dispatch', write, lambda: bool(self.db.execute(
+            'SELECT 1 FROM execution_review_attempts WHERE run_id=? AND execution_id=? AND state=? AND reference_json=?',
+            (run, execution_id, 'dispatched', refs)).fetchone()))
 
     def review_outcome(self, run, execution_id, state, *, findings=None, suggestions=None, uncertainty=False, references=None):
         if state not in ('approved', 'rejected', 'failed', 'interrupted'):
