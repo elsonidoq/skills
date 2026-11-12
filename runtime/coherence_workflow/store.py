@@ -267,7 +267,7 @@ class Store:
             raise Blocked(operation + ' needs an exact saved task-worker session file; inspect retained history or use an authorized fresh context')
         return {'id': session['id'], 'file': session['file']}
 
-    def reserve_worker_dispatch(self, run, task, invocation_id, session):
+    def reserve_worker_dispatch(self, run, task, invocation_id, session, *, recovery=None):
         """Durably consume one same-task/session worker allowance before provider dispatch."""
         if not isinstance(invocation_id, str) or not invocation_id:
             raise ValueError('worker dispatch needs an invocation ID')
@@ -318,26 +318,35 @@ class Store:
                           '; inspect retained invocation history before continuation')
         if invocation_id in reservations or invocation_id in bindings:
             raise Blocked('worker dispatch invocation is already reserved; inspect retained invocation history before continuation')
+        unresolved = [prior_id for prior_id, prior in reservations.items()
+                      if prior is None and prior_id not in bindings]
+        if unresolved:
+            raise Blocked('worker dispatch history has an unbound fresh session for task ' + task +
+                          '; inspect retained invocation ' + unresolved[-1] + ' before continuation')
+        if recovery is not None:
+            latest = next(reversed(invocation_states), None)
+            if (session is not None or not reservations or not isinstance(recovery, dict)
+                    or recovery.get('predecessor') != latest
+                    or invocation_states.get(latest) not in ('returned', 'failed', 'interrupted')
+                    or recovery.get('action') not in ('fresh', 'escalate')
+                    or not isinstance(recovery.get('diagnosis'), str) or not recovery['diagnosis'].strip()):
+                raise Blocked('fresh worker recovery needs a settled exact predecessor and targeted diagnosis; inspect retained calls')
         if session is None:
-            if reservations:
+            if reservations and recovery is None:
                 raise Blocked('worker dispatch lacks an exact saved task-worker session for task ' + task +
                               '; inspect retained history before continuation')
         else:
-            unresolved = [prior_id for prior_id, prior in reservations.items()
-                          if prior is None and prior_id not in bindings]
-            if unresolved:
-                raise Blocked('worker dispatch history has an unbound fresh session for task ' + task +
-                              '; inspect retained invocation ' + unresolved[-1] + ' before continuation')
             used = {prior_id for prior_id, prior in reservations.items()
                     if (bindings.get(prior_id) or prior) == selected}
             if len(used) >= 3:
                 raise Blocked('worker dispatch allowance exhausted for task ' + task + ' session ' + selected['id'] +
-                              ': used initial plus 2 further calls; inspect retained recovery or use an owner-authorized fresh context')
+                              ': used initial plus 2 further calls; inspect the cause and use targeted coordinator recovery')
         if any(invocation_states.get(prior_id) not in ('returned', 'failed', 'interrupted')
                for prior_id in reservations):
             raise Blocked('worker dispatch invocation history is missing or uncertain for task ' + task +
                           '; inspect retained calls before continuation')
-        details = canonical({'invocation_id': invocation_id, 'session': selected})
+        details = canonical({'invocation_id': invocation_id, 'session': selected,
+                             **({'recovery': recovery} if recovery is not None else {})})
         def write():
             with self.transaction() as db:
                 self._history_insert(db, run, task, 'worker_dispatch', 'reserved', details, time.time())

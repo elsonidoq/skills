@@ -211,6 +211,10 @@ def main(argv=None):
             sub.add_argument('--run', default=None)
         if command in ('resume', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target'):
             sub.add_argument('--run', required=True)
+        if command == 'resume':
+            sub.add_argument('--recovery-action', choices=('continue', 'fresh', 'escalate'),
+                             help='coordinator-selected inspected continuation of the unfinished task')
+            sub.add_argument('--diagnosis', help='inspected cause and targeted correction; not renewed owner consent')
         if command == 'authorize-routine-repairs':
             sub.add_argument('--scope', required=True, help='exact retained original task scope from the authorized handoff')
     args = parser.parse_args(argv)
@@ -254,8 +258,12 @@ def main(argv=None):
                     raise Blocked('resume cannot continue: retained paid scope is missing')
                 # Validate retained launch bindings before resume() records progress. A legacy
                 # missing reviewer needs owner correction, not a stranded running run.
+                if bool(args.recovery_action) != bool(args.diagnosis):
+                    raise Blocked('resume recovery needs both --recovery-action and --diagnosis')
+                recovery = {'action': args.recovery_action, 'diagnosis': args.diagnosis} if args.recovery_action else None
                 engine = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
-                                paid_scope=paid_scope, resume=True, **({'question': question} if question else {}))
+                                paid_scope=paid_scope, resume=True, worker_recovery=recovery,
+                                **({'question': question} if question else {}))
                 recovered = authority.store.resume(args.run)
                 writer_entered = True
                 result = engine.invoke()

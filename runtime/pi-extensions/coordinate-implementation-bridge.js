@@ -11,6 +11,7 @@ const startParameters = {
   type: 'object', additionalProperties: false,
   properties: {
     tasks: {type: 'string'}, executor: {type: 'string'}, run: {type: 'string'}, resume: {type: 'boolean'},
+    recovery_action: {type: 'string', enum: ['continue', 'fresh', 'escalate']}, diagnosis: {type: 'string'},
   }, required: ['run'],
 };
 const replyParameters = {
@@ -163,6 +164,8 @@ export default function coordinateImplementationBridge(pi) {
     parameters: startParameters, executionMode: 'sequential',
     async execute(_id, params, signal, _update, ctx) {
       if (active) throw new Error('coordinate implementation bridge already has an active run');
+      if ((params.recovery_action || params.diagnosis) && (!params.resume || !params.recovery_action || !params.diagnosis))
+        throw new Error('worker recovery requires resume, recovery_action and diagnosis');
       if (!params.resume && (typeof params.tasks !== 'string' || typeof params.executor !== 'string'))
         throw new Error('start requires tasks and executor; resume requires only the retained run ID');
       const directory = await mkdtemp(path.join(tmpdir(), 'coordinate-implementation-'));
@@ -212,6 +215,7 @@ export default function coordinateImplementationBridge(pi) {
         }
         const child = spawn(command, params.resume ? [
           'resume', '--project', ctx.cwd, '--run', params.run,
+          ...(params.recovery_action ? ['--recovery-action', params.recovery_action, '--diagnosis', params.diagnosis] : []),
         ] : [
           'start', '--project', ctx.cwd, '--tasks', params.tasks, '--executor', params.executor, '--run', params.run,
         ], {cwd: ctx.cwd, stdio: ['ignore', 2, 2], env: {...process.env,

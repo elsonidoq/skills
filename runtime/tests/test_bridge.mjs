@@ -287,7 +287,7 @@ test('bridge start abort signal cancels the retained owned runner after launch',
   }
 });
 
-test('bridge launches explicit same-run resume without replacement task inputs', async () => {
+for (const recovery of [undefined, 'fresh', 'escalate']) test(`bridge launches same-run resume with ${recovery || 'retained context'}`, async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-resume-bridge-'));
   try {
     await fs.mkdir(path.join(root, 'scripts'));
@@ -297,12 +297,14 @@ test('bridge launches explicit same-run resume without replacement task inputs',
     const pi = mockPi(messages, tools);
     const {default: bridge} = await import(bridgeModule);
     bridge(pi);
-    await tools.get('coordinate_implementation_start').execute('resume', {run: 'failed-run', resume: true}, undefined, undefined,
+    await tools.get('coordinate_implementation_start').execute('resume', {run: 'failed-run', resume: true,
+      ...(recovery ? {recovery_action: recovery, diagnosis: 'Inspected missing parser; implement retained task'} : {})}, undefined, undefined,
       {cwd: root, sessionManager: {getSessionId: () => 'parent-session'}});
     while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete'))
       await new Promise(resolve => setTimeout(resolve, 10));
     assert.deepEqual((await fs.readFile(path.join(root, 'resume-args'), 'utf8')).trim().split('\n'),
-      ['resume', '--project', root, '--run', 'failed-run']);
+      ['resume', '--project', root, '--run', 'failed-run',
+        ...(recovery ? ['--recovery-action', recovery, '--diagnosis', 'Inspected missing parser; implement retained task'] : [])]);
   } finally { await fs.rm(root, {recursive: true, force: true}); }
 });
 

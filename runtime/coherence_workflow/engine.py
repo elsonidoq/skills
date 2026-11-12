@@ -128,10 +128,22 @@ _ROUTINE_AUTHORITY = (
 
 
 class Engine:
-    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False):
+    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False, worker_recovery=None):
+        self.worker_recovery = worker_recovery
+        if worker_recovery is not None:
+            if (not resume or not isinstance(worker_recovery, dict)
+                    or worker_recovery.get('action') not in ('continue', 'fresh', 'escalate')
+                    or not isinstance(worker_recovery.get('diagnosis'), str)
+                    or worker_recovery['diagnosis'].strip().lower() in ('', 'unknown', 'retry', 'yes')):
+                raise Blocked('worker recovery needs resume, an action and a substantive cause-specific diagnosis/correction')
         self.authority, self.run, self.contract, self.resume = authority, run, contract, resume
         self.input_executor = executor
-        self.executor = {key: value for key, value in executor.items() if key != 'reviewer'}
+        self.executor = {key: value for key, value in executor.items() if key not in ('reviewer', 'implementation_fallback')}
+        self.implementation_fallback = executor.get('implementation_fallback')
+        if self.implementation_fallback is not None and (not isinstance(self.implementation_fallback, dict) or any(
+                not isinstance(self.implementation_fallback.get(key), str) or not self.implementation_fallback[key]
+                for key in ('provider', 'model', 'effort'))):
+            raise Blocked('implementation_fallback needs provider, model and effort strings; correct the selected executor')
         self.reviewer_executor = executor.get('reviewer')
         if not isinstance(self.reviewer_executor, dict) or any(
             not isinstance(self.reviewer_executor.get(key), str) or not self.reviewer_executor[key]
@@ -1277,7 +1289,13 @@ class Engine:
                 preparation = recorder.occurrence()
                 recorder.emit(preparation, 'prepare', 'started', task_id=task['id'])
                 focused = None
+                escalated = False
                 try:
+                    if self.resume and store.db.execute(
+                            "SELECT 1 FROM execution_history WHERE run_id=? AND task_id=? "
+                            "AND kind='implementation_escalation' LIMIT 1", (self.run, task['id'])).fetchone():
+                        raise Blocked('implementation escalation did not complete task ' + task['id'] +
+                                      '; stop and notify the owner with the retained failure and partial work; owner direction required')
                     focused = FocusedGit(project, task, store.task_facts(self.run, task['id']) if self.resume else None)
                     store.task(self.run, task['id'], 'running', focused.base)
                     recorder.emit(preparation, 'prepare', 'passed', task_id=task['id'])
@@ -1330,10 +1348,10 @@ class Engine:
                             if row['state'] == 'started':
                                 raise Blocked('unfinished worker invocation has no terminal outcome; inspect its saved call before continuation')
                             if row['state'] == 'failed':
-                                if not continuation.get('saved_session'):
+                                if not continuation.get('saved_session') and self.worker_recovery is None:
                                     raise Blocked('terminal worker failure has no saved session; inspect the failed invocation/cause before any relaunch: '
                                                   + str(continuation.get('invocation_id', 'unknown')))
-                                correction = self.question(
+                                correction = self.worker_recovery['diagnosis'] if self.worker_recovery else self.question(
                                     'As coordinating agent, inspect this terminal worker failure and its saved session before continuing. '
                                     'Provide the inspected diagnosis and a targeted correction justifying safe continuation '
                                     '(not an unchanged retry); do not ask the owner to debug routine technical failures; leave empty if unknown. '
@@ -1378,6 +1396,29 @@ class Engine:
                                 (self.run, task['id'])).fetchone()
                             if prior:
                                 raise Blocked('unfinished worker lacks retained invocation/cause; inspect legacy history before any relaunch')
+                    dispatch_recovery = None
+                    if self.worker_recovery is not None:
+                        recovery, self.worker_recovery = self.worker_recovery, None
+                        if continuation is None:
+                            raise Blocked('worker recovery needs a retained terminal invocation for the unfinished task')
+                        continuation['targeted_correction'] = recovery['diagnosis']
+                        store.history(self.run, task['id'], 'worker_recovery', 'selected', recovery)
+                        if recovery['action'] in ('fresh', 'escalate'):
+                            profile = self.executor
+                            if recovery['action'] == 'escalate':
+                                if self.implementation_fallback is None:
+                                    raise Blocked('implementation escalation has no permitted fallback; configure it at launch before using a stronger worker')
+                                profile = self.implementation_fallback
+                                escalated = True
+                            dispatch_recovery = {**recovery, 'predecessor': continuation['invocation_id']}
+                            worker = self.adapter(project, profile, question=self.question, observe_question=worker_question)
+                            worker.lock_fd = self.authority.lock.fileno()
+                            worker.saved_session = None
+                            continuation.pop('saved_session', None)
+                            selected = None
+                            if escalated:
+                                store.history(self.run, task['id'], 'implementation_escalation', 'started',
+                                              {**dispatch_recovery, 'executor': profile})
                     def selected_inputs():
                         # Only checkpoints the sequential runner selected from declared prerequisites
                         # are relations; absent recording remains absent rather than guessed.
@@ -1389,7 +1430,7 @@ class Engine:
                                 and isinstance(item.get('producer_invocation_id'), str)]
 
                     def invoke_worker(prompt, **kwargs):
-                        nonlocal continuation
+                        nonlocal continuation, dispatch_recovery
                         prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + prompt
                         if continuation is not None:
                             prompt = ('Continue only the unfinished same-task work. Inspect the retained failure/diagnosis below; '
@@ -1417,10 +1458,13 @@ class Engine:
                         explicit_session = kwargs.get('saved_session')
                         effective_session = effective_saved_session(explicit_session, getattr(worker, 'saved_session', None))
                         facts = {'invocation_id': invocation_id, 'role': role, 'prompt': prompt, 'reuse_key': reuse_key,
-                                 'saved_session': effective_session}
+                                 'saved_session': effective_session,
+                                 'executor': self.implementation_fallback if escalated else self.executor}
                         # Reserve before the adapter/provider boundary. PiAdapter uses the same
                         # explicit-over-held identity precedence for its savedSession request.
-                        store.reserve_worker_dispatch(self.run, task['id'], invocation_id, effective_session)
+                        store.reserve_worker_dispatch(self.run, task['id'], invocation_id, effective_session,
+                                                      recovery=dispatch_recovery)
+                        dispatch_recovery = None
                         store.history(self.run, task['id'], 'worker_invocation', 'started', facts)
                         recorder.emit(occurrence, 'worker', 'started', task_id=task['id'], facts=public)
                         steering = {'run_id': self.run, 'task_id': task['id'], 'invocation_id': invocation_id,
@@ -1518,6 +1562,9 @@ class Engine:
                                 checks = run_required_checks()
                                 return checks
                             except CheckFailure as failure:
+                                if escalated:
+                                    raise Blocked('implementation escalation required check failed; stop and notify the owner: '
+                                                  + canonical(failure.attempt)) from failure
                                 if failure.attempt == previous_failed_attempt:
                                     raise Blocked('required check failed and remains unchanged after same-task correction: ' + canonical(failure.attempt))
                                 previous_failed_attempt = failure.attempt
@@ -1552,6 +1599,8 @@ class Engine:
                                 break
                             if isinstance(exc, (KeyboardInterrupt, SystemExit)):
                                 raise
+                            if escalated:
+                                raise Blocked('implementation escalation checkpoint failed; stop and notify the owner: ' + str(exc)) from exc
                             if str(exc) == previous_checkpoint_error:
                                 raise Blocked('checkpoint failed and remains unchanged after same-task correction: ' + str(exc))
                             previous_checkpoint_error = str(exc)
@@ -1582,14 +1631,22 @@ class Engine:
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts=checkpoint_facts)
                     store.history(self.run, task['id'], 'checkpoint', 'passed', checkpoint)
                     checkpoints.append(checkpoint)
-                    self._settle_session(task, worker, session_request, reuse_key, checkpoint)
+                    if not escalated:
+                        self._settle_session(task, worker, session_request, reuse_key, checkpoint)
                     store.task(self.run, task['id'], 'complete', focused.base, checkpoint['sha'],
                                {'summary': text, 'checks': checks, 'paths': checkpoint['paths'],
                                 'generated_artifacts': checkpoint['artifacts']})
                 except BaseException as exc:
+                    if escalated:
+                        store.history(self.run, task['id'], 'implementation_escalation', 'failed',
+                                      {'error': _safe_error(exc), 'action': 'stop and notify owner; no further dispatch without owner direction'})
                     recorder.emit(preparation, 'prepare', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'error_category': _failure(exc)})
                     state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                     store.task(self.run, task['id'], state, focused.base if focused else base, details={'error': _safe_error(exc)})
+                    if escalated and not isinstance(exc, (KeyboardInterrupt, SystemExit)):
+                        raise Blocked('implementation escalation failed for task ' + task['id'] +
+                                      '; stop and notify the owner; partial work retained, owner direction required: '
+                                      + _safe_error(exc)) from exc
                     raise
             result = self._finish_reviews(recorder=recorder, terminal=terminal, checkpoints=checkpoints,
                                           base=base, review_base=review_base, terminal_stop=terminal_stop)
