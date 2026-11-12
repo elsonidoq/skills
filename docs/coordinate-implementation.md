@@ -143,7 +143,10 @@ For a failed task continuation, the coordinator's existing diagnosis question al
 `{"diagnosis":"inspected cause and targeted correction","edit_only_paths":["path/to/file"]}`.
 Use this only for exact dirty source paths with actual edit-only authority; it does not transfer or
 approve inherited content, widen `owned_paths`, or change the original task. Plain-text diagnosis
-remains supported. At first claim the runner privately retains the original worktree bytes/mode and
+remains supported. An assigned review repair can use only the same exact edit-only paths already
+claimed in original-task history. Its first repair claim records a fresh repair-relative baseline; a
+settled same-assignment continuation restores that baseline after the existing source/index drift checks.
+An unresolved edit-only repair checkpoint stops for inspection rather than automatic replay. At first claim the runner privately retains the original worktree bytes/mode and
 committed/index identity; subsequent resume uses that same baseline. The path must be a tracked
 regular file with index equal to HEAD and no inherited mode change. Binary, filtered, overlapping,
 ambiguous or drifted changes stop for inspection; repeated lines can make attribution conservative.
