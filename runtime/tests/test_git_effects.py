@@ -147,6 +147,76 @@ class FocusedCheckpointTests(ProjectTest):
         result = f.checkpoint()
         self.assertEqual(git(self.project, 'show', result['sha'] + ':script.py'), b'value = 2\nprint(value)\n')
 
+    def test_edit_only_unique_context_allows_repeated_closing_line_insertion(self):
+        base = 'header\n  };\nunique progress();\n  };\n  };\nfooter\n'
+        self.write('owned.txt', base)
+        git(self.project, 'add', '--', 'owned.txt')
+        git(self.project, 'commit', '-qm', 'context baseline')
+        start = base.replace('header\n', 'inherited header\n')
+        self.write('owned.txt', start)
+        f = self.focused(owned_paths=['owned.txt'])
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        mixed = start.replace('unique progress();\n', 'unique progress();\nobserve();\n')
+        self.write('owned.txt', mixed)
+        result = f.checkpoint()
+        self.assertEqual(git(self.project, 'show', result['sha'] + ':owned.txt'),
+                         base.replace('unique progress();\n', 'unique progress();\nobserve();\n').encode())
+        self.assertEqual((self.project/'owned.txt').read_text(), mixed)
+
+    def test_edit_only_unique_context_allows_repeated_line_replacement(self):
+        base = 'header\n  };\nunique progress();\n  };\n  };\nfooter\n'
+        self.write('owned.txt', base)
+        git(self.project, 'add', '--', 'owned.txt')
+        git(self.project, 'commit', '-qm', 'context baseline')
+        start = base.replace('header\n', 'inherited header\n')
+        self.write('owned.txt', start)
+        f = self.focused(owned_paths=['owned.txt'])
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        mixed = start.replace('unique progress();\n  };\n', 'unique progress();\n  changed();\n')
+        self.write('owned.txt', mixed)
+        result = f.checkpoint()
+        self.assertEqual(git(self.project, 'show', result['sha'] + ':owned.txt'),
+                         base.replace('unique progress();\n  };\n', 'unique progress();\n  changed();\n').encode())
+        self.assertEqual((self.project/'owned.txt').read_text(), mixed)
+
+    def test_edit_only_rejects_ambiguous_repeated_block_deletion(self):
+        base = 'header\nbegin\nend\nbegin\nend\nfooter\n'
+        self.write('owned.txt', base)
+        git(self.project, 'add', '--', 'owned.txt')
+        git(self.project, 'commit', '-qm', 'repeat baseline')
+        start = base.replace('header\n', 'inherited header\n')
+        self.write('owned.txt', start)
+        f = self.focused(owned_paths=['owned.txt'])
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        mixed = start.replace('begin\nend\nbegin\nend\n', 'begin\nend\n')
+        self.write('owned.txt', mixed)
+        before = git(self.project, 'rev-parse', 'HEAD')
+        with self.assertRaisesRegex(Blocked, 'ambiguous'):
+            f.checkpoint()
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), before)
+        self.assertEqual((self.project/'owned.txt').read_text(), mixed)
+
+    def test_edit_only_rejects_inherited_repeated_block_with_ambiguous_origin(self):
+        base = 'header\nbegin\nend\nbegin\nend\nfooter\n'
+        self.write('owned.txt', base)
+        git(self.project, 'add', '--', 'owned.txt')
+        git(self.project, 'commit', '-qm', 'repeat baseline')
+        start = base.replace('begin\nend\nbegin\nend\n', 'begin\nend\nbegin\nend\nbegin\nend\n')
+        self.write('owned.txt', start)
+        f = self.focused(owned_paths=['owned.txt'])
+        f.authorize_edit_only(['owned.txt'])
+        f.claim('owned.txt')
+        mixed = start.replace('header\nbegin\n', 'header\ntask\n')
+        self.write('owned.txt', mixed)
+        before = git(self.project, 'rev-parse', 'HEAD')
+        with self.assertRaisesRegex(Blocked, 'ambiguous'):
+            f.checkpoint()
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD'), before)
+        self.assertEqual((self.project/'owned.txt').read_text(), mixed)
+
     def test_edit_only_rejects_overlap_index_mode_and_symlink_without_losing_work(self):
         for kind in ('overlap', 'index', 'mode', 'symlink'):
             with self.subTest(kind=kind):
