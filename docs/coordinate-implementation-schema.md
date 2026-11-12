@@ -34,6 +34,10 @@ reviewer's saved session with scoped writer tools, a correction plan and impleme
 the recorded `fixer` stage uses the reviewer model, not a separate worker-model agent. Missing or malformed reviewer configuration
 is an actionable error, never implicit worker-assignment inheritance. Explicitly identical
 worker and reviewer values are allowed; reviewer contexts remain independent.
+An optional `implementation_fallback` object contains nonempty `provider`, `model` and `effort`
+strings. It separately permits stronger implementation recovery selected by the coordinator; the
+reviewer profile alone grants no fallback. Resume uses this profile only from the retained launch
+configuration, not a later configuration-file edit. See [coordinator-selected recovery](coordinate-implementation.md#coordinator-selected-worker-recovery).
 The SDK resolves the exact selected model or reports its real error. Before prompting, the
 host checks that SDK-exposed provider, model and effort match the requested assignment; it rejects
 clamping, omission or substitution. Opted-in opened-session and result `before`/`after`
