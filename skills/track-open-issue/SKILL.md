@@ -81,11 +81,37 @@ The intended body states the original intent, verified problem and category wher
 primary evidence, verified cause only when established, clearly labelled hypotheses,
 uncertainty, and resumption condition. Prepare Markdown in a local body file and pass it with
 `--body-file`; do not interpolate Markdown into a shell command, use `eval`, upload
-attachments, or add labels, assignees, projects, parent/blocked-by relations, or unrelated
-fields. An authorized create is explicitly targeted, for example:
+attachments, or add labels (except the required `AI generated` label below), assignees,
+projects, parent/blocked-by relations, or unrelated fields. An authorized create is explicitly targeted, for example:
 
 ```sh
 gh issue create --repo "$HOST/$OWNER/$REPO" --title "$title" --body-file "$body_file"
+```
+
+## Label agent-initiated issues
+
+For every new issue initiated autonomously by an agent, rather than explicitly requested by
+the user, require the exact label `AI generated`. General permission to track discovered work
+is not a user request to create that specific issue. User-requested issues do not require this
+label under this rule. Do not relabel existing matches found during overlap discovery.
+
+Before an autonomous create, inspect the target repository's labels with complete pagination
+(`gh api --method GET --hostname "$HOST" --paginate "repos/$OWNER/$REPO/labels?per_page=100"`).
+If the exact label is absent, autonomously create it without asking for separate approval:
+
+```sh
+gh label create 'AI generated' --repo "$HOST/$OWNER/$REPO"
+```
+
+This rule authorizes only that label creation and assignment, not issue creation without the
+existing target-specific issue-write authority. Do not modify an existing label's metadata.
+If label creation fails or its response is unknown, re-read the labels to reconcile a possible
+successful or concurrent creation; do not blindly retry. If the required label remains unavailable,
+defer the issue create and report the failure and corrective action; do not create it unlabelled.
+Once the label exists, include it in the issue creation operation:
+
+```sh
+gh issue create --repo "$HOST/$OWNER/$REPO" --title "$title" --body-file "$body_file" --label 'AI generated'
 ```
 
 ## Create, scoped change, and state transitions
@@ -113,7 +139,11 @@ gh api --method GET --hostname "$HOST" "repos/$OWNER/$REPO/issues/$number"
 ```
 
 Confirm the exact qualified URL/identity, original intent, intended problem/evidence/cause-or-
-hypothesis/uncertainty/resumption content, and intended state. Keep the actual read-back body
+hypothesis/uncertainty/resumption content, and intended state. For an agent-initiated create,
+also confirm that the independently read-back labels include the exact `AI generated` label.
+If missing, apply only that label to the exact issue and independently GET it again; report
+any failure as incomplete labelling, not successful compliance, and do not create a duplicate.
+Keep the actual read-back body
 available with the original intent and investigation evidence for the separate read-only review;
 do not represent creation/readback as independent review. Readback failure or unknown mutation
 response leaves verification unknown: do not blindly retry a possibly successful mutation.

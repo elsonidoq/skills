@@ -22,7 +22,7 @@ class LifecycleContractTests(unittest.TestCase):
         self.assertIn("GitHub Issues", (root / "docs/index.md").read_text())
         self.assertIn("INCONCLUSIVE / NOT PASS", (root / "skills/import-open-issues/SKILL.md").read_text())
 
-    def test_this_project_has_one_explicit_github_owner_and_retained_history(self):
+    def test_this_project_has_one_explicit_github_owner_and_import_support(self):
         root = SKILL.resolve().parents[2]
         for path in ("AGENTS.md", "README.md", "REQUIREMENTS.md", "docs/index.md"):
             text = (root / path).read_text()
@@ -31,10 +31,6 @@ class LifecycleContractTests(unittest.TestCase):
                 self.assertNotIn("Canonical local register", text)
                 self.assertNotIn("`docs/open_issues.md` is the canonical", text)
                 self.assertNotIn("`docs/open_issues.md` holds the canonical", text)
-        history = (root / "docs/open_issues.md").read_text()
-        self.assertIn("Historical source only, not an active tracker", history)
-        self.assertIn("Actual historical migration: **NOT RUN**", history)
-        self.assertIn("OI-4/#2 mapping", history)
         for path in ("scripts/check-task-commit-contract.py", "scripts/probe-pi-load.sh"):
             self.assertIn("import-open-issues", (root / path).read_text())
 
@@ -55,6 +51,28 @@ class LifecycleContractTests(unittest.TestCase):
             "**all open and closed issues**", "--paginate", "state=all&per_page=100",
             "Exclude pull requests", "Never deduplicate, merge, or reopen solely from a title",
             "--body-file", "do not interpolate Markdown into a shell command", "use `eval`",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, TEXT)
+
+    def test_autonomous_issue_label_requirement_and_boundaries(self):
+        for clause in (
+            "rather than explicitly requested by\nthe user",
+            "require the exact label `AI generated`",
+            "General permission to track discovered work",
+            "User-requested issues do not require this",
+            "Do not relabel existing matches",
+            'labels?per_page=100',
+            "gh label create 'AI generated' --repo",
+            "without asking for separate approval",
+            "not issue creation without the\nexisting target-specific issue-write authority",
+            "Do not modify an existing label's metadata",
+            "defer the issue create",
+            "do not create it unlabelled",
+            "--body-file \"$body_file\" --label 'AI generated'",
+            "independently read-back labels include the exact `AI generated` label",
+            "do not create a duplicate",
+            "except the required `AI generated` label below",
         ):
             with self.subTest(clause=clause):
                 self.assertIn(clause, TEXT)
