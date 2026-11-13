@@ -186,9 +186,9 @@ claim it passes now, or turn this into unrelated repair.
 - [ ] T019 Verify real manual assessment evidence and label transitions
   - **Depends**: T017
   - **Paths/context**: No repository mutation; selected issue/chat/live observation only.
-  - **Acceptance/context**: Manually assess a representative selected paginated issue set with real authorized label/comment readback. Observe grouped proposals, evidence gaps and delivered-only addressed; approval of a proposal is not delivery, incomplete effects remain partial.
+  - **Acceptance/context**: Perform one owner-selected real assessment with complete discovery across all actual pages/open+closed states, excluding PRs and with no acceptance eligibility filter. Inspect available evidence, source links, gaps and uncertainty; present supported grouped minimal proposals or justified no-change. Reuse applicable T015 local evidence for absent live categories and report those limits, not a failed inventory. Scoped label/comment effects require readback; preserve proposed/no-change distinction. Any addressed application needs actual delivered evidence; if none occurs, record unobserved/NOT VERIFIED without creating unrelated improvements. No fabricated evidence or automatic assessment/skill edit/PR.
   - **Check**: No deterministic shell command is configured; the real manual observation above is REQUIRED.
-  - **Manual gate**: Selected assessment reads/label/comment operations; actual delivery evidence before addressed. Full consumed question in tasks.json.
+  - **Manual gate**: Selected assessment reads/label/comment authority and actual-effect readback; actual delivery evidence before any addressed application. No addressed transition means unobserved/NOT VERIFIED, not a demand for unrelated improvement. Full consumed question in tasks.json.
 
 - [ ] T020 Observe real LangSmith replacement visibility
   - **Depends**: T017
