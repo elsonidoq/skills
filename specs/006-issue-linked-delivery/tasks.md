@@ -1,217 +1,175 @@
 # Tasks: Issue-linked delivery and manual skill assessment
 
-**Input**: [Approved spec](spec.md), [derived plan](plan.md) and linked contracts.
-**Executable task input**: [tasks.json](tasks.json). Same IDs/outcomes/dependencies; full bounded instructions, owned paths, acceptance and consumed checks/gates are task-local.
+**Sources:** [spec.md](spec.md), [plan.md](plan.md), [research.md](research.md),
+[data model](data-model.md), [interfaces](contracts/interfaces.md), [quickstart](quickstart.md).
+**Executable handoff:** [tasks.json](tasks.json) holds each task's complete scope, owned paths,
+acceptance and REQUIRED commands. This file is the brief human presentation of the same graph.
 
 ## Shared context
 
-[spec.md](spec.md) is requirements truth; [plan.md](plan.md) is derived and challengeable.
-Read affected [research](research.md), [data model](data-model.md), [interfaces](contracts/interfaces.md)
-and [quickstart](quickstart.md). Issue: [#44](https://github.com/elsonidoq/skills/issues/44).
-No task implies tracker write authority. No SDD quality document is a direct task input.
+- Requirements come from the current spec. Use the actual selected `.pi/workflow-executor.json`:
+  Terra/medium workers, explicit Sol/medium fallback and fresh Sol/medium reviewers. No model
+  substitution or agent capability version pins. Each executable task links here because the
+  current runner forwards task objects, not arbitrary top-level context.
+- [ADR-0003](../../docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md) and
+  [ADR-0004](../../docs/decisions/ADR-0004-shared-routine-worker-permissions.md) apply: preserve
+  current launch/shared routine authority in initial, corrective and resumed prompts. Ordinary
+  scoped fixes, isolated setup and small local tests/databases need no repeated consent.
+  Retain actual product/material-scope/manual/paid/security/data/external gates, hooks/signing,
+  unrelated work, inspected cause-specific recovery and the failed-Sol escalation stop.
+  [Project memory](../../memory/MEMORY.md) also preserves autonomous routine technical choices
+  and non-waking routine status. No memory/STATE/ledger or permission-service work.
+- Final explicit planning/implementation approval may cover the exact operative proposals in
+  [plan](plan.md#operative-amendments-for-later-explicit-approval). T001/T003/T016 inspect and
+  reuse precise evidence for unchanged content/scope through normal launch/brief context;
+  absent approval stops the affected change. Changed content or uncovered actual effects need
+  their real gate. Do not repeat task-by-task consent or add an approval cache/schema/protocol.
+- Fixed outcomes: Python LangGraph/Pi/LangSmith, one execution controller, standard persistence/
+  interrupt/fanout/reduction, safe effect reconciliation and answer delivery, explicitly directed
+  parallelism, exact ownership/checkpoints/history, metadata-only privacy and observed live
+  visibility before monitor removal. [Requirements versus proposed mechanisms](plan.md#requirements-versus-proposed-mechanisms)
+  distinguishes these from node layout, pauseQuestions spelling, saver arrangement, backend
+  marker, intent encoding, exact SDK helpers and compatible-route mechanics. Prefer simpler
+  equivalent existing mechanisms when actual checks prove the same observables and preserve
+  consumers/authority/security/history. Routine equivalent mechanics are autonomous; material
+  scope/privacy/accepted-architecture changes still require the owner. No new abstraction layer.
+- Keep independently testable outcomes separate; tests/docs and routine teardown stay with each.
+  Sequential implementation is the default for these overlapping paths. Product wave tests use
+  explicit fixture concurrency authority, not implied parallel implementation permission or
+  mandatory worktrees. Verify and focused-commit each producer before consumer reliance.
+  Preserve #28/#43 helpers without broader repairs; related issues remain separately owned.
+- Commands stay in consumed JSON `checks` fields; semantic acceptance stays prose. New
+  test_graph_*.py/test_tracing.py selectors are implementation deliverables, not existing passes.
+  Use permanent real saver/SDK/Git/graph checks at the first usable seam (T004–T014), then final
+  local integration T017. Pure helper mocks cannot prove actual custody/answer/wire boundaries.
+  No prototype chain, broad synthetic replacement or historical replay. Failed/unrun necessary
+  proof blocks affected reliance; reuse unchanged applicable proof, repeat only if invalidated.
+- Only T019 tracker and T020 account/project/region/access/pricing/upload questions remain in
+  executable `gates`. They are real operation boundaries, not repeat policy consent. T021
+  consumes applicable successful T020 visibility evidence without asking for recertification;
+  absent/invalidated proof still forbids removal. Missing gates block only affected work; the
+  current sequential runner does not automatically skip blocked tasks, so scope available work
+  honestly. No installs/live operations are established by planning evidence.
+- Retain six intake checks only: readable file, parsed list, ID/work description, unique IDs,
+  existing dependencies and no cycles. No admission metadata, automatic conversion/replay,
+  raw/ambient tracing, background assessment, service/data deletion, push or deployment.
 
-- Use exact existing `.pi/workflow-executor.json`: Terra/medium workers, explicit Sol/medium
-  fallback, fresh Sol/medium reviewers. Do not edit bindings, use producer assignment for
-  implementation, or require specific agent capability versions.
-- [ADR-0003](../../docs/decisions/ADR-0003-current-launch-authority-and-neutral-tasks.md):
-  current scoped launch overrides historical preparation labels. Preserve it in initial,
-  corrective and resumed prompts. T002/T006/T007/T009/T010 check actual consumers.
-  Executable instructions are authorization-neutral; phase status belongs in approval records.
-- [ADR-0004](../../docs/decisions/ADR-0004-shared-routine-worker-permissions.md) and verified
-  [memory index](../../memory/MEMORY.md): retain shared routine authority, autonomous routine
-  technical choices, ordinary scoped repairs/isolated setup/small local tests and databases
-  without repeated consent. Preserve genuine material/product/manual/paid/security/data/external
-  gates, normal hooks/signing, unrelated bytes, failure inspection and stop after failed Sol
-  escalation. No permission service/cap/memory write/default history intake/ledger. Routine
-  progress must not wake the parent; questions and terminal completion can.
-- Own only declared paths and coupled support. This task list uses sequential implementation;
-  shared-path overlap needs coordination, not mandatory worktrees. Product concurrency tests
-  use explicitly directed isolated fixtures, not implied concurrent implementation permission.
-  Each producer is validated and focused-committed before consumer reliance. Preserve #28/#43
-  helpers; related issues remain separately owned, not automatic closure/repair prerequisites.
-- REQUIRED acceptance is each task's semantic acceptance plus `checks` and actual `gates`.
-  Deterministic commands occur once in existing executable fields in [tasks.json](tasks.json).
-  The current runner forwards the whole task object, including this task-local context link;
-  it does not forward arbitrary top-level context. `gates` uses existing manual_gates string
-  questions before dispatch, not a new schema. Genuine later operation/feedback/acceptance
-  gates still apply; a generic affirmative question is not exact-revision acceptance.
-- Exact policy approval gates belong to T001/T003/T016; current final approval can provide
-  evidence, not fabricated consent or repeated routine-setup questions. Tracker delivery T018/assessment T019,
-  account/project/region/access/pricing/upload T020 and observed visibility T021 remain real.
-  Missing authority blocks only affected operations/reliance. Complete unrelated local work
-  first; coordinator schedules available authorized scopes rather than falsely completing a
-  gated task. This does not promise current sequential runner automatically skips blocked work.
-- Preserve one final graph controller, saver/interrupt/Send/reducers, useful Pi/Git/check/session/
-  history helpers and six linter checks only. No automatic conversion/replay, raw/ambient
-  tracing, historical feature reconstruction, background assessment, automatic RCA/skill edit/PR,
-  STATE/manifests, new test platform, service-stop/data deletion/push/deployment.
-- `test_graph_*.py` and `test_tracing.py` are explicit implementation-produced selectors, not
-  currently available passing checks. Other command families/files exist now. Run checks in
-  selected implementation environment; establish lock/import consistency before graph reliance.
-  Runtime/live/model behavior is NOT VERIFIED by task production. Unrun/failed required proof
-  blocks affected reliance. Local necessary setup is ordinary authority, not global install.
+Known baseline: `check-planner-workflow.py` expects lowercase `evidence-only review reassessment
+uses the existing retained evidence`, but the coordinator carrier starts `Evidence-only`.
+T001 aligns that maintained assertion; no skipped check, current pass claim or broader repair.
 
-## Proof selection and limits
+### Normal coordinator delivery — not an executable worker exercise
 
-Use permanent actual-helper tests at earliest useful seams: saver reopen T004, Git/history
-window T005, provider reconciliation T006, installed SDK pause T008, actual answer consumption
-T009, composed public sequential entry T011, directed wave completion T013 and FINAL-SDK privacy
-T014. No separate prototype/scaffold/report/cleanup chain earns its cost. T017 checks final
-local composition after integration, not a new comparison programme. Mock-only helpers cannot
-replace actual saver/SDK/Git proofs where effects/order matter. Reuse unchanged applicable proof;
-changed code/dependency/environment or failed/inconclusive results require affected correction/
-replanning before reliance. Live tracker T018/T019 and LangSmith T020 are REQUIRED real-system
-outcomes, not optional hardening; only T020 observed visibility releases T021 removal.
+After actual implementation, specified checks and fresh independent final review, coordinator/
+finish-session publishes the same meaningful executive summary to [issue #44](https://github.com/elsonidoq/skills/issues/44)
+and current owner chat under actual tracker authority: result, verification/limits, review focus,
+exact reviewed commit and attributable checkpoint links, with unrelated context distinguished.
+Inspect/read back issue effects and report partial publication, not false success. Delivery
+then awaits real owner review/acceptance. If actual feedback occurs, link purpose-classified
+corrections and refresh the presented reviewed SHA; new requirements renew affected approval.
+Close only after actual explicit acceptance of that revision plus closure authority/readback,
+retaining the trace. Unobserved correction/acceptance/closure branches remain NOT VERIFIED,
+not passes or blockers demanding invented work. Do not manufacture corrections, unrelated test
+issues, owner acceptance or closure; no automatic RCA, skill edit or PR. This is the normal
+final delivery obligation, not T017 worker publication or a renamed replacement for old T018.
 
-Known baseline: check-planner-workflow.py fails risk-coordinator-triage: expected lowercase
-`evidence-only review reassessment uses the existing retained evidence`, coordinator carrier
-starts `Evidence-only`. T001 aligns the touched maintained assertion. Do not skip the check,
-claim it passes now, or turn this into unrelated repair.
-
-
-## Independently verifiable outcomes
+## Bounded outcomes
 
 - [ ] T001 Reconcile the runtime operative contracts
   - **Depends**: none
-  - **Paths/context**: `.specify/memory/constitution.md`, `AGENTS.md`, `README.md`; complete owned paths/support in `T001.owned_paths`.
-  - **Acceptance/context**: Apply the exact runtime/constitution amendments only after explicit approval. Align affected maintained assertions (including the known case mismatch), keeping six-check intake, actual permissions, checkpoints and independent review; no runtime-success claim.
-  - **Check**: REQUIRED commands appear only in `T001.checks` in tasks.json; run after this outcome and report actual results.
-  - **Manual gate**: Exact runtime/constitution amendment approval. Full consumed question in tasks.json.
+  - Reconcile the exact runtime/constitution amendments using precise final approval, not repeat questions. Preserve authority/checkpoint/review protections and align the known maintained-carrier case mismatch.
 
 - [ ] T002 Carry the issue from planner understanding into task execution
   - **Depends**: T001
-  - **Paths/context**: `skills/planner/SKILL.md`, `skills/task-generation/SKILL.md`, `skills/tiny-spec/SKILL.md`; complete owned paths/support in `T002.owned_paths`.
-  - **Acceptance/context**: Associate after understanding, never as intake prerequisite; carry the same qualified issue into artifacts and actual initial/corrective/resumed worker/reviewer context. Preserve bare lists, existing planning approvals and actionable tracker gaps; no writes in local tests.
-  - **Check**: REQUIRED commands appear only in `T002.checks` in tasks.json; run after this outcome and report actual results.
+  - Associate after understanding, never as intake prerequisite; carry the same qualified issue into artifacts and actual initial/corrective/resumed worker/reviewer context. Preserve bare lists, existing planning approvals and actionable tracker gaps; no writes in local tests.
 
-- [ ] T003 Deliver and accept an exact reviewed issue revision
+- [ ] T003 Define natural reviewed issue delivery
   - **Depends**: T002
-  - **Paths/context**: `skills/finish-session/SKILL.md`, `skills/track-open-issue/SKILL.md`, `docs/index.md`; complete owned paths/support in `T003.owned_paths`.
-  - **Acceptance/context**: Permit the reviewed exact-SHA executive summary in issue and chat through existing skills. Preserve purpose-linked corrections, partial publication recovery, explicit revision-specific acceptance and separately authorized closure; no automatic RCA/skill/PR.
-  - **Check**: REQUIRED commands appear only in `T003.checks` in tasks.json; run after this outcome and report actual results.
-  - **Manual gate**: Exact executive-summary policy amendment approval. Full consumed question in tasks.json.
+  - Define natural exact-reviewed-commit issue/chat delivery through existing skills, with conditional real feedback/correction and acceptance-before-authorized-closure handling. Reuse exact final policy approval; no staged lifecycle exercise.
 
 - [ ] T004 Provide standard file-backed graph persistence
   - **Depends**: T001
-  - **Paths/context**: `runtime/pyproject.toml`, `runtime/requirements.lock`, `runtime/coherence_workflow/graph.py`; complete owned paths/support in `T004.owned_paths`.
-  - **Acceptance/context**: Resolve compatible hashed dependencies and deliver actual stable-thread/sync SQLite saver reopen and interrupt primitives in separate graph storage. Preserve Python minimum/history; align existing package fixture, report unavailable platform proof, no scheduler or upload.
-  - **Check**: REQUIRED commands appear only in `T004.checks` in tasks.json; run after this outcome and report actual results.
+  - Resolve the compatible hashed lock and durable standard graph persistence, proving reopen/interrupt behavior and old-history preservation. Saver layout/API details are proposals, not additional owner requirements.
 
 - [ ] T005 Reconcile focused Git success before history retry
   - **Depends**: none
-  - **Paths/context**: `runtime/coherence_workflow/git_effects.py`, `runtime/coherence_workflow/store.py`, `runtime/coherence_workflow/engine.py`; complete owned paths/support in `T005.owned_paths`.
-  - **Acceptance/context**: Persist attempted parent/path/content before Git and reconcile actual matching direct child before retry, including advanced HEAD. Recover the original SHA without recommit; retain hooks, unrelated bytes and stop uncertain effects.
-  - **Check**: REQUIRED commands appear only in `T005.checks` in tasks.json; run after this outcome and report actual results.
+  - Reconcile actual parent/path/content facts after Git success/history loss without duplicate commit. Intent encoding can vary; normal hooks/signing and unrelated bytes remain protected.
 
 - [ ] T006 Execute dependent tasks through a sequential graph task interface
   - **Depends**: T004, T005
-  - **Paths/context**: `runtime/coherence_workflow/graph.py`, `runtime/coherence_workflow/engine.py`, `runtime/coherence_workflow/store.py`; complete owned paths/support in `T006.owned_paths`.
-  - **Acceptance/context**: Deliver independently testable graph task execution: dependency readiness, durable provider results, real checks/correction and accepted focused checkpoints. Prove uncertain-call stop before redispatch and authority in all prompt modes; internal until public cutover, no wrapper engine.
-  - **Check**: REQUIRED commands appear only in `T006.checks` in tasks.json; run after this outcome and report actual results.
+  - Deliver graph task execution with dependency/checkpoint readiness, reconciled provider calls, real checks and scoped correction. Proposed subgraph layout must not wrap the old engine.
 
 - [ ] T007 Route independent review and scoped repair through graph transitions
   - **Depends**: T006
-  - **Paths/context**: `runtime/coherence_workflow/graph.py`, `runtime/coherence_workflow/engine.py`, `runtime/coherence_workflow/store.py`; complete owned paths/support in `T007.owned_paths`.
-  - **Acceptance/context**: Deliver graph review/repair/re-review transitions against completed task checkpoints and actual check evidence. Preserve fresh read-only contexts, coverage/gaps, reassessment and failure inspection; old public controller is deleted together at cutover, not embedded in nodes.
-  - **Check**: REQUIRED commands appear only in `T007.checks` in tasks.json; run after this outcome and report actual results.
+  - Replace review/repair dispatch with framework transitions while preserving fresh read-only review, evidence/coverage and scoped repair. Node layout may simplify; old controller is removed at cutover.
 
 - [ ] T008 Settle Pi questions into a saved idle transport pause
   - **Depends**: none
-  - **Paths/context**: `runtime/pi-host/host.mjs`, `runtime/coherence_workflow/pi_adapter.py`, `runtime/tests/test_host.mjs`; complete owned paths/support in `T008.owned_paths`.
-  - **Acceptance/context**: Add opt-in question pause to idle saved Pi session while non-opt-in callbacks keep working. Actual SDK fixture verifies no gated effect before consent and uncertain settlement is not safe redispatch; update coupled fixture assumptions.
-  - **Check**: REQUIRED commands appear only in `T008.checks` in tasks.json; run after this outcome and report actual results.
+  - Prove safe settled SDK question pause with retained context before reliance. pauseQuestions/abort-to-idle is proposed; a simpler supported suspension mechanism must preserve consent, settlement and existing callers.
 
 - [ ] T009 Deliver durable graph replies to actual saved task context
   - **Depends**: T006, T008
-  - **Paths/context**: `runtime/coherence_workflow/graph.py`, `runtime/coherence_workflow/engine.py`, `runtime/coherence_workflow/pi_adapter.py`; complete owned paths/support in `T009.owned_paths`.
-  - **Acceptance/context**: Persist settled pause, then interrupt separately; actual terminal/parent answer reaches a new invocation in the same saved task context. Composed SDK/Git reopen test rejects stale reply, retains no-answer pause, denial and no replay.
-  - **Check**: REQUIRED commands appear only in `T009.checks` in tasks.json; run after this outcome and report actual results.
+  - Deliver the actual durable terminal/parent answer to the correct retained task context after reopen, without replay or gated action before consent. Wait-node/Command wiring may vary, not these observables.
 
 - [ ] T010 Feed inspected recovery actions into graph continuation
   - **Depends**: T007, T009
-  - **Paths/context**: `runtime/coherence_workflow/cli.py`, `runtime/coherence_workflow/graph.py`, `runtime/coherence_workflow/engine.py`; complete owned paths/support in `T010.owned_paths`.
-  - **Acceptance/context**: Provide graph action consumers for inspected continue/fresh/escalate, transfer, routine repair and review refresh before public cutover. Preserve original scope/effects/authority and failed-Sol stop; no broader #28/#43 repair or automatic retries.
-  - **Check**: REQUIRED commands appear only in `T010.checks` in tasks.json; run after this outcome and report actual results.
+  - Provide graph action consumers for inspected continue/fresh/escalate, transfer, routine repair and review refresh before public cutover. Preserve original scope/effects/authority and failed-Sol stop; no broader #28/#43 repair or automatic retries.
 
 - [ ] T011 Cut the existing CLI over to one graph backend with explicit legacy routing
   - **Depends**: T010
-  - **Paths/context**: `runtime/coherence_workflow/cli.py`, `runtime/coherence_workflow/engine.py`, `runtime/coherence_workflow/graph.py`; complete owned paths/support in `T011.owned_paths`.
-  - **Acceptance/context**: Switch existing CLI start/resume to completed graph and remove custom task/review/resume loops. Verify full actual sequential CLI/SDK/Git/review/question composition; retain read-only old history and concrete compatible legacy-runtime route, no conversion or second engine.
-  - **Check**: REQUIRED commands appear only in `T011.checks` in tasks.json; run after this outcome and report actual results.
+  - Switch public CLI to one graph controller, preserving history and an explicit usable compatible legacy route without automatic conversion/replay. Backend-marker and route mechanics may use verified simpler equivalents.
 
 - [ ] T012 Route attached-parent messages to multiple exact active targets
   - **Depends**: T008
-  - **Paths/context**: `runtime/pi-extensions/coordinate-implementation-bridge.js`, `runtime/coherence_workflow/pi_adapter.py`, `runtime/tests/test_bridge.mjs`; complete owned paths/support in `T012.owned_paths`.
-  - **Acceptance/context**: Replace singleton parent target with exact run/task/invocation/session/role routing. Two actual SDK fixture targets prove no broadcast/stale consumption, serialized owner-only questions and non-waking routine updates; no scheduling.
-  - **Check**: REQUIRED commands appear only in `T012.checks` in tasks.json; run after this outcome and report actual results.
+  - Route parent messages to exact active targets, never broadcast or consume stale replies. Preserve owner-only separation and non-waking routine status; storage representation is proposed.
 
 - [ ] T013 Complete directed disjoint waves before shared checks and Git
   - **Depends**: T011, T012
-  - **Paths/context**: `runtime/coherence_workflow/graph.py`, `runtime/coherence_workflow/engine.py`, `runtime/coherence_workflow/store.py`; complete owned paths/support in `T013.owned_paths`.
-  - **Acceptance/context**: Support explicit disjoint Send waves, thread-owned history and retained mode, sequential by default. Actual overlap/failure/reopen joins preserve sibling results; quiescent shared checks/Git yield separate task commits before dependent release, no mandatory worktree.
-  - **Check**: REQUIRED commands appear only in `T013.checks` in tasks.json; run after this outcome and report actual results.
+  - Complete explicitly directed disjoint waves with thread-safe state, retained successful siblings and a quiescent shared check/Git boundary. Default sequential; separate focused commits precede dependent release, no mandatory worktrees.
 
 - [ ] T014 Submit only safe invocation metadata through the actual LangSmith SDK
   - **Depends**: T011
-  - **Paths/context**: `runtime/coherence_workflow/tracing.py`, `runtime/coherence_workflow/graph.py`, `runtime/coherence_workflow/engine.py`; complete owned paths/support in `T014.owned_paths`.
-  - **Acceptance/context**: Add one explicit metadata-only SDK adapter with opaque IDs and qualified local usage. Final real-SDK requests must exclude all private sentinels/ambient metadata; no-authority gives zero network, telemetry failure still permits safe graph checks/commit.
-  - **Check**: REQUIRED commands appear only in `T014.checks` in tasks.json; run after this outcome and report actual results.
+  - Prove actual final-SDK metadata-only requests, qualified usage, zero network without authority and fail-open execution. Exact LangSmith helpers may simplify, never privacy or real upload gates.
 
 - [ ] T015 Provide the manual evidence-based skill assessment entry
   - **Depends**: T001
-  - **Paths/context**: `skills/assess-skill-improvements/SKILL.md`, `README.md`, `docs/index.md`; complete owned paths/support in `T015.owned_paths`.
-  - **Acceptance/context**: Add one manual portable assessment skill: all paginated open/closed issues, PR exclusion, acceptance as evidence, honest attribution and cross-issue minimal proposals. Local reader/carrier sensitivity preserves proposed/no-change versus delivered-only addressed; no scanner/ledger/self-edit.
-  - **Check**: REQUIRED commands appear only in `T015.checks` in tasks.json; run after this outcome and report actual results.
+  - Add one manual portable assessment skill: all paginated open/closed issues, PR exclusion, acceptance as evidence, honest attribution and cross-issue minimal proposals. Local reader/carrier sensitivity preserves proposed/no-change versus delivered-only addressed; no scanner/ledger/self-edit.
 
 - [ ] T016 Retire specified behavioral machinery and active mandates
   - **Depends**: T001
-  - **Paths/context**: `evaluations/README.md`, `evaluations/review-necessity/packet.md`, `evaluations/review-necessity/expectations.md`; complete owned paths/support in `T016.owned_paths`.
-  - **Acceptance/context**: After exact amendment approval, remove only four evaluation documents, RPC driver/loader/driver-only tests and active mandatory run directions. Keep historical NOT RUN evidence and useful static/runtime/security checks; no synthetic replacement or monitor deletion.
-  - **Check**: REQUIRED commands appear only in `T016.checks` in tasks.json; run after this outcome and report actual results.
-  - **Manual gate**: Exact behavioral-retirement amendment approval. Full consumed question in tasks.json.
+  - Retire only the four evaluation docs, RPC driver/loader/driver-only tests and active mandates using exact final approval. Keep meaningful runtime/static/security checks and historical limits; no replacement suite.
 
 - [ ] T017 Verify the retained local application composition
   - **Depends**: T003, T013, T014, T015, T016
-  - **Paths/context**: `runtime/tests/test_graph_execution.py`, `runtime/tests/test_graph_questions.py`, `runtime/tests/test_graph_concurrency.py`; complete owned paths/support in `T017.owned_paths`.
-  - **Acceptance/context**: Integrate the completed local application and fix only causal cross-seam wiring/docs defects. Full retained checks observe reply/recovery/wave/privacy composition; preserve actual checkpoint review and fresh-session Paseo activation handoff, not live/model claims.
-  - **Check**: REQUIRED commands appear only in `T017.checks` in tasks.json; run after this outcome and report actual results.
-
-- [ ] T018 Verify real issue delivery and exact-revision acceptance
-  - **Depends**: T017
-  - **Paths/context**: No repository mutation; selected issue/chat/live observation only.
-  - **Acceptance/context**: Use an authorized selected issue and independently reviewed revision for actual dual publication, real correction, refreshed SHA, actual acceptance and authorized closure/readback. No implied #44 closure or acceptance of unfinished work; missing authority blocks this live outcome only.
-  - **Check**: No deterministic shell command is configured; the real manual observation above is REQUIRED.
-  - **Manual gate**: Selected tracker operations plus actual owner feedback/acceptance. Full consumed question in tasks.json.
+  - Integrate local application seams and causal wiring/docs fixes with retained checks. Normal fresh final review follows; this worker does not publish delivery or stage owner acceptance.
 
 - [ ] T019 Verify real manual assessment evidence and label transitions
   - **Depends**: T017
-  - **Paths/context**: No repository mutation; selected issue/chat/live observation only.
-  - **Acceptance/context**: Perform one owner-selected real assessment with complete discovery across all actual pages/open+closed states, excluding PRs and with no acceptance eligibility filter. Inspect available evidence, source links, gaps and uncertainty; present supported grouped minimal proposals or justified no-change. Reuse applicable T015 local evidence for absent live categories and report those limits, not a failed inventory. Scoped label/comment effects require readback; preserve proposed/no-change distinction. Any addressed application needs actual delivered evidence; if none occurs, record unobserved/NOT VERIFIED without creating unrelated improvements. No fabricated evidence or automatic assessment/skill edit/PR.
-  - **Check**: No deterministic shell command is configured; the real manual observation above is REQUIRED.
-  - **Manual gate**: Selected assessment reads/label/comment authority and actual-effect readback; actual delivery evidence before any addressed application. No addressed transition means unobserved/NOT VERIFIED, not a demand for unrelated improvement. Full consumed question in tasks.json.
+  - Assess one owner-selected real set with complete actual discovery (all pages, open/closed, no PRs or acceptance eligibility filter). Use available linked evidence honestly for grouped minimal proposals or no-change; reuse T015 for absent categories and report limits, never manufacture cases or improvements.
+  - **Live gate**: Scoped tracker reads/label/comment effects with readback. Keep proposed/no-change distinct; addressed needs actual delivered evidence or remains unobserved/NOT VERIFIED. No automatic assessment, skill edit or PR.
 
 - [ ] T020 Observe real LangSmith replacement visibility
   - **Depends**: T017
-  - **Paths/context**: No repository mutation; selected issue/chat/live observation only.
-  - **Acceptance/context**: After same-revision local privacy proof and explicit account/project/region/access/pricing/network authority, observe a real permitted graph/Pi invocation in LangSmith UI. Usable hierarchy and safe known/unknown metadata, not HTTP/offline success, release removal.
-  - **Check**: No deterministic shell command is configured; the real manual observation above is REQUIRED.
-  - **Manual gate**: Selected LangSmith account/project/region/access/pricing/upload authority and actual Pi-call scope. Full consumed question in tasks.json.
+  - After same-revision local privacy proof and explicit account/project/region/access/pricing/network authority, observe a real permitted graph/Pi invocation in LangSmith UI. Usable hierarchy and safe known/unknown metadata, not HTTP/offline success, release removal.
+  - **Live gate**: Selected LangSmith account/project/region/access/pricing/upload and actual Pi-call scope; same-revision final-SDK privacy proof before upload. Usable real UI hierarchy, not HTTP/offline success.
 
 - [ ] T021 Retire only redundant monitor source after observed replacement
   - **Depends**: T020
-  - **Paths/context**: `workflow_monitor`, `runtime/coherence_workflow/monitoring.py`, `runtime/coherence_workflow/store.py`; complete owned paths/support in `T021.owned_paths`.
-  - **Acceptance/context**: Only after observed replacement, remove redundant monitor source/recorders/dependencies and inspect actual callers. Preserve monitor README/history/mockups, old data/tables, useful metrics/readers and unresolved limitations; no service-stop/data deletion/migration.
-  - **Check**: REQUIRED commands appear only in `T021.checks` in tasks.json; run after this outcome and report actual results.
-  - **Manual gate**: Observed same-revision usable live replacement, not an offline substitute. Full consumed question in tasks.json.
+  - Inspect applicable successful T020 visibility evidence, then retire only redundant monitor source/callers. Missing/invalidated proof stops removal without recertification; retain history/data/readers/limitations, no service stop.
 
-## Minimal executable intake
+## Coverage and handoff
 
-JSON uses current tasks/id/outcome/depends plus optional owned_paths/context/acceptance/checks/gates/delivery_issue. Startup checks only readable input, parsed list, ID/work description, uniqueness, existing references and acyclic dependencies. File order/numbering is not authority. No new launch/schema prerequisite.
+FR-001–002 → T002/T011 and normal coordinator delivery; FR-003–004 → T003 and normal
+coordinator delivery; FR-005–008 → T001/T004–T013/T017; FR-009–010 → T014/T020;
+FR-011 → T020/T021; FR-012–014 → T015/T019; FR-015 → T016/T017;
+FR-016 → T001/T003/T016 using precise final approval evidence. SC-001 → T002/T003 plus
+normal coordinator delivery; SC-002 → T005–T011/T017; SC-003 → T012/T013/T017;
+SC-004 → T014/T020/T021; SC-005 → T015/T019; SC-006 → T016/T017;
+SC-007 → applicable authority/checkpoint/review boundaries. T018 is removed; IDs need not be contiguous.
 
-## Verification and review
-
-Validate both presentations with installed task-order script and JSON with current CLI read-only intake. Inspect source coverage, real producer dependencies, owned paths, links and executable check/gate consumption. Implementation runs actual task checks plus semantic/manual acceptance. No optional hardening matrix or universal startup protocol.
-
-Coverage: FR-001–002 → T002/T011/T018; FR-003–004 → T003/T018; FR-005–008 → T001/T004–T013/T017; FR-009–010 → T014/T020; FR-011 → T020/T021; FR-012–014 → T015/T019; FR-015 → T016/T017; FR-016 → T001/T003/T016 approval gates. SC-001 → T002/T003/T018; SC-002 → T005–T011/T017; SC-003 → T012/T013/T017; SC-004 → T014/T020/T021; SC-005 → T015/T019; SC-006 → T016/T017; SC-007 → applicable authority/checkpoint/review boundaries T001–T017.
-
-T017 is final local integration, not a waiver for gated live criteria. Normal fresh independent full-range review covers actual delivered checkpoints and honest outstanding gates before executive presentation. Changed global skills/extensions in Paseo require a fresh-session handoff verifying checkout/revision/current approval/loaded capability; never owner reload or automatic restart. Task preparation does not launch implementation. Independent review and final owner approval remain outside production.
+Validate both task presentations and current read-only intake. Internal graph interfaces precede
+public cutover T011; concurrent composition is checked at T013, final local integration at T017.
+Fresh independent final review covers actual delivered checkpoints and honest outstanding gates.
+Changed global skills/extensions in Paseo require a fresh-session handoff verifying revision,
+approval and loaded capabilities, never owner reload or automatic restart. Task production is
+not final task approval or implementation acceptance.
