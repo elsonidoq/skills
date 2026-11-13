@@ -8,7 +8,7 @@ SKILLS = (
     "brainstorming compact-memory coordinate-implementation delegating-architectural-planning "
     "finish-session finish-session-jev handoff-prompt import-open-issues incorporate-skill infographic initialize-coherence "
     "memory-handling planner planning-brainstorming receiving-code-review requesting-code-review "
-    "scientific-method-debugging supabase-server task-generation tiny-spec track-open-issue "
+    "scientific-method-debugging task-generation tiny-spec track-open-issue "
     "using-git-worktrees writing-skills"
 ).split()
 
