@@ -6,7 +6,9 @@ Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimon
 
 **Created**: 2026-11-13
 
-**Status**: Bounded source correction; current specification pending renewed owner approval before downstream planning continues. Implementation remains unauthorized.
+**Status**: Corrected specification authorized for downstream planning simplification. Implementation remains unauthorized.
+
+**Current continuation authority**: After the corrected content at `bfe2e6ebc1c1f843d0cdaf101dd8e2d53c16ad85` (SHA-256 `010e2cb125421e9014a96eed2b77a20f384a9684d05c8322392e5942f8f56d6d`) and its zero-finding targeted review were presented, the owner directed: “you didn't do the simplification yet? if you didn't go ahead, and then present this back again with the simplified tasks”. This authorizes continuation from that corrected source to align and simplify the plan/tasks, then present them; it does not approve unseen downstream artifacts, implementation or external operations. This record changes no requirements.
 
 **Historical specification approval**: After independent specification review returned zero findings, the owner stated: “I approve, continue with architecture planning.” That answer approved the specification content at commit `123954cd141e32bd55805c3bb90a1c16d2a983d2`, SHA-256 `08a6a37dc33496e604f954c897ae63b4f1a9728e434e047b9f59821a8d85db14`. The earlier approval question was cancelled and granted no authority; that later explicit answer was the approval. At the approval-only checkpoint `4c1725e`, only status and this record were added; requirements, scope, acceptance and decisions were unchanged. Architecture planning was authorized under the selected Standard route; implementation and external-operation gates remained intact.
 
