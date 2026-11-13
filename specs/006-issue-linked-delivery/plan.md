@@ -4,13 +4,18 @@ Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimon
 
 **Branch:** `plan-issue-44` | **Date:** 2026-11-13 | **Spec:** [spec.md](spec.md)
 
-**Input:** [Current specification](spec.md) at `fb5d5a39246cb9ab0f7feb7c3442872721a3b48d`,
-SHA-256 `952b41d0d470caa108fb4f3d1fbd17cea7333bb370f434c8d0b5c37e86338366`.
+**Input:** [Current specification](spec.md) at `1320221befca71ad8cb7b54145ef3fc139afdfb1`,
+SHA-256 `80f15f920c2a8f83073d63915089eadc2b92f06c0c862fea87a9ba6213117a98`.
 Issue: [github.com/elsonidoq/skills#44](https://github.com/elsonidoq/skills/issues/44).
 
-**Status:** Owner-authorized downstream planning simplification for presentation, not
-implementation or unseen final-task approval. Original installed SpecKit plan setup ran once;
-this correction does not rerun it. Tasks remain owned by their separate producer.
+**Status:** Owner-selected local Phoenix planning correction, not implementation or unseen
+final-task approval. The owner said “ok, update the plan to use local phoenix”, then
+“ok. continue” after the parent explained finished-span export and unproven current
+incremental UI behavior. The parent inspected the current source and its zero-finding
+affected review. This is authority to continue this exact correction without another
+source-selection question. Original issue wording/approvals remain historical; the current
+selection supersedes the monitoring destination only. Original installed SpecKit setup ran
+once; no rerun. Tasks remain owned by their separate producer.
 
 ## Summary
 
@@ -19,9 +24,9 @@ exact-commit delivery/acceptance, and add one manual assessment skill. Replace t
 execution controller with Python LangGraph nodes using existing Pi, check, Git, session
 and history helpers. Keep sequential execution by default; permit explicitly authorized
 path-disjoint worker waves and synchronize before checks/checkpoints and dependent work.
-Use one metadata-only LangSmith adapter at invocation boundaries. Keep the monitor until
-real replacement visibility passes its later live gate. Retire only the approved behavioral
-collection and operative mandates, not meaningful runtime or security checks.
+Use one metadata-only OpenTelemetry adapter and one same-machine loopback Phoenix server/UI.
+Keep the monitor until useful incremental local visibility is observed during an evolving run.
+Retire only the approved behavioral collection and operative mandates, not meaningful runtime or security checks.
 
 [research.md](research.md) is the single canonical dependency/seam research owner. It records
 versions, inspected sources, source→constraint→check reasoning and honest evidence limits.
@@ -32,15 +37,19 @@ versions, inspected sources, source→constraint→check reasoning and honest ev
 
 - **Language/version:** Python >=3.10; current lock target Python 3.12 Linux x86_64.
   Existing Node/Pi SDK host remains JavaScript. No new agent capability version requirement.
-- **Dependencies:** LangGraph 1.2.21, SQLite saver 3.1.3, LangSmith 0.14.17 and existing
-  PyYAML 6.0.3. Full transitive lock/install consistency is an implementation check.
+- **Dependencies:** LangGraph 1.2.21, SQLite saver 3.1.3, OpenTelemetry API/SDK/OTLP-HTTP
+  exporter 1.45.2 and existing PyYAML 6.0.3. Phoenix 21.0.0 runs in a pinned container,
+  not the workflow Python environment; no Phoenix wrapper or direct LangSmith adapter.
+  Full transitive lock/install consistency is an implementation check.
 - **Proposed storage:** Existing private `.coherence/workflow/workflow.sqlite` for original input,
   effects/checks/history; separate `.coherence/workflow/graph.sqlite` for standard saver
   tables only. Existing metric JSONL/history remains readable. Git and the delivery issue
-  remain their existing evidence owners. No new trace/learning/receipt database.
+  remain their existing evidence owners. Phoenix owns its local SQLite trace store,
+  not workflow acceptance or a learning/receipt ledger.
 - **Testing:** Existing Python unittest, Node test/SDK fixtures, temporary local Git/SQLite
   checks, focused static checks and explicitly authorized live application acceptance.
-- **Platform/type:** Existing local CLI plus attached Pi parent; no daemon or hosted graph.
+- **Platform/type:** Existing local CLI plus attached Pi parent; one local Phoenix container;
+  no scheduler daemon or hosted graph.
 - **Constraints:** Exact selected executors; private state never automatically traced;
   no replay of uncertain effects; normal hooks/signing and unrelated bytes preserved.
   No invented latency, scale, resource or spending target.
@@ -108,7 +117,10 @@ specs/006-issue-linked-delivery/
 - `pi_adapter.py`, `runtime/pi-host/host.mjs`, `runtime/pi-extensions/coordinate-implementation-bridge.js`:
   durable question-pause/answer route and multiple exact steering targets.
 - A small `runtime/coherence_workflow/tracing.py`: approved metadata projection and explicit
-  SDK submission. Reuse `metrics.py`; retain useful `metric_artifacts.py` compatibility.
+  OTel submission. Reuse `metrics.py`; retain useful `metric_artifacts.py` compatibility.
+  Proposed `runtime/phoenix.env.example` and the existing `docs/coordinate-implementation.md`
+  own reproducible single-container settings, image pin, local storage ownership/recovery and
+  ordinary Docker launch instructions. Keep these with tracing delivery, not a provisioning task.
 - `cli.py`, `scripts/coordinate-implementation`, package declarations/lock and runtime tests:
   same entry, graph resume, compatible status/history and dependency packaging.
 - `skills/planner`, `skills/task-generation`, `skills/coordinate-implementation`,
@@ -125,7 +137,7 @@ specs/006-issue-linked-delivery/
 
 ### Requirements versus proposed mechanisms
 
-The [specification](spec.md) fixes Python LangGraph control, Pi agent execution, LangSmith
+The [specification](spec.md) fixes Python LangGraph control, Pi agent execution, local Phoenix
 visibility, skill-owned planning, one controller, durable effect reconciliation, explicit
 concurrency direction, privacy and live visibility before monitor removal. These outcomes,
 checks, authority and historical preservation are not optional hardening.
@@ -242,16 +254,30 @@ no automatic downgrade/conversion/deletion or service stop.
 
 ### Tracing and monitor cutover
 
-Use one small metadata-only adapter at the Pi invocation boundary, reusing qualified local
-metrics. [Research](research.md#metadata-only-langsmith-submission) owns inspected SDK options
-and their rationale; exact helper selection is derived, not an added owner mandate. Suppress
-ambient raw graph/provider tracing. Optional telemetry failure cannot veto safe execution.
+Use one explicit allowlisted OpenTelemetry adapter at invocation/task/graph boundaries,
+reusing `metrics.interval_record`. [Research](research.md#metadata-only-local-phoenix-submission)
+owns compatible packages, final-wire privacy controls and source limits. No auto-instrumentation,
+raw graph tracing, per-token spans or custom heartbeat/UI. Suppress ambient hosted tracing even
+when configured. Export only to explicit same-machine loopback; disable Phoenix analytics and
+external resources. Pi/model-provider traffic remains independent.
 
-Actual SDK privacy/fail-open proof precedes upload. Actual account/project/region/access,
-pricing and network authority precede live use. Usable real LangSmith UI visibility precedes
-monitor-only removal; HTTP success or offline evidence is not a substitute. The
-[quickstart](quickstart.md#live-replacement-and-monitor-retirement--explicit-gate) owns the
-observable and evidence-reuse boundary. Preserve historical monitor data and open limits.
+One pinned Phoenix container with persistent SQLite exposes only HTTP UI/OTLP on loopback
+6006. No Postgres, Redis, ClickHouse, separate collector or agent server. Future configuration
+and setup/recovery instructions belong in Git; private data belongs in a project-owned durable
+local directory outside disposable worktrees. [Interfaces](contracts/interfaces.md#local-monitoring-configuration)
+defines the proposed settings and storage convention. Do not adopt unknown services/data or
+stop a collision. Docker is accessible here, but no Phoenix image/container is present and
+Compose is unavailable; ordinary `docker run` is sufficient. No setup was performed.
+
+Actual final-exporter privacy proof precedes real metadata export. Ordinary future local setup
+uses scoped implementation authority, not a cloud account/pricing consent ritual. New actual
+external/paid/security/data effects retain their applicable gates. Optional monitoring failure
+reports a gap and cannot veto safe execution. Completed small spans can export before root
+completion; current UI refresh/partial-trace usability is NOT VERIFIED. The
+[local acceptance](quickstart.md#live-replacement-and-monitor-retirement--explicit-gate) must
+observe useful incremental progress during an evolving run before monitor removal; ended-root
+traces or HTTP success cannot substitute. If inadequate, retain the monitor and report the
+concrete gap, not build a custom UI. Preserve historical data and open limits.
 
 ### Approval reuse in task handoff
 
@@ -266,12 +292,20 @@ The task producer must therefore remove duplicate policy-consent entries in T001
 not leave them with instructions to skip the question. Likewise, T021 already depends on
 T020: inspect the applicable successful live observation, do not ask the owner to recertify
 it through another “Confirm actual successful T020” gate. Missing/invalidated visibility
-still prevents removal. Keep outstanding live/private/paid/tracker authority, not duplicate
-questions about already satisfied prerequisites.
+still prevents removal. Keep actual uncovered external/security/paid/tracker authority,
+not duplicate questions about already satisfied prerequisites.
 
 Remove the old T018 worker exercise. Its natural publication and conditional owner-review
 trace belong to normal coordinator/finish-session delivery, not a task that manufactures
 feedback or unrelated test issues. Remaining task IDs may stay stable with gaps.
+
+Task alignment for this destination change: T004 replaces the direct LangSmith requirement
+with the compatible standard OTel packages (retain any necessary transitive LangSmith).
+T014 includes the adapter, small local config and operating documentation as one coherent
+outcome. T020 verifies actual local incremental visibility and removes obsolete cloud consent;
+T021 consumes that evidence without recertification. T019's scoped tracker gate stays.
+Update the T014 research anchor to `metadata-only-local-phoenix-submission`.
+Do not restore T018, duplicate policy gates or add environment-check tasks.
 
 ## Ordered design stages and verification rationale
 
@@ -282,8 +316,8 @@ interfaces/checks for Terra/medium and split independently verifiable outcomes.
 2. Replace sequential control and validate durable Pi/Git/question/review boundaries before
    consumers rely on them; retain CLI/history compatibility and remove replaced control.
 3. Add directed disjoint waves, exact parent routing and safe shared check/Git serialization.
-4. Add local safe tracing, then authorized real visibility; only its observed result releases
-   monitor retirement. Local work need not wait on missing upload authority.
+4. Deliver local safe OTel tracing and bounded Phoenix setup together, then observe real
+   incremental local UI visibility; only that result releases monitor retirement.
 5. Deliver manual assessment and bounded behavioral retirement independently of monitor cutover.
 6. Validate composed application seams and obtain fresh independent review. Normal final
    delivery publishes the exact reviewed revision, then waits for real feedback/acceptance.
@@ -396,11 +430,12 @@ because they once served the monitor. No service stop, data cleanup or issue-sta
 **Does the current plan induce scope creep or over complexities?** This revision removes
 repeated consent, a staged owner-lifecycle exercise and duplicate protocol descriptions.
 Derived mechanics may be simplified while preserving their tested outcomes. One graph,
-standard persistence and existing effect helpers are sufficient; no new service or ledger.
+standard persistence and existing effect helpers plus one local Phoenix container suffice;
+no added orchestration service or ledger.
 
 Final content/implementation approval remains pending. It can include the exact amendments
-above. Outstanding external/live authority and the indispensable visibility proof remain
-as described in the approval-reuse and tracing sections. No runtime/live verification was
+above. Actual uncovered external/paid/security/data authority and the indispensable local
+visibility proof remain as described in the approval-reuse and tracing sections. No runtime/live verification was
 performed during planning. Related issues remain separately owned; #14/#16 inform checks,
 not automatic fixes/closures. Changed global capabilities in Paseo need the normal fresh-
 session handoff, not `/reload` or automatic restart.

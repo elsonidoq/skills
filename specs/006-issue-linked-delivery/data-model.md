@@ -48,10 +48,13 @@ not a new receipt database. Graph state holds control references, not duplicate 
 
 Approved observation fields are the opaque identities/parent relation, role/model, safe
 outcome/category, time and known invocation-local usage/cost from FR-009–010. Private state
-never becomes an outbound record. Unknown numeric values are omitted, not zero. SDK protocol
-routing fields do not authorize private payloads. [Research](research.md#metadata-only-langsmith-submission)
-owns mapping/SDK choices; [quickstart](quickstart.md#trace-privacy-before-any-upload) owns
-final-wire privacy and usage verification.
+never becomes an outbound record, including local export. Unknown numeric values are omitted,
+not zero. SDK protocol routing fields do not authorize private payloads. [Research](research.md#metadata-only-local-phoenix-submission)
+owns mapping/SDK choices; [quickstart](quickstart.md#trace-privacy-before-real-metadata-export) owns
+final-wire privacy and usage verification. Phoenix receives only this projection over explicit
+same-machine loopback OTLP/HTTP. Its SQLite data lives in project-owned durable local storage
+outside disposable worktrees, separate from workflow state. Phoenix never owns execution
+acceptance; no automatic history import, retention purge or cloud replication.
 
 ## Delivery and assessment (no new runtime tables)
 

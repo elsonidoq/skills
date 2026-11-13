@@ -1,8 +1,8 @@
 # Validation guide
 
 This guide schedules later implementation validation. **No runtime integration, provider,
-tracker write or LangSmith upload was run during planning.** Requirements and gates remain
-in [spec](spec.md); [plan](plan.md) owns design and [interfaces](contracts/interfaces.md)
+tracker write, Phoenix launch or metadata export was run during planning.** Requirements and
+gates remain in [spec](spec.md); [plan](plan.md) owns design and [interfaces](contracts/interfaces.md)
 owns proposed CLI/Pi/lifecycle behavior.
 
 ## Prerequisites
@@ -14,7 +14,7 @@ Resolve the complete compatible hashed Python lock during authorized setup; use 
 environment and usable Pi capabilities, not a required agent version.
 
 Local checks use existing SDK fixture providers and temporary Git/SQLite state. They exercise
-actual mechanisms without paid model traffic, but do not prove live model behavior or account
+actual mechanisms without paid model traffic, but do not prove live model behavior or local UI
 usability. No runtime or live checks were run during this planning correction.
 
 ## Local command families
@@ -80,37 +80,62 @@ Observe these actual seams through permanent production helpers/CLI integration:
 These outcomes establish recovery within tested boundaries, not exactly-once external effects
 in general. A failed/unrun composed seam blocks consumers that rely on it, not unrelated work.
 
-## Trace privacy before any upload
+## Trace privacy before real metadata export
 
-Use the actual selected LangSmith SDK with a local intercepted transport. Put distinctive
-private sentinels in prompts, responses, raw exceptions, tool data, paths, caller IDs and
-ambient tracing metadata. Inspect all actual outgoing request bodies and relevant URL/header
-content for create/update/error paths. Only the closed approved observation plus necessary
-safe SDK protocol fields may be sent. Turn ambient tracing on while application authority
-is off and assert zero network submission. Exercise SDK initialization/submission failure:
-execution still checks/commits safely and reports a visibility gap.
+Use the actual selected OTel SDK/exporter with an intercepted final HTTP transport. Put private
+sentinels in prompts, responses, raw exceptions, tool payloads, paths, caller IDs, process resource
+metadata, baggage and ambient headers/tracing configuration. Decode final OTLP protobuf bodies
+and inspect destinations/headers for ordinary completion and error paths, not just a mapper mock.
+Only allowlisted span/resource attributes and necessary safe protocol fields may remain. Automatic
+exception events/status descriptions and raw graph state must be absent.
 
-Use a reused-session interval and a missing/discontinuous end observation. Known local
-usage stays invocation-local; unknown fields are absent, not zero. Inspect run→task→
-invocation parentage, opaque identities, safe outcome and elapsed time. No raw graph state
-or per-tool/per-token spans. This check is of final SDK serialization, not just a mapper mock.
+Set ambient LangSmith/OTLP remote endpoints, OTLP headers and HTTP proxy configuration in the
+isolated test environment. With monitoring disabled, assert zero monitoring requests; with it
+enabled, permit only the selected numeric loopback endpoint and safe headers. Exercise a redirect
+response: no follow-up to a remote host. This checks actual SDK/session defaults, including
+resource detectors, header merging and internal metrics, without sending sentinels to a real
+collector. Existing Pi/model-provider network traffic is independent, not prohibited by this
+monitoring-only assertion. No whole-process firewall or credential logging.
+
+Use a reused-session interval and a missing/discontinuous end observation. Known usage remains
+invocation-local; unknown fields are absent, not zero. Inspect run→task→invocation parentage,
+opaque IDs, safe status and elapsed time. No per-tool/per-token instrumentation. Exporter init,
+serialization and unavailable-collector failures must report a safe visibility gap while actual
+checks/commits and otherwise safe execution continue. Prove these controls before real metadata
+export; an environment flag or HTTP status alone is not evidence of privacy.
 
 ## Live replacement and monitor retirement — explicit gate
 
-Before a real call, obtain the selected LangSmith account/project/region/access, pricing
-acceptance and network/upload authority. Confirm the local privacy checks passed for the
-same adapter/dependencies. Run one otherwise authorized real Pi invocation through the
-actual CLI graph, then inspect the LangSmith UI for usable graph/task/invocation relationships,
-model/role/outcome/time and qualified known/unknown usage. Record the concise observation
-and limitations in the existing delivery evidence, without private payloads.
+Under future scoped implementation authority, use the single-container settings/storage in
+[interfaces](contracts/interfaces.md#local-monitoring-configuration). Local setup does not need
+cloud account/project/region/pricing/upload consent. Preserve genuine uncovered external/paid/
+security/data gates if introduced; real Pi calls use their existing scoped authority. Confirm
+applicable final-wire privacy evidence for the actual adapter/dependencies before export.
 
-Inspect and reuse that applicable observation when the removal task starts (T021 consumes
-T020); do not ask the owner to recertify the recorded success. Missing or invalidated evidence
-still blocks removal. Only observed live visibility releases it. HTTP success,
-an offline fixture or missing account authority does not release it. Keep monitor tests and
-source until then. Do not stop an existing service, delete databases, migrate history or close
-related issues as part of source retirement. Verify relevant packaging/import/documentation
-callers after removal and retain historical read access and acceptance limits.
+At actual setup inspect local service/port/storage ownership, pin the selected image and verify
+its effective version/settings and persistent SQLite path. No unknown existing asset is adopted
+or stopped. Publish only loopback HTTP 6006; do not expose gRPC or ancillary ports. Check server
+and browser network behavior with analytics/external resources disabled: no monitoring analytics,
+fonts, model-price fetch, hosted tracing or other third-party monitoring request. Flags alone do
+not establish the result. No provider integration is configured in Phoenix. Preserve the local
+storage path/recovery instructions outside disposable worktrees; do not add an archive registry.
+
+Observe one representative actual CLI graph run in local Phoenix **while it is still evolving**.
+Use completed invocation/task or small graph-boundary spans, normal batch export/boundary flush,
+and the selected UI's actual refresh behavior. Before root completion, inspect useful incremental
+progress and graph/task/invocation relationships, role/model/status/time and honest known/unknown
+usage/cost. Record the observed update/refresh limitations and concise evidence in normal delivery
+evidence, without private payloads. A final ended-root trace, successful ingestion or an offline
+fixture is insufficient. Open-span timers/dashboard parity and latency are not promised or tested
+by assumption. If selected UI behavior is inadequate, report the concrete gap and retain the
+monitor; do not build a custom UI, heartbeat or event-log framework to hide the gap.
+
+T021 consumes the applicable successful T020 observation; do not ask the owner to recertify it.
+Missing or invalidated evidence still blocks removal, not unrelated safe execution. Keep monitor
+source/tests until this actual local replacement proof passes. Do not stop existing services,
+delete databases, migrate history or close related issues as part of source retirement. Verify
+relevant packaging/import/documentation callers after removal, retaining historical read access
+and acceptance limits. No runtime, local service, exporter or UI acceptance has run in this plan.
 
 ## Issue delivery and manual assessment
 

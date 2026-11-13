@@ -67,6 +67,51 @@ to the correct retained task context, with independently identified subsequent i
 usage. [Quickstart](../quickstart.md#composed-execution-and-recovery) owns the actual-boundary
 proof required before reliance. No live callback is assumed recoverable after process loss.
 
+## Local monitoring configuration
+
+Monitoring is opt-in and metadata-only; application execution does not depend on exporter
+availability. Proposed settings in `runtime/phoenix.env.example` and launch instructions in
+existing `docs/coordinate-implementation.md` use one Docker container, not Compose or a new
+service manager. These paths are future implementation outputs, not created by this plan.
+
+- Workflow config explicitly enables monitoring and selects
+  `http://127.0.0.1:6006/v1/traces`; UI is `http://127.0.0.1:6006`.
+  Use a numeric loopback address, explicit port and exact OTLP path. Do not inherit OTLP
+  endpoint/proxy/headers or hosted graph tracing from the environment. Nonlocal settings
+  refuse export with a safe corrective message; they do not block otherwise safe execution.
+- Pin the official Phoenix 21.0.0 image by the digest in [research](../research.md#sources-and-minimal-deployment).
+  Publish only `127.0.0.1:6006:6006`. Container-internal HTTP binding must accept that mapping;
+  do not use host networking, publish-all, gRPC/Prometheus ports or remote collectors.
+  `PHOENIX_TELEMETRY_ENABLED=false`, `PHOENIX_ALLOW_EXTERNAL_RESOURCES=false`, and
+  `PHOENIX_WORKING_DIR=/data` are explicit container settings. Do not pass through the host
+  environment, cloud credentials, provider integrations or external-resource configuration.
+  The privacy flags also suppress automatic model-price downloads; check actual behavior.
+  Retain the image's authentication default for its non-loopback container bind; use local
+  Phoenix credentials only, privately stored with documented recovery, never in Git or
+  telemetry. Explicit local authorization is the only allowed credential header; no inherited
+  auth. This is ordinary local setup, not a hosted-account approval ceremony.
+- Proposed durable private bind directory:
+  `${XDG_DATA_HOME:-$HOME/.local/share}/coherence/PROJECT_KEY/phoenix`, where `PROJECT_KEY`
+  is the project's explicit stable local identifier, not a disposable worktree name.
+  The local project maintainer owns the directory and its access. Document the selected
+  absolute path, image pin and ordinary restart/recovery command in existing project operating
+  guidance; recover by reusing that same owned SQLite volume, not creating an empty replacement.
+  Keep source/config in Git and private database bytes out of Git. Verify directory ownership
+  and image-user write access at setup, without broad permission changes or adoption of
+  unknown bytes. A known existing directory is reused only after confirming its owner/purpose.
+- An occupied port, foreign container or ambiguous data directory stops affected local setup
+  with the collision and corrective choice; do not stop, overwrite or silently adopt it.
+  Missing Docker/access is an affected setup gap, not a global execution/startup gate or
+  authority to install globally. Ordinary future scoped setup needs no new consent ritual.
+  No automatic shutdown, deletion, expiry, retention purge or resource ceilings.
+
+The adapter's safe IDs and attributes map run→task→invocation, role/model/status/time and
+known invocation-local usage/cost. No raw input/output/error/path even locally; no baggage or
+automatic exception/status text. [Research](../research.md#standard-adapter-and-concrete-privacy-seams)
+owns final transport/resource controls. Export completed small boundary spans while the run
+continues. Do not promise display of an open span or root-only completion as progress proof.
+Actual local UI observation is the removal prerequisite, not another approval question.
+
 ## Delivery issue and acceptance
 
 Use the project's declared owner and `track-open-issue` capabilities/target/authority rules;
