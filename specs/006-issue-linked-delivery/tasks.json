@@ -1,0 +1,547 @@
+{
+  "delivery_issue": "https://github.com/elsonidoq/skills/issues/44",
+  "tasks": [
+    {
+      "id": "T001",
+      "outcome": "Reconcile the runtime operative contracts. Apply only the runtime/constitution proposals in plan.md#operative-amendments-for-later-explicit-approval, recording exact owner approval and actual date/version 4.4.0 rationale. Establish the maintained contract for one LangGraph controller, sequential default, explicitly directed path-disjoint waves, quiescent checks/Git, compatible legacy routing and unchanged six intake checks. Align touched maintained-carrier assertions, including the known Evidence-only/evidence-only mismatch, without changing historical approvals. Exclude delivery-summary and behavioral-retirement amendments, applied with T003/T016; do not claim the runtime implemented.",
+      "depends": [],
+      "owned_paths": [
+        ".specify/memory/constitution.md",
+        "AGENTS.md",
+        "README.md",
+        "REQUIREMENTS.md",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        "skills/coordinate-implementation/SKILL.md",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py",
+        "skills/coordinate-implementation/scripts/test_batching_contract.py",
+        "skills/coordinate-implementation/scripts/test_state_contract.py",
+        "skills/coordinate-implementation/scripts/test_intake_contract.py"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-005\u2013008,016; SC-007. Compare exact proposals with affected owners; retain ADR-0003/0004 authority, hooks/signing, failure inspection, independent review and no-extra-admission rules. Static checks pass with retained semantic protections. Correct the demonstrated carrier mismatch as part of the touched coordinator contract, not a broad repair sweep.",
+      "checks": [
+        "python3 scripts/check-planner-workflow.py",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py",
+        "PYTHONDONTWRITEBYTECODE=1 python3 skills/coordinate-implementation/scripts/test_batching_contract.py",
+        "PYTHONDONTWRITEBYTECODE=1 python3 skills/coordinate-implementation/scripts/test_state_contract.py",
+        "PYTHONDONTWRITEBYTECODE=1 python3 skills/coordinate-implementation/scripts/test_intake_contract.py"
+      ],
+      "gates": [
+        "Confirm explicit owner approval of the exact runtime/constitution operative amendments in specs/006-issue-linked-delivery/plan.md, not merely specification approval. Retain the actual approval evidence; absent approval stops these changes and dependent reliance."
+      ]
+    },
+    {
+      "id": "T002",
+      "outcome": "Carry the issue from planner understanding into task execution. Use existing track-open-issue rules after understanding/brainstorming to reuse or, when authorized, create an association. Propagate the qualified issue through TinySpec/Standard artifacts, optional top-level delivery_issue and actual worker/reviewer context. Bare lists remain valid: no issue intake prerequisite, local register or second approval chain. Update only needed active template/prompt carriers, preserving AGENTS concurrency precedence. Exclude issue writes during local verification.",
+      "depends": [
+        "T001"
+      ],
+      "owned_paths": [
+        "skills/planner/SKILL.md",
+        "skills/task-generation/SKILL.md",
+        "skills/tiny-spec/SKILL.md",
+        ".pi/prompts/speckit.specify.md",
+        ".pi/prompts/speckit.plan.md",
+        ".pi/prompts/speckit.tasks.md",
+        ".specify/templates/spec-template.md",
+        ".specify/templates/plan-template.md",
+        ".specify/templates/tasks-template.md",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/tests/test_worker_authority.py",
+        "runtime/tests/test_task_intake.py",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-001,002; SC-001/007 association. A no-issue walkthrough reaches understanding before association; supplied #44 is reused without duplicate. Capture the same URL reaching initial/corrective/resumed worker and reviewer prompts. Missing tracker capability identifies the affected operation and corrective action, not a universal stop. Six-check intake accepts bare lists and optional context. Preserve current-launch/shared routine authority in changed prompt sites.",
+      "checks": [
+        "python3 scripts/check-planner-workflow.py",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_worker_authority.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_task_intake.py'"
+      ]
+    },
+    {
+      "id": "T003",
+      "outcome": "Deliver and accept an exact reviewed issue revision. Apply the exact finish-session/docs summary amendment from plan.md under its explicit policy gate. Use existing skills, not graph nodes/new tracker client, for matching meaningful issue/chat executive text after checks/checkpoints/fresh review. Link purpose-classified feedback and actual attributable correction commits, refresh presented SHA, distinguish awaiting acceptance from internal completion and retain exact-revision acceptance before authorized closure. Inspect uncertain/partial publication before retry. Exclude automatic RCA, skill edits, PRs and unrelated issue changes.",
+      "depends": [
+        "T002"
+      ],
+      "owned_paths": [
+        "skills/finish-session/SKILL.md",
+        "skills/track-open-issue/SKILL.md",
+        "docs/index.md",
+        "README.md",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-003,004,016; SC-001/007. Focused instruction checks/walkthroughs cover required summary content, unrelated range context, correction to a new SHA, stale acceptance rejection, partial publication and missing authority. Closing requires actual explicit acceptance of that revision plus operation-scoped closure authority/readback. Local walkthroughs do not claim real tracker delivery; T018 supplies live acceptance.",
+      "checks": [
+        "python3 scripts/check-planner-workflow.py",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py"
+      ],
+      "gates": [
+        "Confirm explicit owner approval of the exact finish-session safety-rule/docs-routing executive-summary amendment in plan.md before changing its owners. This is not tracker comment/closure authority."
+      ]
+    },
+    {
+      "id": "T004",
+      "outcome": "Provide standard file-backed graph persistence. Resolve the complete compatible hashed lock for researched LangGraph 1.2.21, SQLite saver 3.1.3, LangSmith 0.14.17 and existing PyYAML/Python minimum. Add a small production graph/saver factory using graph.sqlite, stable thread identity, sync durability and typed control/reference state, distinct from workflow.sqlite history. Verify actual selected packages, not a prototype/alternate launched controller. Exclude task scheduling, uploads and legacy conversion. Align the existing PackagingTests dependency assertion with the resolved direct requirements without weakening packaging/global-destination protections.",
+      "depends": [
+        "T001"
+      ],
+      "owned_paths": [
+        "runtime/pyproject.toml",
+        "runtime/requirements.lock",
+        "runtime/coherence_workflow/graph.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/tests/test_graph_persistence.py",
+        "runtime/tests/test_database_compatibility.py",
+        "REQUIREMENTS.md",
+        "docs/coordinate-implementation-schema.md",
+        "runtime/tests/test_installation.py"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-005,006,008; SC-002 foundation. Check resolved lock/import consistency on selected Python 3.12 platform and declared >=3.10 support with available supported environments; unavailable environment remains an explicit gap, never silently raise minimum. Actual saver close/reopen resumes latest state and Command interrupt answer with stable thread_id/durability=sync, preserving old history bytes. No custom serializer/admission rules. New test_graph_persistence.py is an implementation-produced selector, not existing evidence.",
+      "checks": [
+        "python3 -m pip check",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_graph_persistence.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_database_compatibility.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_installation.py'"
+      ]
+    },
+    {
+      "id": "T005",
+      "outcome": "Reconcile focused Git success before history retry. Persist operation-local checkpoint intent before Git in existing private history: attempted parent, exact selected paths/content and check references. Reconcile actual direct child of attempted parent even after HEAD advances, reuse matching successful SHA or stop uncertainty before recommit. Preserve hooks/signing, unrelated index/worktree and genuine no-change. Keep helper compatibility with current callers; no receipt store or broader #28/#43 transfer repair.",
+      "depends": [],
+      "owned_paths": [
+        "runtime/coherence_workflow/git_effects.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/tests/test_git_effects.py",
+        "runtime/tests/test_checkpoint_recovery.py",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-006,008; SC-002/007; concrete #14 seam. Temporary-Git tests exercise actual successful commit followed by failed/missing history write and reopen, advanced HEAD, unrelated child/content mismatch, hook/check failure and no-change. Matching original SHA is recovered without duplicate commit; uncertain/mismatched effects preserve work and stop affected continuation. Use smallest cases establishing parent/path/content attribution, not historical replay.",
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_git_effects.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_checkpoint_recovery.py'"
+      ]
+    },
+    {
+      "id": "T006",
+      "outcome": "Execute dependent tasks through a sequential graph task interface. Implement production task subgraph readiness, preparation, durable dispatch identity/result, actual required checks, scoped correction and focused checkpoint acceptance. Reuse prompt/session/verification/Git helpers; graph transitions do not wrap Engine.invoke. Persist started before Pi and terminal result before reliance; reconcile provider process/session/result and Git before rerun. Keep graph construction internal until T011 public cutover, without a second selectable engine/dual dispatch. Exclude review lifecycle, durable worker questions and waves.",
+      "depends": [
+        "T004",
+        "T005"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/graph.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/sessions.py",
+        "runtime/tests/test_graph_execution.py",
+        "runtime/tests/test_engine.py",
+        "runtime/tests/fixtures/support.py",
+        "docs/coordinate-implementation-schema.md"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-005\u2013008; SC-002/007 task boundary. Actual graph plus temporary Git and adapter fixtures show dependent release only after producer checks/checkpoint, default one worker, correctable check failure fixed within scope and unsuccessful return not accepted. Crash around provider result persistence either reuses settled result or stops uncertain call before redispatch. Initial/corrective/resumed prompts retain ADR authority, small isolated local database permission and genuine gates. New test_graph_execution.py exercises production nodes, not a demo scheduler. Acceptance of this task interface needs no unfinished review/question work.",
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_graph_execution.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_worker_authority.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_check_correction.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_checkpoint_recovery.py'"
+      ]
+    },
+    {
+      "id": "T007",
+      "outcome": "Route independent review and scoped repair through graph transitions. Deliver the graph counterpart of _finish_reviews lifecycle dispatch/stage selection as graph review/repair/checkpoint/review nodes. Reuse evidence/attribution helpers, cumulative coverage, evidence-only reassessment/target refresh, fresh read-only reviewers and routine-repair authority. Consume T006 checkpoints and real check evidence; reports/SQL progress do not substitute acceptance. Exclude public backend cutover and new retry policies/budgets. Exercise this internal production graph interface directly in adapted review fixtures; remove the old public controller at the T011 cutover, not by breaking its callers during preparation.",
+      "depends": [
+        "T006"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/graph.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/tests/test_review_chain.py",
+        "runtime/tests/test_cumulative_review.py",
+        "runtime/tests/test_review_format_recovery.py",
+        "runtime/tests/test_review_payload_recovery.py",
+        "runtime/tests/test_worker_authority.py",
+        "runtime/tests/test_graph_execution.py"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-005,006,008; SC-002/007. Production graph completes small task/checkpoint\u2192fresh review\u2192scoped repair/checkpoint\u2192fresh re-review. Exact attributable SHA/evidence reaches reviewers with fresh read-only contexts; coverage/gap decisions survive reopen. Unknown/failed calls require inspected diagnosis, failed explicit Sol escalation retains owner-direction stop, and new review nodes do not call the old lifecycle controller; T011 deletes it at cutover.",
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_review_chain.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_cumulative_review.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_review_format_recovery.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_review_payload_recovery.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_worker_authority.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_graph_execution.py'"
+      ]
+    },
+    {
+      "id": "T008",
+      "outcome": "Settle Pi questions into a saved idle transport pause. Implement opt-in pauseQuestions from contracts/interfaces.md#pi-question-pause-and-continuation. Return explicit awaiting-decision disposition, abort/drain outside tool await to SDK idle, retain saved session and correlated question/tool identity in waiting result. Pause is not an owner answer/task completion. Preserve non-opt-in callbacks. Exclude graph interrupt and multi-target changes.",
+      "depends": [],
+      "owned_paths": [
+        "runtime/pi-host/host.mjs",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/tests/test_host.mjs",
+        "runtime/tests/test_pi_adapter.py",
+        "runtime/tests/test_saved_sessions.mjs",
+        "runtime/tests/fixtures/steering_adapter_fixture.mjs",
+        "runtime/tests/cleanup_adapter_fixture.mjs"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-006,008; SC-002 transport prerequisite. Actual installed SDK fixture provider, without paid calls, proves question\u2192pause\u2192idle\u2192saved result and saved-context reopen; no gated effect before actual consent. Unconfirmed idle/lost result is uncertain, not safe redispatch. Adapt fixture consumer assertions currently expecting immediate tool reply/steering direction to explicitly admit pause/continuation without weakening existing callback tests. Separate invocation usage intervals. Failed pause proof blocks T009 reliance, not unrelated local work.",
+      "checks": [
+        "node --test runtime/tests/test_host.mjs runtime/tests/test_saved_sessions.mjs",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_pi_adapter.py'"
+      ]
+    },
+    {
+      "id": "T009",
+      "outcome": "Deliver durable graph replies to actual saved task context. Persist T008 settled waiting result before separate effect-free interrupt node. Route actual terminal/attached reply by current interrupt/target through Command resume to a new invocation of same saved task session, with pending question/answer/current authority/settled effects. Reopen re-presents same question; missing input stays paused, denial prevents gated operation. Routine triage uses existing authority, never fabricated owner consent. Exclude parallel target maps/waves.",
+      "depends": [
+        "T006",
+        "T008"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/graph.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/pi-extensions/coordinate-implementation-bridge.js",
+        "runtime/tests/test_graph_questions.py",
+        "runtime/tests/test_pi_adapter.py",
+        "runtime/tests/test_bridge.mjs",
+        "runtime/tests/fixtures/steering_adapter_fixture.mjs",
+        "runtime/tests/fixtures/support.py"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-006,008; SC-002/007 answer-consumption seam. New test_graph_questions.py uses actual graph\u2192adapter\u2192SDK fixture provider\u2192temporary Git with terminal and attached consumers: pause/idle/checkpoint/close/reopen/actual answer reaches saved continuation, prior settled effect does not repeat, denial runs no prohibited effect, stale reply rejected and no-answer remains paused. Helper-only interrupt tests are insufficient. Public status omits private question/session paths. Resumed prompt retains ADR blocks.",
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_graph_questions.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_pi_adapter.py'",
+        "node --test runtime/tests/test_bridge.mjs"
+      ]
+    },
+    {
+      "id": "T010",
+      "outcome": "Feed inspected recovery actions into graph continuation. Preserve recover-task continue/fresh/escalate with diagnosis, authorize-routine-repairs, external completion transfer and refresh-review-target as reconciled graph actions. Retain original scope/session/ownership and settled facts, not custom stage loops. Use completed effect reconciliation before continuation and existing #28/#43 helpers without wider repair. Inspect failure before targeted recovery; unknown cause/live effects stop affected action. Exclude new authority protocol and automatic expensive retries. Exercise the internal graph recovery action interface directly; public action routing and removal of superseded loops land together in T011.",
+      "depends": [
+        "T007",
+        "T009"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/graph.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/tests/test_recovery.py",
+        "runtime/tests/test_worker_recovery.py",
+        "runtime/tests/test_external_recovery.py",
+        "runtime/tests/test_review_chain.py",
+        "runtime/tests/test_worker_authority.py",
+        "docs/coordinate-implementation.md"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-006,008; SC-002/007. Adapt recovery fixtures to graph: original inputs and current launch/routine blocks reach resumed/corrective prompts, successful work not redone, review targets fresh and unrelated work preserved. Sol escalation failure stops and notifies owner, no further dispatch. Public cutover T011 supplies the legacy route; these fixtures check graph actions without an old-engine launch. Routine tests/local databases/fixes do not ask again; real gates remain.",
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_recovery.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_worker_recovery.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_external_recovery.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_review_chain.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_worker_authority.py'"
+      ]
+    },
+    {
+      "id": "T011",
+      "outcome": "Cut the existing CLI over to one graph backend with explicit legacy routing. Wire existing start/resume to completed graph, write langgraph-v1 marker in existing input authority and delete replaced task/review/custom resume loops from package. Keep only useful helpers/facade; no wrapper/parallel old controller. Status/history retain read-only legacy compatibility and safe waiting projection. Refuse unmarked legacy mutation before effects with exact action/arguments for retained compatible pre-cutover revision 4c1725ebded2f89dec6933b8d193bf34997c62ce. No automatic checkout/install/old process/conversion. Document retention and rollback routes.",
+      "depends": [
+        "T010"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/graph.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/tests/test_cli.py",
+        "runtime/tests/test_resume.py",
+        "runtime/tests/test_database_compatibility.py",
+        "runtime/tests/test_engine.py",
+        "runtime/tests/test_graph_execution.py",
+        "scripts/coordinate-implementation",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        "README.md",
+        "REQUIREMENTS.md"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-005,006,008; SC-002/007 first usable composed sequential boundary. Actual CLI/SDK fixture runs dependent tasks/checks/Git/fresh review, interrupt/reopen/answer and uncertain provider/Git stop using T005\u2013009. Verify selected executor/effort, no-issue/empty-list behavior and one controller by code inspection. New CLI reads unchanged legacy rows; mutation gives concrete compatible route. Exercise retained revision with isolated legacy fixture/compatible environment when available: missing environment is a required compatibility gap, not diagnostic-only proof. Never feed graph runs to old engine. Run retained Python and host/bridge/session collection here because public cutover invalidates cross-seam compatibility.",
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_*.py'",
+        "node --test runtime/tests/test_host.mjs runtime/tests/test_bridge.mjs runtime/tests/test_saved_sessions.mjs"
+      ]
+    },
+    {
+      "id": "T012",
+      "outcome": "Route attached-parent messages to multiple exact active targets. Replace singleton steering target with run/task/invocation/session/role keyed map using existing tools/framing. Route matching active target only, serialize owner questions preserving owner-only distinction, retire stale targets and re-establish bridge request on reopen without changing underlying question. Preserve triggerTurn=false routine notifications and question/terminal completion behavior. Exclude wave scheduling/permission widening.",
+      "depends": [
+        "T008"
+      ],
+      "owned_paths": [
+        "runtime/pi-extensions/coordinate-implementation-bridge.js",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/tests/test_bridge.mjs",
+        "runtime/tests/test_global_bridge.mjs",
+        "runtime/tests/test_question_triage.mjs",
+        "runtime/tests/test_pi_adapter.py",
+        "runtime/tests/fixtures/steering_adapter_fixture.mjs"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-006\u2013008; SC-003 parent prerequisite. Real registered bridge\u2192adapter\u2192SDK fixture checks with two exact active targets show direction/reply reaches selected saved context only, stale/unknown targets never broadcast, owner-only remains separate and routine status does not wake parent. Existing singleton callers remain compatible, session exclusivity unchanged.",
+      "checks": [
+        "node --test runtime/tests/test_bridge.mjs runtime/tests/test_global_bridge.mjs runtime/tests/test_question_triage.mjs",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_pi_adapter.py'"
+      ]
+    },
+    {
+      "id": "T013",
+      "outcome": "Complete directed disjoint waves before shared checks and Git. Add start-only --parallel/parent parallel context retained in run input; sequential default unchanged. Use Send/task subgraph/keyed reducers for explicitly directed disjoint ready wave. Keep controller flock, only needed claim-bookkeeping mutex, thread-owned short history transactions and saver locking; no shared active Pi session. After workers settle, serialize check\u2192diff\u2192stage\u2192commit/reconcile without sibling mutation, one focused checkpoint/task. Coordinate overlap/shared outputs rather than mandate worktrees. Optional concurrency context is not intake eligibility. Exclude continuous scheduler/service/resource caps.",
+      "depends": [
+        "T011",
+        "T012"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/graph.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/coherence_workflow/sessions.py",
+        "runtime/pi-extensions/coordinate-implementation-bridge.js",
+        "runtime/tests/test_graph_concurrency.py",
+        "runtime/tests/test_lock_waiting.py",
+        "runtime/tests/test_sessions.py",
+        "runtime/tests/test_bridge.mjs",
+        "runtime/tests/fixtures/support.py",
+        "runtime/tests/fixtures/steering_adapter_fixture.mjs",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        ".pi/prompts/speckit.tasks.md",
+        ".specify/templates/tasks-template.md"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-007,008; SC-003/007. New test_graph_concurrency.py uses production graph, actual SDK fixture operations and temporary Git: workers visibly overlap only under explicit test concurrency direction, then checks/Git quiesce and dependent join waits for accepted checkpoints. Fail branch/reopen retains completed sibling without replay/combined commit. Check actual path overlap/shared outputs, unrelated staged bytes and target drift; not exhaustive matrix. Thread-owned connections and no transaction across call/wait. Default public launch stays sequential. Run composed collection at first usable concurrent boundary.",
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_*.py'",
+        "node --test runtime/tests/test_host.mjs runtime/tests/test_bridge.mjs runtime/tests/test_saved_sessions.mjs"
+      ]
+    },
+    {
+      "id": "T014",
+      "outcome": "Submit only safe invocation metadata through the actual LangSmith SDK. Add small explicit RunTree adapter at Pi boundary using T004 packages and research.md#metadata-only-langsmith-submission. Construct safe observations afresh: opaque IDs/fixed names, approved hierarchy/role/model/outcome/time and qualified invocation-local known usage/cost. Dedicated single-endpoint client omits runtime info, hides IO, filters metadata closed; disable ambient graph tracing. Submission needs scoped upload authority. Reuse interval_record; no cumulative/raw errors/events/state/unknown zeroes. Fail-open gaps never veto safe task/checkpoints. Exclude live uploads/account setup/per-tool-token tracing/queue/monitor removal.",
+      "depends": [
+        "T011"
+      ],
+      "owned_paths": [
+        "runtime/coherence_workflow/tracing.py",
+        "runtime/coherence_workflow/graph.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/coherence_workflow/metrics.py",
+        "runtime/tests/test_tracing.py",
+        "runtime/tests/test_metrics.py",
+        "runtime/tests/test_usage_reporting.py",
+        "docs/coordinate-implementation.md",
+        "REQUIREMENTS.md"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-009,010; SC-004 local prerequisite; #16 seam. New test_tracing.py intercepts FINAL requests from actual selected SDK, not mapper mocks: sentinel prompts/responses/tools/paths/errors/caller IDs/ambient metadata absent in create/update/failure bodies and relevant URLs/headers. Only safe protocol routing/time/hierarchy fields allowed. Authority off with ambient tracing on makes zero network requests. Init/submission failure still allows production graph check/commit with safe gap notice. Reused/discontinuous/missing intervals show qualified usage or omitted unknowns, not cumulative/invented cost. Proof applies to same adapter/SDK revision and precedes T020 upload.",
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_tracing.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_metrics.py'",
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_usage_reporting.py'"
+      ]
+    },
+    {
+      "id": "T015",
+      "outcome": "Provide the manual evidence-based skill assessment entry. Create one portable owner-triggered skill using track-open-issue capabilities and contracts/interfaces.md#manual-assessment. Discover all paginated open/closed issues/comments excluding PRs; absent assessment labels means unassessed. Reuse equivalent labels or propose three planned labels. Acceptance is evidence, not eligibility. Assess intent/artifacts/feedback/supported commits by purpose with gaps/uncertain attribution; group supported cross-issue causes into minimal existing-owner proposals. Proposed/no-change are analysis; addressed requires delivered evidence. Labels/comments require scoped authority/readback. No scanner/ledger/self-edit/automatic acceptance trigger/implicit PR.",
+      "depends": [
+        "T001"
+      ],
+      "owned_paths": [
+        "skills/assess-skill-improvements/SKILL.md",
+        "README.md",
+        "docs/index.md",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-012\u2013014; SC-005 local entry. Use bounded multi-page reader/walkthrough fixtures in existing planner test owner, not a behavioral suite: open/closed/PR, absent acceptance, explicit reassessment, unrelated commit, changed requirement and supported omission. Observe full discovery reaches reasoning, grouped sources/responsible owners, incomplete reads/writes stay partial and analysis never becomes addressed. Do not attribute by author/time/blind range. Skill lint/carriers establish instruction/reader sensitivity only; T019 retains actual state-transition acceptance.",
+      "checks": [
+        "python3 scripts/check-planner-workflow.py",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py",
+        "bash scripts/check-skills-lint.sh \"$PWD/skills/assess-skill-improvements\""
+      ]
+    },
+    {
+      "id": "T016",
+      "outcome": "Retire specified behavioral machinery and active mandates. Apply only exact behavioral/evaluation policy proposals in plan.md under explicit amendment authority. Remove four evaluation documents, RPC driver, rpc loader and RpcDriverTests; retire/supersede active mandates, route validation to maintained README. Preserve historical observations/NOT RUN, meaningful trace/static/parser/resolver/installer/permission/security/runtime checks and fixtures. Align only obsolete maintained assertions. No blanket test deletion, synthetic comparison/replay replacement, monitor removal or historical approval rewrite.",
+      "depends": [
+        "T001"
+      ],
+      "owned_paths": [
+        "evaluations/README.md",
+        "evaluations/review-necessity/packet.md",
+        "evaluations/review-necessity/expectations.md",
+        "evaluations/review-necessity/recipe.md",
+        "scripts/planner-rpc-smoke.py",
+        "scripts/test-planner-workflow.py",
+        "scripts/check-planner-workflow.py",
+        "docs/plans/planner-regression.md",
+        "AGENTS.md",
+        "README.md",
+        "docs/index.md",
+        "skills/planner/SKILL.md",
+        "skills/requesting-code-review/SKILL.md",
+        "skills/receiving-code-review/SKILL.md"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-015,016; SC-006. Inspect bounded deletion/import/reference diff: named machinery gone, no active caller/mandatory scenario points at it, historical references clearly historical. Remaining tests import without rpc and retained relevant checks pass. Limits remain honest, not model-obedience claims. T001 is a real prerequisite for retained checker success because it aligns the known touched coordinator mismatch; never silently skip it.",
+      "checks": [
+        "python3 scripts/check-planner-workflow.py",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py",
+        "bash scripts/check-skills-lint.sh"
+      ],
+      "gates": [
+        "Confirm explicit owner approval of exact behavioral-retirement/evaluation-guidance operative amendment in plan.md. This authorizes bounded source/convention retirement, not service shutdown or retained-data deletion."
+      ]
+    },
+    {
+      "id": "T017",
+      "outcome": "Verify the retained local application composition. Integrate complete local interfaces at actual CLI/Pi/Git boundary; fix only causal cross-task wiring/docs defects in existing tests. Inspect one-controller replacement, legacy route, safe trace suppression and actual reply/fork-join consumers together. Update operating docs to implemented behavior/remaining gates. No broader #28/#43 repairs or historical Cerca replay. This is composed application integration, not evidence-only report/cleanup; no-change creates no empty commit.",
+      "depends": [
+        "T003",
+        "T013",
+        "T014",
+        "T015",
+        "T016"
+      ],
+      "owned_paths": [
+        "runtime/tests/test_graph_execution.py",
+        "runtime/tests/test_graph_questions.py",
+        "runtime/tests/test_graph_concurrency.py",
+        "runtime/tests/test_tracing.py",
+        "runtime/tests/test_cli.py",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py",
+        "README.md",
+        "docs/coordinate-implementation.md",
+        "docs/coordinate-implementation-schema.md",
+        "docs/index.md",
+        "runtime/coherence_workflow/graph.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/pi-extensions/coordinate-implementation-bridge.js"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-001\u2013016 local portions; SC-001\u2013007 local portions. Completed T006/T009/T013/T014 selectors observe final dependency/checkpoint order, reply consumption, effect reconciliation and wave quiescence through production helpers. Run retained Python/Node/static checks once on integrated revision and inspect links/removal bounds. Inspect focused checkpoints and retain normal fresh independent full-range review. Fixture success is not live/model obedience. Prepare fresh Paseo activation handoff for changed extensions/skills: checkout/revision/current approval/loaded capability verification, never reload/restart.",
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_*.py'",
+        "node --test runtime/tests/test_host.mjs runtime/tests/test_bridge.mjs runtime/tests/test_saved_sessions.mjs",
+        "bash scripts/check-skills-lint.sh"
+      ]
+    },
+    {
+      "id": "T018",
+      "outcome": "Verify real issue delivery and exact-revision acceptance. Using an explicitly selected authorized issue and already independently reviewed exact revision, exercise no-issue intake\u2192association\u2192matching issue/chat executive summary\u2192purpose-linked actual owner correction\u2192new presented revision\u2192explicit exact-revision acceptance\u2192authorized closure/readback. Use existing issue/chat evidence; no repository report, ledger or automatic #44/related-issue closure. Do not require acceptance of unfinished #44 to satisfy this task.",
+      "depends": [
+        "T017"
+      ],
+      "owned_paths": [],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-001\u2013004; SC-001 real acceptance. Observe actual tracker effects and current chat publication. Inspect partial/uncertain operations before retry; owner feedback/acceptance must be actual, not fixture consent. Scope changes renew affected approval, unrelated commits stay unattributed and newer revision does not inherit stale acceptance. No diff means no empty commit. Missing authority/access/owner actions blocks this live outcome, not completed local interfaces.",
+      "gates": [
+        "Obtain operation-scoped tracker authority for exact selected repository/issue and association/comment/closure effects. Confirm independently reviewed revision and real owner-feedback/acceptance opportunity. No implied #44/related-issue authority; yes to this gate is not feedback or acceptance."
+      ]
+    },
+    {
+      "id": "T019",
+      "outcome": "Verify real manual assessment evidence and label transitions. Invoke the manual entry on an owner-selected representative issue set with multiple pages, open/closed states and PR exclusion. Observe evidence-based grouped proposals and scoped label/comment readback for proposed/no-change and delivered-only addressed. Use existing issue trail/chat, no repository report or learning ledger. Do not edit skills or issue PRs as an assessment side effect.",
+      "depends": [
+        "T017"
+      ],
+      "owned_paths": [],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-012\u2013014; SC-005 real assessment. Discovery is complete across selected pages regardless of acceptance evidence. Record missing artifacts/acceptance, unrelated concurrent commits, changed requirements, genuine omission and uncertain attribution; link grouped minimal proposals to responsible owners. Analysis cannot become addressed: actual delivered improvement evidence must exist or that transition remains NOT VERIFIED. Partial access/writes remain partial. No diff means no empty commit; missing authority blocks this outcome only.",
+      "gates": [
+        "Obtain scoped reads and exact label/comment authority for the selected repository/issues, reusing equivalent labels or authorizing the planned minimal labels. Confirm actual delivered evidence before addressed; do not manufacture it from proposal approval or infer authority over other issues."
+      ]
+    },
+    {
+      "id": "T020",
+      "outcome": "Observe real LangSmith replacement visibility. After T014 same-revision actual-SDK privacy/fail-open proof, run one otherwise authorized real Pi invocation through graph and observe selected LangSmith UI. Use existing delivery evidence for concise result/limits, no repository report. Keep monitor until actual usable hierarchy/safe metadata observed. Exclude provisioning/credentials/service/data changes/paid-scope expansion.",
+      "depends": [
+        "T017"
+      ],
+      "owned_paths": [],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-009\u2013011; SC-004 live. Owner can inspect real graph/task/invocation relationships, opaque IDs, role/model/outcome/time and qualified known/unknown usage/cost without private sentinels. HTTP success/offline fixtures cannot release T021. Missing live authority/visibility remains NOT VERIFIED, monitor retained; unrelated local work remains usable. No-change creates no empty commit.",
+      "gates": [
+        "Obtain explicit LangSmith account/project/region/access choice, pricing acceptance and network/upload authority, plus actual scope for the real Pi invocation. Verify same adapter/SDK T014 final outbound sentinel/fail-open pass before any upload; no ambient/raw tracing."
+      ]
+    },
+    {
+      "id": "T021",
+      "outcome": "Retire only redundant monitor source after observed replacement. Only after T020 observation, inspect imports/packaging/callers and remove redundant monitor app/source/tests, monitor-only launch/build dependencies and unused recording writers/call sites. Preserve workflow_monitor/README.md as cutover/history owner, mockup/history links, old tables/data, useful history/metric readers and unresolved #2/#10/#13 limits. Reconcile active setup/docs references. Exclude service shutdown, data cleanup, migration, tracker mutation and removal of useful effect/metric evidence.",
+      "depends": [
+        "T020"
+      ],
+      "owned_paths": [
+        "workflow_monitor",
+        "runtime/coherence_workflow/monitoring.py",
+        "runtime/coherence_workflow/store.py",
+        "runtime/coherence_workflow/engine.py",
+        "runtime/coherence_workflow/cli.py",
+        "runtime/coherence_workflow/pi_adapter.py",
+        "runtime/coherence_workflow/graph.py",
+        "runtime/pyproject.toml",
+        "runtime/requirements.lock",
+        "runtime/tests/test_monitoring.py",
+        "runtime/tests/test_retention.py",
+        "runtime/tests/test_database_compatibility.py",
+        "runtime/tests/test_cli.py",
+        "scripts/install.sh",
+        "scripts/install-links.py",
+        "README.md",
+        "REQUIREMENTS.md",
+        "docs/index.md",
+        "runtime/tests/test_review_chain.py",
+        "scripts/install-workflow.sh",
+        "runtime/tests/test_installation.py",
+        "scripts/test-install-capabilities.py"
+      ],
+      "context": "Read specs/006-issue-linked-delivery/tasks.md#shared-context and the task-local source references before edits. These constraints apply to initial, corrective and resumed work.",
+      "acceptance": "FR-011; SC-004/007. Verify actual live prerequisite, full removal diff and packaging/import callers. Retained runtime/history reads work without monitor imports; remove only now-obsolete monitor tests, run remaining collection and installer-related checks. Preserve historical limitations, no new archive/private assets in Git. Unverified prerequisite leaves monitor untouched, not accepted on offline proof.",
+      "checks": [
+        "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_*.py'",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-planner-workflow.py",
+        "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-install-capabilities.py"
+      ],
+      "gates": [
+        "Confirm actual successful T020 usable LangSmith UI observation for this adapter/dependency revision before monitor source removal. This checks visibility prerequisite, not service-stop/data-deletion/migration authority."
+      ]
+    }
+  ]
+}
