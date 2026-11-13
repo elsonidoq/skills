@@ -79,7 +79,7 @@ def _run_check(project, command, lock_fd, completed):
 def run_checks(project, task, *, lock_fd=None, observe=None, completed=None):
     results = []
     for ordinal, value in enumerate(commands(task), 1):
-        command = value.get('command', value.get('argv')) if isinstance(value, dict) else value
+        command = value.get('command', value.get('argv', value.get('check'))) if isinstance(value, dict) else value
         if not isinstance(command, (str, list)) or not command or (isinstance(command, list) and
                 any(not isinstance(arg, str) for arg in command)):
             raise Blocked('task ' + task['id'] + ' check needs a command string or argv list; registered check IDs are no longer executable')

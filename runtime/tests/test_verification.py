@@ -15,6 +15,45 @@ class ProjectCheckTests(ProjectTest):
             {'id': 'project-check', 'check': {'argv': ['python3', '-B', '-c', 'assert 2+2 == 4']}}]})
         self.assertEqual(results[0]['exit_code'], 0)
 
+    def test_check_alias_executes_authored_shell_and_argv_commands(self):
+        for command in ("printf 'alias success'",
+                        ['python3', '-B', '-c', "print('alias success', end='')"]):
+            with self.subTest(command=command):
+                self.assertEqual(run_checks(self.project, {'id': 'authored', 'checks': [
+                    {'check': command, 'expectation': 'Print alias success'}]}), [
+                        {'command': command, 'exit_code': 0, 'output': 'alias success'}])
+
+    def test_check_alias_failure_preserves_actual_evidence(self):
+        command = "printf 'alias failure'; exit 23"
+        outcomes = []
+        events = []
+        with self.assertRaises(CheckFailure) as raised:
+            run_checks(self.project, {'id': 'authored', 'checks': [
+                {'check': command, 'expectation': 'Pass'}]},
+                observe=lambda *event: events.append(event),
+                completed=lambda state, attempt: outcomes.append((state, attempt)))
+        self.assertEqual(raised.exception.attempt, {
+            'command': command, 'exit_code': 23, 'output': 'alias failure'})
+        self.assertEqual(outcomes, [('failed', raised.exception.attempt)])
+        self.assertEqual(events, [('started', 1, None), ('failed', 1, 23)])
+
+    def test_check_alias_preserves_command_and_argv_precedence(self):
+        for value, command in (
+                ({'command': 'printf command', 'argv': ['false'], 'check': 'false'}, 'printf command'),
+                ({'argv': ['printf', 'argv'], 'check': 'false'}, ['printf', 'argv'])):
+            with self.subTest(value=value):
+                self.assertEqual(run_checks(self.project, {'id': 'authored', 'checks': [value]})[0]['command'], command)
+
+    def test_check_alias_rejects_malformed_values_without_fallback(self):
+        for value in ({'check': None}, {'check': ''}, {'check': []},
+                      {'check': [1]}, {'check': {'id': 'removed.catalogue'}},
+                      {'id': 'removed.catalogue'},
+                      {'command': None, 'check': 'true'},
+                      {'argv': None, 'check': 'true'}):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(Blocked, 'command string or argv'):
+                    run_checks(self.project, {'id': 'authored', 'checks': [value]})
+
     def test_failed_command_is_not_success(self):
         events = []
         with self.assertRaisesRegex(Blocked, 'exit 19'):

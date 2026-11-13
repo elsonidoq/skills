@@ -109,7 +109,7 @@ runs are not API approval. The unchanged grant and exclusions follow worker, fix
 reviewer prompts. Additional paid APIs discovered during execution require approval before use. Existing
 `agent_providers` fields remain compatible historical context, not a paid-consent requirement.
 
-Optional `checks` accepts shell command strings, argv lists or objects with `command`/`argv`.
+Optional `checks` accepts shell command strings, argv lists or objects with `command`/`argv`/`check` (in that precedence order).
 A singular `check` or `required[].check` uses the same command format. Old registered catalogue
 IDs are no longer executable: supply the actual project command when requesting that check. Checks
 run in the project cwd with the runner's inherited environment. Each consuming project owns its
