@@ -1,7 +1,9 @@
 # Interface contracts
 
-Proposed implementation contracts derived from [approved spec](../spec.md), not current
-runtime claims. [Plan](../plan.md) owns sequencing/policy proposals;
+Proposed implementation contracts derived from [current spec](../spec.md), not current
+runtime claims. Proposed names/fields and transport mechanics may use simpler equivalents
+under the [design boundary](../plan.md#requirements-versus-proposed-mechanisms), preserving
+existing consumers and required outcomes. [Plan](../plan.md) owns sequencing/policy proposals;
 [research](../research.md) owns exact dependency applicability and evidence limits.
 
 ## CLI and attached parent
@@ -53,31 +55,17 @@ completion retain existing notification behavior.
 
 ## Pi question pause and continuation
 
-Existing source callers without graph opt-in keep current callback behavior. Add host request
-`pauseQuestions: true` for graph-controlled invocation. On `ask_owner`:
+A question must survive a durable graph pause and reach the actual affected operation on
+resume. Preserve current callers, correlated target identity and owner-only reply separation.
+An unavailable answer stays pending; denial performs no gated effect. No synthetic answer,
+rerun of a settled provider/tool effect or redispatch of an uncertain call is permitted.
 
-1. Emit the existing correlated question; accept an explicit pause disposition rather than
-   an invented owner answer. The tool records “awaiting decision; operation not authorized
-   by this pause.” It must not let the agent continue into the gated effect.
-2. Arrange abort/drain outside the tool's own awaited execution to avoid self-deadlock.
-   Await SDK idle before disposal/result. Preserve the SDK session and pending tool/question
-   identity. A normal aborted assistant response must not be misclassified as completed.
-3. Return an opt-in `waiting` outcome with pending question and saved session. The adapter
-   distinguishes it from normal completed/blocked/failed/incomplete outcomes and persists
-   it before the graph enters its separate `owner_wait` node. No live callback is retained
-   across a durable graph pause.
-4. The wait node calls `interrupt` with private operation/authority context. Actual owner or
-   scoped coordinator reply is retained as the resume value. A denied gate does not dispatch
-   the prohibited operation. A permitted answer reaches the same saved task context in a
-   new, separately identified continuation invocation containing that question/answer and
-   the existing current-authority block.
-5. If the host result/idle settlement is missing, first inspect actual process/session and
-   retained invocation effects. Never infer a clean pause from an exception or automatically
-   reissue the original provider call. Preserve all earlier completed effects and usage.
-
-A production-boundary SDK fixture test must prove pause→idle→graph checkpoint→reopen→answer
-consumption, with no gated action before consent and no repeated settled tool effect. This
-contract proposes new behavior; existing abort support alone does not prove it works.
+The proposed `pauseQuestions` / `waiting` adaptation and SDK settlement rationale live in
+[plan](../plan.md#questions-reach-the-actual-consumer); do not treat those spellings as owner
+requirements. The external observable is settled safe pause, reopen and real answer delivery
+to the correct retained task context, with independently identified subsequent invocation
+usage. [Quickstart](../quickstart.md#composed-execution-and-recovery) owns the actual-boundary
+proof required before reliance. No live callback is assumed recoverable after process loss.
 
 ## Delivery issue and acceptance
 
@@ -101,6 +89,11 @@ applicable approval; corrected delivery gets a new exact summary/review commit. 
 attribute all commits in a range to the issue. Read back comment/label/closure effects before
 reporting them. If issue publication succeeds and chat delivery fails (or vice versa), report
 the partial result and retry only the missing operation after inspection; no false delivery.
+
+Normal coordinator/finish-session delivery publishes after actual checks and fresh independent
+review, then awaits real feedback/acceptance. Corrections and closure are conditional real
+branches, not a worker demonstration. Unobserved branches are NOT VERIFIED, not passes; do
+not manufacture corrections, unrelated issues, acceptance or closure to exercise them.
 
 Explicit acceptance identifies the presented revision. It does not automatically authorize
 RCA, a skill edit, PR or acceptance of later changes. Close only with actual closure authority

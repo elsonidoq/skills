@@ -5,8 +5,10 @@ This is a design, not a database migration. Requirements remain in [spec.md](spe
 
 ## Graph state
 
-Use ordinary typed dictionaries and standard LangGraph serialization. Keep runtime objects
-(adapter, subprocess, locks, open SQLite connection, credentials) out of checkpoint state.
+Proposed representation: ordinary typed dictionaries and standard LangGraph serialization.
+Equivalent simpler representation follows the [design boundary](plan.md#requirements-versus-proposed-mechanisms).
+Keep runtime objects (adapter, subprocess, locks, open SQLite connection, credentials)
+out of checkpoint state.
 No message-history reducer or custom serializer is needed.
 
 | Entity | Minimal values and relations | Owner / invariant |
@@ -31,37 +33,25 @@ serializing private question contents.
 
 ## Persistence boundaries
 
-- `.coherence/workflow/graph.sqlite`: standard saver tables, private filesystem protection
-  consistent with current workflow storage; sync durability and stable thread identity.
-  No automatic time travel, retention purge or graph-state upload.
-- `.coherence/workflow/workflow.sqlite`: retain existing tables/rows and read APIs. New run
-  inputs identify their backend in the existing authority JSON. Store holds original inputs,
-  actual invocation/check/commit/review facts; it no longer selects orchestration stages.
-- SQLite operations use connections in their owning threads, short transactions and normal
-  saver locking. The existing inherited worktree lock excludes conflicting controllers.
-- A saver failure cannot mean that an external effect failed. Reconcile existing operation
-  history and actual SDK/Git results before rerunning an interrupted node. A history-write
-  failure cannot be hidden by a graph checkpoint. Preserve partial work and report the
-  affected persistence operation if its outcome cannot be established.
-- Legacy inputs without a graph marker remain legacy. No inferred initial graph state,
-  mass conversion, table deletion or changed historical success. Compatible old-runtime
-  continuation is specified in [plan](plan.md#recovery-and-legacy-compatibility).
-- Existing optional metric JSONL and read projections remain; no second local trace store.
-  After released monitor cutover, stop new monitor-only writes without deleting old tables.
+Proposed placement: standard saver tables in `.coherence/workflow/graph.sqlite`; existing
+private inputs/effect history in `.coherence/workflow/workflow.sqlite`; existing metric
+JSONL remains readable. File arrangement and backend-marker encoding are derived choices,
+not owner requirements. The [plan](plan.md#recovery-and-legacy-compatibility) owns recovery
+routing. Preserve old rows and private filesystem protection; no automatic conversion,
+retention purge or state upload. Store facts support reconciliation, not a second controller.
+
+Saver/history disagreement cannot prove an external effect failed. Retain partial work and
+reconcile before mutation. Standard thread-safe connection/transaction handling is needed,
+not a new receipt database. Graph state holds control references, not duplicate transcripts.
 
 ## Outbound observation
 
-A safe observation is constructed afresh, not obtained by deleting a few keys from raw
-Pi records. It has opaque run/task/invocation/session IDs, parent relation, fixed role/name,
-model, safe outcome/category, timestamps/elapsed time and only known qualified numeric
-usage/cost. Map caller-supplied identifying strings to UUIDs in private run context so an
-issue title, task path or arbitrary run name cannot become outbound metadata. SDK wire
-fields required for hierarchy/time/project routing are allowed; private graph state is not.
-
-Unknown usage/cost is absent, not zero. A reused session requires a continuous exclusive
-before/after interval. A reset/discontinuity or missing end means unknown. Do not aggregate
-local cumulative totals into an invocation or silently use LangSmith-estimated pricing as
-known local cost. Metadata-only chain spans need no prompt/output messages.
+Approved observation fields are the opaque identities/parent relation, role/model, safe
+outcome/category, time and known invocation-local usage/cost from FR-009–010. Private state
+never becomes an outbound record. Unknown numeric values are omitted, not zero. SDK protocol
+routing fields do not authorize private payloads. [Research](research.md#metadata-only-langsmith-submission)
+owns mapping/SDK choices; [quickstart](quickstart.md#trace-privacy-before-any-upload) owns
+final-wire privacy and usage verification.
 
 ## Delivery and assessment (no new runtime tables)
 

@@ -4,16 +4,13 @@ Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimon
 
 **Branch:** `plan-issue-44` | **Date:** 2026-11-13 | **Spec:** [spec.md](spec.md)
 
-**Input:** Approved specification at baseline `4c1725ebded2f89dec6933b8d193bf34997c62ce`,
-SHA-256 `9285a6df41070e315c167c7fd6a039070e8a5d243dd21a566843e565259c7d97`.
+**Input:** [Current specification](spec.md) at `fb5d5a39246cb9ab0f7feb7c3442872721a3b48d`,
+SHA-256 `952b41d0d470caa108fb4f3d1fbd17cea7333bb370f434c8d0b5c37e86338366`.
 Issue: [github.com/elsonidoq/skills#44](https://github.com/elsonidoq/skills/issues/44).
 
-**Status:** Derived architecture for independent review and later task generation, not
-implementation approval. No substantive specification corrections were needed.
-Installed `.pi/prompts/speckit.plan.md` was followed; `setup-plan.sh --json` ran once.
-Its `BRANCH=006-issue-linked-delivery` is the feature identifier from the existing pointer,
-not a Git branch change. Before/after hooks are absent. Phase 0 research precedes Phase 1
-contracts, data model and validation guide. No tasks are generated here.
+**Status:** Owner-authorized downstream planning simplification for presentation, not
+implementation or unseen final-task approval. Original installed SpecKit plan setup ran once;
+this correction does not rerun it. Tasks remain owned by their separate producer.
 
 ## Summary
 
@@ -37,7 +34,7 @@ versions, inspected sources, source→constraint→check reasoning and honest ev
   Existing Node/Pi SDK host remains JavaScript. No new agent capability version requirement.
 - **Dependencies:** LangGraph 1.2.21, SQLite saver 3.1.3, LangSmith 0.14.17 and existing
   PyYAML 6.0.3. Full transitive lock/install consistency is an implementation check.
-- **Storage:** Existing private `.coherence/workflow/workflow.sqlite` for original input,
+- **Proposed storage:** Existing private `.coherence/workflow/workflow.sqlite` for original input,
   effects/checks/history; separate `.coherence/workflow/graph.sqlite` for standard saver
   tables only. Existing metric JSONL/history remains readable. Git and the delivery issue
   remain their existing evidence owners. No new trace/learning/receipt database.
@@ -97,7 +94,7 @@ specs/006-issue-linked-delivery/
   quickstart.md              later validation guide
 ```
 
-`tasks.md` and any executable task file belong to the next separate producer.
+`tasks.md` and `tasks.json` remain owned by their task producer, who aligns them after this correction.
 
 ### Maintained source owners
 
@@ -126,269 +123,174 @@ specs/006-issue-linked-delivery/
 
 ## Architecture and interfaces
 
+### Requirements versus proposed mechanisms
+
+The [specification](spec.md) fixes Python LangGraph control, Pi agent execution, LangSmith
+visibility, skill-owned planning, one controller, durable effect reconciliation, explicit
+concurrency direction, privacy and live visibility before monitor removal. These outcomes,
+checks, authority and historical preservation are not optional hardening.
+
+The node layout, `pauseQuestions` transport, saver file arrangement, backend marker,
+checkpoint-intent representation and exact SDK helpers below are **derived proposals**.
+Their basis is in [research](research.md); their observables are in [quickstart](quickstart.md).
+Use a simpler equivalent framework/SDK mechanism when it preserves those observables and
+security/history/authority outcomes. Routine equivalent mechanics need no renewed owner
+choice or abstraction layer. Material changes to accepted architecture, privacy or scope
+still return to the owner. Test consequential assumptions before reliance, within the
+production outcome rather than a new spike chain.
+
 ### Skill-owned delivery lifecycle
 
-Planner understanding/brainstorming remains possible without an issue. Before downstream
-planning handoff, resolve the declared tracker, associate the supplied issue or use existing
-`track-open-issue` creation/duplicate/readback rules within authority. Missing write access
-reports that operation; it is not a new universal planning stop. Carry a qualified issue URL
-in existing human artifact context and optional executable top-level `delivery_issue`.
-The six-check linter does not require it; generic unrelated direct coding stays valid.
+Planner associates an issue after understanding, using declared tracker ownership and
+existing `track-open-issue` capabilities. No issue is required for intake. Carry the URL in
+artifact/context fields; issue operations do not belong in the execution graph. The
+[delivery interface](contracts/interfaces.md#delivery-issue-and-acceptance) owns publication,
+feedback and closure behavior. Normal coordinator/finish-session delivery after checks and
+fresh independent review satisfies SC-001; no worker task stages an owner correction,
+acceptance or closure exercise. Observe those branches only when they occur naturally.
 
-After runner checks, checkpoints and fresh independent review, `finish-session` uses the
-actual attributed task/repair commits to prepare the same executive text for issue and chat:
-result, checks, limits, review focus and exact presented commit. Internal completion is not
-owner acceptance. Link corrections by purpose (implementation/internal review, owner review,
-new requirement) and refresh the presented revision. Read back tracker writes. Report a
-partial publication rather than claiming delivery. If a write result is uncertain, inspect
-existing issue comments before retrying it. No graph node posts/accepts/closes issues.
-
-The owner must explicitly accept the identified revision. If acceptance names an older
-revision, do not apply it to new work. Scope changes renew affected approval. Close only
-with actual closure authority; preserve acceptance even if closure cannot run. A full Git
-range is review context, not automatic issue attribution. Do not start RCA, skill edits or
-PR creation as a side effect. Details are in the [interface contract](contracts/interfaces.md).
+Manual assessment is one portable explicitly invoked skill, using existing issue reads,
+labels and approval routes, not a service or automatic acceptance hook. Its
+[interface](contracts/interfaces.md#manual-assessment) owns discovery/classification/state;
+[validation](quickstart.md#issue-delivery-and-manual-assessment) preserves the bounded live
+assessment and local-evidence distinction.
 
 ### One execution controller
 
-Build one LangGraph `StateGraph`, with a task subgraph for effect boundaries. Delete the
-custom `Engine.invoke` task loop, `_finish_reviews` lifecycle dispatch loop and custom
-resume-stage selection once their graph replacements pass. Do not put an `Engine.invoke`
-call inside a graph node. Existing parsing, prompt, evidence, Git and policy helpers can
-remain ordinary functions; Store validation of facts is not a second scheduler.
+Proposed wiring: `StateGraph` with task-local effect boundaries. Remove `Engine.invoke`'s
+custom task loop, `_finish_reviews` dispatch loop and custom resume-stage selection after
+their replacements pass. Retain parsing, prompts, evidence, sessions, checks and Git helpers;
+do not wrap the legacy engine in a single node or keep parallel old/new controllers.
 
-Graph boundaries and data flow:
+| Boundary | Responsibility |
+| --- | --- |
+| Reconcile / ready | Read original inputs and latest state; reconcile unfinished effects; select dependency-ready work in stable order. Default one task, directed disjoint wave otherwise. |
+| Prepare / gate | Establish task paths/session. Ask only an outstanding actual gate; consume already approved unchanged authority as below. |
+| Pi dispatch | Retain invocation identity before calling the adapter; reuse a settled result on recovery, stop uncertainty before redispatch. Unsuccessful return is not acceptance. |
+| Owner wait | Standard framework interrupt/resume connects the actual terminal/parent reply to the affected operation. No provider or Git effect is repeated because a wait node reruns. |
+| Join / checks | Settle siblings, run specified checks, retain actual failures and route ordinary scoped correction to the same task. |
+| Focused checkpoint | Inspect owned diff with sibling mutation quiescent; normal hooks/signing, one verified commit per task. Only checkpoints release dependents. |
+| Fresh review / repair | Review actual attributable checkpoints and full integration context; retain cumulative coverage, scoped repairs and fresh follow-up review, including supported reassessment/target refresh. |
+| Finish | Retain the reviewed application SHA and qualified usage; normal delivery follows outside the graph. |
 
-1. **Reconcile / select ready:** Load original inputs and latest framework state. Reconcile
-   any interrupted invocation/checkpoint before mutation. Readiness is ordinary application
-   logic over declared dependencies and accepted focused checkpoints. Choose one task in
-   stable intake order, or a disjoint authorized wave; no continuous ready queue.
-2. **Task prepare / gate:** Resolve task-local ownership and existing session selection.
-   Declared manual gates enter a separate `owner_wait` node before the affected effect.
-   Routine covered operations use existing authority, not a new question.
-3. **Dispatch / Pi effect:** Retain invocation identity and saved-context reference in
-   ordinary history before calling `PiAdapter`. A graph rerun reads that identity first:
-   use a retained terminal result, or stop for an uncertain live/missing result. A returned
-   `blocked/failed/incomplete` is not task success. A settled question result routes to wait.
-4. **Owner wait / continuation:** `interrupt(payload)` holds the pending question in private
-   framework state. CLI/parent obtains the actual reply and calls `Command(resume=...)` for
-   the same thread/interrupt. The consumer validates the current target; a worker question
-   answer is delivered to a new continuation invocation of the same saved task context, not
-   a replay of the previous prompt. See the concrete transport route below.
-5. **Join / project checks:** Wait for wave workers to settle. Run each task's specified
-   commands and actual manual acceptance with existing `verification.py`. Retain actual
-   failure output privately. A correctable check/implementation failure routes to that
-   task's scoped correction, with other settled results retained. No generic retry policy.
-6. **Focused checkpoint:** While no sibling can mutate, inspect task-owned bytes/diff,
-   retain attempted parent/selected paths/content before Git, and use `FocusedGit` with
-   normal hooks/signing. On return failure/reopen compare actual commits before retrying.
-   Verify the attempted parent, exact changed-path set and selected content. If HEAD has
-   since advanced, inspect the actual direct child of the attempted parent rather than
-   attribute the new HEAD or a whole range to this task. Record a matching successful SHA,
-   or stop an uncertain effect. Genuine no-change has no empty commit. Only accepted
-   checkpoint results release dependency edges.
-7. **Independent review / scoped repair:** After all tasks checkpoint, invoke a fresh
-   read-only reviewer with original range, actual attributable checkpoints, required-check
-   output and worker-reported returns clearly distinguished. Graph edges route actionable
-   defects to scoped repair/check/checkpoint and a fresh follow-up review. Preserve existing
-   cumulative coverage and evidence-only reassessment/target-refresh outcomes, and explicit
-   routine repair authority; do not transplant the old dispatch loop. Material gates wait.
-   Existing session allowance and fallback-stop rules remain; no new retry budgets.
-8. **Finish:** Retain the actually reviewed application SHA and qualified local usage.
-   Internal completion ends the graph. Skills handle executive delivery and owner acceptance.
-
-The graph persists typed control state, result references, pending questions and coverage
-references, not repeated raw task histories. Standard saver tables live separately to avoid
-colliding with retained legacy tables. Stable thread identity and `durability="sync"` are
-required at invocation/resume. Resume uses the latest checkpoint, not time travel. No custom
-checkpoint serializer, migration service or event ledger is needed.
+Proposed persistence uses the standard SQLite saver with stable thread identity and sync
+durability, separate from existing private operation history to avoid table collisions.
+[Data model](data-model.md) defines ownership, not a second trace ledger. No automatic
+provider-node retries or time-travel recovery. Existing session allowance and fallback-stop
+rules remain; no new retry budget.
 
 ### Questions reach the actual consumer
 
-Existing manual gates can directly use a wait node. In-call Pi questions need a small
-transport change, because the current callback blocks while a host/provider session lives.
-For graph runs, opt into `pauseQuestions` in the host request. On a question the adapter
-requests a pause, not an answer. The host saves question/tool identity, reports an explicit
-awaiting-decision tool disposition, aborts further generation and waits for SDK idle before
-returning `waiting` plus the saved session. No actual denied/gated operation may run during
-this disposition. Preserve old transport behavior for callers without the opt-in.
+The current Pi callback waits on a live host. A framework interrupt alone cannot preserve
+that callback across process loss. Proposed adaptation: opt into `pauseQuestions`, record
+an awaiting-decision disposition, stop generation and await SDK idle before returning a
+saved-session `waiting` result. Then a side-effect-free graph wait receives the actual
+terminal/parent answer. Continue only pending work in that saved context with a separately
+identified invocation, not the old prompt. Do not await abort from inside its own tool and
+create a self-deadlock. Existing callers retain their transport behavior.
 
-Persist that settled result before entering the side-effect-free wait node. Attached mode
-maps its interrupt ID to the existing `coordinate_implementation_reply` or owner-only reply
-request; terminal mode asks interactively. Routine triage can answer covered work from
-current authority and says so. Missing input leaves the graph paused; it never fabricates
-an answer. Reopen reads the same pending interrupt, reissues its question if necessary and
-resumes only with the actual answer. A targeted continuation prompt includes the pending
-question and actual answer, original authority and settled effects, and uses the saved Pi
-session. It does not pretend to resume a dead transport callback. The new invocation has
-its own identity and usage interval.
-
-If a process dies before idle/result persistence, reconciliation inspects the saved call,
-SDK session and actual live process before any continuation. Unknown effects stop only that
-operation. Do not rely on a graph checkpoint as evidence the provider never ran. Test this
-with the actual installed SDK fixture provider before wiring general worker questions into
-graph resume. This is a production seam check, not a disposable prototype prerequisite.
+This adaptation is not proven by existing abort support. Before reliance, the actual
+SDK/adapter/graph check must observe settlement, reopen, targeted answer consumption and no
+repeated settled effect. An equivalent supported SDK suspension/resumption route is preferable
+if simpler and passes the same check. Missing idle/result facts require process/session/effect
+reconciliation; they never imply safe redispatch. External reply behavior is in
+[interfaces](contracts/interfaces.md#pi-question-pause-and-continuation).
 
 ### Concurrency and Git critical section
 
-Default remains one worker. Explicit launch `--parallel` (parent `parallel: true`) records
-owner-directed concurrency in retained run input; it is never inferred from independent
-DAG nodes. The same controller may dispatch path-disjoint ready tasks with `Send` to the
-task subgraph. Missing/uncertain path boundaries do not invalidate intake: coordinate that
-wave's ownership or execute it sequentially. Use exact claimed paths plus declared
-`owned_paths`/known output boundaries to detect overlap; broad directory overlap is not
-safe merely because task IDs differ. Share no active Pi session between branches.
+Proposed directed-wave wiring uses `Send`, keyed task results, existing inherited worktree
+lock and thread-owned short SQLite transactions. The lock excludes conflicting controllers,
+not authorized disjoint workers within one controller. The singleton parent steering target
+needs exact task/invocation/session routing for concurrent workers; do not share an active Pi
+session. Missing path boundaries require coordination or sequential work, not a new linter.
 
-Keep the existing inherited per-worktree lock to exclude a second cooperating controller,
-not to prohibit workers within the authorized controller. A small in-process mutex protects
-shared claim/dispatch bookkeeping. Use thread-owned history connections/short SQLite
-transactions, and the saver's own connection/lock. Do not hold a database transaction over
-a provider call or owner wait. The parent bridge must route multiple exact targets rather
-than overwrite its current single target; owner questions can be delivered one at a time.
+Workers may overlap only on distinct owned paths, including generated outputs. Quiesce
+sibling mutation for the shared check→diff→stage→commit/reconcile boundary. Commit each task
+separately; retain successful sibling results after failure. Coordinate wider corrective
+edits before restarting mutation. A global Git index lock alone cannot provide this safety.
+No mandatory worktrees, separate index scheme or scheduler service is needed.
 
-After the worker wave settles, a single coordinator critical section covers the actual
-check→diff→stage→commit/reconcile interval. No branch tool execution or shared generated-output
-mutation overlaps it. Commit each task's explicit paths independently; do not collect all
-wave changes into one commit. If checks mutate shared outputs, assign them to this serial
-phase and preserve task ownership. If a correction needs wider paths, coordinate the actual
-overlap before further edits. Retain successful sibling results when another fails; no
-successor sees a merely returned worker as a completed prerequisite. This uses a barrier
-and existing Git safety, not a new scheduler, index-per-task system or mandatory worktrees.
-
-Uncooperative unrelated writers are not fenced by advisory locks. Recheck selected bytes,
-index entries and actual parent at the operation boundary; on target drift retain work and
-coordinate. Do not reset unrelated state. Post-wave integration checks and final review
-observe causal cross-task interactions without claiming ownership of unrelated commits.
+For interrupted Git, retain enough operation-local facts to verify attempted parent, selected
+paths/content and actual resulting commit; existing fixer/external-recovery history provides
+a reuse pattern. If HEAD advanced, inspect the matching direct child rather than claim the
+latest HEAD or whole range. Exact intent encoding is not prescribed. Preserve unrelated
+staged/working bytes; target drift stops only the unsafe operation. Keep #28/#43 transfer
+helpers and their separate ownership, not a broad recovery repair prerequisite.
 
 ### Recovery and legacy compatibility
 
-New inputs record `execution_backend: langgraph-v1` in their existing private authority
-context. Missing marker identifies legacy execution, not a graph seed. New status/history
-continues read-only current and historical SQLite/JSONL projection without initializing or
-converting storage. Graph status adds a safe waiting/interrupt indicator, never private
-question text, prompt or session path in public projections.
+Proposed routing records `execution_backend: langgraph-v1` in existing private run input.
+Missing marker remains legacy, not seed data. New status/history reads retained SQLite/JSONL
+without conversion; public projections omit prompts, questions and session paths.
 
-Pending legacy runs use the compatible pre-migration runtime at
-`4c1725ebded2f89dec6933b8d193bf34997c62ce` (or a verified later pre-cutover compatible revision)
-from a retained suite checkout/environment, targeting the original project and run ID.
-The new CLI refuses to execute a legacy resume/recover/repair/refresh operation and gives
-that exact compatible route. The owner/coordinator inspects the failed call first and
-explicitly invokes that old entry; no automatic process launch, database import, replay,
-reset or conversion. Keep old code in Git, not a second execution controller in the new
-package. Both versions retain the same per-worktree lock so they cannot run concurrently.
-Before removing a sole compatible environment/checkout, preserve its reproducible revision
-and required private runtime assets through the existing retention policy. Finishing a
-legacy run before switching its active runtime is the simplest operational path.
+For pending legacy operations, use an explicitly selected retained pre-cutover runtime at
+`4c1725ebded2f89dec6933b8d193bf34997c62ce` or a verified compatible revision/environment,
+targeting the original project/run after inspecting its failure. New CLI diagnostics give
+that route rather than launching it automatically. Keep old code in Git, not in a second
+controller; retain the shared lock and required private assets under existing retention
+policy. This route is a derived compatible mechanism, not a demand for new migration tooling.
 
-For graph runs, preserve `recover-task`, inspected `continue|fresh|escalate`, review-target
-refresh and routine-repair authority as application actions feeding graph state, not new
-control loops. Reuse exact transfer/ownership helpers unchanged where possible (#28/#43
-remain separate). Stop after a failed authorized Sol escalation; no further dispatch without
-owner direction. History and graph state may disagree after a crash: reconcile operation-local
-facts, not a blanket clean-tree/HEAD admission test. Required persistence failures prevent
-unsafe dependent mutations; optional metrics/telemetry failures report a gap only.
+Graph recovery preserves inspected continue/fresh/escalate, external same-task completion,
+routine-repair authority and review refresh as graph actions. Preserve actual checks and
+fresh review. After a failed authorized Sol escalation, stop for owner direction. History/
+saver disagreement requires effect reconciliation, not a blanket clean-tree admission test.
+Required persistence failures block unsafe mutations; optional telemetry reports gaps only.
 
-Rollback selects the retained old runtime for old runs and stops new graph launches. Never
-feed graph runs into the old engine. Inspect/recover graph runs with their compatible graph
-revision, or retain them stopped while repairing it. Keep both databases and partial work;
-no automatic downgrade, data deletion or history conversion. Monitor removal has its own
-later gate and source rollback through Git, not a service shutdown instruction.
+Rollback stops new graph launches and uses compatible runtime revisions for each run type.
+Never feed a graph run to the old engine. Retain failed runs, partial work and databases;
+no automatic downgrade/conversion/deletion or service stop.
 
 ### Tracing and monitor cutover
 
-One small explicit LangSmith adapter consumes safe invocation observations from Pi. It
-creates fixed-name run/task/invocation chain spans with opaque IDs and qualified metadata.
-[Research](research.md#metadata-only-langsmith-submission) fixes the selected SDK privacy
-controls, automatic-tracing suppression and final-request checks. Do not instrument raw
-provider/tool calls, errors, graph state or prompts with decorators/callbacks. Do not add a
-trace queue, event schema registry, new metrics mirror or per-token/tool capture.
+Use one small metadata-only adapter at the Pi invocation boundary, reusing qualified local
+metrics. [Research](research.md#metadata-only-langsmith-submission) owns inspected SDK options
+and their rationale; exact helper selection is derived, not an added owner mandate. Suppress
+ambient raw graph/provider tracing. Optional telemetry failure cannot veto safe execution.
 
-Reuse invocation-local `metrics.interval_record`; session totals and missing statistics are
-not invocation usage or zero. Keep useful local metric artifacts/readers; LangSmith is the
-live visibility replacement, not a reason to convert historical records. Adapter creation,
-submission and observation failures produce a safe visibility-gap notice and cannot veto
-otherwise safe checks/checkpoints. Disabled/missing upload authority means no SDK network
-submission, even with ambient tracing environment variables.
+Actual SDK privacy/fail-open proof precedes upload. Actual account/project/region/access,
+pricing and network authority precede live use. Usable real LangSmith UI visibility precedes
+monitor-only removal; HTTP success or offline evidence is not a substitute. The
+[quickstart](quickstart.md#live-replacement-and-monitor-retirement--explicit-gate) owns the
+observable and evidence-reuse boundary. Preserve historical monitor data and open limits.
 
-Monitor-specific source/dependency removal waits for: local actual-SDK privacy/fail-open
-checks; explicit account/project/region/access/pricing/upload authority; and observation of
-one real permitted graph/task/invocation hierarchy in the selected LangSmith UI. Inspect
-usability, known/unknown usage and safe categories, not merely HTTP success. No offline
-substitute releases that gate. Preserve historical monitor data, mockup/history links and
-open acceptance limits (#2/#10/#13). No automatic service shutdown or issue closure.
+### Approval reuse in task handoff
 
-### Manual assessment
+Final explicit planning approval can cover the exact operative amendment text below.
+For unchanged content/scope, downstream tasks inspect and consume that approval through
+normal launch/brief context, rather than ask again. Changed content or an uncovered actual
+operation keeps its applicable gate. No approval cache, permission protocol or runtime
+schema is needed.
 
-`assess-skill-improvements` is an explicitly invoked skill. Resolve the declared tracker;
-use paginated GitHub all-state issue reads and comments, excluding PRs. No assessment label
-means unassessed; acceptance status is evidence, never eligibility. Default discovery
-reports all unassessed matches in the explicitly selected repository; an owner may select a
-bounded subset for this assessment without claiming the remainder were assessed. Do not
-invent a scan cap or poll in the background.
+`verification.manual_gates` currently asks for every `gates` entry; it cannot reuse evidence.
+The task producer must therefore remove duplicate policy-consent entries in T001/T003/T016,
+not leave them with instructions to skip the question. Likewise, T021 already depends on
+T020: inspect the applicable successful live observation, do not ask the owner to recertify
+it through another “Confirm actual successful T020” gate. Missing/invalidated visibility
+still prevents removal. Keep outstanding live/private/paid/tracker authority, not duplicate
+questions about already satisfied prerequisites.
 
-Read intent, approved artifacts, feedback and supported correction commits. Distinguish
-changed/new requirements from planning/task/implementation/review omissions and unnecessary
-workflow complexity. Record uncertainty and missing evidence. Group supported causes in
-one presented proposal with per-issue links and responsible existing skill owners; do not
-turn each correction into a rule. Minimal labels `skill-assessment:proposed`,
-`skill-assessment:addressed`, `skill-assessment:no-change` record state, with absence meaning
-unassessed. Reuse equivalent labels if already available. Conflicts are inspected, not
-silently overwritten. Analysis alone never means addressed. No-change may explicitly mean
-insufficient evidence, not proof no defect existed. Owner-requested reassessment can include
-previously assessed issues without erasing their trail.
-
-Write labels/comments only with target/operation authority and independent readback. A
-partial failure stays partial. Approved proposals enter existing planning and implementation
-approval; addressed requires delivered improvement evidence. Global changes require a
-portable cause/outcome, not project-specific experience promoted into global rules. No
-learning ledger, autonomous edit loop or implicit PR authority.
+Remove the old T018 worker exercise. Its natural publication and conditional owner-review
+trace belong to normal coordinator/finish-session delivery, not a task that manufactures
+feedback or unrelated test issues. Remaining task IDs may stay stable with gaps.
 
 ## Ordered design stages and verification rationale
 
-These are integration order and meaningful outcomes, **not executable task assignments**.
-The next fresh producer must split independently testable seams for the selected Terra/
-medium executor, with bounded owned paths, consumed interfaces and check observables.
-Do not assign an entire stage below as one milestone task by default.
+These stages guide dependency order, not milestone-sized worker assignments. Keep bounded
+interfaces/checks for Terra/medium and split independently verifiable outcomes.
 
-1. **Reconcile operative contracts and issue lifecycle.** Obtain exact amendment approval
-   before affected behavior relies on it. Integrate issue association and exact-revision
-   delivery at existing skill owners, with direct no-issue intake and partial tracker
-   failure walkthroughs. Manual assessment can develop independently after the label/
-   lifecycle contract; it does not depend on graph execution.
-2. **Replace sequential control and establish durable effect boundaries.** Deliver selected
-   dependencies/saver, actual graph routing and retained helpers, CLI/history compatibility,
-   then question/repair/review resume at their real interfaces. Place crash-before/after
-   invocation/Git checks at the first usable graph seam before downstream reliance. Remove
-   the replaced custom controller, not its useful safety helpers. No throwaway prototype.
-3. **Enable explicit disjoint waves.** After sequential graph/effect recovery works, add
-   `Send`/keyed results, thread-safe history, multi-target parent routing and the quiescent
-   check/commit barrier. A composed fork/join with one failed branch must demonstrate both
-   overlap and safe serialized checkpoints. This is not permission to run workers in
-   parallel during this planning pass or implementation without owner direction.
-4. **Add safe invocation visibility.** Local real-SDK outbound sentinel, usage and fail-open
-   checks precede any upload. After explicit live authority, observe the actual replacement
-   hierarchy/metadata; only then release monitor-only source/dependency retirement. This
-   stage can remain gated while unrelated local work proceeds.
-5. **Finish manual assessment and bounded retirement integration.** Exercise pagination,
-   open/closed/missing evidence, purpose classification, proposed/no-change/addressed
-   distinctions; retire named behavioral machinery and supersede active mandates. Preserve
-   meaningful checks and historical NOT RUN observations. These outcomes need not wait on
-   monitor cutover; only monitor-specific retirement does.
-6. **Validate composed delivery and present the exact revision.** Run the smallest actual
-   CLI/Pi/Git recovery and concurrency scenarios, then the separately authorized tracker
-   delivery/correction/acceptance and LangSmith observation. Fresh independent review must
-   have actual task/checkpoint evidence and honest unrun gates. Publish matching issue/chat
-   summary only for the reviewed delivery. Acceptance and closure are later owner actions.
+1. Align runtime and lifecycle contracts using exact final approval, consumed without repeats.
+2. Replace sequential control and validate durable Pi/Git/question/review boundaries before
+   consumers rely on them; retain CLI/history compatibility and remove replaced control.
+3. Add directed disjoint waves, exact parent routing and safe shared check/Git serialization.
+4. Add local safe tracing, then authorized real visibility; only its observed result releases
+   monitor retirement. Local work need not wait on missing upload authority.
+5. Deliver manual assessment and bounded behavioral retirement independently of monitor cutover.
+6. Validate composed application seams and obtain fresh independent review. Normal final
+   delivery publishes the exact reviewed revision, then waits for real feedback/acceptance.
 
-The hardest risks are interrupted Pi effects, Git success before history, parallel Git
-ownership and telemetry leakage. Permanent actual-helper/integration checks have more value
-than a separate demo. Easy API names/labels are settled by inspection, not experiments.
-Live account usability cannot be proven locally, so its real gated observation is retained.
-Fail-then-pass regressions should reproduce concrete old failure paths where practical;
-new graph behavior uses explicit adverse cases, not manufactured whole-feature replays.
-Unrun/failed checks never release the affected dependency. [Quickstart](quickstart.md)
-specifies observable scenarios and existing command families; new test selectors belong to
-implementation, not fictitious commands presented as already available.
+Permanent actual-helper/composed checks target the consequential Pi/Git recovery, concurrency
+and privacy risks; no prototype chain or historical replay. [Quickstart](quickstart.md) owns
+acceptance scenarios and honest limits. Failed/unrun necessary proof cannot release reliance.
 
 ## Operative amendments for later explicit approval
 
@@ -491,26 +393,14 @@ because they once served the monitor. No service stop, data cleanup or issue-sta
 
 ## Self-review and remaining gates
 
-**Does the current plan induce scope creep or over complexities?** The broad required
-outcomes do not justify a new platform. This design uses one graph, one standard saver,
-existing operation history and one explicit trace adapter. It rejects a custom event ledger,
-second execution controller, mandatory prototype chain, background assessment scanner,
-retention/permission services, global admission rules and an isolated index/worktree per
-parallel task. Checks stay with concrete outcomes. The host question-pause change earns
-its cost because the current live callback cannot safely survive a graph interrupt;
-the quiescent Git barrier earns its cost because a global index cannot isolate parallel
-checks/commits. Dedicated SDK privacy options remove the need for a custom sanitizer service.
+**Does the current plan induce scope creep or over complexities?** This revision removes
+repeated consent, a staged owner-lifecycle exercise and duplicate protocol descriptions.
+Derived mechanics may be simplified while preserving their tested outcomes. One graph,
+standard persistence and existing effect helpers are sufficient; no new service or ledger.
 
-No unresolved material product choice is hidden in the design. Pending gates are explicit:
-exact operative amendment approval before reliance; normal reviewed task/implementation
-approval; real tracker write operations; real LangSmith account/project/region/access,
-pricing and upload authority; actual live replacement visibility before monitor removal;
-separate PR/push/deploy/service/data authority if ever requested. Fresh-session activation
-is required for changed global capabilities in Paseo, with checkout/revision/approval and
-loaded capability verification; do not ask the owner to run `/reload`.
-
-All runtime integration, dependency installation, live provider/tracker/LangSmith and
-behavioral acceptance checks are **NOT RUN** in this planning pass. Research does not
-establish those outcomes. Related issues #2/#10/#13/#14/#16/#41/#42 remain separately owned;
-#14 and #16 inform checks, not automatic fixes/closures. Preserve #28/#43 transfer helpers
-without adding their wider repair as a prerequisite.
+Final content/implementation approval remains pending. It can include the exact amendments
+above. Outstanding external/live authority and the indispensable visibility proof remain
+as described in the approval-reuse and tracing sections. No runtime/live verification was
+performed during planning. Related issues remain separately owned; #14/#16 inform checks,
+not automatic fixes/closures. Changed global capabilities in Paseo need the normal fresh-
+session handoff, not `/reload` or automatic restart.

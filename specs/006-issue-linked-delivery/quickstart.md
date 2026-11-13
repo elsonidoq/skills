@@ -7,20 +7,15 @@ owns proposed CLI/Pi/lifecycle behavior.
 
 ## Prerequisites
 
-Use an authorized implementation scope, the reviewed tasks and selected executor. Obtain
-explicit approval of the plan's operative amendments before affected behavior relies on
-them. Use existing usable Pi SDK/subagents/ask-user capabilities, without a required agent
-version. Resolve/install new Python dependencies only under implementation setup authority;
-update `runtime/requirements.lock` with the full compatible hashed wheel set, not just three
-new top-level lines. Use the selected environment with `COHERENCE_PYTHON` where necessary.
-No automatic install, credential change, authentication refresh or global reload.
+Use reviewed tasks, current implementation authority and the selected executor. Consume
+applicable final approval as described in [approval reuse](plan.md#approval-reuse-in-task-handoff);
+do not ask again for unchanged amendments. Actual outstanding external/live gates remain.
+Resolve the complete compatible hashed Python lock during authorized setup; use the selected
+environment and usable Pi capabilities, not a required agent version.
 
-Use a temporary Git repository and small isolated SQLite state for local checks. Preserve
-normal hooks/signing and unknown/unrelated files. Existing SDK fixture providers exercise
-actual host/adapter mechanisms without paid model traffic. Their results are not live model
-obedience or LangSmith account usability. Live project/SDK invocations need the actual
-implementation launch scope; application paid APIs and tracker/upload actions keep their
-separate gates.
+Local checks use existing SDK fixture providers and temporary Git/SQLite state. They exercise
+actual mechanisms without paid model traffic, but do not prove live model behavior or account
+usability. No runtime or live checks were run during this planning correction.
 
 ## Local command families
 
@@ -109,7 +104,9 @@ actual CLI graph, then inspect the LangSmith UI for usable graph/task/invocation
 model/role/outcome/time and qualified known/unknown usage. Record the concise observation
 and limitations in the existing delivery evidence, without private payloads.
 
-Only that observed live result releases monitor-only source/dependency removal. HTTP success,
+Inspect and reuse that applicable observation when the removal task starts (T021 consumes
+T020); do not ask the owner to recertify the recorded success. Missing or invalidated evidence
+still blocks removal. Only observed live visibility releases it. HTTP success,
 an offline fixture or missing account authority does not release it. Keep monitor tests and
 source until then. Do not stop an existing service, delete databases, migrate history or close
 related issues as part of source retirement. Verify relevant packaging/import/documentation
@@ -117,12 +114,19 @@ callers after removal and retain historical read access and acceptance limits.
 
 ## Issue delivery and manual assessment
 
-Use one explicitly authorized issue for the real delivery scenario: start without an issue,
-associate/create through declared ownership, retain planning links, finish reviewed work,
-publish matching issue/chat summaries for an exact commit, link an owner correction by
-purpose, refresh the summary and obtain explicit acceptance before authorized closure.
-Inspect both publications and closure readback. Also exercise missing tracker access and a
-partial publication failure without inventing success or a local fallback.
+Observe normal coordinator/finish-session delivery after actual checks and fresh independent
+review. Use its existing issue or real no-issue intake path as applicable; publish the exact-
+commit executive summary in the actual issue and current chat, then await owner review and
+acceptance. This is a final delivery obligation, not a separate worker task or unrelated test
+issue. [Interfaces](contracts/interfaces.md#delivery-issue-and-acceptance) define the content,
+attribution and partial-publication handling.
+
+When actual feedback occurs, inspect the linked corrections and refreshed presented commit.
+When explicit acceptance and closure authority occur, retain the acceptance trace and read
+back the closed state. Otherwise report those branches NOT VERIFIED; do not force a correction,
+acceptance or closure exercise. Cheap inspection/walkthroughs may check handling of absent
+branches, missing access or publication failure, but are not real owner/tracker actions.
+Publication and acceptance-before-closure remain required; internal completion is not acceptance.
 
 For manual assessment, perform one owner-selected real assessment. Complete discovery across
 all actual pages and open/closed states in the selected repository, excluding PRs and without
@@ -135,7 +139,7 @@ assessment merely because the repository lacks them.
 Present supported grouped minimal proposals or a justified no-change conclusion, keeping
 proposed and no-change status distinct. Actual GitHub label/comment operations require scoped
 authority and readback. Any addressed label requires actual delivered improvement evidence;
-if no such transition occurs, report it as unobserved, not verified. Do not create unrelated
+if no such transition occurs, report it as unobserved (NOT VERIFIED). Do not create unrelated
 improvements merely to test that transition. No automatic assessment at acceptance, skill edit
 or PR.
 

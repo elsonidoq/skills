@@ -1,8 +1,10 @@
 # Dependency and seam research
 
 Canonical research owner for this migration; discover through [plan](plan.md).
-Research date: 2026-11-13. Requirements: [approved specification](spec.md).
-These are design findings, not installed integration or live acceptance results.
+Research date: 2026-11-13. Requirements: [current specification](spec.md).
+These are design findings, not installed integration or live acceptance results. Derived
+choices below remain revisable under the [plan](plan.md#requirements-versus-proposed-mechanisms);
+source findings and required observables are not waived by a simpler equivalent mechanism.
 
 ## Dependency selection
 
@@ -66,14 +68,10 @@ Official sources read as Markdown, using their named sections:
   uses `check_same_thread=False` and an internal lock. This does not make the repository's
   separate `Store` connection safe for graph worker threads or provide distributed scaling.
 
-**Derived choice → checks:** One `StateGraph` with a task subgraph, a stable run ID as
-thread ID, sync file checkpoints and no provider-node automatic retry policy. Application
-readiness selects one ready task by default or an explicitly authorized disjoint wave.
-Keyed task-result reducers merge distinct IDs, not unordered append-only trace data.
-Use separate saver and ordinary history connections. Prove crash/reopen and failed-sibling
-pending writes through the permanent production graph, not a second demo implementation.
-Graph state contains control data/references; it is neither an effect receipt nor a trace
-warehouse. Reconcile retained dispatch/Git facts before a rerun can mutate.
+**Implication:** Standard persistence supports the proposed graph layout, but does not prove
+external effects occurred exactly once. Use durable state and effect reconciliation; the
+[plan](plan.md#one-execution-controller) owns proposed wiring and the
+[quickstart](quickstart.md#composed-execution-and-recovery) owns its observable checks.
 
 ## Pi, Git and question seams
 
@@ -99,15 +97,10 @@ Repository inspection at `4c1725ebded2f89dec6933b8d193bf34997c62ce`:
   SDK abort before disposal; `promptSession` waits for idle and rejects aborted results.
   A Python `interrupt()` cannot simply be thrown through this live callback: that would
   neither durably deliver the answer nor prove settlement.
-- Use a narrow opt-in host question-pause result: preserve the question and saved session,
-  mark the tool as awaiting a decision (not an owner answer), stop further generation with
-  SDK abort and await idle, then report a settled waiting outcome. The graph's separate
-  owner-wait node interrupts only after that result is retained. Resume reopens the same
-  saved context with the actual answer and an instruction to continue only the pending
-  operation. An unconfirmed abort/idle or lost result is uncertain, not permission to
-  invoke again. Existing SDK/tool tests and fixture provider can exercise this exact seam
-  without a real paid call. This is an implementation assumption with a defined test,
-  not a claim that the current host already supports durable pause.
+- The proposed [question adaptation](plan.md#questions-reach-the-actual-consumer) must
+  establish SDK idle/settlement and deliver the real answer after reopen. Existing abort
+  support is not proof of durable pause. Test the actual installed SDK boundary before
+  reliance; prefer a simpler supported equivalent if it establishes the same observables.
 - The parent bridge currently has one active steering target and one question. Change
   target storage to a map keyed by task/invocation/session for an authorized wave. Serialize
   owner questions through the existing tools, preserving their request IDs and owner-only
@@ -118,12 +111,9 @@ Repository inspection at `4c1725ebded2f89dec6933b8d193bf34997c62ce`:
   `metrics.py:interval_record` qualifies continuous exclusive before/after deltas; reuse
   it rather than export `getSessionStats()` cumulative totals.
 
-**Checks before reliance:** Actual graph + adapter + SDK fixture provider + temporary Git
-repository: manual wait, worker question, process reopen, answered/denied operation,
-uncertain-call stop, commit-before-history failure, disjoint fork/join, unrelated staged
-bytes, and check/hook failure. This is the smallest composed boundary that can observe
-replay, path custody and answer consumption. Pure graph mocks cannot establish those
-outcomes. Keep tests in their coherent delivery outcomes; no mandatory prototype chain.
+**Verification basis:** Pure graph mocks cannot establish Pi settlement, Git custody or
+actual answer consumption. Use permanent production-boundary checks in
+[quickstart](quickstart.md#composed-execution-and-recovery), not a separate demo chain.
 
 ## Metadata-only LangSmith submission
 
@@ -151,31 +141,23 @@ Sources inspected:
 
 **Decision (derived):** One explicit adapter constructs safe RunTree chain spans for
 run→task→invocation, and posts only when scoped upload authority and selected endpoint/
-project are present. Use a dedicated Client with `omit_traced_runtime_info=True`, IO hidden,
-closed metadata filtering and explicit single-endpoint credentials; no replicas, ambient
-tracing callbacks, attachments, raw exception recording or provider wrappers. Wrap graph
-execution in `tracing_context(enabled=False)` so ambient graph tracing cannot export state;
-explicit safe RunTree submission is the sole enabled path. Use fixed span names; map any
-user-supplied IDs to opaque UUIDs rather than trust arbitrary task/run/session strings.
+project are present. A dedicated Client with `omit_traced_runtime_info=True`, IO hidden,
+closed metadata filtering and explicit single-endpoint credentials avoids incidental
+SDK data/destinations. Proposed graph wrapping with `tracing_context(enabled=False)` is
+intended to suppress ambient state export while explicit safe RunTree submission remains
+possible; the final-wire check below must verify it. Use fixed names; map user-supplied IDs
+to opaque UUIDs rather than trust arbitrary task/run/session strings.
 No raw task descriptions or Git paths in names/tags. Chain spans can show known numeric
 usage/cost as approved metadata without claiming LLM message/playground functionality or
 estimated server pricing as an invoice. Retain field-level unknowns locally; omit unknown
 numeric values on upload.
 
-**Observable checks:** Intercept final HTTP requests from the real selected SDK (not only
-our mapper) with private sentinels in task names, state, session paths, exceptions, tool
-payloads and ambient LangSmith/LangChain metadata. Inspect creation, update and failure
-paths plus headers/URLs for unintended payload leakage. Disabled authority must cause
-zero network requests even if ambient tracing is enabled. Fail initialization/submission
-and show safe task/checkpoint completion with a visibility-gap diagnostic. Check hierarchy
-and known/unknown usage. Do not add redaction services or a durable upload queue.
-
-**Still NOT VERIFIED:** Installed transitive compatibility, actual safe request bodies,
-Pi question pause behavior, graph recovery/concurrency, and live UI visibility. These are
-implementation acceptance work. No LangSmith account API was contacted. Account/project,
-region/access, pricing and network/upload approval are later gates. Local sentinel checks
-must pass before live use; a real visible approved invocation must pass before monitor
-removal. Missing upload access is not a blocker to local graph work.
+**Verification:** [Final SDK-request checks](quickstart.md#trace-privacy-before-any-upload)
+must establish that the selected integration does not leak through automatic metadata,
+errors or ambient tracing. Installation/transitive compatibility, Pi pause, graph recovery,
+actual wire privacy and live UI visibility remain NOT VERIFIED. No account API was contacted.
+The [live gate](quickstart.md#live-replacement-and-monitor-retirement--explicit-gate) cannot
+be released by these documentary findings.
 
 ## Lifecycle and retirement research
 
