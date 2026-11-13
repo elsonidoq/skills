@@ -24,10 +24,10 @@ acceptance and REQUIRED commands. This file is the brief human presentation of t
   reuse precise evidence for unchanged content/scope through normal launch/brief context;
   absent approval stops the affected change. Changed content or uncovered actual effects need
   their real gate. Do not repeat task-by-task consent or add an approval cache/schema/protocol.
-- Fixed outcomes: Python LangGraph/Pi/LangSmith, one execution controller, standard persistence/
+- Fixed outcomes: Python LangGraph/Pi/local Phoenix, one execution controller, standard persistence/
   interrupt/fanout/reduction, safe effect reconciliation and answer delivery, explicitly directed
-  parallelism, exact ownership/checkpoints/history, metadata-only privacy and observed live
-  visibility before monitor removal. [Requirements versus proposed mechanisms](plan.md#requirements-versus-proposed-mechanisms)
+  parallelism, exact ownership/checkpoints/history, metadata-only local privacy and observed useful incremental UI
+  visibility during an evolving run before monitor removal. [Requirements versus proposed mechanisms](plan.md#requirements-versus-proposed-mechanisms)
   distinguishes these from node layout, pauseQuestions spelling, saver arrangement, backend
   marker, intent encoding, exact SDK helpers and compatible-route mechanics. Prefer simpler
   equivalent existing mechanisms when actual checks prove the same observables and preserve
@@ -44,12 +44,21 @@ acceptance and REQUIRED commands. This file is the brief human presentation of t
   local integration T017. Pure helper mocks cannot prove actual custody/answer/wire boundaries.
   No prototype chain, broad synthetic replacement or historical replay. Failed/unrun necessary
   proof blocks affected reliance; reuse unchanged applicable proof, repeat only if invalidated.
-- Only T019 tracker and T020 account/project/region/access/pricing/upload questions remain in
-  executable `gates`. They are real operation boundaries, not repeat policy consent. T021
-  consumes applicable successful T020 visibility evidence without asking for recertification;
-  absent/invalidated proof still forbids removal. Missing gates block only affected work; the
-  current sequential runner does not automatically skip blocked tasks, so scope available work
-  honestly. No installs/live operations are established by planning evidence.
+- Only T019 selected tracker operations remain in executable `gates`. Ordinary future local
+  Phoenix setup/export uses scoped implementation authority, not a cloud-account/pricing/upload
+  or local-confirmation ceremony. New actual external/paid/security/data effects keep their gates.
+  T020 must prove useful incremental local UI visibility; T021 inspects that applicable success
+  without recertification. Missing/invalidated proof still forbids removal. Missing gates block
+  affected work only; the current sequential runner does not automatically skip blocked tasks.
+  No installation, image pull, service launch or export is established by planning evidence.
+- Monitoring is metadata-only even locally, opt-in, and only to explicit numeric-loopback Phoenix;
+  disable UI analytics/external resources and ambient hosted export. Disabled monitoring makes
+  zero monitoring requests; enabled loopback HTTP is expected. Existing Pi/provider traffic is
+  separate, not a whole-process ban. LangSmith may remain transitive, never a hosted monitoring
+  destination. T014 owns adapter/config/[wire controls](research.md#metadata-only-local-phoenix-submission) and
+  [wire checks](quickstart.md#trace-privacy-before-real-metadata-export); T020 owns actual image/setup,
+  server/browser incidental-network and evolving-run UI proof. No custom UI, heartbeat framework
+  or new service manager. Ordinary equivalent mechanisms remain permitted with the same proof.
 - Retain six intake checks only: readable file, parsed list, ID/work description, unique IDs,
   existing dependencies and no cycles. No admission metadata, automatic conversion/replay,
   raw/ambient tracing, background assessment, service/data deletion, push or deployment.
@@ -89,7 +98,7 @@ final delivery obligation, not T017 worker publication or a renamed replacement 
 
 - [ ] T004 Provide standard file-backed graph persistence
   - **Depends**: T001
-  - Resolve the compatible hashed lock and durable standard graph persistence, proving reopen/interrupt behavior and old-history preservation. Saver layout/API details are proposals, not additional owner requirements.
+  - Resolve the LangGraph/saver/standard OTel compatible hashed lock without raising Python >=3.10; Phoenix server stays in its separate pinned container, needed transitive LangSmith may remain. Prove persistence reopen/interrupt/history compatibility; saver layout/API details remain proposals.
 
 - [ ] T005 Reconcile focused Git success before history retry
   - **Depends**: none
@@ -127,9 +136,9 @@ final delivery obligation, not T017 worker publication or a renamed replacement 
   - **Depends**: T011, T012
   - Complete explicitly directed disjoint waves with thread-safe state, retained successful siblings and a quiescent shared check/Git boundary. Default sequential; separate focused commits precede dependent release, no mandatory worktrees.
 
-- [ ] T014 Submit only safe invocation metadata through the actual LangSmith SDK
+- [ ] T014 Deliver metadata-only local Phoenix tracing and reproducible settings
   - **Depends**: T011
-  - Prove actual final-SDK metadata-only requests, qualified usage, zero network without authority and fail-open execution. Exact LangSmith helpers may simplify, never privacy or real upload gates.
+  - Deliver the explicit OTel adapter with bounded runtime/phoenix.env.example and operating docs: pinned single Phoenix image/SQLite, loopback-only 6006, privacy/auth defaults and durable private data ownership/recovery. Prove final OTLP protobuf/header/destination privacy under ambient endpoints/headers/proxy and redirect, qualified usage and fail-open checks/Git; no service start. Exact controls may simplify only with equivalent proof.
 
 - [ ] T015 Provide the manual evidence-based skill assessment entry
   - **Depends**: T001
@@ -141,21 +150,21 @@ final delivery obligation, not T017 worker publication or a renamed replacement 
 
 - [ ] T017 Verify the retained local application composition
   - **Depends**: T003, T013, T014, T015, T016
-  - Integrate local application seams and causal wiring/docs fixes with retained checks. Normal fresh final review follows; this worker does not publish delivery or stage owner acceptance.
+  - Integrate local application seams, safe OTel export suppression/config checks and causal wiring/docs fixes. Actual local incremental UI visibility remains T020, not an interception-test claim. Normal fresh final review follows; no worker publication or staged owner acceptance.
 
 - [ ] T019 Verify real manual assessment evidence and label transitions
   - **Depends**: T017
   - Assess one owner-selected real set with complete actual discovery (all pages, open/closed, no PRs or acceptance eligibility filter). Use available linked evidence honestly for grouped minimal proposals or no-change; reuse T015 for absent categories and report limits, never manufacture cases or improvements.
   - **Live gate**: Scoped tracker reads/label/comment effects with readback. Keep proposed/no-change distinct; addressed needs actual delivered evidence or remains unobserved/NOT VERIFIED. No automatic assessment, skill edit or PR.
 
-- [ ] T020 Observe real LangSmith replacement visibility
+- [ ] T020 Observe useful incremental local Phoenix replacement visibility
   - **Depends**: T017
-  - After same-revision local privacy proof and explicit account/project/region/access/pricing/network authority, observe a real permitted graph/Pi invocation in LangSmith UI. Usable hierarchy and safe known/unknown metadata, not HTTP/offline success, release removal.
-  - **Live gate**: Selected LangSmith account/project/region/access/pricing/upload and actual Pi-call scope; same-revision final-SDK privacy proof before upload. Usable real UI hierarchy, not HTTP/offline success.
+  - After applicable final-wire proof, perform ordinary scoped single-container local setup with current collision/ownership, effective pinned-image/privacy/auth and durable storage/recovery checks. Verify actual server/browser incidental monitoring stays local. Observe useful incremental hierarchy/task/progress in an evolving actual run BEFORE root completion, recording refresh limits; no final-trace/HTTP/offline substitute.
+  - **Required proof, not consent ceremony**: Retain the monitor if setup/privacy/UI visibility is inadequate; no custom UI/heartbeat framework. Reuse existing Pi-call authority; new actual external/paid/security/data effects still need their real gate. No T020 `gates` question.
 
 - [ ] T021 Retire only redundant monitor source after observed replacement
   - **Depends**: T020
-  - Inspect applicable successful T020 visibility evidence, then retire only redundant monitor source/callers. Missing/invalidated proof stops removal without recertification; retain history/data/readers/limitations, no service stop.
+  - Inspect applicable successful T020 useful incremental local Phoenix visibility evidence from before root completion, then retire only redundant monitor source/callers. Missing/invalidated proof stops removal without recertification; retain history/data/readers/limitations, no service stop.
 
 ## Coverage and handoff
 
