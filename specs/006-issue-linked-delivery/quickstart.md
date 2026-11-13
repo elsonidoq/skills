@@ -124,14 +124,20 @@ purpose, refresh the summary and obtain explicit acceptance before authorized cl
 Inspect both publications and closure readback. Also exercise missing tracker access and a
 partial publication failure without inventing success or a local fallback.
 
-For manual assessment, use a bounded owner-selected representative issue set. Include more
-than one page, open and closed issues, a PR to exclude, missing acceptance/artifacts, an
-unrelated concurrent commit, a changed requirement, a genuine supported omission and a
-previously assessed issue. Inspect all pages and source evidence. Verify grouped minimal
-proposals, uncertainty, and proposed/no-change status; addressed requires actual delivered
-improvement evidence. Local retained-reader tests/walkthroughs can establish selection and
-instruction limits, but actual authorized GitHub label/comment effects need readback. No
-automatic assessment at acceptance, skill edit or PR.
+For manual assessment, perform one owner-selected real assessment. Complete discovery across
+all actual pages and open/closed states in the selected repository, excluding PRs and without
+requiring acceptance records for eligibility. Inspect the selected issues and available source
+evidence; retain source links, evidence gaps and uncertain attribution. Reuse applicable T015
+local pagination/classification evidence for cases absent from the live set. Report those absent
+categories and the limits of live coverage; do not fabricate cases or block a meaningful
+assessment merely because the repository lacks them.
+
+Present supported grouped minimal proposals or a justified no-change conclusion, keeping
+proposed and no-change status distinct. Actual GitHub label/comment operations require scoped
+authority and readback. Any addressed label requires actual delivered improvement evidence;
+if no such transition occurs, report it as unobserved, not verified. Do not create unrelated
+improvements merely to test that transition. No automatic assessment at acceptance, skill edit
+or PR.
 
 ## Retirement and final delivery checks
 
