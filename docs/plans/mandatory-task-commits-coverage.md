@@ -27,7 +27,6 @@ the consumer is already wired; later task evidence changes rows only after verif
 | incorporate-skill | Adaptation-plan approval precedes writes and checkpoints | integrated | T004 link/read-through |
 | infographic | Authorized retained repository output checkpoints automatically | integrated | T004 link/read-through |
 | scientific-method-debugging | Investigation-only work has no empty checkpoint; retained fix does | integrated | T004 link/read-through |
-| supabase-server | External/secret safety and operation permissions remain independent | integrated | T004 link/read-through |
 
 Relevant active prompt routes (`.pi/prompts/speckit.*.md`) are package entry points rather than
 skills. T004 wires all active routes and classifies planning/analyze/checklist/clarify/

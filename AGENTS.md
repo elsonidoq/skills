@@ -21,7 +21,7 @@ Automatically use only these global process skills:
   skill before planning or implementing.
 
 Use another skill only when the user explicitly requests it or the task requires a named external capability.
-Global skills may depend on a reusable capability such as SpecKit, Railway, Supabase, GitHub, or a configured
+Global skills may depend on a reusable capability such as SpecKit, Railway, GitHub, or a configured
 agent only after verifying it is available and stating an unavailable fallback.
 
 ## Global Assets

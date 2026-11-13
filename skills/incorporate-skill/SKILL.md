@@ -21,7 +21,7 @@ copy, edit, delete, stage, commit, or overwrite any asset until the owner explic
 Apply this policy: a global asset must not assume a named project, its data, repository state, undocumented local
 path, branch, deployed state, model, agent, tracker, or command.
 
-A named reusable capability such as SpecKit, Railway, Supabase, GitHub, Jev, or a configured agent is allowed only
+A named reusable capability such as SpecKit, Railway, GitHub, Jev, or a configured agent is allowed only
 when the asset:
 
 1. states the dependency;
