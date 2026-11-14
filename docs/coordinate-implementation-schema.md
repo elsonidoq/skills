@@ -14,6 +14,23 @@ remain unchanged, not execution-eligibility mandates. The approved [CLI/Pi inter
 retains existing actions, targeted replies and inspected recovery while adding directed waves and durable
 interrupt/resume. Exact mechanics may vary within the approved design boundary; effect validation remains.
 
+## Internal graph task boundary
+
+`task_graph(engine, saver)` in `runtime/coherence_workflow/graph.py` is an internal task
+interface, not a CLI backend or a second selectable engine. The caller retains the worktree
+lock, creates the run with its admitted contract and executor, opens `graph_saver`, and uses
+the run ID as the thread ID with synchronous durability. Start with `{}` and continue the
+latest checkpoint with `None`; do not use checkpoint time travel. The caller must configure
+LangGraph's recursion limit for the actual number of transitions, including corrections.
+
+The graph selects one dependency-ready task at a time. It records dispatch before the Pi
+call, and records the returned result and selected effects before checks can consume them.
+A missing terminal result stops continuation for inspection, not redispatch. Required checks
+and focused Git intents remain in private operation history; a dependent task starts only
+after the producer's checkpoint is reconciled. The graph contains no review lifecycle,
+durable question transport or parallel waves. Public cutover and inspected worker recovery
+remain later work.
+
 ## Task input
 
 `runtime/coherence_workflow/intake.py` owns the six task-linter checks. The packaged
