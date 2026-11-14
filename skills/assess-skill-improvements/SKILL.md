@@ -72,3 +72,9 @@ label/comment effect independently. If a write or readback fails or is uncertain
 partial result and inspect the actual issue/comments before any retry; never claim a complete
 transition or blindly duplicate a comment. Without authority, present the analysis without writes.
 No scanner, separate learning ledger, automatic acceptance trigger, or implicit PR is created.
+
+## Task checkpoints
+
+Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md)
+when authorized work retains repository changes. Read-only or external-only assessment creates
+no empty commit. This does not authorize skill edits or tracker writes.
