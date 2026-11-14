@@ -145,7 +145,7 @@ class ReviewPayloadRecoveryTests(ProjectTest):
             facts['error'] = 'SDK operation failed: unknown transport'
             owner.store.db.execute('update execution_history set details=? where seq=?', (json.dumps(facts), row['seq']))
             owner.store.resume('run')
-            with self.assertRaisesRegex(Blocked, 'not an actionable rejection'):
+            with self.assertRaisesRegex(Blocked, 'no inspected matching payload-size diagnosis'):
                 Engine(owner, 'run', self.contract, EXECUTOR, adapter=adapter, resume=True).invoke()
         self.assertEqual(self.calls, ['worker', 'review', 'fixer', 'review'])
 
@@ -154,7 +154,7 @@ class ReviewPayloadRecoveryTests(ProjectTest):
         with Authority(self.project) as owner:
             owner.store.db.execute("delete from execution_history where run_id='run' and kind='invocation' and state='failed'")
             owner.store.resume('run')
-            with self.assertRaisesRegex(Blocked, 'not an actionable rejection'):
+            with self.assertRaisesRegex(Blocked, 'no inspected matching payload-size diagnosis'):
                 Engine(owner, 'run', self.contract, EXECUTOR, adapter=adapter, resume=True).invoke()
         self.assertEqual(self.calls, ['worker', 'review', 'fixer', 'review'])
 
@@ -175,7 +175,7 @@ class ReviewPayloadRecoveryTests(ProjectTest):
             self.assertEqual(chain['executions'][-1]['attempt_count'], 4)
         with Authority(self.project) as owner:
             owner.store.resume('run')
-            with self.assertRaisesRegex(Blocked, 'not an actionable rejection'):
+            with self.assertRaisesRegex(Blocked, 'no inspected matching payload-size diagnosis'):
                 Engine(owner, 'run', self.contract, EXECUTOR, adapter=FailedRetry, resume=True).invoke()
         self.assertEqual(self.calls, ['worker', 'review', 'fixer', 'review', 'unknown review failure'])
 
@@ -198,7 +198,7 @@ class ReviewPayloadRecoveryTests(ProjectTest):
         altered = admit({'tasks': [{'id': 'task', 'description': 'different scope'}]})
         with Authority(self.project) as owner:
             owner.store.resume('run')
-            with self.assertRaisesRegex(Blocked, 'not an actionable rejection'):
+            with self.assertRaisesRegex(Blocked, 'inputs differ from retained contract or executor'):
                 Engine(owner, 'run', altered, EXECUTOR, adapter=adapter, resume=True).invoke()
         self.assertEqual(self.calls, ['worker', 'review', 'fixer', 'review'])
 

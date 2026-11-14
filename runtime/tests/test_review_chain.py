@@ -563,7 +563,7 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
             facts['sha'] = new_head
             owner.store.db.execute('UPDATE execution_history SET details=? WHERE seq=?', (json.dumps(facts), row['seq']))
             owner.store.db.commit()
-        with self.assertRaisesRegex(Blocked, 'actual metrics commit facts mismatch'):
+        with self.assertRaisesRegex(Blocked, 'metric artifact commit changed unexpected paths'):
             self._resume()
         self.assertEqual(len(self.calls), 2)
 
@@ -587,7 +587,7 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
         with Authority(self.project) as owner:
             owner.store.db.execute('UPDATE execution_history SET details=? WHERE seq=?', (json.dumps(facts), seq))
             owner.store.db.commit()
-        with self.assertRaisesRegex(Blocked, 'actual metrics commit facts mismatch.*parent'):
+        with self.assertRaisesRegex(Blocked, 'unexpected metric artifact commit parent'):
             self._resume()
         self.assertEqual(len(self.calls), 2)
 
@@ -688,8 +688,10 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
                     'base': self.base, 'head': self.base, 'review_summary': self.gap})
                 store.finish(run, 'failed', self.base)
                 store.resume(run)
-                with self.assertRaisesRegex(Blocked, 'uncertain|not an actionable rejection'):
-                    Engine(owner, run, {'tasks': []}, EXECUTOR, adapter=self.adapter, resume=True).invoke()
+                with self.assertRaisesRegex(Blocked, 'uncertain|remaining coverage gaps'):
+                    engine = Engine(owner, run, {'tasks': []}, EXECUTOR, adapter=self.adapter, resume=True)
+                    with graph_saver(owner) as saver:
+                        task_graph(engine, saver, review=True).invoke({}, {'configurable': {'thread_id': run}}, durability='sync')
         self.assertEqual(len(self.calls), 2)
 
 
@@ -761,7 +763,9 @@ class ChainHistoryTests(ProjectTest):
             def forbidden(*_args, **_kwargs):
                 self.fail('uncertain fixer must not be replayed')
             with self.assertRaisesRegex(Blocked, 'uncertain'):
-                Engine(owner, 'uncertain-fixer', {'tasks': []}, EXECUTOR, adapter=forbidden, resume=True).invoke()
+                engine = Engine(owner, 'uncertain-fixer', {'tasks': []}, EXECUTOR, adapter=forbidden, resume=True)
+                with graph_saver(owner) as saver:
+                    task_graph(engine, saver, review=True).invoke({}, {'configurable': {'thread_id': 'uncertain-fixer'}}, durability='sync')
 
     def test_engine_records_single_review_and_status_exposes_safe_findings_and_references(self):
         project = self.project
@@ -792,7 +796,7 @@ class ChainHistoryTests(ProjectTest):
 class BoundedChainTests(ProjectTest):
     def test_optional_identity_failure_does_not_block_required_chain(self):
         with patch.object(Recorder, 'occurrence', return_value=None):
-            self.test_actionable_rejection_repairs_once_then_fresh_rereview()
+            self.test_actionable_rejection_repairs_once_then_fresh_rereview(optional_identity_failure=True)
 
 
     def test_immediate_approval_skips_fixer_and_rereview(self):
@@ -852,7 +856,7 @@ class BoundedChainTests(ProjectTest):
                         calls.append(kwargs.get('read_only', False))
                         return verdict if kwargs.get('read_only') else 'worker answer'
                 with Authority(self.project) as owner:
-                    with self.assertRaisesRegex(Blocked, 'owner authorization unavailable|actionable rejection'):
+                    with self.assertRaisesRegex(Blocked, 'owner authorization unavailable|remaining coverage gaps'):
                         Engine(owner, name, admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
                                EXECUTOR, adapter=Adapter).invoke()
                     chain = owner.store.review_chain(name)
@@ -942,7 +946,7 @@ class BoundedChainTests(ProjectTest):
                 self.assertEqual(len(repair_inputs), 1)
                 self.assertIn(finding, repair_inputs[0])
 
-    def test_actionable_rejection_repairs_once_then_fresh_rereview(self):
+    def test_actionable_rejection_repairs_once_then_fresh_rereview(self, optional_identity_failure=False):
         project, calls, review_outputs = self.project, [], []
         project.joinpath('unrelated.txt').write_text('intervening\n')
         from coherence_workflow.store import git
@@ -1031,6 +1035,9 @@ class BoundedChainTests(ProjectTest):
             fixer_calls = [json.loads(row['facts']) for row in observations
                            if row['phase'] == 'worker' and row['kind'] == 'started'
                            and json.loads(row['facts']).get('role') == 'fixing_worker']
+            if optional_identity_failure:
+                self.assertEqual(fixer_calls, [])
+                return
             self.assertEqual(len(fixer_calls), 1)
             self.assertEqual(fixer_calls[0]['trigger_execution_id'], chain['executions'][0]['execution_id'])
             self.assertEqual(fixer_calls[0]['correction_chain'], [fixer_calls[0]['invocation_id']])
@@ -1227,46 +1234,51 @@ class BoundedChainTests(ProjectTest):
         contract = {'tasks': []}
         calls = []
         class Adapter:
-            def __init__(self, *_args, **_kwargs):
-                self.saved_session = None
+            reviews = 0
+            def __init__(self, *_args, **_kwargs): self.saved_session = None
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
+                    Adapter.reviews += 1
                     calls.append('review')
-                    return json.dumps({'approved': len(calls) > 1, 'coverage': ['target examined'], 'coverage_gaps': [],
-                        'findings': ['owned.txt:1 - current target defect'] if len(calls) == 1 else []})
+                    return json.dumps({'approved': Adapter.reviews == 4, 'coverage': ['target examined'],
+                        'coverage_gaps': [], 'findings': [] if Adapter.reviews == 4 else ['owned.txt:1 - current target defect']})
                 calls.append('fixer')
                 return 'scoped repair'
         with Authority(self.project) as owner:
             store = owner.store
-            store.start('graph-refresh', self.base, contract=contract, executor=EXECUTOR,
-                        authority={'review_policy': 'owner-pair-v1'}, review_base=self.base)
-            OwnerPairPrimitiveTests._rejection(self, store, 'graph-refresh')
+            with self.assertRaisesRegex(Blocked, 'did not authorize'):
+                Engine(owner, 'graph-refresh', contract, EXECUTOR, adapter=Adapter,
+                       question=lambda *_a, **_k: 'no').invoke()
+            rejection = store.review_chain('graph-refresh', private=True)['executions'][-1]['execution_id']
             scope = store.review_scope('graph-refresh')
-            store.authorize_owner_pair('graph-refresh', 'stale', rejecting_execution_id='review-2', review_base=self.base,
+            store.authorize_owner_pair('graph-refresh', 'stale', rejecting_execution_id=rejection, review_base=self.base,
                 review_head=self.base, original_scope=scope, fixer_execution_id='stale-fix', reviewer_execution_id='stale-review')
+            store.authorize_routine_review_continuation('graph-refresh', scope)
             self.project.joinpath('owned.txt').write_text('intervening change\n')
             git(self.project, 'add', '--', 'owned.txt')
             git(self.project, 'commit', '-qm', 'intervening correction')
             current = git(self.project, 'rev-parse', 'HEAD').decode().strip()
-            store.finish('graph-refresh', 'failed', self.base, 'target drifted')
             engine = Engine(owner, 'graph-refresh', contract, EXECUTOR, adapter=Adapter, resume=True)
-            with graph_saver(owner) as saver:
-                graph = task_graph(engine, saver, review=True)
-                config = {'configurable': {'thread_id': 'graph-refresh'}, 'recursion_limit': 40}
-                graph_recovery_action(engine, graph, config, 'authorize-routine-repairs', scope=scope)
-                result = graph_recovery_action(engine, graph, config, 'refresh-review-target')
+            before = len(calls)
+            result = engine.refresh_review_target()
             chain = store.review_chain('graph-refresh', private=True)['executions']
-            self.assertEqual(result['result']['status'], 'complete')
-            self.assertEqual(chain[3]['references']['head'], current)
-            self.assertEqual(chain[3]['trigger_execution_id'], 'review-2')
-            self.assertEqual(chain[4]['trigger_execution_id'], chain[3]['execution_id'])
-            self.assertEqual(store.owner_pair_for_rejection('graph-refresh', rejecting_execution_id='review-2',
+            self.assertEqual(result['status'], 'rejected')
+            self.assertEqual(calls[before:], ['review'])
+            self.assertEqual(chain[-1]['references']['head'], current)
+            self.assertEqual(chain[-1]['trigger_execution_id'], rejection)
+            self.assertEqual(store.owner_pair_for_rejection('graph-refresh', rejecting_execution_id=rejection,
                 review_base=self.base, review_head=self.base, original_scope=scope)['state'], 'authorized')
-        self.assertEqual(calls, ['review', 'fixer', 'review'])
+            store.resume('graph-refresh')
+            result = Engine(owner, 'graph-refresh', contract, EXECUTOR, adapter=Adapter, resume=True).invoke()
+            chain = store.review_chain('graph-refresh', private=True)['executions']
+            self.assertEqual(result['status'], 'complete')
+            self.assertEqual(chain[-2]['trigger_execution_id'], chain[-3]['execution_id'])
+        self.assertEqual(calls[before:], ['review', 'fixer', 'review'])
 
     def test_refreshes_stale_unreserved_pair_with_current_full_range_before_routine_resume(self):
         contract = {'tasks': []}
         calls, questions = [], []
+        paid = {'agent_providers': ['fixture'], 'apis': []}
         class Adapter:
             reviews = 0
             def __init__(self, *_args, **_kwargs): pass
@@ -1274,22 +1286,23 @@ class BoundedChainTests(ProjectTest):
                 if kwargs.get('read_only'):
                     Adapter.reviews += 1
                     calls.append(('review', Adapter.reviews))
-                    return ('{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - current target defect"]}'
-                            if Adapter.reviews == 1 else '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}')
+                    return json.dumps({'approved': Adapter.reviews == 4, 'coverage': ['fixture examined'],
+                        'coverage_gaps': [], 'findings': [] if Adapter.reviews == 4 else ['owned.txt:1 - current target defect']})
                 calls.append(('fixer', None))
                 return 'routine scoped repair'
         def question(*args, **kwargs):
             questions.append((args, kwargs))
-            return 'yes'
+            return 'no'
         with Authority(self.project) as owner:
             store = owner.store
-            store.start('refresh', self.base, contract=contract, executor=EXECUTOR,
-                        authority={'paid_scope': {'agent_providers': ['fixture'], 'apis': []}, 'review_policy': 'owner-pair-v1'},
-                        review_base=self.base)
-            self.assertTrue(Recorder(store, 'refresh').register(descriptor(contract, EXECUTOR, self.base)))
-            OwnerPairPrimitiveTests._rejection(self, store, 'refresh')
+            with self.assertRaisesRegex(Blocked, 'did not authorize'):
+                Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, question=question, paid_scope=paid).invoke()
+            chain = store.review_chain('refresh', private=True)['executions']
+            rejection = chain[-1]['execution_id']
+            self.assertEqual([(item['role'], item['state']) for item in chain],
+                             [('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'rejected')])
             scope = store.review_scope('refresh')
-            store.authorize_owner_pair('refresh', 'stale', rejecting_execution_id='review-2', review_base=self.base,
+            store.authorize_owner_pair('refresh', 'stale', rejecting_execution_id=rejection, review_base=self.base,
                                        review_head=self.base, original_scope=scope,
                                        fixer_execution_id='stale-fix', reviewer_execution_id='stale-review')
             store.authorize_routine_review_continuation('refresh', scope)
@@ -1297,27 +1310,29 @@ class BoundedChainTests(ProjectTest):
             git(self.project, 'add', '--', 'owned.txt')
             git(self.project, 'commit', '-m', 'known intervening correction')
             current = git(self.project, 'rev-parse', 'HEAD').decode().strip()
-            store.finish('refresh', 'failed', self.base, 'review target drifted after owner authorization')
+            before = len(calls)
             refreshed = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter,
-                               paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=True).refresh_review_target()
-            stale = store.owner_pair_for_rejection('refresh', rejecting_execution_id='review-2', review_base=self.base,
+                               paid_scope=paid, resume=True).refresh_review_target()
+            stale = store.owner_pair_for_rejection('refresh', rejecting_execution_id=rejection, review_base=self.base,
                                                     review_head=self.base, original_scope=scope)
             chain = store.review_chain('refresh', private=True)
             self.assertEqual((refreshed['status'], refreshed['sha']), ('rejected', current))
+            self.assertEqual(calls[before:], [('review', 3)])
             self.assertEqual((stale['grant_id'], stale['state']), ('stale', 'authorized'))
             self.assertEqual(chain['executions'][-1]['references']['head'], current)
             self.assertEqual(chain['executions'][-1]['references']['base'], self.base)
+            self.assertEqual(chain['executions'][-1]['trigger_execution_id'], rejection)
             self.assertEqual(store.db.execute("SELECT count(*) FROM execution_tasks WHERE run_id='refresh'").fetchone()[0], 0)
             refresh_terminal = [(row['kind'], json.loads(row['facts'])) for row in store.monitor('refresh')['observations']
                                 if row['phase'] == 'terminal']
-            self.assertIn(('started', {'baseline': self.base}), refresh_terminal)
+            self.assertIn(('started', {}), refresh_terminal)
             self.assertIn(('failed', {'head': current}), refresh_terminal)
             store.resume('refresh')
             result = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, question=question,
-                            paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=True).invoke()
+                            paid_scope=paid, resume=True).invoke()
         self.assertEqual(result['status'], 'complete')
-        self.assertEqual(calls, [('review', 1), ('fixer', None), ('review', 2)])
-        self.assertEqual(questions, [])
+        self.assertEqual(calls[before:], [('review', 3), ('fixer', None), ('review', 4)])
+        self.assertEqual(len(questions), 1)
 
 
 class ReviewBoundaryRegressionTests(ProjectTest):
