@@ -35,6 +35,7 @@ class UsageReportingTests(ProjectTest):
         class Adapter:
             def __init__(self, *_args, **_kwargs):
                 self.last_interval = None
+                self.saved_session = {'id': 'worker-session', 'file': str(project / 'session.jsonl')}
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     self.last_interval = interval('review-session', 7, .07)

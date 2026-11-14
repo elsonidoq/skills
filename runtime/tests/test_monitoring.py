@@ -137,7 +137,8 @@ class MonitoringStorageTests(ProjectTest):
         calls = []
 
         class InterruptedWorker:
-            def __init__(self, *args, **kwargs): pass
+            def __init__(self, *args, **kwargs):
+                self.saved_session = {'id': 'fixture-resume', 'file': str(project / 'session.jsonl')}
             def prompt(self, prompt, *, read_only=False, claim=None, **kwargs):
                 if read_only:
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -155,7 +156,8 @@ class MonitoringStorageTests(ProjectTest):
             owner.store.resume('resume-lineage')
 
             class ResumedWorker:
-                def __init__(self, *args, **kwargs): pass
+                def __init__(self, *args, **kwargs):
+                    self.saved_session = {'id': 'fixture-resume', 'file': str(project / 'session.jsonl')}
                 def prompt(self, prompt, *, read_only=False, claim=None, **kwargs):
                     if read_only:
                         return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -167,7 +169,8 @@ class MonitoringStorageTests(ProjectTest):
 
             self_case = self
             result = Engine(owner, 'resume-lineage', admit([task]), EXECUTOR,
-                            adapter=ResumedWorker, resume=True).invoke()
+                            adapter=ResumedWorker, resume=True,
+                            worker_recovery={'action': 'continue', 'diagnosis': 'Inspected interrupted fixture; continue unfinished correction.'}).invoke()
             observations = owner.store.monitor('resume-lineage')['observations']
 
         self.assertEqual(result['status'], 'complete')
