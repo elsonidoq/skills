@@ -59,15 +59,11 @@ before generalizing; supporting machinery must not become the main deliverable.
 
 ## Repository-local Definition of Done
 
-When a practical, meaningful evaluation is possible at a proportionate cost, the issue
-should include evidence that the intended behavior improved.
-
-Useful simpler evidence or a brief justification that evaluation is impractical, expensive,
-or low-value is sufficient; do not manufacture new fixtures or compliance tests. Evaluation
-belongs to later issue resolution, not initial issue filing. Preserve applicable existing
-checks, security and permission gates; this does not authorize skipping failing relevant
-existing checks or automatically running the whole behavioral collection. Follow the
-repository's evaluation convention in [evaluations/README.md](evaluations/README.md).
+Use the smallest meaningful check of the changed behavior and report its limits. Preserve
+applicable runtime, integration, application, security and permission checks. No retained
+behavioral comparison collection, mandatory prior/candidate run, live RPC scenario or
+full historical replay is required. Static/carrier/trace sensitivity is not model-obedience
+proof; genuine live application acceptance and its authority remain required where specified.
 
 ## Expensive Subagent Failures
 

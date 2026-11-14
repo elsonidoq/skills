@@ -13,7 +13,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Global repository policy and portability constraints | [AGENTS.md](../AGENTS.md) |
 | Project development principles and constitution amendments | [Project Constitution](../.specify/memory/constitution.md) |
 | A skill's operational contract | Its `skills/<name>/SKILL.md`; shared brainstorming and task semantics belong to the shared owners linked below |
-| Issue-derived evaluation convention | [Evaluations README](../evaluations/README.md) |
+| Validation guidance | [README validation](../README.md#validation-and-documentation) |
 | Planning depth assessment principles | [Spec-driven-development guidance](best_practices_spec_driven_development.md); planner assesses and the owner chooses |
 | Pi configuration examples and attributed configuration decisions | [Pi settings sample](pi-settings-sample.md), including scope, rationale, provenance/date, verification and supersession status |
 | Verified unresolved bug, risk or investigation | [GitHub Issues](https://github.com/elsonidoq/skills/issues), explicit target `github.com/elsonidoq/skills`, via `track-open-issue`; the former `docs/open_issues.md` is available in Git history only |
@@ -79,7 +79,7 @@ adoption never initializes execution state in unrelated projects. The legacy por
 - [Coherence Planning Review](plans/reviews/coherence-planning-review.md): Digest-bound combined source/task/scope approval and execution limits.
 - [Coherence Initialization Execution](plans/coherence-initialization-execution.md): Authorized bounds, per-task verification/commits and independent review status.
 - [Planner Refactor](plans/planner-refactor.md): Approved architecture and source-first preservation ledger.
-- [Planner Regression](plans/planner-regression.md): Deterministic and live scenario strategy, evidence and limitations.
+- [Planner Regression](plans/planner-regression.md): Trace guidance and historical evidence and limitations.
 - [Library Best-Practices Research](plans/library-best-practices-research.md): Approved shared dependency-evidence source (R1–R6).
 - [Library Best-Practices Research Tasks](plans/library-best-practices-research-tasks.md): Sequential contract, integration, regression and documentation tasks.
 - [Library Best-Practices Research Execution](plans/library-best-practices-research-execution.md): Hash-bound authority, verified task evidence and pending independent review.

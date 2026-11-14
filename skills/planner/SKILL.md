@@ -104,6 +104,12 @@ failures before replacement and stop on unknown cause, never blind-retry.
 
 ## Proportionate validation
 
+Use the smallest meaningful check of the changed behavior and report its limits. Preserve applicable
+runtime, integration, application, security and permission checks. No retained behavioral comparison
+collection, mandatory prior/candidate run, live RPC scenario or full historical replay is required.
+Static, carrier and trace sensitivity do not prove model obedience; genuine live application acceptance
+and its authority remain required where specified.
+
 At specification and the separate final simplicity review, seek the simplest sufficient specification and delivery
 approach that achieves the user's goals while preserving necessary safety and required acceptance.
 Tooling, operations and verification are supporting means, not independent products. At simplicity review,

@@ -29,7 +29,6 @@ def load(name, filename):
 checker = load("checker", "check-planner-workflow.py")
 trace = load("trace", "planner-trace.py")
 links = load("links", "install-links.py")
-rpc = load("rpc", "planner-rpc-smoke.py")
 
 
 def replace_clause(text, clause, replacement="REMOVED"):
@@ -3354,53 +3353,6 @@ class LinkTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "destination changed concurrently"):
                 self.install()
         self.assertEqual(links.target(self.dest / "planner"), self.root / "foreign")
-
-
-class RpcDriverTests(unittest.TestCase):
-    def test_actual_offline_fake_rpc_process(self):
-        # No pi/model process: exercises LF framing and UI correlation through real pipes.
-        program = '''import json,sys
-request=json.loads(sys.stdin.buffer.readline())
-print(json.dumps({"type":"response","success":True,"id":request["id"]}),flush=True)
-print(json.dumps({"type":"extension_ui_request","id":"ui-1","method":"select","title":"Choose workflow","options":["TinySpec","Standard"]}),flush=True)
-answer=json.loads(sys.stdin.buffer.readline())
-assert answer["id"]=="ui-1" and answer["value"]=="TinySpec"
-print(json.dumps({"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"unicode \\u2028 remains in one frame"}]}}),flush=True)
-print(json.dumps({"type":"agent_settled"}),flush=True)
-sys.stdin.buffer.read()
-'''
-        with tempfile.TemporaryDirectory() as directory:
-            result = rpc.record([sys.executable, "-c", program], "prompt", [{"method": "select", "title_contains": "workflow", "response": {"value": "TinySpec"}}], Path(directory) / "out", directory, timeout=5)
-            self.assertEqual(result["driver"], "COMPLETED", result)
-            self.assertIn("NOT EVALUATED", result["acceptance"])
-
-    def test_runtime_failures_never_report_completion(self):
-        cases = [
-            ({"type": "response", "success": False, "error": "provider blocked"}, "RPC command failed"),
-            ({"type": "tool_execution_end", "isError": True}, "tool failed"),
-            ({"type": "tool_execution_start", "toolName": "bash"}, "read-only"),
-            ({"type": "extension_ui_request", "id": "q", "method": "confirm"}, "unscripted"),
-            ({"type": "extension_error", "error": "load failed"}, "extension failed"),
-        ]
-        for event, diagnostic in cases:
-            with self.subTest(event=event), tempfile.TemporaryDirectory() as directory:
-                program = "import json,sys; sys.stdin.buffer.readline(); print(" + repr(json.dumps(event)) + ",flush=True); sys.stdin.buffer.read()"
-                result = rpc.record([sys.executable, "-c", program], "prompt", [], Path(directory) / "out", directory, timeout=2)
-                self.assertEqual(result["driver"], "FAIL", result)
-                self.assertIn(diagnostic, result["error"])
-
-    def test_deadline_is_failure_not_empty_error_success(self):
-        with tempfile.TemporaryDirectory() as directory:
-            result = rpc.record([sys.executable, "-c", "import sys; sys.stdin.buffer.read()"], "prompt", [], Path(directory) / "out", directory, timeout=0.1)
-            self.assertEqual(result["driver"], "FAIL", result)
-            self.assertTrue(result["error"])
-
-    def test_unoffered_option_and_unexpected_dialog(self):
-        request = {"id": "x", "method": "select", "title": "Choose", "options": ["Standard"]}
-        with self.assertRaises(ValueError):
-            rpc.answer_dialog(request, {"method": "select", "response": {"value": "TinySpec"}})
-        with self.assertRaises(ValueError):
-            rpc.answer_dialog(request, {"method": "input", "response": {"value": "TinySpec"}})
 
 
 class AuthoredCommandHandoffTests(unittest.TestCase):
