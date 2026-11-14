@@ -82,6 +82,36 @@ not passes or blockers demanding invented work. Do not manufacture corrections, 
 issues, owner acceptance or closure; no automatic RCA, skill edit or PR. This is the normal
 final delivery obligation, not T017 worker publication or a renamed replacement for old T018.
 
+#### Issue #44 final owner skill-diff DoD gate
+
+[FR-017](spec.md#functional-requirements)/[SC-008](spec.md#measurable-outcomes) and the
+[issue-local final skill-diff contract](contracts/interfaces.md#issue-44-final-skill-diff-gate)
+apply once at the existing final delivery review, after implementation, specified checks and
+fresh independent technical review. Show the owner the **complete actual combined net patch**
+through normal chat/host diff presentation, not just paths, links or a summary. Include every
+actual task-attributed addition/deletion/modification to the eight existing and one new skill
+instructions and their task-authorized coupled references/scripts/tests. Contributions are:
+T001 coordinate-implementation; T002 planner/task-generation/tiny-spec; T003 finish-session/
+track-open-issue; T015 new assess-skill-improvements; T016 planner/requesting-code-review/
+receiving-code-review. Combine overlapping contributions, not five separate approval exercises.
+
+Identify exact baseline, reviewed commit, attributed paths and contributing task/repair commits;
+inspect attribution and exclude unrelated/concurrent work rather than claim a blind range.
+Present the patch with normal delivery evidence even while approval is pending, marked
+“awaiting owner skill-diff approval”. Record the actual explicit owner response and patch
+identity in existing issue/chat under actual tracker authority/readback. Plan approval, green
+checks and agent review never imply this owner approval. Missing approval keeps this issue's
+delivery DoD/completion/acceptance and closure pending, while verified task checkpoints,
+technical review and internal runtime completion may finish first; no worker failure solely
+because this final gate is pending. No implementation skill diff exists yet for owner approval.
+
+Reuse precise approval for unchanged skill content; later affected skill edits renew only
+affected diff approval; unrelated commits alone do not invalidate it. Skill approval
+is not overall delivery acceptance or closure authority. This is #44-only user acceptance,
+not a policy to insert into global/adopting-project skills. No pre-dispatch or repeated task
+questions, new task/runtime state, viewer/tool, patch ledger/receipt, required patch file or
+fixture that simulates owner response. Existing natural feedback and NOT VERIFIED rules remain.
+
 ## Bounded outcomes
 
 - [ ] T001 Reconcile the runtime operative contracts
@@ -174,7 +204,9 @@ FR-011 → T020/T021; FR-012–014 → T015/T019; FR-015 → T016/T017;
 FR-016 → T001/T003/T016 using precise final approval evidence. SC-001 → T002/T003 plus
 normal coordinator delivery; SC-002 → T005–T011/T017; SC-003 → T012/T013/T017;
 SC-004 → T014/T020/T021; SC-005 → T015/T019; SC-006 → T016/T017;
-SC-007 → applicable authority/checkpoint/review boundaries. T018 is removed; IDs need not be contiguous.
+SC-007 → applicable authority/checkpoint/review boundaries.
+FR-017/SC-008 → T001/T002/T003/T015/T016 skill contributions plus coordinator final skill-diff
+review and actual owner response, not an automatic code test. T018 is removed; IDs need not be contiguous.
 
 Validate both task presentations and current read-only intake. Internal graph interfaces precede
 public cutover T011; concurrent composition is checked at T013, final local integration at T017.
