@@ -144,6 +144,33 @@ Explicit acceptance identifies the presented revision. It does not automatically
 RCA, a skill edit, PR or acceptance of later changes. Close only with actual closure authority
 and readback, retaining the acceptance trace even if closure is unavailable.
 
+### Issue #44 final skill-diff gate
+
+At this migration's normal final delivery review, after implementation, specified checks and
+fresh independent technical review, present **one combined complete actual net patch** for
+T001/T002/T003/T015/T016's changed skills (eight existing and one new) and any actual
+task-authorized coupled skill references/scripts/tests. Include additions, deletions and
+modifications, not just `SKILL.md` edits. Identify exact Git baseline, reviewed commit,
+attributed paths and contributing task/repair commits. Inspect attribution; exclude unrelated
+or concurrent changes rather than blindly presenting a Git range as this task's work.
+
+Show the full patch through normal chat/host diff presentation; a file list, links or summary
+alone does not suffice. Publish the normal evidence with “awaiting owner skill-diff approval”
+when pending; do not wait for approval before showing what must be approved. Record the actual
+owner response and its patch identity in the existing issue/chat trail under existing tracker
+authority/readback. No automatic browser viewer, push, PR, required patch file or new registry.
+
+Until explicit owner approval, this issue's delivery DoD/completion/acceptance and closure
+remain pending. Plan approval, green checks and agent review are not owner skill approval.
+Normal verified task checkpoints, technical review and internal runtime completion may finish
+first. No worker failure solely for this pending final gate, repeated task-by-task confirmation,
+new orchestration state machine or global/adopting-project skill policy is required.
+
+Reuse precise prior owner approval for unchanged skill content. Later affected skill edits
+renew only affected approval; unrelated commits alone do not invalidate it. Skill approval is
+not overall delivery acceptance or closure authority. Natural feedback, unobserved branches
+and the delivery/closure rules above remain intact.
+
 ## Manual assessment
 
 Entry: `/skill:assess-skill-improvements` in a host supporting normal skill invocation;

@@ -146,6 +146,16 @@ acceptance. This is a final delivery obligation, not a separate worker task or u
 issue. [Interfaces](contracts/interfaces.md#delivery-issue-and-acceptance) define the content,
 attribution and partial-publication handling.
 
+For #44, at this same final review, apply the
+[skill-diff gate](contracts/interfaces.md#issue-44-final-skill-diff-gate): verify that the owner
+can see the full combined attributed net skill/support patch, exact baseline/reviewed commit,
+paths and contributing commits, including new/deleted files and excluding unrelated changes.
+Present it with the normal evidence even while approval is pending. Record the actual explicit
+response in the existing issue/chat trail; missing approval keeps delivery DoD/acceptance/closure
+pending; completed worker checks/commits do not become unsuccessful. Reuse unchanged-content
+approval; renew affected approval after skill edits. Do not infer a human response from checks
+or manufacture a behavioral fixture. Overall acceptance and closure authority stay separate.
+
 When actual feedback occurs, inspect the linked corrections and refreshed presented commit.
 When explicit acceptance and closure authority occur, retain the acceptance trace and read
 back the closed state. Otherwise report those branches NOT VERIFIED; do not force a correction,
