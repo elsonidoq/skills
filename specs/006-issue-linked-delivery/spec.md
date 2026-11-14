@@ -6,7 +6,7 @@ Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimon
 
 **Created**: 2026-11-13
 
-**Status**: Local Phoenix is the current owner-selected monitoring direction for planning; LangGraph remains selected. Current-content final planning/task/implementation approval is pending. No implementation or monitoring operation is authorized by this source repair.
+**Status**: Current specification, plan, tasks and exact operative amendments approved for sequential implementation. The owner selected “Approve and start implementation” for the artifacts at `ac964e33e22e05909140c278856d40022f9e35bf`; see the [current implementation approval](tasks.md#current-implementation-approval). This metadata update changes no requirements. Actual final skill-diff approval, human-verifiable functional evidence and overall delivery acceptance remain required and unfulfilled.
 
 **Historical simplification continuation authority**: After the corrected content at `bfe2e6ebc1c1f843d0cdaf101dd8e2d53c16ad85` (SHA-256 `010e2cb125421e9014a96eed2b77a20f384a9684d05c8322392e5942f8f56d6d`) and its zero-finding targeted review were presented, the owner directed: “you didn't do the simplification yet? if you didn't go ahead, and then present this back again with the simplified tasks”. This authorizes continuation from that corrected source to align and simplify the plan/tasks, then present them; it does not approve unseen downstream artifacts, implementation or external operations. This record changes no requirements.
 

@@ -7,6 +7,7 @@ acceptance and REQUIRED commands. This file is the brief human presentation of t
 
 ## Shared context
 
+- Current scoped implementation authority is recorded under [Current implementation approval](#current-implementation-approval); prior preparation-only status is historical, not a prohibition on the approved task scope.
 - Requirements come from the current spec. Use the actual selected `.pi/workflow-executor.json`:
   Terra/medium workers, explicit Sol/medium fallback and fresh Sol/medium reviewers. No model
   substitution or agent capability version pins. Each executable task links here because the
@@ -259,3 +260,15 @@ Fresh independent final review covers actual delivered checkpoints and honest ou
 Changed global skills/extensions in Paseo require a fresh-session handoff verifying revision,
 approval and loaded capabilities, never owner reload or automatic restart. Task production is
 not final task approval or implementation acceptance.
+
+## Current implementation approval
+
+The owner selected **“Approve and start implementation”** through `ask_user` after the current-content executive brief. Approval covers the specification, plan, executable/human tasks and linked artifacts at `ac964e33e22e05909140c278856d40022f9e35bf`, including the exact operative amendments in `plan.md`. Reviewed identities: specification SHA-256 `d50625bc21530b004165baee4744d661476e0582a050334df351198551494652`, plan `ba547e055361a9de380c446df9e6ac1858b35027b48451bad2787d00eba1b895`, human tasks `753f9f036b8b97bd1c6f045b0dc5403a6721c7afc9e7acfc7d44b5e81293a806`, executable tasks `95958a03ee94c632bb4971ae0e7fceeec83d00578d45ece9c45a1c90d5edca9f`.
+
+Both final correctness and simplicity reviews, including the targeted Phoenix and FR-017/FR-018 follow-ups, returned zero remaining findings. Dependency validators, read-only intake and whitespace checks passed. The known pre-existing static capitalization failure remains a required T001 correction; runtime behavior, actual captures and final skill-diff approval were not demonstrated by planning.
+
+Authority starts sequential coordinator preflight and execution with `/home/dev/.paseo/worktrees/0zfm1a0e/boring-eel/.pi/workflow-executor.json` unchanged: Terra/medium workers, explicit Sol/medium implementation fallback and fresh Sol/medium reviewers. It includes the scoped implementation, exact operative amendments, ordinary local dependency setup and Phoenix setup/export/capture when the applicable tasks and privacy prerequisites are reached. Initial, corrective and resumed work consume this approval for unchanged scope without repeat policy questions.
+
+The actual T019 tracker-operation gate and genuine introduced external/paid/security/data boundaries remain. No cloud monitoring, push, PR, unrelated service shutdown or retained-data deletion is authorized. Changed global capabilities require the existing fresh Paseo-session handoff before affected reliance, not automatic reload/restart. DoD remains pending until actual required functional evidence and explicit owner approval of the complete actual skill diff; that skill approval is separate from overall delivery acceptance and closure authority.
+
+Only status, this approval record and its shared-context link were added after the approved snapshot; requirements, task outcomes, dependencies, owned paths, checks, gates and the exact operative amendments are unchanged. The executable task input remains byte-identical. This record is not approval of unseen implementation or a claim of delivered acceptance.
