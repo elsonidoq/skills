@@ -50,7 +50,12 @@ documentation owners and indexes exist.
 - Verify a durable claim against its primary artifact: code, configuration, schema, generator output, or external source explicitly configured by the repository. Never record an unverified claim as current truth.
 - Do not write credentials, tokens, personal data, or sensitive payloads. Use redacted placeholders such as `$SERVICE_TOKEN`.
 - Do not execute deployment procedures. Do not invent deployment commands, rollback steps, or environment state. Record an unknown or verification gap instead.
-- Git owns changelogs, completed-work summaries, file-and-line inventories, and plan/task completion metadata. Do not add them to docs, issues, deployment steps, or memory.
+- Git owns changelogs, file-and-line inventories and plan/task completion metadata; do not
+  duplicate those as routine closeout bookkeeping. For issue-linked delivery, publish the
+  meaningful executive result, verification, limits, review focus, exact presented commit,
+  owner feedback/correction links and acceptance trace in the delivery issue and current
+  owner chat. This does not authorize routine inventories in memory/docs, automatic RCA,
+  skill changes, PRs or unrelated tracker writes.
 
 ## Step 1: Discover Existing Owners
 
@@ -183,6 +188,30 @@ project retention requirement. Completed workflow databases, transcripts, screen
 reports do not require an archive merely because they exist. Retain their still-required facts in
 existing authoritative owners, not a duplicate session summary. This distinction grants no deletion
 permission and does not waive paid-data, failure-evidence or other explicit retention requirements.
+
+## Issue-linked delivery
+
+After actual implementation, specified checks, focused checkpoints and fresh independent
+review, use `track-open-issue` for the associated qualified issue and operation-scoped
+tracker authority. Present the same meaningful executive text in the issue and current owner
+chat: result and important changes, actual verification and limits, review focus, exact reviewed
+commit, attributable task/repair links, unrelated range context and acceptance status. Distinguish
+internal completion from awaiting explicit owner acceptance. Do not treat a whole commit range
+as attributable without inspection.
+
+If real feedback occurs, link corrections by purpose: approved implementation/internal-review
+fix, owner-review correction, or new/changed requirement. Renew applicable approval for new
+requirements; after correction and applicable checks/review, present the new exact reviewed SHA.
+Acceptance of an earlier revision is not acceptance of that revision. Retain the actual feedback,
+correction links and explicit acceptance trace. Close only after explicit acceptance of the
+presented revision and separate operation-scoped closure authority; read back the closure.
+
+Inspect uncertain publication or readback before retry. If only issue or chat publication
+succeeded, report the partial result and retry only the missing operation after inspection.
+Missing tracker capability or authority defers the affected operation with a corrective action;
+it does not prevent an authorized chat report. Unobserved feedback, acceptance and closure are
+NOT VERIFIED, not a reason to manufacture them. No automatic RCA, skill edit, PR or unrelated
+issue change follows delivery or acceptance.
 
 ## Workflow history at source integration
 

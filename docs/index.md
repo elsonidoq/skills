@@ -23,7 +23,7 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Project-local technical gotchas and explicit future-directed owner guidance | [Memory Handling](../skills/memory-handling/SKILL.md); one associated project index carries both kinds with selective retrieval and explicit-feedback authority |
 | Mandatory retained-task commit/checkpoint policy | [Task Commit Contract](../skills/memory-handling/references/task-commit-contract.md); consumer role text links this single owner |
 | Context-first implementation recovery | [Coordinator recovery contract](../skills/coordinate-implementation/SKILL.md#recover-context); summary/recent context then selective artifact/Git/check/runtime reconstruction, no automatic STATE writes |
-| Completed changes, commit history and inventories | Git history; do not duplicate these as closeout summaries |
+| Completed changes, commit history and inventories | Git history; do not duplicate routine inventories. Issue-linked delivery's meaningful executive result and acceptance trace belong in the delivery issue and current owner chat via [finish-session](../skills/finish-session/SKILL.md#issue-linked-delivery). |
 | Coordinate Implementation executable operation and focused Git safety | [Runtime operating guide](coordinate-implementation.md); optional explicit runtime setup, thin executable interface |
 | Current task progress, historical SQLite and SDK interfaces | [Runtime schema owner](coordinate-implementation-schema.md) |
 | Local read-only workflow monitor package preparation, launch, rollback, correction lookup, HTTP boundary, and mockup-first UI approval rule | [Workflow monitor README](../workflow_monitor/README.md) |

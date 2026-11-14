@@ -56,6 +56,29 @@ class IssueAssociationWalkthroughTests(unittest.TestCase):
             self.assertIn('issue', (ROOT / path).read_text().lower(), path)
 
 
+class IssueDeliveryInstructionTests(unittest.TestCase):
+    """Local instruction walkthrough only; no tracker or owner actions."""
+
+    def test_reviewed_delivery_and_conditional_branches(self):
+        for path, heading in (
+            ('skills/finish-session/SKILL.md', '## Issue-linked delivery'),
+            ('skills/track-open-issue/SKILL.md', '## Reviewed issue-linked delivery'),
+        ):
+            body = ' '.join(checker.section((ROOT / path).read_text(), heading).split())
+            for phrase in ('same meaningful executive text', 'verification and limits',
+                           'review focus', 'exact reviewed commit', 'attributable task/repair links',
+                           'unrelated range context', 'new exact reviewed SHA',
+                           'new requirements', 'operation-scoped closure authority',
+                           'partial result', 'missing operation', 'NOT VERIFIED'):
+                with self.subTest(path=path, phrase=phrase):
+                    self.assertIn(phrase.lower(), body.lower())
+            self.assertIn('acceptance of an earlier', body.lower())
+            self.assertIn('explicit acceptance of the presented revision', body.lower())
+            self.assertIn('read back', body.lower())
+            self.assertRegex(body.lower(), r'missing (?:tracker )?capability or authority')
+            self.assertIn('corrective action', body.lower())
+
+
 class PlanningCommitAuthorityTests(unittest.TestCase):
     """Static regression guard, not proof of runtime model compliance."""
 

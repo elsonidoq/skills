@@ -114,6 +114,31 @@ Once the label exists, include it in the issue creation operation:
 gh issue create --repo "$HOST/$OWNER/$REPO" --title "$title" --body-file "$body_file" --label 'AI generated'
 ```
 
+## Reviewed issue-linked delivery
+
+For an associated delivery issue, use the declared qualified target and existing capability and
+operation-scoped authority rules. After implementation, specified checks, checkpoints and fresh
+independent review, `finish-session` presents the same meaningful executive text in the issue
+and current owner chat: result and important changes, actual verification and limits, review
+focus, exact reviewed commit, attributable task/repair links, unrelated range context and
+acceptance status. Inspect attribution rather than claiming every commit in a range. Internal
+completion is not owner acceptance.
+
+Real feedback may lead to purpose-linked corrections: approved implementation/internal-review
+fix, owner-review correction, or new/changed requirement. New requirements renew applicable
+approval. After correction and applicable checks/review, present the new exact reviewed SHA;
+acceptance of an earlier SHA does not accept it. Preserve the feedback, correction links and
+actual explicit acceptance trace. Close only after explicit acceptance of the presented revision
+and current operation-scoped closure authority; independently read back the closure. Acceptance
+alone is not closure authority or permission for RCA, skill edits, PRs or unrelated issue changes.
+
+Read back publication effects. If publication or its response is uncertain, inspect the exact
+issue and relevant comments before retry; do not duplicate a possibly successful comment. If
+only issue or chat publication succeeds, report the partial result and retry only the missing
+operation after inspection. Missing capability or authority defers the affected tracker operation
+with a corrective action, not the authorized chat report. Unobserved feedback, acceptance and
+closure are NOT VERIFIED; never manufacture them as a delivery exercise.
+
 ## Create, scoped change, and state transitions
 
 Create only when there is current explicit issue-write authority for this target and no exact
