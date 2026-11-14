@@ -112,6 +112,47 @@ not a policy to insert into global/adopting-project skills. No pre-dispatch or r
 questions, new task/runtime state, viewer/tool, patch ledger/receipt, required patch file or
 fixture that simulates owner response. Existing natural feedback and NOT VERIFIED rules remain.
 
+#### Issue #44 human-verifiable functional evidence
+
+[FR-018](spec.md#functional-requirements)/[SC-009](spec.md#measurable-outcomes) and the
+[canonical functional-evidence contract](contracts/interfaces.md#issue-44-functional-evidence)
+require one small actual non-skill evidence package alongside the combined final skill patch;
+[the four guide steps](quickstart.md#human-inspectable-functional-evidence) govern delivery.
+Reuse readable actual public-CLI/Git demonstrations from T011/T013 in T017: dependency execution/
+checkpoints, pause/restart/actual reply consumption, explicitly authorized parallel work/accepted
+join and relevant real commits/results. Reuse actual helper checks for the other non-skill
+outcomes, closing composed gaps with the smallest shared run, not separate demos or a matrix.
+T019 supplies its existing bounded actual assessment results/links, not another browser scenario.
+
+T020 requires successive actual browser-rendered local Phoenix screenshots of useful hierarchy/
+progress during an evolving representative CLI run BEFORE root completion, not mockups or only
+an ended trace. The coordinator verifies existing browser rendering, capture, persistence and
+owner/reviewer access at that stage; a registered parent screenshot tool is not proven usable
+or worker-available. Ordinary coordinator capture assistance needs no per-screenshot approval,
+but missing capability is an actionable evidence gap, not browser-framework installation authority.
+T021 consumes that proof, adding only changed post-removal CLI/history observations.
+
+Resolve the project-owned durable directory once through normal coordinator setup:
+`${XDG_DATA_HOME:-$HOME/.local/share}/coherence/PROJECT_KEY/evidence/issue-44/`, separate from
+Phoenix data/credentials and outside disposable worktrees. The project maintainer owns access/
+recovery. Retain captures/results with their generating outcome and link its actual checkpoint/
+application revision, explicit persistent asset paths, actions/commands, expected/observed results,
+limits and reproduction/local URL access in the existing authorized issue/chat evidence trail.
+Verify assets can be opened after the session/worktree ends, not solely via /tmp or transient
+attachments. Do not add outside paths to runner ownership, assume SDK UTF-8 edit claims commit
+external binary screenshots, fake claims/edits or expand #28/#43. External-only capture makes no
+empty/evidence-only commit; actual source/config/necessary reproduction changes retain ordinary
+owned-path checkpoints. No new manifest, ledger, registry or required repository PNG copy.
+
+Use only approved metadata; exclude sensitive paths, credentials and private prompts/responses/
+errors. Disclose cropping/redaction without misrepresenting behavior; no unauthorized external
+publication or shutdown/cleanup. Label SDK fixture-provider runs as local-mechanism proof, not
+live model judgment; fabricate no owner reply/approval. Screenshots supplement required runtime/
+privacy/security/recovery checks. Missing actual proof is NOT RUN/UNAVAILABLE/FAIL with DoD
+unmet, never a pass from scheduled checks. The final owner skill-diff gate remains separate
+from functional evidence, overall acceptance and closure authority. This is issue-local guidance,
+not a new global skill policy; no new task, question, framework or human-response checker.
+
 ## Bounded outcomes
 
 - [ ] T001 Reconcile the runtime operative contracts
@@ -206,7 +247,11 @@ normal coordinator delivery; SC-002 → T005–T011/T017; SC-003 → T012/T013/T
 SC-004 → T014/T020/T021; SC-005 → T015/T019; SC-006 → T016/T017;
 SC-007 → applicable authority/checkpoint/review boundaries.
 FR-017/SC-008 → T001/T002/T003/T015/T016 skill contributions plus coordinator final skill-diff
-review and actual owner response, not an automatic code test. T018 is removed; IDs need not be contiguous.
+review and actual owner response, not an automatic code test.
+FR-018/SC-009 → shared T011/T013/T017 CLI/Git proof, bounded T019 assessment results,
+T020 coordinator-rendered evolving UI captures, T021 changed post-removal observations and
+coordinator final inspection/durable access; no automatic code-test or screenshot-only claim.
+T018 is removed; IDs need not be contiguous.
 
 Validate both task presentations and current read-only intake. Internal graph interfaces precede
 public cutover T011; concurrent composition is checked at T013, final local integration at T017.
