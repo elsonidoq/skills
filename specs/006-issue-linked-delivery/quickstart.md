@@ -137,6 +137,30 @@ delete databases, migrate history or close related issues as part of source reti
 relevant packaging/import/documentation callers after removal, retaining historical read access
 and acceptance limits. No runtime, local service, exporter or UI acceptance has run in this plan.
 
+## Human-inspectable functional evidence
+
+Follow the [single evidence contract](contracts/interfaces.md#issue-44-functional-evidence)
+within existing outcomes; no capture is authorized by this guide alone.
+
+1. Use the smallest composed execution/recovery demonstration above. Retain readable actual
+   CLI/Git output with exact application/review revisions, commands, expected/observed behavior
+   and limits. Reuse T011/T013 evidence in T017 where applicable; identify fixture-provider
+   limits honestly. Do not replace output with test totals or stage a human reply.
+2. During T020's actual local UI acceptance, the coordinator verifies its browser/capture tool
+   and takes successive rendered screenshots while the representative run is still evolving,
+   before the root ends. Explain the visible hierarchy/progress changes and any refresh limits.
+   T021 reuses that proof and checks changed post-removal CLI/history behavior; no repeat UI
+   ceremony unless changed state invalidates it. Privacy/wire checks remain prerequisites.
+3. Retain actual captures/results in the contract's durable project-owned local directory,
+   linked to the generating task checkpoint/revision in the existing evidence trail. Verify
+   the owner/reviewer can open them after the session/worktree ends. Record reproduction/local
+   access and sanitization, without credentials or private payloads. Do not presume arbitrary
+   screenshot binaries are automatically committed by runtime write/edit claims.
+4. Present the functional evidence alongside the complete skill patch at normal final review.
+   Missing evidence remains NOT RUN/UNAVAILABLE/FAIL with DoD unmet; neither screenshots nor
+   skill approval replace tests, overall acceptance or actual closure authority. T019's real
+   assessment evidence remains bounded by its existing scope and tracker permissions.
+
 ## Issue delivery and manual assessment
 
 Observe normal coordinator/finish-session delivery after actual checks and fresh independent

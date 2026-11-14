@@ -171,6 +171,56 @@ renew only affected approval; unrelated commits alone do not invalidate it. Skil
 not overall delivery acceptance or closure authority. Natural feedback, unobserved branches
 and the delivery/closure rules above remain intact.
 
+### Issue #44 functional evidence
+
+Supply one concise owner/reviewer-inspectable package of actual non-skill behavior with the
+final skill patch. Show actual browser-rendered local Phoenix captures at successive moments
+of an evolving representative CLI run **before root completion**, with hierarchy and progress;
+a mockup, generated image or only a finished trace is not a substitute. Readable actual CLI/
+terminal output must show dependency execution/checkpoints, pause/restart/actual reply,
+explicitly authorized parallel work/accepted join and relevant real Git commits/results.
+
+For each shared demonstration, state exact application and reviewed revisions, actions,
+expected/observed results and limits, reproduction commands and local URL/access instructions
+without secrets. Label actual SDK deterministic fixture-provider runs as local-mechanism proof,
+not live model judgment. Captures supplement required runtime/recovery/privacy/security tests;
+missing proof is NOT RUN, UNAVAILABLE or FAIL, never a pass from scheduled checks. Skill-diff
+approval, overall acceptance and closure authority stay distinct; no screenshot approval ritual.
+
+**Producer/consumer reuse:** T011's public CLI boundary supplies initial readable functional
+output; T013 supplies the authorized parallel/join extension. T017 consumes applicable evidence
+and closes composed execution/recovery gaps with the smallest shared run, not repeated task
+demos. T020 uses coordinator browser capture for the required real evolving local UI run;
+T021 consumes that proof before removal and supplies only changed post-removal CLI/history
+observations. T019 retains its actual assessment results/links under its existing tracker gate,
+not a forced extra browser scenario. No fifteen-task matrix, feature replay or new proof task.
+
+**Capture and retention:** Existing `docs/evidence/` subject directories establish an evidence
+convention, but inspected `host.mjs` write/edit hooks claim UTF-8 writes and `FocusedGit.checkpoint`
+selects claimed edit paths, not arbitrary external binary output. Do not assume a parent screenshot
+will enter a worker commit, fake an edit/claim, or expand #28/#43 transfer work. Select the existing
+project-owned durable local storage convention instead: a sibling `evidence/issue-44/` beneath
+`${XDG_DATA_HOME:-$HOME/.local/share}/coherence/PROJECT_KEY/`, outside disposable worktrees and
+separate from Phoenix database/credentials. The project maintainer owns these captures/results.
+Retain them with the generating outcome, linking its actual task checkpoint/application revision
+and explicit persistent asset paths in the existing issue/chat evidence trail. Reproducible source,
+configuration and any necessary test-script changes still use ordinary task-owned Git checkpoints;
+external-only captures create neither an empty nor an evidence-only commit.
+
+The parent reports registered `chrome-devtools_screenshot` with optional `filePath`. Use the
+existing parent/coordinator capture capability, not an assumed worker MCP tool. At capture time,
+verify the browser can render the local UI and persist actual screenshot bytes to the selected
+path (or copy its returned capture there), then verify owner/reviewer access. Registered tool
+presence is not proven usable browser/capture access; inability is an actionable evidence gap,
+not authority to install a browser framework. No browser or capture was run during planning.
+
+Use approved metadata only. Exclude sensitive paths, credentials and private prompts/responses/
+errors; disclose cropping/redaction without changing or fabricating behavior. Existing local
+storage ownership/recovery guidance must identify the actual evidence directory and how to reopen
+its assets after the session/worktree ends; concise existing issue/chat links describe access and
+observations, not a new manifest, registry or archive service. Do not rely only on transient tool
+attachments or `/tmp`, publish externally without authority, or force shutdown/cleanup.
+
 ## Manual assessment
 
 Entry: `/skill:assess-skill-improvements` in a host supporting normal skill invocation;

@@ -4,12 +4,12 @@ Apply [Parsimony and Actionable Checks](../../skills/planner/references/parsimon
 
 **Branch:** `plan-issue-44` | **Date:** 2026-11-13 | **Spec:** [spec.md](spec.md)
 
-**Input:** [Current specification](spec.md) at `328322831cc98a67d6ad77f4b70fae77a468c46b`,
-SHA-256 `6b04454ba77f58d8a82391a1b802e5c3a53c3db585a62ab3ca16f92d9dc3da05`.
+**Input:** [Current specification](spec.md) at `d42b45cbe1963de4a4a62d50756a2a3d0d08622e`,
+SHA-256 `d50625bc21530b004165baee4744d661476e0582a050334df351198551494652`.
 Issue: [github.com/elsonidoq/skills#44](https://github.com/elsonidoq/skills/issues/44).
 
-**Status:** Owner-required final skill-diff DoD alignment, retaining local Phoenix; not
-implementation or unseen final-task approval. The owner said “ok, update the plan to use local phoenix”, then
+**Status:** Owner-required functional-evidence DoD alignment, retaining skill-diff approval
+and local Phoenix; not implementation or unseen final-task approval. The owner said “ok, update the plan to use local phoenix”, then
 “ok. continue” after the parent explained finished-span export and unproven current
 incremental UI behavior. The parent inspected the then-current Phoenix source and its
 zero-finding affected review. This is authority to continue this exact correction without another
@@ -17,7 +17,9 @@ source-selection question. Original issue wording/approvals remain historical; t
 selection supersedes the monitoring destination only. Original installed SpecKit setup ran
 once; no rerun. The subsequent owner direction requires approval of the actual skill diff
 as part of this issue's DoD, not approval of unseen changes. Tasks remain owned by their
-separate producer.
+separate producer. The subsequent direction “I need human verifiable evidence, functional
+evidence, browser screenshots, etc” authorizes this bounded planning correction, not capture,
+implementation or unseen final approval.
 
 ## Summary
 
@@ -174,6 +176,14 @@ this final gate is pending. This is not duplicate technical consent or global sk
 Task producer: carry this linked context in the existing T001/T002/T003/T015/T016 skill-task
 acceptance and coordinator final review, preserving their authorized paths and the 20-task
 graph. Do not add per-task `manual_gates`, a pre-dispatch question, task ID or runtime state.
+
+[FR-018](spec.md#functional-requirements)/[SC-009](spec.md#measurable-outcomes) also require
+owner-inspectable actual functional evidence alongside the skill patch, not green totals
+alone. The [functional-evidence contract](contracts/interfaces.md#issue-44-functional-evidence)
+owns capture, durable access and shared producer/consumer scope; the
+[validation steps](quickstart.md#human-inspectable-functional-evidence) schedule it. Keep the
+20-task graph and only T019's executable tracker gate; no separate proof task, per-screenshot approval,
+browser framework or global verification rule. Missing required proof leaves DoD unmet.
 
 Manual assessment is one portable explicitly invoked skill, using existing issue reads,
 labels and approval routes, not a service or automatic acceptance hook. Its
