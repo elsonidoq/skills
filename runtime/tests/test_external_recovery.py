@@ -16,7 +16,7 @@ from test_resume import EXECUTOR
 
 
 class ExternalRecoveryTests(ProjectTest):
-    def fail_run(self, checks=None, gates=None):
+    def fail_run(self, checks=None, gates=None, *, consumer_first=False):
         project, calls = self.project, []
         class Adapter:
             def __init__(self, *_args, **_kwargs): self.saved_session = None
@@ -30,6 +30,8 @@ class ExternalRecoveryTests(ProjectTest):
             {'id': 'one', 'description': 'original semantic acceptance', 'owned_paths': ['owned.txt'],
              'gates': gates or [], 'checks': checks or [['/bin/sh', '-c', 'test "$(cat owned.txt)" = recovered']]},
             {'id': 'two', 'description': 'dependent', 'depends': ['one'], 'owned_paths': ['next.txt']}]}
+        if consumer_first:
+            contract['tasks'].reverse()
         for attempt in range(3):
             with Authority(project) as owner:
                 if attempt: owner.store.resume('run')
@@ -90,9 +92,13 @@ class ExternalRecoveryTests(ProjectTest):
             continuation = Engine(owner, 'run', self.contract, EXECUTOR, adapter=Healthy, resume=True,
                                   paid_scope={'agent_providers': ['fixture'], 'apis': []})
             with graph_saver(owner) as saver:
-                outcome = graph_recovery_action(continuation, task_graph(continuation, saver, review=True),
-                                                {'configurable': {'thread_id': 'run'}}, 'external',
-                                                transfer=transfer, owner_authorized=True)['result']
+                graph = task_graph(continuation, saver, review=True)
+                config = {'configurable': {'thread_id': 'run'}}
+                checkpoint = graph_recovery_action(continuation, graph, config, 'external',
+                                                   transfer=transfer, owner_authorized=True)
+                self.assertEqual(checkpoint['sha'], result['sha'])
+                self.assertEqual(calls, [])
+                outcome = graph.invoke(None, config, durability='sync')['result']
             self.assertEqual(outcome['status'], 'complete')
             self.assertEqual(owner.store.input('run')['executor'], EXECUTOR)
             reviewed = owner.store.db.execute(
@@ -179,8 +185,11 @@ class ExternalRecoveryTests(ProjectTest):
                             'paths': {'owned.txt': {'sha256': hashlib.sha256(b'recovered\n').hexdigest(), 'mode': 420}}}
                 with self.assertRaisesRegex(Blocked, 'owner authorization'):
                     graph_recovery_action(engine, graph, config, 'external', transfer=transfer)
-                result = graph_recovery_action(engine, graph, config, 'external', transfer=transfer, owner_authorized=True)
-                self.assertEqual(result['result']['status'], 'complete')
+                checkpoint = graph_recovery_action(engine, graph, config, 'external', transfer=transfer, owner_authorized=True)
+                self.assertEqual(checkpoint['paths'], ['owned.txt'])
+                self.assertEqual(calls, ['failed'])
+                self.assertEqual(graph.get_state(config).next, ('ready',))
+                self.assertEqual(graph.invoke(None, config, durability='sync')['result']['status'], 'complete')
         self.assertEqual(calls, ['failed', 'dependent', 'review'])
         self.assertEqual((project/'other.txt').read_text(), 'unrelated\n')
         self.assertEqual(git(project, 'show', 'HEAD:owned.txt'), b'recovered\n')
@@ -190,24 +199,50 @@ class ExternalRecoveryTests(ProjectTest):
         path = self.root / 'transfer.json'
         path.write_text(json.dumps(transfer))
         bridge = {key: value for key, value in os.environ.items() if not key.startswith('COHERENCE_PARENT_BRIDGE_')}
-        class Healthy:
-            def __init__(self, *_args, **_kwargs):
-                self.saved_session = self.opened_session = {'id': 'cli-dependent', 'file': '/fixture/cli-dependent'}
-            def prompt(self, _prompt, **kwargs):
-                if kwargs.get('read_only'):
-                    return '{"approved":true,"coverage":["transfer"],"coverage_gaps":[],"findings":[]}'
-                kwargs['claim']('next.txt')
-                (self_project / 'next.txt').write_text('next\n')
-                return 'dependent complete'
-        self_project = self.project
-        with patch.dict(os.environ, bridge, clear=True), patch.object(cli, 'PiAdapter', Healthy), contextlib.redirect_stdout(io.StringIO()) as output:
+        with patch.dict(os.environ, bridge, clear=True), \
+             patch.object(cli, 'PiAdapter', side_effect=AssertionError('recover-task must not dispatch a provider')) as adapter, \
+             contextlib.redirect_stdout(io.StringIO()) as output:
             self.assertEqual(cli.main(['recover-task', '--project', str(self.project), '--run', 'run', '--recovery', str(path)]), 2)
             self.assertEqual(cli.main(['recover-task', '--project', str(self.project), '--run', 'run', '--recovery', str(path), '--owner-authorized']), 0, output.getvalue())
+        adapter.assert_not_called()
+        self.assertFalse((self.project / 'next.txt').exists())
         self.assertNotIn(transfer['summary'], output.getvalue())
         status = cli.status(self.project, 'run')
         self.assertIn(transfer['invocation_id'], json.dumps(status))
         self.assertNotIn(transfer['diagnosis'], json.dumps(status))
         self.assertNotIn(transfer['summary'], json.dumps(status))
+
+    def test_cli_recovers_dependency_ready_task_before_earlier_consumer(self):
+        transfer = self.fail_run(consumer_first=True)
+        self.assertEqual([task['id'] for task in self.contract['tasks']], ['two', 'one'])
+        path = self.root / 'transfer.json'
+        path.write_text(json.dumps(transfer))
+        project, calls = self.project, []
+        class Healthy:
+            def __init__(self, *_args, **_kwargs):
+                self.saved_session = self.opened_session = {'id': 'dependency-ready', 'file': '/fixture/dependency-ready'}
+            def prompt(self, _prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    calls.append('review')
+                    return '{"approved":true,"coverage":["dependency-ready transfer"],"coverage_gaps":[],"findings":[]}'
+                calls.append('dependent')
+                self_test.assertEqual((project / 'owned.txt').read_text(), 'recovered\n')
+                kwargs['claim']('next.txt')
+                (project / 'next.txt').write_text('next\n')
+                return 'dependent complete'
+        self_test = self
+        bridge = {key: value for key, value in os.environ.items() if not key.startswith('COHERENCE_PARENT_BRIDGE_')}
+        with patch.dict(os.environ, bridge, clear=True), patch.object(cli, 'PiAdapter', Healthy), \
+             contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(cli.main(['recover-task', '--project', str(project), '--run', 'run',
+                                       '--recovery', str(path), '--owner-authorized']), 0, output.getvalue())
+            self.assertEqual(calls, [])
+            self.assertFalse((project / 'next.txt').exists())
+            self.assertEqual(cli.main(['resume', '--project', str(project), '--run', 'run']), 0, output.getvalue())
+        self.assertEqual(calls, ['dependent', 'review'])
+        self.assertEqual(self.calls, ['old'] * 3)
+        self.assertEqual(git(project, 'rev-list', '--count', self.base + '..HEAD').strip(), b'2')
+        self.assertEqual((project / 'other.txt').read_text(), 'unknown unrelated bytes\n')
 
     def test_manual_gate_denial_retains_uncommitted_recovery(self):
         transfer = self.fail_run(gates=['Required manual acceptance'])

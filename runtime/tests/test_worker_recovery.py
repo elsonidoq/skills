@@ -425,9 +425,13 @@ class WorkerRecoveryTests(ProjectTest):
                                   question=self.no_owner_question)
             if check_passes:
                 with graph_saver(owner) as saver:
-                    result = graph_recovery_action(continuation, task_graph(continuation, saver, review=True),
-                                                   {'configurable': {'thread_id': 'recovery'}}, 'external',
-                                                   transfer=transfer, owner_authorized=True)
+                    graph = task_graph(continuation, saver, review=True)
+                    config = {'configurable': {'thread_id': 'recovery'}}
+                    checkpoint = graph_recovery_action(continuation, graph, config, 'external',
+                                                       transfer=transfer, owner_authorized=True)
+                    self.assertEqual(checkpoint['paths'], ['owned.txt'])
+                    self.assertEqual(calls, [('worker', 'worker'), ('worker', 'strong')])
+                    result = graph.invoke(None, config, durability='sync')
                 self.assertEqual(result['result']['status'], 'complete')
                 self.assertEqual(result['checkpoints']['one']['paths'], ['owned.txt'])
                 self.assertEqual(calls, [('worker', 'worker'), ('worker', 'strong'),
