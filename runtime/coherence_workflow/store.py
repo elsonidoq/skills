@@ -8,6 +8,7 @@ from pathlib import Path, PurePosixPath
 import sqlite3
 import subprocess
 import tempfile
+import threading
 import uuid
 import time
 
@@ -139,9 +140,37 @@ class Authority:
     def __exit__(self, *exc): self.close()
 
 class Store:
+    @property
+    def db(self):
+        return getattr(self._connections, 'db', self._owner_db)
+
+    @db.setter
+    def db(self, value):
+        self._owner_db = value
+
+    @contextmanager
+    def thread_connection(self):
+        """Give a graph worker its own short-transaction SQLite connection.
+
+        The caller must leave this context after its worker settles. No transaction
+        may span an SDK call or wait; transaction() remains operation-local.
+        """
+        if hasattr(self._connections, 'db'):
+            yield self.db
+            return
+        connection = sqlite3.connect(self.path, isolation_level=None)
+        connection.row_factory = sqlite3.Row
+        self._connections.db = connection
+        try:
+            yield connection
+        finally:
+            del self._connections.db
+            connection.close()
+
     def __init__(self, path, authority):
         self.authority = authority
         self.path = Path(path)
+        self._connections = threading.local()
         self.db = sqlite3.connect(path, isolation_level=None)
         self.db.row_factory = sqlite3.Row
         # These progress tables neither deserialize nor settle legacy effects.

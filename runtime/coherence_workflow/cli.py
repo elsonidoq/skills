@@ -248,6 +248,7 @@ def main(argv=None):
         if command == 'start':
             sub.add_argument('--executor', help='JSON file with provider, model and effort; no manifest or binding proof')
             sub.add_argument('--run', default=None)
+            sub.add_argument('--parallel', action='store_true', help='explicitly direct disjoint dependency-ready worker waves; default sequential')
         if command in ('resume', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task'):
             sub.add_argument('--run', required=True)
         if command == 'resume':
@@ -353,7 +354,7 @@ def main(argv=None):
                       + '; created clean execution storage', file=sys.stderr)
             writer_entered = True
             engine = Engine(authority, run_id, contract, executor, adapter=PiAdapter,
-                            paid_scope=paid_scope, **({'question': question} if question else {}))
+                            paid_scope=paid_scope, parallel=args.parallel, **({'question': question} if question else {}))
             result = run_graph(engine)
             print(canonical(result))
         return 0

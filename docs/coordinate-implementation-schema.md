@@ -1,9 +1,9 @@
 # Coordinate Implementation schema and storage owner
 
 See the [operating guide](coordinate-implementation.md) for actual invocation and safety.
-The public CLI uses one LangGraph controller for sequential task/review transitions and
-interrupt/resume; standard file-backed SQLite graph checkpoints hold control state. Directed
-parallel waves remain later work. Existing private
+The public CLI uses one LangGraph controller for task/review transitions and interrupt/resume;
+execution is sequential by default. Standard file-backed SQLite graph checkpoints hold control
+state, including directed worker waves and their keyed results. Existing private
 operation history and actual Git/SDK observations support effect reconciliation, not automatic
 acceptance. One inherited worktree lock excludes competing controllers; explicitly owner-directed
 path-disjoint workers may overlap inside it, with sibling mutations quiescent for shared checks and
@@ -26,7 +26,18 @@ the run ID as the thread ID with synchronous durability. Start with `{}` and con
 latest checkpoint with `None`; do not use checkpoint time travel. The caller must configure
 LangGraph's recursion limit for the actual number of transitions, including corrections.
 
-The graph selects one dependency-ready task at a time. It records dispatch before the Pi
+The graph selects one dependency-ready task at a time unless original run authority records
+`parallel: true` from explicit start-time `--parallel` (parent `parallel: true`). Absent/false
+means sequential; resume restores the retained selection. Optional ownership/output regions
+select disjoint ready waves, not intake eligibility. Unknown/overlapping regions remain serial.
+Standard `Send` fanout writes invocation-keyed results into a reducer, then joins all siblings
+before serial checks/corrections/Git. Each branch uses a thread-local SQLite connection with
+operation-local transactions and a fresh distinct saved Pi context. Bookkeeping locks never span
+SDK/wait. Successful siblings checkpoint before a failed branch reaches the existing inspected
+recovery boundary; retained queue/results preserve unreleased work across reopen. Actual selected
+source/index facts and verified same-run focused commit parent/path facts reconcile advancement,
+not branch/control completion alone. No combined sibling commit or provider replay is inferred.
+The graph records dispatch before the Pi
 call, and records the returned result and selected effects before checks can consume them.
 A missing terminal result stops continuation for inspection, not redispatch. Required checks
 and focused Git intents remain in private operation history; a dependent task starts only
@@ -35,7 +46,7 @@ use this same graph. A settled Pi question reaches a standard LangGraph interrup
 invocation binds the actual resume answer. Status projects safe task/question IDs while private
 question/session/answer data stays in private storage. An unanswered pause returns `waiting` and
 retains the ordinary run projection `interrupted`, with error `waiting for owner answer`.
-No graph thread is synthesized from legacy rows. Parallel waves remain later work.
+No graph thread is synthesized from legacy rows.
 
 ## Task input
 
@@ -185,7 +196,7 @@ Task-worker recording has a closed, future-run-only invocation vocabulary. Each 
 run-scoped `invocation_id` at its real start and terminal return/failure, with `invocation_kind` of
 `task_worker` or `corrective_worker`. A corrective call names its exact selected predecessor and retains its
 ordered `correction_chain`. At task dispatch, `selected_input_checkpoints` records only the completed declared
-prerequisite checkpoints selected by the sequential runner: each value contains its checkpoint occurrence ID,
+prerequisite checkpoints selected by the controller: each value contains its checkpoint occurrence ID,
 task ID, producing invocation ID, and that producer's correction chain. A passed task checkpoint records the
 final producing invocation and chain, so a later task consumes an exact producer rather than a viewer-selected
 latest attempt. Failed/interrupted worker calls and the enclosing terminal boundary may name the explicit

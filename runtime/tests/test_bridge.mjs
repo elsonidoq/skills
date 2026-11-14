@@ -121,21 +121,25 @@ test('runner output stays off the parent RPC stdout channel', async () => {
   try {
     await fs.mkdir(path.join(root, 'scripts'));
     await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'),
-      '#!/bin/sh\nprintf "RUNNER-STDOUT\\n"\nprintf "RUNNER-STDERR\\n" >&2\n', {mode: 0o700});
+      '#!/bin/sh\nprintf "RUNNER-STDOUT\\n"\nprintf "RUNNER-STDERR %s\\n" "$*" >&2\n', {mode: 0o700});
     const code = `
       import bridge from ${JSON.stringify(bridgeModule)};
+      import assert from 'node:assert/strict';
       const tools = new Map();
       bridge({registerTool: tool => tools.set(tool.name, tool), getActiveTools: () => [...tools.keys()], on() {},
         sendMessage(message) { process.stdout.write(JSON.stringify({type: message.customType}) + '\\n'); }});
+      assert.equal(tools.get('coordinate_implementation_start').parameters.properties.parallel.type, 'boolean');
+      await assert.rejects(tools.get('coordinate_implementation_start').execute('start',
+        {resume: true, parallel: true, run: 'output-probe'}, undefined, undefined, {}), /start-only/);
       await tools.get('coordinate_implementation_start').execute('start',
-        {tasks: 'unused', executor: 'unused', run: 'output-probe'}, undefined, undefined,
+        {tasks: 'unused', executor: 'unused', run: 'output-probe', parallel: true}, undefined, undefined,
         {cwd: ${JSON.stringify(root)}, sessionManager: {getSessionId: () => 'output-parent'}});
     `;
     const {stdout, stderr} = await promisify(execFile)(process.execPath, ['--input-type=module', '-e', code]);
     assert.deepEqual(stdout.trim().split('\n').map(line => JSON.parse(line)),
       [{type: 'coordinate_implementation_complete'}]);
     assert.match(stderr, /RUNNER-STDOUT/);
-    assert.match(stderr, /RUNNER-STDERR/);
+    assert.match(stderr, /RUNNER-STDERR .*--parallel/);
   } finally { await fs.rm(root, {recursive: true, force: true}); }
 });
 

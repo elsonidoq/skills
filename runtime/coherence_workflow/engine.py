@@ -127,7 +127,8 @@ _ROUTINE_AUTHORITY = (
 
 
 class Engine:
-    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False, worker_recovery=None):
+    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False, worker_recovery=None, parallel=False):
+        self.parallel = parallel
         self.worker_recovery = worker_recovery
         if worker_recovery is not None:
             if (not resume or not isinstance(worker_recovery, dict)
@@ -155,6 +156,9 @@ class Engine:
         self.session_settlement_sequence = 0
         self.metric_artifact = None
         self.metric_invocation_ids = []
+        # Only bookkeeping is serialized. Never hold this across SDK calls/waits.
+        import threading
+        self.metric_lock = threading.Lock()
 
     @staticmethod
     def _snapshot(observation):
@@ -184,7 +188,11 @@ class Engine:
             return 'continued_same_task', selection.get('reason')
         return ('reused_from_earlier_task' if selection.get('session_id') else 'fresh', selection.get('reason'))
 
-    def _append_metric(self, worker, *, invocation_id, task_id, role, outcome, selection, continued=False,
+    def _append_metric(self, worker, **kwargs):
+        with self.metric_lock:
+            return self._append_metric_locked(worker, **kwargs)
+
+    def _append_metric_locked(self, worker, *, invocation_id, task_id, role, outcome, selection, continued=False,
                        expected_session_id=None, fixing_round=None, review_ordinal=None):
         """Best-effort terminal-call JSONL; never changes the execution result."""
         self.metric_invocation_ids.append(invocation_id)

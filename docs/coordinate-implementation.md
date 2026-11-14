@@ -1,10 +1,10 @@
 # Coordinate Implementation operating guide
 
-The existing entry uses one LangGraph controller for sequential tasks, checks, focused Git
+The existing entry uses one LangGraph controller for tasks (sequential by default), checks, focused Git
 checkpoints, independent review, scoped repair and durable question resume. Pi SDK tools perform
 worker operations. Standard file-backed SQLite checkpoints hold graph control state; private operation
-history and actual Git/SDK observations reconcile effects, not automatic acceptance. Directed parallel
-waves remain later work. Historical non-graph runs remain readable and use an explicitly selected
+history and actual Git/SDK observations reconcile effects, not automatic acceptance. Explicitly directed
+path-disjoint worker waves use standard LangGraph fanout and keyed reduction. Historical non-graph runs remain readable and use an explicitly selected
 compatible runtime for inspected continuation, never silent conversion or replay. The six task-linter checks remain the entire startup linter; no extra
 graph/host/custody/session/evidence admission rules. Historical approvals and rows are not rewritten.
 
@@ -149,7 +149,33 @@ No automatic installation, credential refresh, global reconfiguration or model s
 5. Declared `depends` references exist.
 6. Dependencies have no cycle.
 
-Dependencies determine execution order; sequential is the default and forward references are valid. Empty work reports
+Dependencies determine execution order; sequential is the default and forward references are valid.
+Under actual owner concurrency direction, use `start --parallel` or parent
+`coordinate_implementation_start` with `parallel: true`. This is a start-only selection retained
+in original run authority; resume uses it without a new flag. Feature approval alone is not
+permission to launch real agents concurrently.
+
+The controller selects a disjoint dependency-ready wave from optional `owned_paths` and
+`generated_outputs`. Overlapping paths (including parent/child regions), shared outputs or
+unknown ownership keep affected work sequential; they are not new intake failures. No worktree
+is required. Each wave worker uses a distinct fresh saved Pi context and a thread-owned SQLite
+connection with short transactions; no transaction or bookkeeping lock spans an SDK call/wait.
+All siblings settle before serial checks, corrections, diff, stage and one focused commit per
+task. Dependents wait for accepted producer checkpoints. A failed branch retains successful
+sibling effects/checkpoints; inspected recovery continues only unfinished work. Source/index or
+unexplained HEAD drift stops affected continuation, never authorizes a provider/Git replay.
+Questions are presented serially after siblings settle.
+
+Local-mechanism proof (real SDK fixture provider, temporary Git; not live-model judgment):
+`PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_graph_concurrency.py'`.
+The `T013 FIXTURE-ONLY CLI/GIT EVIDENCE` output shows actual public start/history, overlapping
+workers, quiescent checks/Git, focused commit IDs and accepted join. Capture that output through
+normal coordinator assistance in the already selected issue evidence directory; temporary Git
+repositories are disposed after the test, so their commit IDs are observations, not retained
+application revisions. Associate the capture with the actual reviewed source checkpoint. Do not
+claim live-model judgment, durable capture or owner acceptance from the fixture result.
+
+Empty work reports
 `no tasks` before storage, locks or SDK launch. No mandatory check, path list, approval envelope,
 manifest, catalogue, graph, original session, cgroup or provenance record.
 

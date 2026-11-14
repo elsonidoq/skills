@@ -5,6 +5,7 @@ sync durability. State should contain control facts and references, not payloads
 """
 from contextlib import contextmanager
 import os
+from pathlib import PurePosixPath
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 
@@ -28,13 +29,13 @@ def graph_saver(authority):
         yield saver
 
 
-from typing import TypedDict
+from typing import Annotated, TypedDict
 import json
 import uuid
 
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
-from langgraph.types import Command, interrupt
+from langgraph.types import Command, Send, interrupt
 
 from .engine import (Engine, _COMPLETION_REPORTING, _DECISION_CONSTRAINTS,
                      _IMPLEMENTATION_AUTHORITY, _ROUTINE_AUTHORITY, _safe_error)
@@ -49,6 +50,10 @@ import re
 from .git_effects import _commit_result
 from .metric_artifacts import artifact_relative
 from .verification import CheckFailure, manual_gates, run_checks
+
+
+def _merge_results(left, right):
+    return {**left, **right}
 
 
 class TaskState(TypedDict, total=False):
@@ -70,30 +75,92 @@ class TaskState(TypedDict, total=False):
     answer: str
     question_invocation: str
     recovery: dict
+    wave: list
+    wave_pending: list
+    wave_results: Annotated[dict, _merge_results]
+    in_wave: bool
+    wave_error: str
+
+
+def _wave_paths(task):
+    """Return declared mutation regions, or None when they cannot be coordinated.
+
+    Ownership is optional input, not admission. Unknown or unsafe regions simply
+    mean the task cannot share a wave. Generated outputs are mutation regions too.
+    """
+    owned = task.get('owned_paths')
+    outputs = task.get('generated_outputs', [])
+    if not isinstance(owned, list) or not owned or not isinstance(outputs, list):
+        return None
+    result = []
+    for raw in owned + outputs:
+        if not isinstance(raw, str) or not raw or '\\' in raw or '\x00' in raw:
+            return None
+        parts = raw.rstrip('/').split('/')
+        if not parts or any(part in ('', '.', '..') for part in parts):
+            return None
+        path = PurePosixPath(*parts)
+        if path.is_absolute():
+            return None
+        result.append(path)
+    return result
+
+
+def _ready_wave(ready):
+    """Choose an ordered disjoint wave without changing task intake semantics."""
+    if not ready:
+        return []
+    selected = [ready[0]]
+    regions = _wave_paths(ready[0])
+    if regions is None:
+        return selected
+    for task in ready[1:]:
+        paths = _wave_paths(task)
+        if paths is None or any(a == b or a in b.parents or b in a.parents for a in regions for b in paths):
+            continue
+        selected.append(task)
+        regions.extend(paths)
+    return selected
 
 
 def _head_matches(engine, expected):
-    """Allow only the verified same-run metric commit after a retained effect head."""
+    """Allow only verified same-run focused checkpoints and the metric commit."""
     store, project = engine.authority.store, engine.authority.project
     current = git(project, 'rev-parse', 'HEAD').decode().strip()
     if current == expected:
         return True
+    # Serial focused sibling checkpoints can advance HEAD after a worker settles.
+    # Verify actual Git parent/path facts, not just graph branch completion.
+    accepted = store.completed_checkpoints(engine.run)
+    cursor = expected
+    by_parent = {item.get('parent'): item for item in accepted.values() if not item.get('no_change')}
+    while cursor in by_parent:
+        item = by_parent.pop(cursor)
+        sha = item['sha']
+        parents = git(project, 'rev-list', '--parents', '-n', '1', sha).decode().split()
+        paths = set(filter(None, git(project, 'diff-tree', '--no-commit-id', '--no-renames',
+                                    '--name-only', '-r', '-z', sha).decode().split('\0')))
+        if parents != [sha, cursor] or not paths or not paths <= set(item['paths']):
+            return False
+        cursor = sha
+        if cursor == current:
+            return True
     for row in store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND kind='metric_artifact' ORDER BY seq DESC", (engine.run,)):
         facts = json.loads(row['details'])
         if row['state'] == 'not_created' and facts == {'status': 'not_created'}:
             continue
         if (row['state'] not in ('committed', 'committed_after_reported_error')
                 or facts.get('status') != row['state'] or facts.get('no_change') is not False
-                or facts.get('sha') != current or facts.get('parent') != expected
+                or facts.get('sha') != current or facts.get('parent') != cursor
                 or facts.get('path') != artifact_relative(engine.run)):
             return False
-        _commit_result(project, current, expected, artifact_relative(engine.run))
+        _commit_result(project, current, cursor, artifact_relative(engine.run))
         return True
     return False
 
 
 def task_graph(engine, saver, *, review=False):
-    """Compile the internal sequential task boundary, optionally including review.
+    """Compile the task boundary with optional directed waves and independent review.
 
     The caller starts the run in Store and uses its run ID as the graph thread ID.
     Invoke with {} for a new thread, or None to resume its latest checkpoint,
@@ -155,12 +222,25 @@ def task_graph(engine, saver, *, review=False):
         validate(config)
         _check_unfinished_escalation(store, run)
         complete = store.completed_checkpoints(run)
+        pending = list(state.get('wave_pending') or [])
+        while pending:
+            item = pending.pop(0)
+            if item['task_id'] not in complete:
+                return {**item, 'wave_pending': pending, 'checkpoints': complete}
         remaining = [task for task in engine.contract['tasks'] if task['id'] not in complete]
-        if not remaining:
-            return {'checkpoints': complete, 'next_node': 'review_route' if review else 'end'}
-        task = next((item for item in remaining if all(dep in complete for dep in item.get('depends', []))), None)
-        if task is None:
+        eligible = [task for task in remaining if all(dep in complete for dep in task.get('depends', []))]
+        wave = _ready_wave(eligible) if engine.parallel else eligible[:1]
+        if len(wave) > 1:
+            prepared = [prepare(task, complete, in_wave=True) for task in wave]
+            return {'wave': prepared, 'next_node': 'fanout', 'wave_pending': []}
+        return prepare(wave[0], complete) if wave else no_ready(remaining, complete)
+
+    def no_ready(remaining, complete):
+        if remaining:
             raise Blocked('no dependency-ready task; inspect task dependencies and retained checkpoints')
+        return {'checkpoints': complete, 'next_node': 'review_route' if review else 'end'}
+
+    def prepare(task, complete, *, in_wave=False):
         baseline = git(project, 'rev-parse', 'HEAD').decode().strip()
         store.task(run, task['id'], 'running', baseline)
         preparation = recorder.occurrence()
@@ -189,10 +269,13 @@ def task_graph(engine, saver, *, review=False):
         recorder.emit(preparation, 'prepare', 'passed', task_id=task['id'])
         return {'task_id': task['id'], 'baseline': baseline, 'invocation_id': uuid.uuid4().hex,
                 'chain': [], 'prompt_kind': 'initial', 'correction_id': '',
-                'session': None, 'recovery': None, 'checkpoints': complete, 'next_node': 'worker'}
+                'session': None, 'recovery': None, 'checkpoints': complete, 'next_node': 'worker',
+                'in_wave': in_wave, 'wave_error': None}
 
     def worker(state, config: RunnableConfig):
         validate(config)
+        if state.get('wave_error'):
+            raise Blocked('directed wave worker stopped; inspect its retained invocation before recovery: ' + state['wave_error'])
         task = tasks[state['task_id']]
         invocation = state['invocation_id']
         events = [(status, facts) for status, facts in history(task['id'], 'worker_invocation')
@@ -228,9 +311,11 @@ def task_graph(engine, saver, *, review=False):
             adapter.saved_session = state['session']
         role = 'fixing_worker' if isinstance(engine.contract.get('monitor'), dict) and engine.contract['monitor'].get('correction_of') else 'worker'
         request, reuse_key = engine._session_request(task, role)
-        selection = select_session(request, engine.session_candidates)
+        # A directed wave starts distinct fresh contexts. Reuse remains available
+        # at sequential task boundaries; two active branches never select one context.
+        selection = select_session(request, [] if state.get('in_wave') else engine.session_candidates)
         if state['prompt_kind'] == 'initial':
-            selected = next((candidate for candidate in engine.session_candidates
+            selected = next((candidate for candidate in ([] if state.get('in_wave') else engine.session_candidates)
                              if candidate['id'] == selection['session_id']), None)
             if selected:
                 adapter.saved_session = selected['saved_session']
@@ -507,15 +592,49 @@ def task_graph(engine, saver, *, review=False):
                 raise
         return guarded
 
+    def connected(node):
+        def call(state, config: RunnableConfig):
+            with store.thread_connection():
+                return node(state, config)
+        return call
+
+    def wave_worker(state, config: RunnableConfig):
+        # Return terminal failure as data so all siblings settle before any shared
+        # checks or Git. An uncertain/failed provider call is never retried here.
+        try:
+            result = escalation_guard(worker)(state, config)
+        except Exception as exc:
+            # Preserve the stop even if failure preceded a dispatch/terminal row.
+            # Recovery must inspect operation history, never repeat this call.
+            result = {'next_node': 'worker', 'wave_error': _safe_error(exc)}
+        item = {**state, **result}
+        return {'wave_results': {state['invocation_id']: item}}
+
+    def wave_join(state, config: RunnableConfig):
+        validate(config)
+        results = [state['wave_results'][item['invocation_id']] for item in state['wave']]
+        # Checkpoint successful siblings even when another branch failed. Keep the
+        # failed exact invocation at the ordinary inspected worker recovery boundary.
+        results.sort(key=lambda item: item['next_node'] != 'checks')
+        return {'wave_pending': results, 'wave': [], 'next_node': 'ready'}
+
     builder = StateGraph(TaskState)
+    builder.add_node('wave_worker', connected(wave_worker))
+    builder.add_node('wave_join', connected(wave_join))
+    builder.add_edge('wave_worker', 'wave_join')
+    builder.add_edge('wave_join', 'ready')
     for name, node in (('ready', ready), ('worker', worker), ('wait', wait), ('checks', checks), ('checkpoint', checkpoint)):
-        builder.add_node(name, escalation_guard(node) if name in ('worker', 'checks', 'checkpoint') else node)
+        builder.add_node(name, connected(escalation_guard(node) if name in ('worker', 'checks', 'checkpoint') else node))
     builder.add_edge(START, 'ready')
-    ready_edges = {'worker': 'worker', 'end': END}
+    ready_edges = {'worker': 'worker', 'checks': 'checks', 'wait': 'wait', 'end': END}
     if review:
         _add_review_nodes(builder, engine, validate)
         ready_edges['review_route'] = 'review_route'
-    builder.add_conditional_edges('ready', lambda state: state['next_node'], ready_edges)
+    def route_ready(state):
+        if state['next_node'] == 'fanout':
+            return [Send('wave_worker', item) for item in state['wave']]
+        return ready_edges[state['next_node']]
+    builder.add_conditional_edges('ready', route_ready)
     builder.add_conditional_edges('worker', lambda state: state['next_node'], {'checks': 'checks', 'wait': 'wait'})
     builder.add_edge('wait', 'worker')
     builder.add_conditional_edges('checks', lambda state: state['next_node'], {'worker': 'worker', 'checkpoint': 'checkpoint'})
@@ -607,7 +726,7 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, tran
     chain = list(state.get('chain') or [])
     if predecessor not in chain:
         chain.append(predecessor)
-    graph.update_state(config, {'prompt_kind': 'recovery', 'recovery': recovery, 'chain': chain,
+    graph.update_state(config, {'prompt_kind': 'recovery', 'recovery': recovery, 'chain': chain, 'wave_error': None,
                                'invocation_id': uuid.uuid4().hex,
                                'session': failure.get('session') if action == 'continue' else None,
                                'next_node': 'worker'}, as_node='ready')
@@ -636,7 +755,7 @@ def answer_graph_question(graph, config, question):
 
 
 def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_authorized=False, scope=None):
-    """Run the public sequential graph against its retained input and checkpoint."""
+    """Run the public graph against its retained input and checkpoint."""
     from .monitoring import descriptor
     from .processes import process_identity
 
@@ -648,6 +767,7 @@ def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_autho
             raise Blocked('run is not a retained LangGraph thread; use retained revision 4c1725ebded2f89dec6933b8d193bf34997c62ce with its compatible environment and original arguments, without conversion')
         if saved['contract'] != engine.contract or saved['executor'] != engine.input_executor:
             raise Blocked('graph run inputs differ from retained contract or executor; restore the original run inputs before continuation')
+        engine.parallel = authority.get('parallel', False)
         if authority.get('paid_scope') != engine.paid_scope:
             raise Blocked('graph paid scope differs from retained launch; restore the original scope')
     if not engine.resume:
@@ -661,7 +781,7 @@ def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_autho
         except Blocked:
             raise Blocked('review_base must resolve to an ancestor of the run baseline') from None
         store.start(run, baseline, contract=engine.contract, executor=engine.input_executor,
-                    authority={'backend': 'langgraph-v1', 'paid_scope': engine.paid_scope,
+                    authority={'backend': 'langgraph-v1', 'paid_scope': engine.paid_scope, 'parallel': engine.parallel,
                                'routine_authority': True, 'review_policy': 'owner-pair-v1'},
                     review_base=review_base)
         try:

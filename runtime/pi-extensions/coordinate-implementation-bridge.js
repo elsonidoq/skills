@@ -12,6 +12,7 @@ const startParameters = {
   properties: {
     tasks: {type: 'string'}, executor: {type: 'string'}, run: {type: 'string'}, resume: {type: 'boolean'},
     recovery_action: {type: 'string', enum: ['continue', 'fresh', 'escalate']}, diagnosis: {type: 'string'},
+    parallel: {type: 'boolean'},
   }, required: ['run'],
 };
 const replyParameters = {
@@ -173,6 +174,7 @@ export default function coordinateImplementationBridge(pi) {
     parameters: startParameters, executionMode: 'sequential',
     async execute(_id, params, signal, _update, ctx) {
       if (active) throw new Error('coordinate implementation bridge already has an active run');
+      if (params.resume && params.parallel !== undefined) throw new Error('parallel is start-only; resume retains original direction');
       if ((params.recovery_action || params.diagnosis) && (!params.resume || !params.recovery_action || !params.diagnosis))
         throw new Error('worker recovery requires resume, recovery_action and diagnosis');
       if (!params.resume && (typeof params.tasks !== 'string' || typeof params.executor !== 'string'))
@@ -227,6 +229,7 @@ export default function coordinateImplementationBridge(pi) {
           ...(params.recovery_action ? ['--recovery-action', params.recovery_action, '--diagnosis', params.diagnosis] : []),
         ] : [
           'start', '--project', ctx.cwd, '--tasks', params.tasks, '--executor', params.executor, '--run', params.run,
+          ...(params.parallel ? ['--parallel'] : []),
         ], {cwd: ctx.cwd, stdio: ['ignore', 2, 2], env: {...process.env,
           COHERENCE_PARENT_BRIDGE_SOCKET: endpoint, COHERENCE_PARENT_BRIDGE_TOKEN: token,
           COHERENCE_PARENT_BRIDGE_SESSION: session, COHERENCE_PARENT_BRIDGE_RUN: params.run}});
