@@ -9,6 +9,7 @@ from unittest.mock import patch
 from coherence_workflow import cli
 from coherence_workflow.cli import status
 from coherence_workflow.engine import Engine
+from coherence_workflow.graph import graph_saver, task_graph
 from coherence_workflow.intake import admit
 from coherence_workflow.metric_artifacts import artifact_relative
 from coherence_workflow.monitoring import Recorder, descriptor
@@ -1221,6 +1222,46 @@ class BoundedChainTests(ProjectTest):
             ('fixer', 'approved'), ('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'approved')])
         self.assertEqual(len(grants), 2)
         self.assertTrue(all(grant['original_scope'] == scope for grant in grants))
+
+    def test_graph_refreshes_stale_pair_before_new_scoped_repair(self):
+        contract = {'tasks': []}
+        calls = []
+        class Adapter:
+            def __init__(self, *_args, **_kwargs):
+                self.saved_session = None
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    calls.append('review')
+                    return json.dumps({'approved': len(calls) > 1, 'coverage': ['target examined'], 'coverage_gaps': [],
+                        'findings': ['owned.txt:1 - current target defect'] if len(calls) == 1 else []})
+                calls.append('fixer')
+                return 'scoped repair'
+        with Authority(self.project) as owner:
+            store = owner.store
+            store.start('graph-refresh', self.base, contract=contract, executor=EXECUTOR,
+                        authority={'review_policy': 'owner-pair-v1'}, review_base=self.base)
+            OwnerPairPrimitiveTests._rejection(self, store, 'graph-refresh')
+            scope = store.review_scope('graph-refresh')
+            store.authorize_owner_pair('graph-refresh', 'stale', rejecting_execution_id='review-2', review_base=self.base,
+                review_head=self.base, original_scope=scope, fixer_execution_id='stale-fix', reviewer_execution_id='stale-review')
+            store.authorize_routine_review_continuation('graph-refresh', scope)
+            self.project.joinpath('owned.txt').write_text('intervening change\n')
+            git(self.project, 'add', '--', 'owned.txt')
+            git(self.project, 'commit', '-qm', 'intervening correction')
+            current = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+            store.finish('graph-refresh', 'failed', self.base, 'target drifted')
+            engine = Engine(owner, 'graph-refresh', contract, EXECUTOR, adapter=Adapter, resume=True)
+            with graph_saver(owner) as saver:
+                result = task_graph(engine, saver, review=True).invoke({'review_action': 'refresh_target'},
+                    {'configurable': {'thread_id': 'graph-refresh'}, 'recursion_limit': 40}, durability='sync')
+            chain = store.review_chain('graph-refresh', private=True)['executions']
+            self.assertEqual(result['result']['status'], 'complete')
+            self.assertEqual(chain[3]['references']['head'], current)
+            self.assertEqual(chain[3]['trigger_execution_id'], 'review-2')
+            self.assertEqual(chain[4]['trigger_execution_id'], chain[3]['execution_id'])
+            self.assertEqual(store.owner_pair_for_rejection('graph-refresh', rejecting_execution_id='review-2',
+                review_base=self.base, review_head=self.base, original_scope=scope)['state'], 'authorized')
+        self.assertEqual(calls, ['review', 'fixer', 'review'])
 
     def test_refreshes_stale_unreserved_pair_with_current_full_range_before_routine_resume(self):
         contract = {'tasks': []}

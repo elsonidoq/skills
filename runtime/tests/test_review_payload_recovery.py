@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
+from coherence_workflow.graph import graph_saver, task_graph
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 
@@ -58,6 +59,32 @@ class ReviewPayloadRecoveryTests(ProjectTest):
             chain = owner.store.review_chain('run', private=True)
             self.assertEqual([x['state'] for x in chain['executions']], ['rejected', 'approved', 'failed'])
         return adapter
+
+    def test_graph_compact_recovery_uses_inspected_cause_without_replaying_work(self):
+        adapter = self.adapter()
+        evidence = Engine._review_check_evidence
+        def old_evidence(engine, **_kwargs):
+            return evidence(engine)
+        config = {'configurable': {'thread_id': 'graph-payload'}}
+        with Authority(self.project) as owner:
+            owner.store.start('graph-payload', self.base, contract=self.contract, executor=EXECUTOR,
+                authority={'review_policy': 'owner-pair-v1', 'routine_authority': True}, review_base=self.base)
+            engine = Engine(owner, 'graph-payload', self.contract, EXECUTOR, adapter=adapter)
+            with graph_saver(owner) as saver:
+                with patch.object(Engine, '_review_check_evidence', old_evidence):
+                    with self.assertRaisesRegex(Blocked, 'string too long'):
+                        task_graph(engine, saver, review=True).invoke({}, config, durability='sync')
+        with Authority(self.project) as owner:
+            engine = Engine(owner, 'graph-payload', self.contract, EXECUTOR, adapter=adapter, resume=True)
+            with graph_saver(owner) as saver:
+                result = task_graph(engine, saver, review=True).invoke(None, config, durability='sync')
+            chain = owner.store.review_chain('graph-payload', private=True)
+            attempts = [row['state'] for row in owner.store.db.execute(
+                'select state from execution_review_attempts where run_id=? and execution_id=? order by seq',
+                ('graph-payload', chain['executions'][-1]['execution_id']))]
+        self.assertEqual(result['result']['status'], 'complete')
+        self.assertEqual(self.calls, ['worker', 'review', 'fixer', 'review', 'review'])
+        self.assertEqual(attempts, ['dispatched', 'failed', 'dispatched', 'approved'])
 
     def test_compact_recovery_consumes_full_evidence_without_replaying_work(self):
         adapter = self.start_failed()

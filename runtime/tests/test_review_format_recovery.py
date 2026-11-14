@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from coherence_workflow.engine import Engine, _ReviewFormat
 from coherence_workflow.intake import admit
+from coherence_workflow.graph import graph_saver, task_graph
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 
@@ -53,6 +54,49 @@ class ReviewFormatRecoveryTests(ProjectTest):
             self.assertTrue(chain['uncertain'])
             self.assertEqual(chain['executions'][0]['attempt_count'], 2)
         return Adapter
+
+    def test_graph_explicit_format_recovery_continues_without_replaying_review(self):
+        fixture = self
+        class Adapter:
+            def __init__(self, *_args, **_kwargs):
+                self.saved_session = None
+            def prompt(self, prompt, **kwargs):
+                fixture.calls.append(('review' if kwargs.get('read_only') else 'writer', prompt))
+                if kwargs.get('read_only'):
+                    if sum(kind == 'review' for kind, _ in fixture.calls) == 1:
+                        entries = [{'type': 'session', 'id': 'session', 'cwd': str(fixture.project)},
+                            {'type': 'message', 'id': 'user', 'parentId': None, 'message': {'role': 'user', 'content': [{'type': 'text', 'text': prompt}]}},
+                            {'type': 'message', 'id': 'answer', 'parentId': 'user', 'message': {'role': 'assistant', 'stopReason': 'stop', 'content': [{'type': 'text', 'text': json.dumps(fixture.verdict)}]}}]
+                        fixture.artifact.write_text(''.join(json.dumps(x) + '\n' for x in entries))
+                        return json.dumps(fixture.verdict)
+                    return json.dumps({'approved': True, 'findings': [], 'coverage': ['producer and consumer checked'], 'coverage_gaps': []})
+                kwargs['claim']('owned.txt')
+                fixture.project.joinpath('owned.txt').write_text('repaired\n' if 'Continue the rejecting review' in prompt else 'task output\n')
+                return 'done'
+        parse = Engine._review_value
+        def old_parser(text, **kwargs):
+            value = parse(text, **kwargs)
+            if any(',4-5' in finding for finding in value['findings']):
+                raise _ReviewFormat('old parser rejected compound location')
+            return value
+        config = {'configurable': {'thread_id': 'graph-format'}}
+        with Authority(self.project) as owner:
+            owner.store.start('graph-format', self.base, contract=self.contract, executor=EXECUTOR,
+                authority={'review_policy': 'owner-pair-v1', 'routine_authority': True}, review_base=self.base)
+            engine = Engine(owner, 'graph-format', self.contract, EXECUTOR, adapter=Adapter)
+            with graph_saver(owner) as saver, patch.object(Engine, '_review_value', side_effect=old_parser):
+                with self.assertRaises(_ReviewFormat):
+                    task_graph(engine, saver, review=True).invoke({}, config, durability='sync')
+        with Authority(self.project) as owner:
+            engine = Engine(owner, 'graph-format', self.contract, EXECUTOR, adapter=Adapter, resume=True,
+                            question=lambda _: str(self.artifact))
+            with graph_saver(owner) as saver:
+                result = task_graph(engine, saver, review=True).invoke(None, config, durability='sync')
+            chain = owner.store.review_chain('graph-format', private=True)['executions']
+        self.assertEqual(result['result']['status'], 'complete')
+        self.assertEqual([item['state'] for item in chain], ['rejected', 'approved', 'approved'])
+        self.assertEqual([kind for kind, _ in self.calls], ['writer', 'review', 'writer', 'review'])
+        self.assertIn('consumer untested', self.calls[-1][1])
 
     def test_explicit_recovery_preserves_failure_and_continues_existing_lifecycle(self):
         self.start_failed()
