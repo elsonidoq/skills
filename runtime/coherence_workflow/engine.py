@@ -270,6 +270,10 @@ class Engine:
         return request, canonical({key: request[key] for key in (
             'role', 'worktree', 'executor', 'resources', 'instructions', 'settings', 'authority')})
 
+    def _delivery_issue_context(self):
+        issue = self.contract.get('delivery_issue')
+        return 'Delivery issue context: ' + canonical(issue) + '\n' if issue is not None else ''
+
     @staticmethod
     def _prompt_worker(worker, prompt, **kwargs):
         """Keep older offline adapters usable while the real adapter gets reuse facts."""
@@ -441,7 +445,7 @@ class Engine:
                 'semantic/manual acceptance or the reviewer verdict. Finish worker-owned semantic/manual acceptance, never stage '
                 'or commit, bypass checks/hooks/signing, or adopt unrelated/pre-existing bytes.\n'
                 + _DECISION_CONSTRAINTS + self.paid_authority() + '\nOriginal task contracts: '
-                + canonical(original_tasks) + '\n')
+                + canonical(original_tasks) + '\n' + self._delivery_issue_context())
             def prompt_fix(prompt, **kwargs):
                 prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + repair_context + prompt
                 invocation_id = uuid.uuid4().hex
@@ -1032,7 +1036,7 @@ class Engine:
                 + review_context +
                 'Attribution below is integration context: do not reject unrelated context solely for task-path scope, and do not certify it as task delivery. Causal integration defects affecting the requested result remain blockers and must cite the interaction/accepted basis. Report independently unrelated defects with their ownership/repair limit; do not expand fixer authority.\n'
                 'Evaluate retained check evidence semantically: distinguish actual passing execution, failed or missing required execution, and an inability to rerun because you are read-only. Do not invent a live check; a read-only inability to rerun does not negate a valid retained pass.\n'
-                'Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
+                + self._delivery_issue_context() + 'Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
                 '\nReview delta: ' + diff_base + '..' + head + '\nDiff:\n' + diff + '\n' + self._review_attribution(review_base, head) +
                 '\nFull check outputs are in the private files referenced below; read relevant files with the read tool and continue long reads with offsets. '
                 + self._review_check_evidence(output_dir=evidence_dir) + '\n' + self._review_worker_evidence()[0])
@@ -1716,7 +1720,7 @@ class Engine:
 
                     def invoke_worker(prompt, **kwargs):
                         nonlocal continuation, dispatch_recovery
-                        prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + prompt
+                        prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + self._delivery_issue_context() + prompt
                         if continuation is not None:
                             prompt = ('Continue only the unfinished same-task work. Inspect the retained failure/diagnosis below; '
                                       'do not replay completed effects. Apply only the justified targeted correction; '

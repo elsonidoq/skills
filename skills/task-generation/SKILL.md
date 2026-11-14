@@ -62,6 +62,11 @@ Use the adapter matching the producing workflow:
   or gate → REQUIRED check → brief mapping. Governing instructions/contracts, memory and
   permission/safety still apply.
 
+Carry the associated qualified issue URL from the source or planner brief into the human tasks
+and executable handoff as optional top-level `delivery_issue`, and into the coordinator handoff.
+Do not create an issue prerequisite or require it for bare task lists; tracker operations follow
+[track-open-issue](../track-open-issue/SKILL.md) and their actual authority.
+
 New TinySpec work always has a separate source and tasks file. Reference source sections
 or acceptance criteria; put work-unit outcomes and task-specific checks in tasks, not a
 copy of the entire source. Existing task-embedded requirements remain valid for legacy

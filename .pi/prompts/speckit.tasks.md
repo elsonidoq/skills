@@ -22,7 +22,9 @@ acceptance; distinguish source-backed requirements, necessary choices and option
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+You **MUST** consider the user input before proceeding (if not empty). Carry any qualified
+delivery issue URL from the source into human tasks and optional top-level `delivery_issue` in
+the executable object and coordinator handoff. Bare lists and absent issues remain valid.
 
 ## Pre-Execution Checks
 

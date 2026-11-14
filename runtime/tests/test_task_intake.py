@@ -58,6 +58,14 @@ class TaskLinterTests(unittest.TestCase):
             validate(value, schema)
             admit(value)
 
+    def test_delivery_issue_is_optional_context_not_an_intake_check(self):
+        issue = 'https://github.com/elsonidoq/skills/issues/44'
+        task = {'id': 'fix', 'outcome': 'Fix title'}
+        self.assertEqual(admit([task]), {'tasks': [task]})
+        self.assertEqual(admit({'delivery_issue': issue, 'tasks': [task]})['delivery_issue'], issue)
+        # Intake preserves optional context rather than adding a seventh validation rule.
+        self.assertEqual(admit({'delivery_issue': {'unusual': True}, 'tasks': [task]})['delivery_issue'], {'unusual': True})
+
     def test_ids_unique(self):
         with self.assertRaisesRegex(Blocked, 'duplicate task id: fix'):
             admit([{'id': 'fix', 'outcome': 'A'}, {'id': 'fix', 'outcome': 'B'}])

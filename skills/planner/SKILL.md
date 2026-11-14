@@ -170,7 +170,15 @@ Apply [Parsimony and Actionable Checks](references/parsimony.md). Fresh planning
 the owner selects depth: no source edits, decisions, specs, plans or tasks. Session history carries
 request bounds, answers/rationale, evidence and deferrals; recover it or ask for missing answers.
 Research may inform assessment, but no dependency docs, source, plan or decisions may be persisted.
-Carry findings in session until selection.
+Carry findings in session until selection. Direct intake needs no issue. After understanding and any
+brainstorming, use [track-open-issue](../track-open-issue/SKILL.md) and the project's declared
+tracker to associate the work: qualify a supplied issue against the declared target and reuse it,
+or reuse a verified matching issue; create only with the required target-specific authority. An
+authorized tracker write is separate from read-only preselection of planning artifacts. Never create
+a duplicate or local fallback.
+If tracker access or authority is unavailable, name the affected tracker operation and correction;
+continue unrelated safe planning. Carry the qualified issue URL, when available, into the selected
+source, plan/tasks, stage briefs and coordinator handoff. Association does not change approval gates.
 
 Invoke `planning-brainstorming` in preselection mode directly in the parent session: assess the inspected
 bounds against readiness target “informed scope assessment.” Do not delegate the gate or resolve a saved

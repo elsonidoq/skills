@@ -34,6 +34,10 @@ supersession stops only the affected acceptance mapping. No default history inta
 relevant retrieval is index-first where useful and retains uncertainty on no match. Required
 gotcha-memory gates remain separate.
 
+Carry the associated qualified issue URL, when supplied after understanding, into the source
+and return it for task generation and coordinator handoff. An absent issue is not an intake gate;
+tracker operations use [track-open-issue](../track-open-issue/SKILL.md) and actual authority.
+
 Use the owner's established source format where it is complete. Link authoritative
 existing sources rather than copying long transcripts. If the request exists only
 in conversation, preserve enough context for a fresh executor. No intermediary Epic,

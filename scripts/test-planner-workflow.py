@@ -41,6 +41,21 @@ def replace_clause(text, clause, replacement="REMOVED"):
     return changed
 
 
+class IssueAssociationWalkthroughTests(unittest.TestCase):
+    def test_understanding_precedes_optional_association_and_issue_carriers(self):
+        planner = (ROOT / 'skills/planner/SKILL.md').read_text()
+        section = planner.split('## Before selection: understand → brainstorm → assess → ask', 1)[1]
+        self.assertIn('Direct intake needs no issue', section)
+        self.assertIn('After understanding and any\nbrainstorming', section)
+        self.assertIn('qualify a supplied issue against the declared target and reuse it', section)
+        self.assertIn('Never create\na duplicate or local fallback', section)
+        self.assertIn('name the affected tracker operation and correction', section)
+        for path in ('skills/tiny-spec/SKILL.md', 'skills/task-generation/SKILL.md',
+                     '.pi/prompts/speckit.specify.md', '.pi/prompts/speckit.plan.md',
+                     '.pi/prompts/speckit.tasks.md'):
+            self.assertIn('issue', (ROOT / path).read_text().lower(), path)
+
+
 class PlanningCommitAuthorityTests(unittest.TestCase):
     """Static regression guard, not proof of runtime model compliance."""
 

@@ -6,6 +6,8 @@ description: "Sequential implementation task template"
 
 **Input**: [Relevant source or direct owner requirement]
 **Executable task input**: [Adjacent JSON/YAML list or object containing tasks]
+<!-- Carry the qualified delivery issue URL when present; optionally use top-level
+`delivery_issue` in the executable object. A bare list remains valid. -->
 
 Apply the shared `task-generation` skill from the authorized suite installation.
 Resolve `skills/planner/references/parsimony.md` through that installation, not a presumed

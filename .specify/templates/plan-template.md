@@ -8,6 +8,8 @@ than inventing constraints to fill fields. Assumptions remain revisitable.
 
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
+<!-- Carry the qualified delivery issue URL from the specification when present. -->
+
 **Note**: This template is filled in by the `/speckit.plan` command; its definition describes the execution workflow.
 
 ## Summary

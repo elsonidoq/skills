@@ -12,6 +12,8 @@ than inventing constraints to fill fields. Assumptions remain revisitable.
 
 **Input**: User description: "$ARGUMENTS"
 
+<!-- Include the qualified delivery issue URL when associated; omit otherwise. -->
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--

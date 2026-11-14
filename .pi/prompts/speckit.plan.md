@@ -20,7 +20,9 @@ necessary choices and optional hardening are distinct.
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+You **MUST** consider the user input before proceeding (if not empty). Carry any qualified
+delivery issue URL from the specification into the plan and subsequent task handoff; absence
+is not a prerequisite.
 
 ## Pre-Execution Checks
 
