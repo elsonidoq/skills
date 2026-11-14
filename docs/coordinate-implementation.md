@@ -11,6 +11,13 @@ silent conversion or replay. This target is not yet implemented; current CLI beh
 the existing runtime until cutover. The six task-linter checks remain the entire startup linter; no extra
 graph/host/custody/session/evidence admission rules. Historical approvals and rows are not rewritten.
 
+The internal graph exposes `graph_recovery_action` for inspected `continue`, `fresh` and
+`escalate` actions, scope-bound routine repair authority, exact owner-authorized external transfer,
+and stale review target refresh. It uses the retained thread, input, session and task ownership;
+reconciles completed effects before continuation; and stops on unknown or live effects. A failed
+implementation escalation stops and requires owner direction. These internal actions are not yet
+the public CLI route; the commands below still use the existing runtime until cutover.
+
 The approved [CLI/Pi interface target](../specs/006-issue-linked-delivery/contracts/interfaces.md#cli-and-attached-parent)
 retains existing actions and adds directed parallel execution and durable targeted question resumption.
 Mechanisms may vary within the approved design boundary; actual effect validation and inspected recovery remain.

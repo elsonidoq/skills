@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from coherence_workflow import engine
 from coherence_workflow.engine import Engine
+from coherence_workflow.graph import graph_saver, task_graph
 from coherence_workflow.pi_adapter import effective_saved_session
 from coherence_workflow.intake import admit
 from coherence_workflow.store import Authority, Blocked
@@ -56,6 +57,36 @@ class WorkerAuthorityTests(ProjectTest):
         self.assertIn(scenario, prompt)
         self.assert_precedence_authority(prompt)
         self.assertLess(prompt.index('this current scoped authority takes precedence'), prompt.index(scenario))
+
+    def test_graph_corrective_prompt_carries_original_authority_and_local_test_scope(self):
+        project, prompts = self.project, []
+        identity = {'id': 'graph-authority', 'file': '/fixture/graph-authority'}
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): self.saved_session = identity
+            def prompt(self, prompt, **kwargs):
+                prompts.append(prompt)
+                if len(prompts) == 2:
+                    kwargs['claim']('owned.txt')
+                    (project/'owned.txt').write_text('ready\n')
+                return 'fixture done'
+        scenario = 'Earlier draft asks for renewed fixture consent.'
+        task = {'id': 'one', 'description': scenario, 'owned_paths': ['owned.txt'],
+                'checks': [['python3', '-B', '-c', "import sqlite3; assert sqlite3.connect(':memory:').execute('select 1').fetchone()==(1,); assert open('owned.txt').read()=='ready\\n'"]]}
+        contract = admit({'delivery_issue': ISSUE, 'tasks': [task]})
+        with Authority(project) as owner:
+            owner.store.start('graph-authority', self.base, contract=contract, executor=EXECUTOR)
+            engine = Engine(owner, 'graph-authority', contract, EXECUTOR, adapter=Adapter,
+                            question=lambda *_a, **_k: self.fail('routine check must not ask'))
+            with graph_saver(owner) as saver:
+                task_graph(engine, saver).invoke({}, {'configurable': {'thread_id': 'graph-authority'}}, durability='sync')
+        self.assertEqual(len(prompts), 2)
+        for prompt in prompts:
+            self.assert_authority(prompt)
+            self.assert_test_permission(prompt)
+            self.assert_completion_ownership(prompt)
+            self.assert_precedence_scenario(prompt, scenario)
+            self.assertIn(ISSUE, prompt)
+        self.assertIn('Actual failure:', prompts[1])
 
     def test_saved_session_selection_matches_adapter_explicit_precedence(self):
         held = {'id': 'held-session', 'file': '/private/held.jsonl'}

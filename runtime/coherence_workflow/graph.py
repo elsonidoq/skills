@@ -67,6 +67,7 @@ class TaskState(TypedDict, total=False):
     pending_question: dict
     answer: str
     question_invocation: str
+    recovery: dict
 
 
 def task_graph(engine, saver, *, review=False):
@@ -127,6 +128,7 @@ def task_graph(engine, saver, *, review=False):
 
     def ready(state, config: RunnableConfig):
         validate(config)
+        _check_unfinished_escalation(store, run)
         complete = store.completed_checkpoints(run)
         remaining = [task for task in engine.contract['tasks'] if task['id'] not in complete]
         if not remaining:
@@ -139,7 +141,7 @@ def task_graph(engine, saver, *, review=False):
         manual_gates(task, engine.question)
         return {'task_id': task['id'], 'baseline': baseline, 'invocation_id': uuid.uuid4().hex,
                 'chain': [], 'prompt_kind': 'initial', 'correction_id': '',
-                'session': None, 'checkpoints': complete, 'next_node': 'worker'}
+                'session': None, 'recovery': None, 'checkpoints': complete, 'next_node': 'worker'}
 
     def worker(state, config: RunnableConfig):
         validate(config)
@@ -165,7 +167,9 @@ def task_graph(engine, saver, *, review=False):
         if any(facts.get('invocation_id') == invocation for _, facts in history(task['id'], 'worker_dispatch')):
             raise Blocked('graph worker reservation has no settled result; inspect its process and session before continuation')
         focused = focused_for(state)
-        adapter = engine.adapter(project, engine.executor, question=engine.question)
+        recovery = state.get('recovery')
+        profile = engine.implementation_fallback if recovery and recovery['action'] == 'escalate' else engine.executor
+        adapter = engine.adapter(project, profile, question=engine.question)
         adapter.lock_fd = engine.authority.lock.fileno()
         if state.get('session') is not None:
             adapter.saved_session = state['session']
@@ -183,6 +187,13 @@ def task_graph(engine, saver, *, review=False):
             body = ('A runner-owned required check or checkpoint failed. Inspect the actual failure and make a '
                     'reasoned scoped correction; do not skip checks or bypass hooks/signing. '
                     'The runner reruns required checks before checkpointing.\nActual failure: ' + canonical(correction['failure'])
+                    + '\n' + _DECISION_CONSTRAINTS + engine.paid_authority() + '\nTask: ' + canonical(task))
+        elif state['prompt_kind'] == 'recovery':
+            prior = read_record(task['id'], 'graph_recovery', recovery['id'])
+            verify_effects(prior['effects'])
+            body = ('Continue only the unfinished same-task work; do not replay settled effects. '
+                    'Apply the inspected targeted correction and preserve all original acceptance and gates.\n'
+                    + 'Retained failure and diagnosis: ' + canonical(prior['reference'])
                     + '\n' + _DECISION_CONSTRAINTS + engine.paid_authority() + '\nTask: ' + canonical(task))
         if state.get('prompt_kind') == 'answer':
             settled = [facts for status, facts in history(task['id'], 'worker_invocation')
@@ -205,7 +216,13 @@ def task_graph(engine, saver, *, review=False):
             focused.command(phase, call)
             store.history(run, task['id'], 'tool_command', 'started' if phase == 'start' else 'returned', {'call': call})
         session = effective_saved_session(state.get('session'), getattr(adapter, 'saved_session', None))
-        store.reserve_worker_dispatch(run, task['id'], invocation, session)
+        dispatch_recovery = ({key: recovery[key] for key in ('action', 'diagnosis', 'predecessor')}
+                             if recovery and state['prompt_kind'] == 'recovery'
+                             and recovery['action'] in ('fresh', 'escalate') else None)
+        store.reserve_worker_dispatch(run, task['id'], invocation, session, recovery=dispatch_recovery)
+        if dispatch_recovery and recovery['action'] == 'escalate':
+            store.history(run, task['id'], 'implementation_escalation', 'started',
+                          {**dispatch_recovery, 'executor': profile})
         store.history(run, task['id'], 'worker_invocation', 'started', {'invocation_id': invocation, 'session': session})
         try:
             result = engine._prompt_worker(adapter, prompt, claim=claim, command=command,
@@ -215,8 +232,10 @@ def task_graph(engine, saver, *, review=False):
             actual = getattr(adapter, 'opened_session', None) or getattr(adapter, 'saved_session', None)
             if actual is not None:
                 store.bind_worker_dispatch(run, task['id'], invocation, actual)
-            store.history(run, task['id'], 'worker_invocation', 'failed',
-                          {'invocation_id': invocation, 'error': str(exc), 'session': actual})
+            status = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+            store.history(run, task['id'], 'worker_invocation', status,
+                          {'invocation_id': invocation, 'error': str(exc), 'session': actual,
+                           'effects': effects(task['id'])})
             raise
         actual = getattr(adapter, 'opened_session', None) or getattr(adapter, 'saved_session', None)
         if actual is not None:
@@ -276,6 +295,9 @@ def task_graph(engine, saver, *, review=False):
         try:
             results = run_checks(project, task, lock_fd=engine.authority.lock.fileno(), completed=retain)
         except CheckFailure as exc:
+            if state.get('recovery') and state['recovery']['action'] == 'escalate':
+                store.history(run, task['id'], 'implementation_escalation', 'failed', {'error': canonical(exc.attempt)})
+                raise Blocked('implementation escalation required check failed; stop and notify the owner; owner direction required: ' + canonical(exc.attempt)) from exc
             previous = (read_record(task['id'], 'graph_correction', state['correction_id'])['failure']
                         if state.get('correction_id') else None)
             if exc.attempt == previous:
@@ -315,6 +337,9 @@ def task_graph(engine, saver, *, review=False):
         except BaseException as exc:
             result = focused.reconcile_checkpoint()
             if result is None:
+                if state.get('recovery') and state['recovery']['action'] == 'escalate':
+                    store.history(run, task['id'], 'implementation_escalation', 'failed', {'error': str(exc)})
+                    raise Blocked('implementation escalation failed; stop and notify the owner; owner direction required: ' + str(exc)) from exc
                 # A failed/uncertain Git attempt must be reconciled before any correction.
                 uncertain = (isinstance(exc, (KeyboardInterrupt, SystemExit)) and
                              getattr(focused, 'git_commit_started', False))
@@ -337,11 +362,26 @@ def task_graph(engine, saver, *, review=False):
         store.task(run, task['id'], 'complete', state['baseline'], result['sha'],
                    {'summary': summary, 'checks': checked['checks'], 'paths': result['paths'],
                     'generated_artifacts': result['artifacts']})
+        if state.get('recovery') and state['recovery']['action'] == 'escalate':
+            store.history(run, task['id'], 'implementation_escalation', 'completed', {'sha': result['sha']})
         return {'next_node': 'ready'}
+
+    def escalation_guard(node):
+        def guarded(state, config: RunnableConfig):
+            try:
+                return node(state, config)
+            except BaseException as exc:
+                if state.get('recovery') and state['recovery']['action'] == 'escalate':
+                    events = history(state['task_id'], 'implementation_escalation')
+                    if not events or events[-1][0] == 'started':
+                        store.history(run, state['task_id'], 'implementation_escalation', 'failed', {'error': str(exc)})
+                    raise Blocked('implementation escalation failed; stop and notify the owner; owner direction required: ' + str(exc)) from exc
+                raise
+        return guarded
 
     builder = StateGraph(TaskState)
     for name, node in (('ready', ready), ('worker', worker), ('wait', wait), ('checks', checks), ('checkpoint', checkpoint)):
-        builder.add_node(name, node)
+        builder.add_node(name, escalation_guard(node) if name in ('worker', 'checks', 'checkpoint') else node)
     builder.add_edge(START, 'ready')
     ready_edges = {'worker': 'worker', 'end': END}
     if review:
@@ -353,6 +393,97 @@ def task_graph(engine, saver, *, review=False):
     builder.add_conditional_edges('checks', lambda state: state['next_node'], {'worker': 'worker', 'checkpoint': 'checkpoint'})
     builder.add_conditional_edges('checkpoint', lambda state: state['next_node'], {'worker': 'worker', 'ready': 'ready'})
     return builder.compile(checkpointer=saver)
+
+
+def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, transfer=None,
+                          owner_authorized=False, scope=None):
+    """Apply one inspected action to the retained graph, then continue its current thread.
+
+    This is an internal interface; public routing remains with the cutover. A failed
+    invocation is never replayed. Completed Git effects are reconciled first.
+    """
+    from .processes import inspect_recorded_writers
+    store, run, project = engine.authority.store, engine.run, engine.authority.project
+    engine.authority.assert_held()
+    if config.get('configurable', {}).get('thread_id') != run:
+        raise Blocked('graph recovery needs the retained run thread; select the matching thread')
+    saved = store.input(run)
+    if not saved or saved['contract'] != engine.contract or saved['executor'] != engine.input_executor:
+        raise Blocked('graph recovery inputs differ from retained run; restore the original contract and executor')
+    retained_paid = saved['authority'].get('paid_scope') if isinstance(saved['authority'], dict) else None
+    if retained_paid is not None and retained_paid != engine.paid_scope:
+        raise Blocked('graph recovery paid scope differs from retained run; restore original scope')
+    inspect_recorded_writers(store.db, 'graph recovery')
+    if action == 'external':
+        snapshot = graph.get_state(config)
+        if (not isinstance(transfer, dict) or snapshot.values.get('task_id') != transfer.get('task_id')
+                or snapshot.interrupts or not set(snapshot.next).intersection({'worker', 'checks', 'checkpoint'})):
+            raise Blocked('external recovery needs the matching stopped task without a pending question; inspect the retained graph before continuation')
+        engine.recover_task(transfer, owner_authorized=owner_authorized)
+        _check_escalation_stop(store, run)
+        graph.update_state(config, {'next_node': 'ready', 'recovery': None}, as_node='checkpoint')
+        return graph.invoke(None, config, durability='sync')
+    _check_escalation_stop(store, run)
+    _check_unfinished_escalation(store, run)
+    completed = store.completed_checkpoints(run)
+    snapshot = graph.get_state(config)
+    state = snapshot.values
+    if action == 'authorize-routine-repairs':
+        return store.authorize_routine_review_continuation(run, scope)
+    if action == 'refresh-review-target':
+        if len(completed) != len(engine.contract['tasks']) or snapshot.interrupts or 'review_route' not in graph.nodes:
+            raise Blocked('review target refresh needs completed tasks and an unpaused review graph; reconcile unfinished work first')
+        graph.update_state(config, {'checkpoints': completed, 'next_node': 'review_route',
+                                    'review_action': 'refresh_target'}, as_node='ready')
+        return graph.invoke(None, config, durability='sync')
+    if action not in ('continue', 'fresh', 'escalate'):
+        raise Blocked('unknown graph recovery action; select an inspected recovery action')
+    if not isinstance(diagnosis, str) or diagnosis.strip().lower() in ('', 'unknown', 'retry', 'yes'):
+        raise Blocked('graph recovery needs a substantive inspected diagnosis and targeted correction')
+    task_id = state.get('task_id')
+    if task_id in completed:
+        graph.update_state(config, {'next_node': 'ready', 'recovery': None}, as_node='checkpoint')
+        return graph.invoke(None, config, durability='sync')
+    if snapshot.interrupts or tuple(snapshot.next) != ('worker',):
+        raise Blocked('graph recovery needs the failed worker boundary; inspect the retained graph and pending effects')
+    rows = list(store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker_invocation' ORDER BY seq", (run, task_id)))
+    if rows and rows[-1]['state'] == 'returned':
+        returned = json.loads(rows[-1]['details'])
+        if returned.get('invocation_id') == state.get('invocation_id'):
+            return graph.invoke(None, config, durability='sync')
+    if not rows or rows[-1]['state'] != 'failed':
+        raise Blocked('graph recovery needs an inspected terminal worker failure; reconcile any live or settled call first')
+    failure = json.loads(rows[-1]['details'])
+    if 'effects are uncertain' in failure.get('error', ''):
+        raise Blocked('worker settlement and effects are uncertain; inspect the saved operation before any continuation')
+    predecessor = failure.get('invocation_id')
+    if predecessor != state.get('invocation_id') or not isinstance(failure.get('effects'), dict):
+        raise Blocked('graph recovery failure lacks exact invocation/effect evidence; inspect retained call before continuation')
+    value = failure['effects']
+    if (git(project, 'rev-parse', 'HEAD').decode().strip() != value['head'] or
+            Engine._repair_source_state(project, value['paths']) != value['source_state'] or
+            Engine._repair_index_state(project, value['paths']) != value['index_state']):
+        raise Blocked('failed worker effects drifted; inspect selected Git and source state before continuation')
+    escalations = list(store.db.execute("SELECT state FROM execution_history WHERE run_id=? AND task_id=? AND kind='implementation_escalation' ORDER BY seq", (run, task_id)))
+    if escalations and escalations[-1]['state'] != 'completed':
+        raise Blocked('implementation escalation is unresolved; stop and notify the owner; owner direction required')
+    if action == 'continue' and not failure.get('session'):
+        raise Blocked('continued recovery needs the exact saved session; inspect the failure or select justified fresh recovery')
+    if action == 'escalate' and engine.implementation_fallback is None:
+        raise Blocked('implementation escalation has no permitted fallback; configure it at launch')
+    identity = uuid.uuid4().hex
+    recovery = {'id': identity, 'action': action, 'diagnosis': diagnosis, 'predecessor': predecessor}
+    reference = {'invocation_id': predecessor, 'error': failure.get('error'),
+                 'saved_session_id': (failure.get('session') or {}).get('id'), 'targeted_correction': diagnosis}
+    store.history(run, task_id, 'graph_recovery', 'recorded', {'id': identity, 'effects': value, 'reference': reference})
+    chain = list(state.get('chain') or [])
+    if predecessor not in chain:
+        chain.append(predecessor)
+    graph.update_state(config, {'prompt_kind': 'recovery', 'recovery': recovery, 'chain': chain,
+                               'invocation_id': uuid.uuid4().hex,
+                               'session': failure.get('session') if action == 'continue' else None,
+                               'next_node': 'worker'}, as_node='ready')
+    return graph.invoke(None, config, durability='sync')
 
 
 def answer_graph_question(graph, config, question):
@@ -385,6 +516,21 @@ def _check_escalation_stop(store, run):
                    for k, s, c in later if k == 'checkpoint' and s == 'passed'
                    for k2, s2, x in later if k2 == 'external_recovery' and s2 == 'completed'):
             raise Blocked('implementation escalation failed for task ' + row['task_id'] + '; stop and notify the owner; owner direction required')
+
+
+def _check_unfinished_escalation(store, run):
+    """Do not release later tasks after an escalation lost its terminal record."""
+    rows = store.db.execute("SELECT seq,task_id,state FROM execution_history WHERE run_id=? AND kind='implementation_escalation' ORDER BY seq", (run,)).fetchall()
+    latest = {row['task_id']: row for row in rows}
+    for task, row in latest.items():
+        if row['state'] != 'started':
+            continue
+        later = [(item['kind'], item['state'], json.loads(item['details'])) for item in store.db.execute(
+            "SELECT kind,state,details FROM execution_history WHERE run_id=? AND task_id=? AND seq>? AND kind IN ('external_recovery','checkpoint') ORDER BY seq", (run, task, row['seq']))]
+        if not any(c.get('external_recovery_id') == x.get('recovery_id') and x.get('recovery_id') and c.get('sha') == x.get('sha')
+                   for k, s, c in later if k == 'checkpoint' and s == 'passed'
+                   for k2, s2, x in later if k2 == 'external_recovery' and s2 == 'completed'):
+            raise Blocked('implementation escalation is unresolved for task ' + task + '; stop and notify the owner; owner direction required')
 
 
 def _add_review_nodes(builder, engine, validate):

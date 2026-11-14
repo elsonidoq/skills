@@ -9,7 +9,7 @@ from unittest.mock import patch
 from coherence_workflow import cli
 from coherence_workflow.cli import status
 from coherence_workflow.engine import Engine
-from coherence_workflow.graph import graph_saver, task_graph
+from coherence_workflow.graph import graph_recovery_action, graph_saver, task_graph
 from coherence_workflow.intake import admit
 from coherence_workflow.metric_artifacts import artifact_relative
 from coherence_workflow.monitoring import Recorder, descriptor
@@ -1244,7 +1244,6 @@ class BoundedChainTests(ProjectTest):
             scope = store.review_scope('graph-refresh')
             store.authorize_owner_pair('graph-refresh', 'stale', rejecting_execution_id='review-2', review_base=self.base,
                 review_head=self.base, original_scope=scope, fixer_execution_id='stale-fix', reviewer_execution_id='stale-review')
-            store.authorize_routine_review_continuation('graph-refresh', scope)
             self.project.joinpath('owned.txt').write_text('intervening change\n')
             git(self.project, 'add', '--', 'owned.txt')
             git(self.project, 'commit', '-qm', 'intervening correction')
@@ -1252,8 +1251,10 @@ class BoundedChainTests(ProjectTest):
             store.finish('graph-refresh', 'failed', self.base, 'target drifted')
             engine = Engine(owner, 'graph-refresh', contract, EXECUTOR, adapter=Adapter, resume=True)
             with graph_saver(owner) as saver:
-                result = task_graph(engine, saver, review=True).invoke({'review_action': 'refresh_target'},
-                    {'configurable': {'thread_id': 'graph-refresh'}, 'recursion_limit': 40}, durability='sync')
+                graph = task_graph(engine, saver, review=True)
+                config = {'configurable': {'thread_id': 'graph-refresh'}, 'recursion_limit': 40}
+                graph_recovery_action(engine, graph, config, 'authorize-routine-repairs', scope=scope)
+                result = graph_recovery_action(engine, graph, config, 'refresh-review-target')
             chain = store.review_chain('graph-refresh', private=True)['executions']
             self.assertEqual(result['result']['status'], 'complete')
             self.assertEqual(chain[3]['references']['head'], current)
