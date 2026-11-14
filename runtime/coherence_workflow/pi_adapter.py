@@ -19,6 +19,13 @@ def effective_saved_session(explicit, held):
     return explicit if explicit is not None else held
 
 
+class WaitingQuestion:
+    """A settled SDK question, not an answer or task completion."""
+    def __init__(self, question, session):
+        self.question = question
+        self.session = session
+
+
 class TaskOutcome:
     """An explicit unsuccessful outcome and its host-returned explanation."""
     def __init__(self, status, explanation=None):
@@ -227,7 +234,7 @@ class PiAdapter:
             raise Blocked('steering target is unavailable: ' + str(exc)) from None
 
     def prompt(self, prompt, *, claim=None, command=None, cleanup=None, read_only=False, saved_session=None,
-               reuse_key=None, steering=None, review_repair=False):
+               reuse_key=None, steering=None, review_repair=False, pause_questions=False):
         """Run one prompt, optionally reopening only a runner-provided private session."""
         self.last_interval = None
         self.last_observation = None
@@ -240,6 +247,8 @@ class PiAdapter:
                    # Explicit opt-in keeps an updated host compatible with
                    # controllers that predate this transport record.
                    'sessionObservations': True}
+        if pause_questions:
+            request['pauseQuestions'] = True
         if review_repair:
             request['reviewRepair'] = True
         if steering is not None:
@@ -389,24 +398,36 @@ class PiAdapter:
                             if not isinstance(value.get('text'), str):
                                 raise Blocked('SDK result text must be a string')
                             outcome = value.get('outcome')
-                            if outcome is not None and outcome not in ('completed', 'blocked', 'failed', 'incomplete'):
-                                raise Blocked('SDK result outcome must be completed, blocked, failed, or incomplete')
+                            if outcome is not None and outcome not in ('completed', 'blocked', 'failed', 'incomplete', 'waiting'):
+                                raise Blocked('SDK result has an invalid outcome')
+                            if outcome == 'waiting':
+                                question = value.get('question')
+                                if (not pause_questions or not isinstance(question, dict)
+                                        or not isinstance(question.get('tool_call_id'), str)
+                                        or not question['tool_call_id'] or not isinstance(question.get('question'), str)):
+                                    raise Blocked('SDK waiting result lacks a valid opted-in question; inspect the saved session')
                             session = value.get('session')
                             if session is not None:
                                 if not (isinstance(session, dict) and isinstance(session.get('id'), str)
                                         and isinstance(session.get('file'), str)):
                                     raise Blocked('SDK result has an invalid saved session identity')
                                 self.saved_session = session
+                            if outcome == 'waiting' and session is None:
+                                raise Blocked('SDK waiting result lacks saved session identity; inspect the operation')
                             observations = {'before': value.get('before'), 'after': value.get('after')}
                             self.last_observation = observations if all(isinstance(item, dict) for item in observations.values()) else None
                             self.last_interval = (interval_record(**observations)
                                                   if self.last_observation is not None else None)
-                            result.append(TaskOutcome(outcome, value['text']) if outcome in ('blocked', 'failed', 'incomplete') else value['text'])
+                            result.append(WaitingQuestion(question, session) if outcome == 'waiting' else
+                                          TaskOutcome(outcome, value['text']) if outcome in ('blocked', 'failed', 'incomplete') else value['text'])
                             # Multiplexed host input intentionally remains open
                             # for controls; the result is its terminal boundary.
                             close_input()
                         elif kind == 'error':
-                            raise Blocked('SDK operation failed: ' + str(value.get('message')))
+                            detail = 'SDK operation failed: ' + str(value.get('message'))
+                            if pause_questions:
+                                detail += '; settlement and effects are uncertain; inspect the saved session and operation before continuation, do not redispatch'
+                            raise Blocked(detail)
                         else:
                             raise Blocked('unknown SDK transport record: ' + str(kind))
                 except BaseException as exc:
@@ -444,7 +465,10 @@ class PiAdapter:
                 code = proc.wait()
                 if code or not result:
                     errors.seek(0)
-                    raise Blocked('SDK host exited without a result (exit ' + str(code) + '): ' + errors.read())
+                    detail = 'SDK host exited without a result (exit ' + str(code) + '): ' + errors.read()
+                    if pause_questions:
+                        detail += '; question settlement and effects are uncertain; inspect the saved session and operation before continuation, do not redispatch'
+                    raise Blocked(detail)
                 return result[0]
             finally:
                 # An active target is valid only for this host invocation.

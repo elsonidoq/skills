@@ -27,7 +27,10 @@ export function installSteeringProvider(callback = 'question', directory = proce
             await options?.onPayload?.({offline: true}, model);
             assert.ok(!options?.signal?.aborted, 'fixture was aborted');
             const reviewer = !getCurrentTools(context.messages).some(tool => tool.name === 'ask_owner');
-            const first = calls++ === 0 && !reviewer;
+            const pauseFixture = callback === 'pause';
+            const priorQuestion = context.messages.some(item => item.role === 'assistant' &&
+              item.content?.some(part => part.type === 'toolCall' && part.id === 'callback-tool'));
+            const first = (pauseFixture ? !priorQuestion : calls++ === 0) && !reviewer;
             stream.push({type: 'start', partial: message});
             if (first) {
               const tool = callback === 'claim' ? {name: 'write', arguments: {path: 'steering-owned.txt', content: 'offline fixture\n'}}
@@ -38,9 +41,33 @@ export function installSteeringProvider(callback = 'question', directory = proce
               stream.push({type: 'toolcall_start', contentIndex: 0, partial: message});
               stream.push({type: 'toolcall_delta', contentIndex: 0, delta: JSON.stringify(tool.arguments), partial: message});
               stream.push({type: 'toolcall_end', contentIndex: 0, toolCall, partial: message});
+              if (pauseFixture) {
+                const premature = {type: 'toolCall', id: 'premature-tool', name: 'write',
+                  arguments: {path: 'premature.txt', content: 'must not run'}};
+                message.content.push(premature);
+                stream.push({type: 'toolcall_start', contentIndex: 1, partial: message});
+                stream.push({type: 'toolcall_delta', contentIndex: 1, delta: JSON.stringify(premature.arguments), partial: message});
+                stream.push({type: 'toolcall_end', contentIndex: 1, toolCall: premature, partial: message});
+              }
               message.stopReason = 'toolUse';
             } else {
-              if (!reviewer) {
+              const answerText = JSON.stringify(context.messages.filter(item => item.role === 'user').at(-1));
+              const effectDone = context.messages.some(item => item.role === 'toolResult' && item.toolCallId === 'gated-tool');
+              if (pauseFixture && !reviewer && answerText.includes('actual consent') && !effectDone) {
+                const toolCall = {type: 'toolCall', id: 'gated-tool', name: 'write',
+                  arguments: {path: 'steering-owned.txt', content: 'consented\n'}};
+                message.content.push(toolCall);
+                stream.push({type: 'toolcall_start', contentIndex: 0, partial: message});
+                stream.push({type: 'toolcall_delta', contentIndex: 0, delta: JSON.stringify(toolCall.arguments), partial: message});
+                stream.push({type: 'toolcall_end', contentIndex: 0, toolCall, partial: message});
+                message.stopReason = 'toolUse';
+              } else {
+              if (pauseFixture && !reviewer) {
+                const reply = context.messages.find(item => item.role === 'toolResult' && item.toolCallId === 'callback-tool');
+                assert.ok(reply, 'saved question tool identity must survive reopen');
+                const answer = context.messages.filter(item => item.role === 'user').at(-1);
+                assert.match(JSON.stringify(answer), /actual consent|actual denial/, 'continuation must carry the actual answer');
+              } else if (!reviewer) {
                 const directions = context.messages.filter(item => item.role === 'user' && JSON.stringify(item.content).includes('[owner-direction id='));
                 assert.ok(directions.length, 'real SDK loop must consume queued direction before next provider request');
                 const reply = context.messages.find(item => item.role === 'toolResult' && item.toolCallId === 'callback-tool');
@@ -52,6 +79,7 @@ export function installSteeringProvider(callback = 'question', directory = proce
               stream.push({type: 'text_delta', contentIndex: 0, delta: text, partial: message});
               stream.push({type: 'text_end', contentIndex: 0, content: text, partial: message});
               message.stopReason = 'stop';
+              }
             }
             Object.assign(message.usage, {input: 1, output: 1, totalTokens: 2});
             stream.push({type: 'done', reason: message.stopReason, message});

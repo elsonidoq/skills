@@ -12,7 +12,7 @@ import threading
 import time
 from unittest.mock import patch
 
-from coherence_workflow.pi_adapter import PiAdapter, parent_question, terminal_question
+from coherence_workflow.pi_adapter import PiAdapter, WaitingQuestion, parent_question, terminal_question
 from coherence_workflow.store import Blocked
 from fixtures.support import ProjectTest
 
@@ -77,6 +77,53 @@ class SDKTransportTests(ProjectTest):
                 proc.wait(timeout=10)
             proc.stdout.close()
             proc.stderr.close()
+
+    def test_real_sdk_question_pause_reopens_saved_context(self):
+        host = Path(__file__).resolve().parents[1] / 'pi-host' / 'host.mjs'
+        preload = Path(__file__).parent / 'fixtures' / 'steering_adapter_fixture.mjs'
+        env = {'COHERENCE_HOST_PRELOAD': '1', 'NODE_OPTIONS': '--import=' + str(preload),
+               'COHERENCE_STEERING_CALLBACK': 'pause', 'PI_CODING_AGENT_DIR': str(self.root/'private-agent')}
+        events = []
+        adapter = PiAdapter(self.project, {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'off'},
+                            question=lambda _: self.fail('pause must not invoke the live answer callback'),
+                            observe=events.append)
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, env, clear=False):
+            waiting = adapter.prompt('ask before effect', pause_questions=True)
+            self.assertIsInstance(waiting, WaitingQuestion)
+            self.assertEqual(waiting.question, {'tool_call_id': 'callback-tool', 'question': 'fixture callback'})
+            first = adapter.last_observation
+            self.assertTrue(Path(waiting.session['file']).is_file())
+            self.assertFalse((self.project/'steering-owned.txt').exists())
+            self.assertFalse((self.project/'premature.txt').exists())
+            self.assertFalse(any(event.get('event') == 'tool_execution_start' and event.get('tool') == 'write'
+                                 for event in events))
+            reopened = PiAdapter(self.project, adapter.executor)
+            claims = []
+            result = reopened.prompt('actual consent', saved_session=waiting.session, pause_questions=True,
+                                     claim=claims.append)
+            self.assertEqual(result, 'steering complete')
+            self.assertEqual(claims, ['steering-owned.txt'])
+            self.assertEqual((self.project/'steering-owned.txt').read_text(), 'consented\n')
+            self.assertEqual(reopened.saved_session['id'], waiting.session['id'])
+            self.assertNotEqual(first['after']['epoch'], reopened.last_observation['before']['epoch'])
+            self.assertEqual(first['after']['counters'], reopened.last_observation['before']['counters'])
+            self.assertIsNotNone(adapter.last_interval)
+            self.assertIsNotNone(reopened.last_interval)
+
+    def test_real_sdk_question_denial_has_no_effect(self):
+        host = Path(__file__).resolve().parents[1] / 'pi-host' / 'host.mjs'
+        preload = Path(__file__).parent / 'fixtures' / 'steering_adapter_fixture.mjs'
+        env = {'COHERENCE_HOST_PRELOAD': '1', 'NODE_OPTIONS': '--import=' + str(preload),
+               'COHERENCE_STEERING_CALLBACK': 'pause', 'PI_CODING_AGENT_DIR': str(self.root/'private-agent')}
+        executor = {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'off'}
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, env, clear=False):
+            waiting = PiAdapter(self.project, executor).prompt('ask first', pause_questions=True)
+            self.assertIsInstance(waiting, WaitingQuestion)
+            result = PiAdapter(self.project, executor).prompt('actual denial', saved_session=waiting.session,
+                                                              pause_questions=True)
+            self.assertEqual(result, 'steering complete')
+            self.assertFalse((self.project/'steering-owned.txt').exists())
+            self.assertFalse((self.project/'premature.txt').exists())
 
     def test_adapter_multiplexes_steering_while_correlated_question_waits(self):
         self._real_sdk_callback_steering('question')
@@ -387,6 +434,11 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
             return 'yes'
         with a, b, self.assertRaises(BrokenPipeError):
             PiAdapter(self.project, {}, question=answer, observe_question=lambda state: (_ for _ in ()).throw(RuntimeError('recorder'))).prompt('fixture')
+
+    def test_lost_pause_result_is_uncertain_not_permission_to_redispatch(self):
+        a, b = self.fixture("assert request['pauseQuestions'] is True\n")
+        with a, b, self.assertRaisesRegex(Blocked, 'settlement and effects are uncertain.*do not redispatch'):
+            PiAdapter(self.project, {}).prompt('fixture', pause_questions=True)
 
     def test_noninteractive_question_stops_without_fabricating_answer(self):
         with patch('sys.stdin.isatty', return_value=False):

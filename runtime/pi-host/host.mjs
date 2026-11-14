@@ -24,7 +24,7 @@ function enforceExactAssignment(session, requested) {
   }
 }
 
-export async function promptSession(session, prompt, emit) {
+export async function promptSession(session, prompt, emit, paused = () => false) {
   if (session.coherenceRequestedAssignment) enforceExactAssignment(session, session.coherenceRequestedAssignment);
   const unsubscribe = session.subscribe(event => {
     if (['tool_execution_start', 'tool_execution_end', 'compaction_start', 'compaction_end',
@@ -34,11 +34,15 @@ export async function promptSession(session, prompt, emit) {
     }
   });
   try {
-    await session.prompt(prompt);
+    try { await session.prompt(prompt); }
+    catch (error) {
+      if (!paused() || error?.name !== 'AbortError') throw error;
+    }
     // A resolved prompt alone is not a reusable/disposable boundary.
     if (typeof session.waitForIdle === 'function') await session.waitForIdle();
     const last = [...session.messages].reverse().find(m => m.role === 'assistant');
-    if (last?.stopReason === 'error' || last?.stopReason === 'aborted') {
+    if ((last?.stopReason === 'error' && !(paused() && last.errorMessage === 'This operation was aborted')) ||
+        (last?.stopReason === 'aborted' && !paused())) {
       throw new Error(last.errorMessage || last.stopReason);
     }
     return session.getLastAssistantText() || '';
@@ -89,7 +93,7 @@ export function mutationTools(project, ask) {
   ];
 }
 
-export async function createWorkflowSession({project, executor, readOnly = false, savedSession, reuseKey = null, reviewRepair = false}, ask) {
+export async function createWorkflowSession({project, executor, readOnly = false, savedSession, reuseKey = null, reviewRepair = false, pauseQuestions = false}, ask) {
   const sessionDir = path.join(project, '.coherence', 'workflow', 'sessions');
   await mkdir(sessionDir, {recursive: true});
   const canonicalSessionDir = await realpath(sessionDir);
@@ -106,6 +110,9 @@ export async function createWorkflowSession({project, executor, readOnly = false
   // on subsequent corrective prompts. Old saved reviews gain this marker here.
   const reviewerContext = readOnly || reviewRepair || savedSession?.reviewerContext === true;
   let reportedOutcome = null;
+  let pendingQuestion = null;
+  let pauseAbort = null;
+  let session;
   let sessionManager;
   if (savedSession) {
     if (typeof savedSession !== 'object' || typeof savedSession.id !== 'string' ||
@@ -167,9 +174,21 @@ export async function createWorkflowSession({project, executor, readOnly = false
       });
       if (!readOnly) pi.registerTool({
         name: 'ask_owner', label: 'Ask owner',
+        ...(pauseQuestions ? {executionMode: 'sequential'} : {}),
         description: 'Ask a material scope or permission question; do not invent an answer.',
         parameters: {type: 'object', properties: {question: {type: 'string'}}, required: ['question']},
-        execute: async (_id, args) => {
+        execute: async (id, args) => {
+          if (pauseQuestions) {
+            pendingQuestion = {tool_call_id: id, question: args.question};
+            // Start abort outside the tool await. abort() waits for this tool and
+            // therefore must never be awaited here.
+            await new Promise(resolve => setImmediate(() => {
+              try { pauseAbort = Promise.resolve(session.abort()); }
+              catch (error) { pauseAbort = Promise.reject(error); }
+              resolve();
+            }));
+            return {content: [{type: 'text', text: 'Awaiting owner decision; no answer was provided.'}], details: {awaitingDecision: true}};
+          }
           const answer = await ask({type: 'question', question: args.question});
           if (answer.error) throw new Error(answer.error);
           return {content: [{type: 'text', text: answer.answer}], details: {}};
@@ -178,11 +197,11 @@ export async function createWorkflowSession({project, executor, readOnly = false
     }],
   });
   await resourceLoader.reload();
-  const {session} = await createAgentSession({
+  ({session} = await createAgentSession({
     cwd: project, modelRuntime, model, thinkingLevel: executor.effort,
     tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'ask_owner', 'cleanup_artifact', 'report_task_outcome'],
     sessionManager, resourceLoader,
-  });
+  }));
   try {
     await session.bindExtensions({});
     enforceExactAssignment(session, executor);
@@ -196,6 +215,8 @@ export async function createWorkflowSession({project, executor, readOnly = false
       ...(reviewerContext ? {reviewerContext: true} : {})};
     session._coherenceSessionManager = sessionManager;
     session.coherenceTaskOutcome = () => reportedOutcome;
+    session.coherencePendingQuestion = () => pendingQuestion;
+    session.coherencePauseAbort = () => pauseAbort;
     return session;
   } catch (error) {
     session.dispose();
@@ -356,10 +377,18 @@ export async function execute(request, emit, ask, controls = null) {
   process.on('SIGINT', cancel);
   try {
     const before = observation(session);
-    const text = await promptSession(session, request.prompt, emit);
+    const text = await promptSession(session, request.prompt, emit, () => !!session.coherencePendingQuestion());
+    const waiting = session.coherencePendingQuestion();
+    if (waiting) {
+      const pauseAbort = session.coherencePauseAbort();
+      if (!pauseAbort) throw new Error('question pause did not initiate SDK abort; inspect the saved session before continuation');
+      await pauseAbort;
+      if (!session.isIdle) throw new Error('question pause did not reach SDK idle; inspect the saved session before continuation');
+    }
     session.coherenceSavedSession = {...session.coherenceSavedSession,
       file: session._coherenceSessionManager.getSessionFile()};
-    return {text, outcome: session.coherenceTaskOutcome?.() ?? 'completed',
+    return {text, outcome: waiting ? 'waiting' : session.coherenceTaskOutcome?.() ?? 'completed',
+      ...(waiting ? {question: waiting} : {}),
       session: session.coherenceSavedSession, before, after: observation(session)};
   } finally {
     process.off('SIGTERM', cancel);
