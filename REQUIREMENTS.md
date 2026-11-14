@@ -72,8 +72,8 @@ version/provenance admission gate. The shared loader honors public package expor
 Node dependency lookup rather than a fixed `dist/` or nested `node_modules` layout;
 [offline compatibility checks](docs/coordinate-implementation.md#setup-and-verification)
 exercise the installed SDK without provider calls. Pi/Paseo updates do not require an SDK
-version pin, but breaking public API changes can still require an integration correction. No LangGraph,
-SQLite saver, cgroup delegation, closed host manifest, resource hashes or catalogue is needed.
+version pin, but breaking public API changes can still require an integration correction. The approved target requires Python LangGraph and standard file-backed SQLite graph checkpoints;
+it is not yet implemented. No cgroup delegation, closed host manifest, resource hashes or catalogue is needed.
 Optional explicit isolated setup never runs on ordinary entry; missing dependencies/auth/model
 report their actual operation errors, not administrative readiness failures.
 
@@ -84,7 +84,7 @@ Preserve the actual owner-selected model/effort without silent substitution or p
 assessment. Ordinary selected-model tokens need no financial receipt; obtain narrow permission
 for unrequested chargeable/irreversible external actions.
 
-Tasks run sequentially with normal SDK read/search/edit/write/command tools. The runner owns
+Tasks run sequentially by default with normal SDK read/search/edit/write/command tools. After cutover, explicit owner direction may authorize path-disjoint workers within one controller; sibling mutation is quiescent during shared checks and focused Git commits. The runner owns
 actual project check execution and explicit-owned-path focused commits; workers never stage
 or commit. Checks and path limits are optional context, not universally required metadata.
 Actual check failures cannot be reported passed. Normal Git hooks/signing and unrelated
@@ -95,8 +95,8 @@ coverage while revisiting invalidated conclusions. Findings and coverage gaps re
 prevent acceptance, not accepted through a SQL disposition or evidence hash.
 
 SQLite stores useful ordinary progress/history. Old tables/rows remain readable in place;
-new work never replays or settles old intent records. Optional history errors cannot veto coding.
-An ordinary exclusive worktree writer lock prevents cooperating overlap. Current recorded live
+new work never replays or settles old intent records. Historical non-graph runs remain readable and use an explicitly selected compatible runtime for inspected continuation, without automatic conversion or replay. Optional history errors cannot veto coding.
+One inherited worktree lock excludes competing controllers, not explicitly authorized disjoint workers within one controller. Current recorded live
 writers cannot be replaced/killed; explicit historical abandon inspects identities/scopes,
 releases only the old reservation and preserves incomplete effects/partial work. No cgroup
 provisioning for normal tasks. SDK compaction and output continuation are normal behavior;

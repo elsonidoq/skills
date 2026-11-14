@@ -710,7 +710,9 @@ def check_contracts(texts):
             "Missing memory or STATE is nonblocking", "no automatic summaries/indexes",
             "execution-time feedback/routing")
     require("runtime-authority", section(c, "# Coordinate Implementation"),
-            "SQLite stores ordinary", "not effect proof or execution eligibility")
+            "one LangGraph controller", "SQLite graph checkpoints hold", "not automatic acceptance",
+            "sequential by", "explicitly owner-directed path-disjoint workers",
+            "sibling mutations quiescent", "never silent", "conversion or replay")
     dispatch = section(p, "## Selected production and stage handoffs")
     require("stage-dispatch", dispatch, "direct asynchronous single-stage dispatch",
             "resolved saved assignment unchanged", "Inspect the returned artifact/checkpoint",

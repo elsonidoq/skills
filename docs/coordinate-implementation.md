@@ -1,8 +1,19 @@
 # Coordinate Implementation operating guide
 
-The existing entry runs ordinary requested tasks using Pi SDK tools. This operative contract
-supersedes old graph/host/custody/session/evidence eligibility rules. Historical plans, schemas,
-approvals and database rows are not rewritten or replayed.
+The existing entry runs ordinary requested tasks using Pi SDK tools. The approved target is one
+LangGraph controller owning transitions, dependency waves and interrupt/resume, with standard
+file-backed SQLite graph checkpoints for control state. Existing private operation history and actual
+Git/SDK observations support effect reconciliation, not automatic acceptance. Execution is sequential
+by default; explicit owner direction may authorize path-disjoint workers within the inherited controller
+lock. Quiesce sibling mutation for shared checks and focused Git commits. Historical non-graph runs
+remain readable and use an explicitly selected compatible runtime for inspected continuation, never
+silent conversion or replay. This target is not yet implemented; current CLI behavior below describes
+the existing runtime until cutover. The six task-linter checks remain the entire startup linter; no extra
+graph/host/custody/session/evidence admission rules. Historical approvals and rows are not rewritten.
+
+The approved [CLI/Pi interface target](../specs/006-issue-linked-delivery/contracts/interfaces.md#cli-and-attached-parent)
+retains existing actions and adds directed parallel execution and durable targeted question resumption.
+Mechanisms may vary within the approved design boundary; actual effect validation and inspected recovery remain.
 
 ## Run a minimal task
 
@@ -13,20 +24,14 @@ project's task-owned files:
 [{"id":"fix-title","description":"Correct the page title; run the existing relevant project test."}]
 ```
 
-Executor JSON uses the actual owner selection, for example:
-
-```json
-{"provider":"openai-codex","model":"gpt-6.1-sol","effort":"medium"}
-```
-
-An optional `reviewer` object selects the fresh read-only review executor separately:
+Executor JSON uses the actual owner selection and a required `reviewer` object for the fresh
+read-only review executor, for example:
 
 ```json
 {"provider":"openai-codex","model":"gpt-6.1-terra","effort":"medium","reviewer":{"provider":"openai-codex","model":"gpt-6.1-sol","effort":"medium"}}
 ```
 
-Without `reviewer`, review retains the selected worker profile for compatibility.
-An explicitly malformed reviewer profile fails with a corrective diagnostic, never a
+A missing or malformed reviewer profile fails with a corrective diagnostic, never a
 silent fallback. These are selections, not proof of provider availability or actual usage.
 An optional `implementation_fallback` object uses the same provider/model/effort fields and
 explicitly permits a stronger implementation worker during inspected recovery. A reviewer profile
@@ -89,7 +94,7 @@ No automatic installation, credential refresh, global reconfiguration or model s
 5. Declared `depends` references exist.
 6. Dependencies have no cycle.
 
-Dependencies determine sequential order; forward references are valid. Empty work reports
+Dependencies determine execution order; sequential is the default and forward references are valid. Empty work reports
 `no tasks` before storage, locks or SDK launch. No mandatory check, path list, approval envelope,
 manifest, catalogue, graph, original session, cgroup or provenance record.
 
@@ -143,8 +148,9 @@ permission prerequisite, or automatic commit target.
 
 ## Real execution and safety
 
-An exclusive Git-worktree writer lock prevents overlapping cooperating runners. The SDK host
-inherits that lock while active. A CLI entry waits transparently for that existing lock and may be
+The current runtime's exclusive Git-worktree writer lock prevents overlapping cooperating runners. The SDK host
+inherits that lock while active. At cutover, the lock continues to exclude competing controllers, not
+explicitly authorized path-disjoint workers within one controller. A CLI entry waits transparently for that existing lock and may be
 cancelled while waiting without creating a failed task/run or replacing its live writer; a platform
 that cannot wait returns concrete busy. This is lock entry only, not a queue, watchdog, polling
 service, or cancellation-drain claim. At an actual SDK edit/write, the runner protects unsafe/symlink,
@@ -427,7 +433,8 @@ Pi/Paseo updates therefore do not require a fixed installation layout; actual br
 changes may still need adaptation. The offline compatibility checks below cover discovery,
 public imports, sessions, tools and bridge discovery with the installed SDK, without paid
 provider calls. Re-run them after updates; no automatic update, installation, restart or live
-model probe is performed. No LangGraph, cgroup delegation, custom SDK tools or host manifests.
+model probe is performed. The current runtime does not use LangGraph; the approved target does.
+No cgroup delegation or host manifests are required.
 Explicit optional setup remains `scripts/install-workflow.sh --prefix NEW_DIRECTORY --allow-network`
 only with separate install/network authority. Ordinary entry never calls it.
 

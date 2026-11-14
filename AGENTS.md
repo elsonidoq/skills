@@ -172,10 +172,14 @@ rules above for reusable skills and commands.
   Historical approvals stay historical. The latest owner direction supersedes older graph/SQL/
   custody/evidence eligibility mandates: task startup linter has only readable file, parsed list,
   ID/work description, unique IDs, existing dependency references and acyclic dependencies.
-- Execution: the existing `coordinate-implementation` CLI runs sequential tasks with normal SDK
-  tools, actual specified project checks/manual gates, focused explicit-owned-path Git commits and
-  fresh independent read-only final review. SQLite stores ordinary progress/history, not effect
-  proof. No manifest, catalogue, cgroup provisioning, session/parent receipts or binding assessment.
+- Execution target: one LangGraph `coordinate-implementation` controller uses normal SDK tools,
+  sequential execution by default and explicitly owner-directed path-disjoint waves. Quiesce sibling
+  mutations during shared checks and focused Git commits; retain actual specified checks/manual gates
+  and fresh independent read-only final review. Graph checkpoints hold control state; private operation
+  history and actual Git/SDK observations support reconciliation, not automatic acceptance. Historical
+  non-graph runs remain readable and use an explicitly selected compatible runtime for inspected
+  continuation, never silent conversion or replay. This target is not yet implemented. No manifest,
+  catalogue, cgroup provisioning, session/parent receipts or binding assessment.
   Preserve task-owned path boundaries, unrelated work, hooks/signing, old rows and actual errors.
   Current terminal input is authority when needed; no automatic install, auth refresh, reload,
   legacy restart, expensive failure retry loop or mass conversion.

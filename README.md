@@ -188,8 +188,11 @@ Approval evidence: [combined approval, or specification and overall approvals]
 Approved current content/revisions and implementation scope: [evidence]
 ```
 
-Coordinate Implementation executes requested tasks sequentially using the existing CLI and
-installed Pi SDK. Source worktrees reuse that Pi SDK rather than requiring copied runtime
+Coordinate Implementation currently executes requested tasks sequentially using the existing CLI and
+installed Pi SDK. The approved target is one LangGraph controller with file-backed checkpoints,
+sequential default and explicitly owner-directed path-disjoint waves. Sibling mutation is quiescent
+for shared checks and focused commits; historical non-graph runs use an explicitly selected compatible
+runtime for inspected continuation, never automatic conversion or replay. This target is not yet implemented. Source worktrees reuse that Pi SDK rather than requiring copied runtime
 `node_modules`; explicit isolated workflow setup retains its lockfile-resolved SDK. Ordinary direct
 owner-authorized coding needs no new planning artifacts.
 Task intake checks only readable file, parsed list, ID/work, unique IDs, existing dependencies
@@ -202,9 +205,10 @@ scripts/coordinate-implementation start --project /absolute/project \
 ```
 
 Minimal tasks: `[{"id":"fix","description":"Fix the requested behavior and run its project test."}]`.
-Executor JSON contains the actual selected `provider`, `model`, `effort`; no substitution or
-provenance assessment. No workflow graph, manifest, catalogue, cgroup delegation, original
-session, parent receipt or proof-of-effect database is required. Installed entry is
+Executor JSON contains the actual selected `provider`, `model`, `effort` and a required `reviewer`
+object with its own selection; no substitution or provenance assessment. Graph checkpoints are control state, not acceptance or an extra admission
+protocol; no manifest, catalogue, cgroup delegation, original session, parent receipt or
+proof-of-effect database is required. Installed entry is
 `coordinate-implementation`; optional explicit isolated setup is separate install/network authority,
 never ordinary-use provisioning or auth refresh. Explicit cross-repository activation uses
 `scripts/install-workflow.sh --prefix "$HOME/.local/share/coherence-workflow" --allow-network --global`.
@@ -229,8 +233,8 @@ SDK compaction and long-output continuation remain normal behavior, not launch p
 releases its reservation without signalling processes or settling old effects, and preserves
 partial files/history. Current terminal input answers material questions without transcript
 proofs; noninteractive questions stop honestly. No automatic resume/replay or expensive retry
-loop. An ordinary writer lock prevents cooperating overlap; SDK tools are not an adversarial
-sandbox. Inspect actual conflicting writers/files and uncertain effects, never kill/adopt them.
+loop. One inherited worktree lock excludes competing controllers; explicitly directed disjoint
+workers may overlap within the controller after cutover. SDK tools are not an adversarial sandbox. Inspect actual conflicting writers/files and uncertain effects, never kill/adopt them.
 After adopting changed global skills/prompts in Paseo, prepare a fresh-session handoff instead of reloading or restarting the current session.
 
 ## Context-first recovery and owner guidance
@@ -255,7 +259,7 @@ keep technical-gotcha retrieval distinct from guidance authority.
 Planner defaults to direct async stage → parent artifact/checkpoint inspection → next
 authorized stage with the saved assignment unchanged. A workflow needs earned branching,
 parallel independent work or other orchestration beyond convenience/single-child/sequential
-wrapping; stage authority/reviewer independence remain. Executable implementation remains single-writer and dependency-ordered.
+wrapping; stage authority/reviewer independence remain. Executable implementation remains dependency-ordered and sequential by default; explicit owner direction may permit disjoint workers.
 Coordinator trusts settled approved design, cheaply audits actual diffs/focused commits/
 REQUIRED outputs, then advances ready tasks. Only concrete invalidation reopens affected
 work; no routine replanning or unchanged preflight loops. Independent final review remains.
