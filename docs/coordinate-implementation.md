@@ -578,7 +578,7 @@ Pi/Paseo updates therefore do not require a fixed installation layout; actual br
 changes may still need adaptation. The offline compatibility checks below cover discovery,
 public imports, sessions, tools and bridge discovery with the installed SDK, without paid
 provider calls. Re-run them after updates; no automatic update, installation, restart or live
-model probe is performed. The current runtime does not use LangGraph; the approved target does.
+model probe is performed. The current runtime uses the LangGraph controller described above.
 No cgroup delegation or host manifests are required.
 Explicit optional setup remains `scripts/install-workflow.sh --prefix NEW_DIRECTORY --allow-network`
 only with separate install/network authority. Ordinary entry never calls it.
