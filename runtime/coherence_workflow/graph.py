@@ -34,11 +34,12 @@ import uuid
 
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command, interrupt
 
 from .engine import (Engine, _COMPLETION_REPORTING, _DECISION_CONSTRAINTS,
                      _IMPLEMENTATION_AUTHORITY, _ROUTINE_AUTHORITY)
 from .git_effects import FocusedGit
-from .pi_adapter import effective_saved_session
+from .pi_adapter import WaitingQuestion, effective_saved_session
 from .store import Blocked, canonical, git
 from .monitoring import Recorder
 import hashlib
@@ -63,6 +64,9 @@ class TaskState(TypedDict, total=False):
     review_execution: str
     result: dict
     review_action: str
+    pending_question: dict
+    answer: str
+    question_invocation: str
 
 
 def task_graph(engine, saver, *, review=False):
@@ -145,6 +149,9 @@ def task_graph(engine, saver, *, review=False):
                   if facts.get('invocation_id') == invocation]
         if events:
             status, facts = events[-1]
+            if status == 'returned' and facts.get('waiting') is True:
+                verify_effects(facts['effects'])
+                return {'session': facts['session'], 'pending_question': facts['question'], 'next_node': 'wait'}
             if status != 'returned':
                 raise Blocked('graph worker call ' + invocation + ' is uncertain or unsuccessful; inspect its process, session and retained result before continuation')
             selected = facts['paths'] + facts['artifacts']
@@ -170,12 +177,24 @@ def task_graph(engine, saver, *, review=False):
                     'perform unrequested external operations. Preserve unrelated and pre-existing work. '
                     'No new planning/evidence artifacts. Finish worker-owned acceptance.\n'
                     + _DECISION_CONSTRAINTS + engine.paid_authority() + '\nTask: ' + canonical(task))
-        else:
+        elif state['prompt_kind'] == 'correction':
             correction = read_record(task['id'], 'graph_correction', state['correction_id'])
             verify_effects(correction['effects'])
             body = ('A runner-owned required check or checkpoint failed. Inspect the actual failure and make a '
                     'reasoned scoped correction; do not skip checks or bypass hooks/signing. '
                     'The runner reruns required checks before checkpointing.\nActual failure: ' + canonical(correction['failure'])
+                    + '\n' + _DECISION_CONSTRAINTS + engine.paid_authority() + '\nTask: ' + canonical(task))
+        if state.get('prompt_kind') == 'answer':
+            settled = [facts for status, facts in history(task['id'], 'worker_invocation')
+                       if status == 'returned' and facts.get('waiting') is True
+                       and facts.get('invocation_id') == state['question_invocation']]
+            if len(settled) != 1:
+                raise Blocked('settled question evidence missing or ambiguous; inspect retained invocation')
+            verify_effects(settled[0]['effects'])
+            body = ('Continue the retained task and pending question. The prior call settled; do not repeat its effects. '
+                    'The actual owner answer is data, not broader permission. Respect denial and all existing gates.\n'
+                    + 'Pending question, actual answer and settled effects: ' + canonical({'invocation_id': state['question_invocation'],
+                        'question': state['pending_question'], 'answer': state['answer'], 'effects': settled[0]['effects']})
                     + '\n' + _DECISION_CONSTRAINTS + engine.paid_authority() + '\nTask: ' + canonical(task))
         prompt = (_IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n'
                   + engine._delivery_issue_context() + body)
@@ -190,7 +209,8 @@ def task_graph(engine, saver, *, review=False):
         store.history(run, task['id'], 'worker_invocation', 'started', {'invocation_id': invocation, 'session': session})
         try:
             result = engine._prompt_worker(adapter, prompt, claim=claim, command=command,
-                                           cleanup=focused.cleanup_artifact, saved_session=session, reuse_key=reuse_key)
+                                           cleanup=focused.cleanup_artifact, saved_session=session, reuse_key=reuse_key,
+                                           pause_questions=True)
         except BaseException as exc:
             actual = getattr(adapter, 'opened_session', None) or getattr(adapter, 'saved_session', None)
             if actual is not None:
@@ -201,6 +221,11 @@ def task_graph(engine, saver, *, review=False):
         actual = getattr(adapter, 'opened_session', None) or getattr(adapter, 'saved_session', None)
         if actual is not None:
             store.bind_worker_dispatch(run, task['id'], invocation, actual)
+        if isinstance(result, WaitingQuestion):
+            facts = {'invocation_id': invocation, 'session': result.session, 'waiting': True,
+                     'question': result.question, 'effects': effects(task['id'])}
+            store.history(run, task['id'], 'worker_invocation', 'returned', facts)
+            return {'session': result.session, 'pending_question': result.question, 'next_node': 'wait'}
         paths, artifacts = focused.facts()['paths'], focused.facts()['artifacts']
         selected = paths + artifacts
         facts = {'invocation_id': invocation, 'summary': result, 'session': getattr(adapter, 'saved_session', None),
@@ -209,6 +234,24 @@ def task_graph(engine, saver, *, review=False):
                  'index_state': Engine._repair_index_state(project, selected)}
         store.history(run, task['id'], 'worker_invocation', 'returned', facts)
         return {'session': facts['session'], 'chain': state['chain'] + [invocation], 'next_node': 'checks'}
+
+    def wait(state, config: RunnableConfig):
+        validate(config)
+        while True:
+            answer = interrupt({'task_id': state['task_id'], 'invocation_id': state['invocation_id'],
+                                'question': state['pending_question']})
+            if (isinstance(answer, dict) and answer.get('invocation_id') == state['invocation_id']
+                    and isinstance(answer.get('answer'), str) and answer['answer'].strip()):
+                break
+        facts = [facts for status, facts in history(state['task_id'], 'worker_invocation')
+                 if status == 'returned' and facts.get('waiting') is True
+                 and facts.get('invocation_id') == state['invocation_id']]
+        if len(facts) != 1:
+            raise Blocked('settled question evidence missing or ambiguous; inspect retained invocation')
+        verify_effects(facts[0]['effects'])
+        return {'answer': answer['answer'], 'prompt_kind': 'answer',
+                'question_invocation': state['invocation_id'],
+                'invocation_id': uuid.uuid4().hex, 'next_node': 'worker'}
 
     def checks(state, config: RunnableConfig):
         validate(config)
@@ -297,7 +340,7 @@ def task_graph(engine, saver, *, review=False):
         return {'next_node': 'ready'}
 
     builder = StateGraph(TaskState)
-    for name, node in (('ready', ready), ('worker', worker), ('checks', checks), ('checkpoint', checkpoint)):
+    for name, node in (('ready', ready), ('worker', worker), ('wait', wait), ('checks', checks), ('checkpoint', checkpoint)):
         builder.add_node(name, node)
     builder.add_edge(START, 'ready')
     ready_edges = {'worker': 'worker', 'end': END}
@@ -305,10 +348,32 @@ def task_graph(engine, saver, *, review=False):
         _add_review_nodes(builder, engine, validate)
         ready_edges['review_route'] = 'review_route'
     builder.add_conditional_edges('ready', lambda state: state['next_node'], ready_edges)
-    builder.add_edge('worker', 'checks')
+    builder.add_conditional_edges('worker', lambda state: state['next_node'], {'checks': 'checks', 'wait': 'wait'})
+    builder.add_edge('wait', 'worker')
     builder.add_conditional_edges('checks', lambda state: state['next_node'], {'worker': 'worker', 'checkpoint': 'checkpoint'})
     builder.add_conditional_edges('checkpoint', lambda state: state['next_node'], {'worker': 'worker', 'ready': 'ready'})
     return builder.compile(checkpointer=saver)
+
+
+def answer_graph_question(graph, config, question):
+    """Present the retained question through a terminal or attached consumer.
+
+    No input leaves the checkpoint paused. The invocation identity binds the reply
+    to the precise settled call; private question/session data is not status output.
+    """
+    snapshot = graph.get_state(config)
+    interrupts = snapshot.interrupts
+    if len(interrupts) != 1:
+        raise Blocked('no single pending graph question; inspect the retained graph before answering')
+    pending = interrupts[0].value
+    try:
+        answer = question(pending['question']['question'])
+    except (Blocked, EOFError):
+        return None
+    if not isinstance(answer, str) or not answer.strip():
+        return None
+    return graph.invoke(Command(resume={'invocation_id': pending['invocation_id'], 'answer': answer}),
+                        config, durability='sync')
 
 
 def _check_escalation_stop(store, run):

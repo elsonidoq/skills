@@ -27,12 +27,21 @@ export function installSteeringProvider(callback = 'question', directory = proce
             await options?.onPayload?.({offline: true}, model);
             assert.ok(!options?.signal?.aborted, 'fixture was aborted');
             const reviewer = !getCurrentTools(context.messages).some(tool => tool.name === 'ask_owner');
-            const pauseFixture = callback === 'pause';
+            const pauseFixture = callback === 'pause' || callback === 'graph-pause';
+            const priorEffect = context.messages.some(item => item.role === 'toolResult' && item.toolCallId === 'prior-tool');
             const priorQuestion = context.messages.some(item => item.role === 'assistant' &&
               item.content?.some(part => part.type === 'toolCall' && part.id === 'callback-tool'));
             const first = (pauseFixture ? !priorQuestion : calls++ === 0) && !reviewer;
             stream.push({type: 'start', partial: message});
-            if (first) {
+            if (callback === 'graph-pause' && !reviewer && !priorEffect) {
+              const toolCall = {type: 'toolCall', id: 'prior-tool', name: 'write',
+                arguments: {path: 'prior.txt', content: 'settled once\n'}};
+              message.content.push(toolCall);
+              stream.push({type: 'toolcall_start', contentIndex: 0, partial: message});
+              stream.push({type: 'toolcall_delta', contentIndex: 0, delta: JSON.stringify(toolCall.arguments), partial: message});
+              stream.push({type: 'toolcall_end', contentIndex: 0, toolCall, partial: message});
+              message.stopReason = 'toolUse';
+            } else if (first) {
               const tool = callback === 'claim' ? {name: 'write', arguments: {path: 'steering-owned.txt', content: 'offline fixture\n'}}
                 : callback === 'command' ? {name: 'bash', arguments: {command: 'true'}}
                   : {name: 'ask_owner', arguments: {question: 'fixture callback'}};
