@@ -280,6 +280,7 @@ After changing global assets in Paseo, prepare a fresh-session handoff instead o
 - `finish-session`: reconcile documentation and other authorized owners with existing session outcomes;
   no fresh implementation review, rerun of implementation checks, or new acceptance gate.
 - `track-open-issue`: project-discovered GitHub unresolved-issue lifecycle, scoped writes, independent readback and configured read-only body review.
+- `assess-skill-improvements`: owner-triggered evidence-based issue assessment; analysis does not deliver changes or imply acceptance.
 - `import-open-issues`: default offline historical Markdown preview, conflict-aware reconciliation and separately authorized import; never an automatic migration.
 
 ## Validation and Documentation

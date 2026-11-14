@@ -41,6 +41,65 @@ def replace_clause(text, clause, replacement="REMOVED"):
     return changed
 
 
+class SkillAssessmentWalkthroughTests(unittest.TestCase):
+    """Bounded reader and authored reasoning walkthrough, not live tracker or model proof."""
+
+    def test_paginated_discovery_reasoning_and_partial_results(self):
+        skill = (ROOT / 'skills/assess-skill-improvements/SKILL.md').read_text()
+        text = ' '.join(skill.split())
+        for clause in ('state=all&per_page=100', '--paginate', 'Exclude records containing `pull_request`',
+                       'An explicit reassessment may select already labelled issues',
+                       'never as an eligibility filter', 'author, time, or a blind Git range cannot establish attribution',
+                       'smallest justified proposals for existing responsible skill owners',
+                       'Proposed and no-change are analysis, never addressed',
+                       'report the partial result', 'Read back each label/comment effect independently'):
+            self.assertIn(clause, text)
+
+        pages = [
+            [{'id': 1, 'state': 'open', 'labels': [], 'acceptance': None},
+             {'id': 2, 'state': 'closed', 'labels': [], 'acceptance': 'accepted'}],
+            [{'id': 3, 'state': 'open', 'pull_request': {}},
+             {'id': 4, 'state': 'closed', 'labels': ['skill-assessment:proposed'], 'acceptance': None}],
+        ]
+        comments = {1: [['original intent'], ['supported omission']],
+                    2: [['changed requirement'], ['supported omission']],
+                    4: [['previous analysis'], ['unrelated commit']]}
+
+        def read_pages(pages, fail=None):
+            result = []
+            for index, page in enumerate(pages):
+                if index == fail:
+                    return result, False
+                result.extend(page)
+            return result, True
+
+        discovered, complete = read_pages(pages)
+        selected = [i for i in discovered if 'pull_request' not in i and
+                    not any(label.startswith('skill-assessment:') for label in i['labels'])]
+        self.assertTrue(complete)
+        self.assertEqual([i['id'] for i in selected], [1, 2])
+        reassessed = next(i for i in discovered if i['id'] == 4)
+        selected.append(reassessed)  # explicit owner selection, not default
+        evidence = {i['id']: read_pages(comments[i['id']])[0] for i in selected}
+        self.assertEqual(evidence[1], ['original intent', 'supported omission'])
+        self.assertEqual(evidence[2], ['changed requirement', 'supported omission'])
+        self.assertIn('unrelated commit', evidence[4])
+        # Authored assessment: independent supported omissions share one existing owner;
+        # changed scope and unrelated commit are not attributed to that omission.
+        proposal = {'sources': [1, 2], 'owner': 'existing skill', 'state': 'proposed',
+                    'excluded': ['changed requirement', 'unrelated commit']}
+        self.assertEqual(proposal['sources'], [1, 2])
+        self.assertEqual(proposal['owner'], 'existing skill')
+        self.assertNotEqual(proposal['state'], 'addressed')
+        self.assertEqual(set(proposal['excluded']), {'changed requirement', 'unrelated commit'})
+        self.assertFalse(read_pages(pages, fail=1)[1])
+        self.assertFalse(read_pages(comments[1], fail=1)[1])
+        # A failed mutation or independent readback cannot establish a complete transition.
+        for mutation_ok, readback_ok in ((False, False), (True, False)):
+            self.assertFalse(mutation_ok and readback_ok)
+        self.assertNotEqual('no-change', 'addressed')
+
+
 class IssueAssociationWalkthroughTests(unittest.TestCase):
     def test_understanding_precedes_optional_association_and_issue_carriers(self):
         planner = (ROOT / 'skills/planner/SKILL.md').read_text()
