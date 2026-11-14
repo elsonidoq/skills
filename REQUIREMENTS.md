@@ -63,8 +63,11 @@ staging/target proposal still needs explicit approval; unresolved selections/rec
 
 ## Executable implementation runtime
 
-Coordinate Implementation uses the existing Python CLI, PyYAML6.0.3, standard-library
-SQLite/Git process handling and the installed Pi SDK. Python >=3.10,
+Coordinate Implementation uses the existing Python CLI, PyYAML 6.0.3, LangGraph 1.2.21,
+SQLite saver 3.1.3, standard OpenTelemetry 1.45.2 packages, standard-library
+SQLite/Git process handling and the installed Pi SDK. The hashed lock targets Python 3.12
+Linux x86_64; the declared Python minimum remains 3.10. Phoenix runs separately in its
+official container, not as a Python workflow dependency. Python >=3.10,
 local Git and a usable Node/SDK installation are actual dependencies. Node must support
 `node:module.findPackageJSON` and parent-aware ESM resolution (the currently installed Pi
 requires Node >=22.19). The SDK lock is install metadata, not an exact runtime
@@ -72,8 +75,7 @@ version/provenance admission gate. The shared loader honors public package expor
 Node dependency lookup rather than a fixed `dist/` or nested `node_modules` layout;
 [offline compatibility checks](docs/coordinate-implementation.md#setup-and-verification)
 exercise the installed SDK without provider calls. Pi/Paseo updates do not require an SDK
-version pin, but breaking public API changes can still require an integration correction. The approved target requires Python LangGraph and standard file-backed SQLite graph checkpoints;
-it is not yet implemented. No cgroup delegation, closed host manifest, resource hashes or catalogue is needed.
+version pin, but breaking public API changes can still require an integration correction. The standard file-backed graph saver is available; the graph execution controller is not yet implemented. No cgroup delegation, closed host manifest, resource hashes or catalogue is needed.
 Optional explicit isolated setup never runs on ordinary entry; missing dependencies/auth/model
 report their actual operation errors, not administrative readiness failures.
 

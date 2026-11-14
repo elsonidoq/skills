@@ -9,6 +9,11 @@ description = "Sequential task execution with the Pi SDK and focused Git checkpo
 requires-python = ">=3.10"
 dependencies = [
   "PyYAML==6.0.3",
+  "langgraph==1.2.21",
+  "langgraph-checkpoint-sqlite==3.1.3",
+  "opentelemetry-api==1.45.2",
+  "opentelemetry-sdk==1.45.2",
+  "opentelemetry-exporter-otlp-proto-http==1.45.2",
 ]
 
 [tool.setuptools.packages.find]
