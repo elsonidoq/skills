@@ -53,7 +53,7 @@ test('registered parent steering tool reaches the production adapter, host and r
     // prompt, not an implementation workflow or replacement host dispatcher.
     const python = execFileSync(process.env.COHERENCE_PYTHON || 'python3',
       ['-c', 'import sys; print(sys.executable)'], {encoding: 'utf8'}).trim();
-    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'), `#!${python}\nimport sys,os\nsys.path.insert(0, ${JSON.stringify(path.join(repository, 'runtime'))})\nfrom coherence_workflow.pi_adapter import PiAdapter,parent_question\ntarget={'run_id':'offline-steering','task_id':'T010','invocation_id':'exact-call','role':'task_worker'}\nadapter=PiAdapter(os.getcwd(), {'provider':'openai','model':'gpt-4o-mini','effort':'off'}, question=parent_question)\nassert adapter.enable_parent_steering(target)\nassert adapter.prompt('controlled offline prompt',steering=target)=='steering complete'\nassert adapter.steering_states['direction-1']=='consumed'\nassert adapter.steering_states['direction-2']=='consumed'\n`, {mode: 0o700});
+    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'), `#!${python}\nimport sys,os\nsys.path.insert(0, ${JSON.stringify(path.join(repository, 'runtime'))})\nfrom coherence_workflow.pi_adapter import PiAdapter,parent_question\nimport threading\nerrors=[]\ndef work(n):\n try:\n  target={'run_id':'offline-steering','task_id':'T%03d'%n,'invocation_id':'exact-call-%d'%n,'role':'task_worker'}\n  adapter=PiAdapter(os.getcwd(), {'provider':'openai','model':'gpt-4o-mini','effort':'off'}, question=lambda q: parent_question('worker-%d: '%n+q))\n  assert adapter.enable_parent_steering(target)\n  assert adapter.prompt('worker-%d'%n,steering=target)=='steering complete'\n  assert adapter.steering_states['direction-%d'%n]=='consumed'\n except BaseException as e: errors.append(e)\nthreads=[threading.Thread(target=work,args=(n,)) for n in (1,2)]\nfor t in threads: t.start()\nfor t in threads: t.join()\nassert not errors, errors\n`, {mode: 0o700});
     process.env.NODE_OPTIONS = '--import=' + path.join(repository, 'runtime/tests/fixtures/steering_adapter_fixture.mjs');
     process.env.COHERENCE_HOST_PRELOAD = '1';
     process.env.COHERENCE_NODE = process.execPath;
@@ -81,27 +81,27 @@ test('registered parent steering tool reaches the production adapter, host and r
       }
     };
     await call('coordinate_implementation_start', {tasks: 'unused', executor: 'unused', run: 'offline-steering'}, abort.signal);
-    await until(() => messages.some(item => item.customType === 'coordinate_implementation_question') && messages.some(item => item.customType === 'coordinate_implementation_target'));
-    const target = messages.find(item => item.customType === 'coordinate_implementation_target').details;
-    assert.equal(target.task_id, 'T010'); assert.equal(target.invocation_id, 'exact-call');
-    const direction = {request_id: 'direction-1', run: 'offline-steering', task_id: target.task_id, invocation_id: target.invocation_id, instruction: '/inert identical direction'};
-    await assert.rejects(call('coordinate_implementation_steer', {...direction, invocation_id: 'successor'}), /exact active worker target unavailable/);
-    assert.equal((await call('coordinate_implementation_steer', direction)).details.status, 'accepted');
-    await until(() => messages.some(item => item.customType === 'coordinate_implementation_steering_status' && item.details.status === 'queued'));
-    assert.equal((await call('coordinate_implementation_steer', direction)).details.status, 'queued', 'same ID is idempotent');
-    await call('coordinate_implementation_steer', {...direction, request_id: 'direction-2'});
-    await until(() => messages.some(item => item.details?.request_id === 'direction-2' && item.details.status === 'queued'));
-    assert.equal(messages.some(item => item.details?.status === 'consumed'), false, 'steering cannot answer the pending owner question');
-    const question = messages.find(item => item.customType === 'coordinate_implementation_question');
-    await call('coordinate_implementation_reply', {run: 'offline-steering', request_id: question.details.request_id, answer: 'ordinary callback'});
+    await until(() => messages.some(item => item.customType === 'coordinate_implementation_question') && messages.filter(item => item.customType === 'coordinate_implementation_target').length === 2);
+    const directions = [1, 2].map(n => ({request_id: `direction-${n}`, run: 'offline-steering', task_id: `T00${n}`, invocation_id: `exact-call-${n}`, instruction: `worker-${n}`}));
+    await assert.rejects(call('coordinate_implementation_steer', {...directions[0], invocation_id: 'successor'}), /exact active worker target unavailable/);
+    for (const direction of directions) assert.equal((await call('coordinate_implementation_steer', direction)).details.status, 'accepted');
+    await until(() => directions.every(direction => messages.some(item => item.details?.request_id === direction.request_id && item.details.status === 'queued')));
+    assert.equal((await call('coordinate_implementation_steer', directions[0])).details.status, 'queued');
+    assert.equal(messages.some(item => item.details?.status === 'consumed'), false);
+    for (let i = 0; i < 2; i++) {
+      await until(() => messages.filter(item => item.customType === 'coordinate_implementation_question').length > i);
+      const question = messages.filter(item => item.customType === 'coordinate_implementation_question')[i];
+      const worker = question.content.match(/worker-[12]/)[0];
+      await call('coordinate_implementation_reply', {run: 'offline-steering', request_id: question.details.request_id, answer: `answer-${worker}`});
+    }
     await until(() => messages.some(item => item.customType === 'coordinate_implementation_complete'));
     assert.match(messages.find(item => item.customType === 'coordinate_implementation_complete').content, /exit 0/);
-    for (const id of ['direction-1', 'direction-2']) {
-      const states = messages.filter(item => item.customType === 'coordinate_implementation_steering_status' && item.details.request_id === id);
+    for (const direction of directions) {
+      const states = messages.filter(item => item.customType === 'coordinate_implementation_steering_status' && item.details.request_id === direction.request_id);
       assert.equal(states.at(-1).details.status, 'consumed');
-      assert.ok(states.every(item => item.details.task_id === 'T010' && item.details.invocation_id === 'exact-call'));
+      assert.ok(states.every(item => item.details.task_id === direction.task_id && item.details.invocation_id === direction.invocation_id));
     }
-    await assert.rejects(call('coordinate_implementation_steer', direction), /no matching active/);
+    await assert.rejects(call('coordinate_implementation_steer', directions[0]), /no matching active/);
     for (const {message, options} of wakeups) {
       const shouldWake = ['coordinate_implementation_question', 'coordinate_implementation_complete'].includes(message.customType);
       assert.equal(options.triggerTurn, shouldWake, message.customType);

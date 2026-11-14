@@ -68,6 +68,7 @@ export default function coordinateImplementationBridge(pi) {
     ['task_worker', 'corrective_worker', 'fixer'].includes(value.role);
   const sameTarget = (left, right) => exactTarget(left) && exactTarget(right) &&
     ['run_id', 'task_id', 'invocation_id', 'session_id', 'role'].every(key => left[key] === right[key]);
+  const targetKey = target => JSON.stringify(['run_id', 'task_id', 'invocation_id', 'session_id', 'role'].map(key => target[key]));
   const settleUnknown = (bridge, target) => {
     for (const [requestId, direction] of bridge.directions) {
       if (direction.target === target && ['accepted', 'queued'].includes(direction.status)) {
@@ -90,7 +91,10 @@ export default function coordinateImplementationBridge(pi) {
       }
       if (request.type === 'steering_target') {
         if (!exactTarget(request.target) || request.target.run_id !== bridge.run) { send(socket, {error: 'invalid active steering target'}); return; }
-        bridge.target = {target: request.target, socket};
+        const key = targetKey(request.target);
+        const previous = bridge.targets.get(key);
+        if (previous) settleUnknown(bridge, previous.target);
+        bridge.targets.set(key, {target: request.target, socket});
         // Keep task/steering telemetry visible without waking the parent agent.
         pi.sendMessage({customType: 'coordinate_implementation_target', display: true,
           content: `Coordinate implementation active target: ${request.target.task_id}/${request.target.invocation_id}.`,
@@ -98,17 +102,18 @@ export default function coordinateImplementationBridge(pi) {
           {triggerTurn: false});
         return;
       }
+      const target = exactTarget(request.target) && bridge.targets.get(targetKey(request.target));
       if (request.type === 'steering_closed') {
-        if (bridge.target?.socket === socket && sameTarget(request.target, bridge.target.target)) {
-          settleUnknown(bridge, bridge.target.target);
-          bridge.target = undefined;
+        if (target?.socket === socket) {
+          settleUnknown(bridge, target.target);
+          bridge.targets.delete(targetKey(request.target));
         }
         return;
       }
       if (typeof request.request_id !== 'string' || typeof request.status !== 'string' ||
-          bridge.target?.socket !== socket || !sameTarget(request.target, bridge.target.target)) { send(socket, {error: 'invalid steering status'}); return; }
+          target?.socket !== socket || !sameTarget(request.target, target.target)) { send(socket, {error: 'invalid steering status'}); return; }
       const direction = bridge.directions.get(request.request_id);
-      if (!direction) return;
+      if (!direction || direction.target !== target.target) return;
       direction.status = request.status;
       pi.sendMessage({customType: 'coordinate_implementation_steering_status', display: true,
         content: `Coordinate implementation direction ${request.request_id}: ${request.status}.`,
@@ -139,14 +144,18 @@ export default function coordinateImplementationBridge(pi) {
       send(socket, {request_id: request.request_id, ready: true});
       return;
     }
-    if (bridge.pending) {
-      send(socket, {request_id: request.request_id, error: 'parent owner bridge already has a pending question'});
-      return;
-    }
     if (ownerOnly && !pi.getActiveTools().includes('ask_user')) {
       send(socket, {request_id: request.request_id, error: 'registered ask_user capability unavailable; open a session with ask_user and ask the owner'});
       return;
     }
+    bridge.questions.push({request, socket, ownerOnly, context});
+    showNextQuestion(bridge);
+  };
+
+  const showNextQuestion = bridge => {
+    if (bridge.pending || !bridge.questions.length) return;
+    const {request, socket, ownerOnly, context} = bridge.questions.shift();
+    if (socket.destroyed) return showNextQuestion(bridge);
     bridge.pending = {request_id: request.request_id, socket, ownerOnly};
     const ownerInstruction = ownerOnly
       ? `This is an owner-only continuation decision, not routine coordinator triage. Call registered ask_user with this decision context and relay only the actual owner answer using coordinate_implementation_owner_reply with request_id ${request.request_id} and run ${bridge.run}. Do not self-consent or use coordinate_implementation_reply.\n\nDecision context: rejecting execution ${context.rejecting_execution}; reviewed range ${context.review_base} → ${context.review_head}; original scope ${context.scope}; effect ${context.effect}.`
@@ -173,7 +182,7 @@ export default function coordinateImplementationBridge(pi) {
       const session = ctx.sessionManager.getSessionId();
       const token = randomBytes(32).toString('hex');
       const sockets = new Set();
-      const bridge = {directory, endpoint, session, token, run: params.run, sockets, pending: undefined, target: undefined,
+      const bridge = {directory, endpoint, session, token, run: params.run, sockets, pending: undefined, questions: [], targets: new Map(),
         directions: new Map(), server: undefined, child: undefined, exited: undefined, closing: undefined, abortSignal: signal, abort: undefined};
       try {
         await chmod(directory, 0o700);
@@ -192,10 +201,10 @@ export default function coordinateImplementationBridge(pi) {
           });
           socket.on('close', () => {
             sockets.delete(socket);
-            if (bridge.pending?.socket === socket) bridge.pending = undefined;
-            if (bridge.target?.socket === socket) {
-              settleUnknown(bridge, bridge.target.target);
-              bridge.target = undefined;
+            bridge.questions = bridge.questions.filter(question => question.socket !== socket);
+            if (bridge.pending?.socket === socket) { bridge.pending = undefined; showNextQuestion(bridge); }
+            for (const [key, target] of bridge.targets) {
+              if (target.socket === socket) { settleUnknown(bridge, target.target); bridge.targets.delete(key); }
             }
           });
           socket.on('error', () => {});
@@ -260,8 +269,9 @@ export default function coordinateImplementationBridge(pi) {
       if (!active || ctx.sessionManager.getSessionId() !== active.session || params.run !== active.run) {
         throw new Error('no matching active coordinate-implementation run');
       }
-      const target = active.target;
-      if (!target || target.target.task_id !== params.task_id || target.target.invocation_id !== params.invocation_id) {
+      const matches = [...active.targets.values()].filter(item => item.target.task_id === params.task_id && item.target.invocation_id === params.invocation_id);
+      const target = matches.length === 1 ? matches[0] : undefined;
+      if (!target) {
         throw new Error('exact active worker target unavailable; inspect the current target before sending');
       }
       const prior = active.directions.get(params.request_id);
@@ -294,6 +304,7 @@ export default function coordinateImplementationBridge(pi) {
       const pending = active.pending;
       active.pending = undefined;
       send(pending.socket, {request_id: params.request_id, answer: params.answer});
+      showNextQuestion(active);
       return textResult('Returned the routine response to the waiting worker.', {request_id: params.request_id, run: params.run});
     },
   });
@@ -311,6 +322,7 @@ export default function coordinateImplementationBridge(pi) {
       const pending = active.pending;
       active.pending = undefined;
       send(pending.socket, {request_id: params.request_id, answer: params.answer});
+      showNextQuestion(active);
       return textResult('Relayed the actual owner answer to the waiting worker.', {request_id: params.request_id, run: params.run});
     },
   });

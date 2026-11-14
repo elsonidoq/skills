@@ -190,17 +190,18 @@ class SDKTransportTests(ProjectTest):
         target = {'run_id': 'run', 'task_id': 'T010', 'invocation_id': 'invocation', 'role': 'task_worker'}
         server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         server.bind(endpoint)
-        server.listen(1)
+        server.listen(2)
         received = []
         def serve():
-            client, _ = server.accept()
-            with client:
-                stream = client.makefile('r', encoding='utf-8')
-                active = json.loads(stream.readline())
-                received.append(active)
-                client.sendall((json.dumps({'type': 'steer', 'request_id': 'direction',
-                                            'target': active['target'], 'instruction': 'Be pragmatic'}) + '\n').encode())
-                received.extend(json.loads(line) for line in stream if line.strip())
+            for _ in range(2):
+                client, _ = server.accept()
+                with client:
+                    stream = client.makefile('r', encoding='utf-8')
+                    active = json.loads(stream.readline())
+                    received.append(active)
+                    client.sendall((json.dumps({'type': 'steer', 'request_id': 'direction',
+                                                'target': active['target'], 'instruction': 'Be pragmatic'}) + '\n').encode())
+                    received.extend(json.loads(line) for line in stream if line.strip())
             server.close()
         thread = threading.Thread(target=serve)
         thread.start()
@@ -218,10 +219,13 @@ print(json.dumps({'type':'result','text':'complete'}),flush=True)
         with a, b, patch.dict(os.environ, values, clear=False):
             self.assertTrue(adapter.enable_parent_steering(target))
             self.assertEqual(adapter.prompt('fixture', steering=target), 'complete')
+            self.assertEqual(adapter.prompt('reopened fixture', steering=target), 'complete')
         thread.join(5)
         self.assertFalse(thread.is_alive())
-        self.assertEqual(received[0]['target'], target | {'session_id': 'host-session'})
-        self.assertEqual([item['status'] for item in received[1:] if item['type'] == 'steering_status'], ['accepted', 'queued'])
+        self.assertEqual([item['target'] for item in received if item['type'] == 'steering_target'],
+                         [target | {'session_id': 'host-session'}] * 2)
+        self.assertEqual([item['status'] for item in received if item['type'] == 'steering_status'],
+                         ['accepted', 'queued', 'accepted', 'queued'])
 
     def test_store_callbacks_keep_prompt_sqlite_thread_affinity(self):
         body = """for kind, extra in [('claim', {'path':'owned.txt'}), ('command', {'phase':'check','call':'true'}), ('cleanup', {'path':'generated.txt'}), ('question', {'question':'continue?'})]:

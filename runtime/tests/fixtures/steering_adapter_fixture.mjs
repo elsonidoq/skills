@@ -79,8 +79,12 @@ export function installSteeringProvider(callback = 'question', directory = proce
               } else if (!reviewer) {
                 const directions = context.messages.filter(item => item.role === 'user' && JSON.stringify(item.content).includes('[owner-direction id='));
                 assert.ok(directions.length, 'real SDK loop must consume queued direction before next provider request');
+                const prompt = context.messages.find(item => item.role === 'user');
+                const worker = JSON.stringify(prompt).match(/worker-[12]/)?.[0];
+                if (worker) assert.ok(directions.every(item => JSON.stringify(item).includes(worker)), 'direction must reach only its selected context');
                 const reply = context.messages.find(item => item.role === 'toolResult' && item.toolCallId === 'callback-tool');
                 assert.ok(reply && !reply.isError, 'own tool reply must reach the SDK before direction consumption');
+                if (worker) assert.ok(JSON.stringify(reply).includes(`answer-${worker}`), 'reply must reach its selected context');
               }
               const text = reviewer ? '{"approved":true,"findings":[]}' : 'steering complete';
               message.content.push({type: 'text', text});

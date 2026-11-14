@@ -193,6 +193,7 @@ class PiAdapter:
         self._send_control = None
         self._control_lock = threading.Lock()
         self._parent_steering = None
+        self._parent_steering_target = None
 
     def parent_steering_available(self):
         """Whether this attached parent can receive active-target updates."""
@@ -207,7 +208,8 @@ class PiAdapter:
         if not isinstance(target, dict) or any(not isinstance(target.get(key), str) or not target[key]
                                                for key in ('run_id', 'task_id', 'invocation_id', 'role')):
             raise Blocked('parent steering needs an exact runner-created target')
-        self._parent_steering = _ParentSteering(self, target)
+        self._parent_steering_target = dict(target)
+        self._parent_steering = _ParentSteering(self, self._parent_steering_target)
         return True
 
     def steer(self, request_id, instruction, *, target=None):
@@ -241,6 +243,8 @@ class PiAdapter:
         self.opened_session = None
         if steering is not None and not isinstance(steering, dict):
             raise Blocked('steering target must be runner-provided')
+        if steering is not None and self._parent_steering is None and self._parent_steering_target is not None:
+            self._parent_steering = _ParentSteering(self, self._parent_steering_target)
         request = {'project': str(self.project), 'executor': self.executor,
                    'prompt': prompt, 'readOnly': read_only,
                    # A standalone session record is a newer host extension.
