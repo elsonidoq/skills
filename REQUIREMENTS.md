@@ -75,7 +75,7 @@ version/provenance admission gate. The shared loader honors public package expor
 Node dependency lookup rather than a fixed `dist/` or nested `node_modules` layout;
 [offline compatibility checks](docs/coordinate-implementation.md#setup-and-verification)
 exercise the installed SDK without provider calls. Pi/Paseo updates do not require an SDK
-version pin, but breaking public API changes can still require an integration correction. The standard file-backed graph saver is available; the graph execution controller is not yet implemented. No cgroup delegation, closed host manifest, resource hashes or catalogue is needed.
+version pin, but breaking public API changes can still require an integration correction. The standard file-backed graph saver and graph execution controller are available. Optional local Phoenix tracing uses the same standard OpenTelemetry dependencies and the explicit [local monitoring settings](docs/coordinate-implementation.md#local-phoenix-configuration); it is disabled by default and its failures do not block execution. A final-wire privacy pass is required before real metadata export; actual server/browser behavior and incremental UI visibility remain separate verification. No cgroup delegation, closed host manifest, resource hashes or catalogue is needed.
 Optional explicit isolated setup never runs on ordinary entry; missing dependencies/auth/model
 report their actual operation errors, not administrative readiness failures.
 

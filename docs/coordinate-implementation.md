@@ -8,6 +8,70 @@ path-disjoint worker waves use standard LangGraph fanout and keyed reduction. Hi
 compatible runtime for inspected continuation, never silent conversion or replay. The six task-linter checks remain the entire startup linter; no extra
 graph/host/custody/session/evidence admission rules. Historical approvals and rows are not rewritten.
 
+## Local Phoenix configuration
+
+Local monitoring is opt-in. Add the following object to the task input's top level;
+leave it out to disable local monitoring. A bare task list remains valid.
+
+```json
+{"local_monitoring":{"enabled":true,"endpoint":"http://127.0.0.1:6006/v1/traces"},"tasks":[]}
+```
+
+Only that exact endpoint is permitted. Other destinations disable export with a safe
+configuration diagnostic; they do not stop the workflow. Ambient OTLP and LangSmith settings,
+proxies, cookies and credentials are not used for monitoring. Pi/provider traffic is separate.
+The isolated tracing provider sends only opaque run/task/invocation identities, fixed boundary
+names, role/model, safe outcome, timing and known invocation-local usage/cost. Unknown usage is
+omitted. It does not send prompts, responses, tool data, paths or errors. Completed boundary
+spans export while the run is open; this does not prove when the UI displays them.
+
+If Phoenix requires authorization, put the complete local `Authorization` header value in a
+private file owned by the project maintainer, and explicitly set
+`COHERENCE_PHOENIX_AUTHORIZATION_FILE` to its path in the runner environment. Do not put the
+credential in the task input, this example, Git, a registry or logs. An unreadable or invalid
+credential file disables export with a safe diagnostic, not the workflow. Keep its recovery
+method with the private project operations information. Export and serialization failures are
+reported as safe visibility gaps; checks and Git still run.
+
+Before any real metadata export, run the final-wire privacy test for the same adapter and
+installed dependencies:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime python3 -m unittest discover -s runtime/tests -p 'test_tracing.py'
+```
+
+A pass is local intercepted/configuration proof only, not evidence of a running service,
+server/browser network behavior or incremental UI visibility.
+
+Use the official image `arizephoenix/phoenix:version-21.0.0@sha256:1f9a144a5357b4973e93a15718f050247cb7a4ee7b7c6c06ecb91b5eed3fbaad`.
+Use SQLite in `/data`, the three settings in `runtime/phoenix.env.example`, and publish
+only `127.0.0.1:6006:6006`. Do not use host networking, publish other ports, pass the
+host environment, or configure external providers. Keep the image's authentication
+default. Use only private local Phoenix credentials; never commit or log credentials.
+
+The project maintainer owns the private persistent directory
+`${XDG_DATA_HOME:-$HOME/.local/share}/coherence/PROJECT_KEY/phoenix`, with a stable
+project key independent of disposable worktrees. Record its selected absolute path,
+image pin, credential recovery method and restart command in project operating guidance
+outside a disposable worktree. Recover using the same owned SQLite directory and private
+credentials, not an empty replacement. Before setup, verify directory ownership and image-user
+write access; do not adopt ambiguous data or change broad permissions. If the port, container
+or data directory belongs to another service or has uncertain ownership, stop that setup and
+resolve the collision without stopping or overwriting it. After those checks and the same-adapter
+privacy proof, the maintainer can start the single container with the selected owned directory:
+
+```sh
+docker run --name coherence-phoenix --env-file runtime/phoenix.env.example \
+  --mount "type=bind,src=$PHOENIX_DATA,dst=/data" -p 127.0.0.1:6006:6006 \
+  arizephoenix/phoenix:version-21.0.0@sha256:1f9a144a5357b4973e93a15718f050247cb7a4ee7b7c6c06ecb91b5eed3fbaad
+```
+
+Set `PHOENIX_DATA` to the verified absolute directory first. Reuse the same directory and
+credentials on an ordinary restart; do not create an empty replacement or stop an unrelated
+container. No setup or service launch is done here. Verify the image's effective settings and
+server/browser network behavior, and observe useful incremental UI progress before removing
+the existing monitor.
+
 ## Legacy run retention and compatible continuation
 
 Retain the pre-cutover suite revision `4c1725ebded2f89dec6933b8d193bf34997c62ce` and a

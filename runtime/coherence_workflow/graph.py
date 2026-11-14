@@ -401,31 +401,36 @@ def task_graph(engine, saver, *, review=False):
         adapter.last_interval = None
         adapter.last_observation = None
         adapter.opened_session = None
-        try:
-            result = engine._prompt_worker(adapter, prompt, claim=claim, command=command,
-                                           cleanup=focused.cleanup_artifact, saved_session=session, reuse_key=reuse_key,
-                                           pause_questions=True)
-        except BaseException as exc:
-            actual = getattr(adapter, 'opened_session', None) or getattr(adapter, 'saved_session', None)
-            if actual is not None:
-                store.bind_worker_dispatch(run, task['id'], invocation, actual)
-            status = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-            store.history(run, task['id'], 'worker_invocation', status,
-                          {'invocation_id': invocation, 'error': _safe_error(exc), 'session': actual,
-                           'effects': effects(task['id']), 'prompt': prompt,
-                           'diagnostic': getattr(exc, 'diagnostic', None)})
-            store.history(run, task['id'], 'worker', status, {'role': role, 'error': _safe_error(exc)})
-            recorder.emit(occurrence, 'worker', status, task_id=task['id'],
-                          facts={**public, 'stopped_by_invocation_id': invocation})
+        from contextlib import nullcontext
+        monitoring = getattr(engine, '_local_tracing', None)
+        boundary = (monitoring.boundary('worker', task_id=task['id'], invocation=True, model=profile.get('model'))
+                    if monitoring else nullcontext())
+        with boundary:
+            try:
+                result = engine._prompt_worker(adapter, prompt, claim=claim, command=command,
+                                               cleanup=focused.cleanup_artifact, saved_session=session, reuse_key=reuse_key,
+                                               pause_questions=True)
+            except BaseException as exc:
+                actual = getattr(adapter, 'opened_session', None) or getattr(adapter, 'saved_session', None)
+                if actual is not None:
+                    store.bind_worker_dispatch(run, task['id'], invocation, actual)
+                status = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+                store.history(run, task['id'], 'worker_invocation', status,
+                              {'invocation_id': invocation, 'error': _safe_error(exc), 'session': actual,
+                               'effects': effects(task['id']), 'prompt': prompt,
+                               'diagnostic': getattr(exc, 'diagnostic', None)})
+                store.history(run, task['id'], 'worker', status, {'role': role, 'error': _safe_error(exc)})
+                recorder.emit(occurrence, 'worker', status, task_id=task['id'],
+                              facts={**public, 'stopped_by_invocation_id': invocation})
+                engine._append_metric(adapter, invocation_id=invocation, task_id=task['id'],
+                                      role=role if role == 'fixing_worker' else 'corrective_worker' if state['chain'] else 'worker', outcome=status,
+                                      selection=selection, continued=state['prompt_kind'] != 'initial',
+                                      expected_session_id=(session or {}).get('id'))
+                raise
             engine._append_metric(adapter, invocation_id=invocation, task_id=task['id'],
-                                  role=role if role == 'fixing_worker' else 'corrective_worker' if state['chain'] else 'worker', outcome=status,
+                                  role=role if role == 'fixing_worker' else 'corrective_worker' if state['chain'] else 'worker', outcome='settled',
                                   selection=selection, continued=state['prompt_kind'] != 'initial',
                                   expected_session_id=(session or {}).get('id'))
-            raise
-        engine._append_metric(adapter, invocation_id=invocation, task_id=task['id'],
-                              role=role if role == 'fixing_worker' else 'corrective_worker' if state['chain'] else 'worker', outcome='settled',
-                              selection=selection, continued=state['prompt_kind'] != 'initial',
-                              expected_session_id=(session or {}).get('id'))
         recorder.emit(occurrence, 'worker', 'returned', task_id=task['id'], facts=public)
         store.history(run, task['id'], 'worker', 'returned', {'role': role})
         actual = getattr(adapter, 'opened_session', None) or getattr(adapter, 'saved_session', None)
@@ -592,9 +597,14 @@ def task_graph(engine, saver, *, review=False):
                 raise
         return guarded
 
-    def connected(node):
+    def connected(node, phase):
         def call(state, config: RunnableConfig):
-            with store.thread_connection():
+            from contextlib import nullcontext
+            monitoring = getattr(engine, '_local_tracing', None)
+            boundary = (monitoring.boundary(phase, task_id=state.get('task_id')
+                                             if phase not in ('ready', 'join') else None)
+                        if monitoring else nullcontext())
+            with store.thread_connection(), boundary:
                 return node(state, config)
         return call
 
@@ -619,12 +629,13 @@ def task_graph(engine, saver, *, review=False):
         return {'wave_pending': results, 'wave': [], 'next_node': 'ready'}
 
     builder = StateGraph(TaskState)
-    builder.add_node('wave_worker', connected(wave_worker))
-    builder.add_node('wave_join', connected(wave_join))
+    builder.add_node('wave_worker', connected(wave_worker, 'worker'))
+    builder.add_node('wave_join', connected(wave_join, 'join'))
     builder.add_edge('wave_worker', 'wave_join')
     builder.add_edge('wave_join', 'ready')
     for name, node in (('ready', ready), ('worker', worker), ('wait', wait), ('checks', checks), ('checkpoint', checkpoint)):
-        builder.add_node(name, connected(escalation_guard(node) if name in ('worker', 'checks', 'checkpoint') else node))
+        builder.add_node(name, connected(escalation_guard(node) if name in ('worker', 'checks', 'checkpoint') else node,
+                                         name))
     builder.add_edge(START, 'ready')
     ready_edges = {'worker': 'worker', 'checks': 'checks', 'wait': 'wait', 'end': END}
     if review:
@@ -755,6 +766,30 @@ def answer_graph_question(graph, config, question):
 
 
 def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_authorized=False, scope=None):
+    """Run with isolated local tracing and scoped suppression of hosted graph tracing."""
+    from langsmith import tracing_context
+    try:
+        from .tracing import configured_tracing
+        monitoring = configured_tracing(engine.contract)
+    except Exception:
+        try:
+            import sys
+            print('coherence tracing: initialization unavailable', file=sys.stderr)
+        except Exception:
+            pass
+        monitoring = None
+    engine._local_tracing = monitoring
+    try:
+        with tracing_context(enabled=False, parent=False):
+            return _run_graph(engine, action=action, diagnosis=diagnosis, transfer=transfer,
+                              owner_authorized=owner_authorized, scope=scope)
+    finally:
+        if monitoring is not None:
+            monitoring.close()
+        engine._local_tracing = None
+
+
+def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_authorized=False, scope=None):
     """Run the public graph against its retained input and checkpoint."""
     from .monitoring import descriptor
     from .processes import process_identity
@@ -1142,10 +1177,20 @@ def _add_review_nodes(builder, engine, validate):
             execution_id=last['execution_id'], retry_limit=int(match.group(1)))
         return {'next_node': 'review_route'}
 
+    def traced_review(node, phase):
+        def call(state, config: RunnableConfig):
+            from contextlib import nullcontext
+            monitoring = getattr(engine, '_local_tracing', None)
+            boundary = (monitoring.boundary(phase) if monitoring else nullcontext())
+            with boundary:
+                return node(state, config)
+        return call
+
     for name, node in (('review_route', route), ('review_dispatch', review_dispatch), ('review_repair', repair),
                        ('review_recover_repair', recover_repair), ('review_evidence', evidence),
                        ('review_payload', payload_recovery), ('review_refresh', refresh)):
-        builder.add_node(name, node)
+        phase = 'repair' if name in ('review_repair', 'review_recover_repair') else 'review'
+        builder.add_node(name, traced_review(node, phase))
     builder.add_conditional_edges('review_route', lambda state: state['next_node'], {
         'review_dispatch': 'review_dispatch', 'review_repair': 'review_repair',
         'review_recover_repair': 'review_recover_repair', 'review_evidence': 'review_evidence',

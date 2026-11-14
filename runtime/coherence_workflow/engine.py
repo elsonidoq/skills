@@ -204,6 +204,12 @@ class Engine:
         if not isinstance(before, dict) and not isinstance(after, dict):
             # Offline adapters may provide the already-derived closed interval only.
             interval = getattr(worker, 'last_interval', None) or interval
+        try:
+            from .tracing import record_interval
+            record_interval(interval, role, outcome)
+        except Exception:
+            # Optional tracing must not prevent metrics, checks, or Git.
+            pass
         opened = getattr(worker, 'opened_session', None)
         actual_id = opened.get('id') if isinstance(opened, dict) and isinstance(opened.get('id'), str) else None
         expected = expected_session_id if continued else selection.get('session_id')
@@ -451,7 +457,7 @@ class Engine:
                 'or commit, bypass checks/hooks/signing, or adopt unrelated/pre-existing bytes.\n'
                 + _DECISION_CONSTRAINTS + self.paid_authority() + '\nOriginal task contracts: '
                 + canonical(original_tasks) + '\n' + self._delivery_issue_context())
-            def prompt_fix(prompt, **kwargs):
+            def prompt_fix_impl(prompt, **kwargs):
                 prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + repair_context + prompt
                 invocation_id = uuid.uuid4().hex
                 predecessor = last_fixer_invocation[0]
@@ -516,6 +522,14 @@ class Engine:
                                         role='fixing_worker', outcome=outcome, selection=selection,
                                         continued=predecessor is not None, expected_session_id=expected_session_id,
                                         fixing_round=fixing_round)
+            def prompt_fix(prompt, **kwargs):
+                from contextlib import nullcontext
+                monitoring = getattr(self, '_local_tracing', None)
+                boundary = (monitoring.boundary('repair', task_id=fix_task['id'], invocation=True,
+                            model=self.reviewer_executor.get('model'), role='fixing_worker')
+                            if monitoring else nullcontext())
+                with boundary:
+                    return prompt_fix_impl(prompt, **kwargs)
             prompt = ('Continue the rejecting review in this assigned repair round. Keep the configured reviewer '
                       'executor and its scoped writer transition.\nActionable findings: ' + canonical(findings))
             if recovered and recovered.get('diagnosis'):
@@ -1014,6 +1028,19 @@ class Engine:
     def _review(self, *, recorder, review_base, head, ordinal, fixing_round=0,
                 trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None,
                 execution_id=None, refresh_target=False, retry_limit=None):
+        from contextlib import nullcontext
+        monitoring = getattr(self, '_local_tracing', None)
+        boundary = (monitoring.boundary('review', invocation=True,
+                    model=self.reviewer_executor.get('model'), role='reviewer') if monitoring else nullcontext())
+        with boundary:
+            return self._review_impl(recorder=recorder, review_base=review_base, head=head, ordinal=ordinal,
+                fixing_round=fixing_round, trigger_execution_id=trigger_execution_id,
+                predecessor_execution_id=predecessor_execution_id, input_checkpoints=input_checkpoints,
+                execution_id=execution_id, refresh_target=refresh_target, retry_limit=retry_limit)
+
+    def _review_impl(self, *, recorder, review_base, head, ordinal, fixing_round=0,
+                     trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None,
+                     execution_id=None, refresh_target=False, retry_limit=None):
         """Dispatch exactly one fresh read-only reviewer and retain its actual outcome."""
         store = self.authority.store
         execution_id = execution_id or uuid.uuid4().hex
