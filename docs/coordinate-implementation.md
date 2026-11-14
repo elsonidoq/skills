@@ -1,22 +1,70 @@
 # Coordinate Implementation operating guide
 
-The existing entry runs ordinary requested tasks using Pi SDK tools. The approved target is one
-LangGraph controller owning transitions, dependency waves and interrupt/resume, with standard
-file-backed SQLite graph checkpoints for control state. Existing private operation history and actual
-Git/SDK observations support effect reconciliation, not automatic acceptance. Execution is sequential
-by default; explicit owner direction may authorize path-disjoint workers within the inherited controller
-lock. Quiesce sibling mutation for shared checks and focused Git commits. Historical non-graph runs
-remain readable and use an explicitly selected compatible runtime for inspected continuation, never
-silent conversion or replay. This target is not yet implemented; current CLI behavior below describes
-the existing runtime until cutover. The six task-linter checks remain the entire startup linter; no extra
+The existing entry uses one LangGraph controller for sequential tasks, checks, focused Git
+checkpoints, independent review, scoped repair and durable question resume. Pi SDK tools perform
+worker operations. Standard file-backed SQLite checkpoints hold graph control state; private operation
+history and actual Git/SDK observations reconcile effects, not automatic acceptance. Directed parallel
+waves remain later work. Historical non-graph runs remain readable and use an explicitly selected
+compatible runtime for inspected continuation, never silent conversion or replay. The six task-linter checks remain the entire startup linter; no extra
 graph/host/custody/session/evidence admission rules. Historical approvals and rows are not rewritten.
 
-The internal graph exposes `graph_recovery_action` for inspected `continue`, `fresh` and
+## Legacy run retention and compatible continuation
+
+Retain the pre-cutover suite revision `4c1725ebded2f89dec6933b8d193bf34997c62ce` and a
+compatible Python/SDK environment for historical execution runs. Status and history remain
+read-only in the current CLI. For an inspected legacy continuation, use an operator-selected
+checkout of that revision and its compatible environment; run its original action with the
+original arguments, for example:
+
+```sh
+LEGACY_SUITE/scripts/coordinate-implementation resume --project /absolute/project --run RUN
+```
+
+Substitute the actual action and arguments when appropriate. Do not feed graph runs to the
+legacy engine, convert historical rows, replay uncertain effects, or automatically check out,
+install, restart, or authenticate the old runtime. For rollback, retain both runtime revisions,
+the original workflow database and the separate graph checkpoint database; select the runtime
+that created the run. A rollback does not make graph runs compatible with the old controller.
+Inspect saved calls and Git effects before any continuation.
+
+The public CLI uses `run_graph`; `Engine.invoke` is only a compatibility facade to that same
+controller, not a second lifecycle. New input authority contains `backend: langgraph-v1`. Mutation
+of an unmarked legacy run stops before writer entry or provider/parent contact and prints the
+compatible command with its original arguments. Status/history do not require the graph backend.
+
+The graph exposes `graph_recovery_action` for inspected `continue`, `fresh` and
 `escalate` actions, scope-bound routine repair authority, exact owner-authorized external transfer,
 and stale review target refresh. It uses the retained thread, input, session and task ownership;
 reconciles completed effects before continuation; and stops on unknown or live effects. A failed
-implementation escalation stops and requires owner direction. These internal actions are not yet
-the public CLI route; the commands below still use the existing runtime until cutover.
+implementation escalation stops and requires owner direction. The existing public commands route
+these actions through the same retained graph. Ordinary resume does not authorize replay of a failed
+worker. Supply the inspected action and substantive diagnosis with `--recovery-action` and
+`--diagnosis`. Uncertain provider/Git effects still stop for reconciliation.
+
+A settled worker question returns `status: waiting`, preserves its saved context and releases the
+writer lock. `status` exposes only task/question identities and the resume action, not the private
+question or answer. Reopen with `resume` on a terminal or attached parent to deliver the actual
+reply to that precise saved invocation before the worker continues.
+
+Local reproduction (fixture providers, not live model judgment):
+
+```sh
+umask 022
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests python3 -m unittest -v \
+  test_cli.CliTests.test_public_cli_framed_adapter_terminal_reply_and_real_git \
+  test_cli.CliTests.test_public_cli_uncertain_provider_and_git_stop_without_replay \
+  test_database_compatibility.DatabaseCompatibilityTests.test_explicit_retained_revision_can_read_and_abandon_legacy_fixture
+```
+
+The first test prints actual CLI/terminal and Git output for dependency checkpoints, saved pause,
+process reopen, terminal answer consumption and fresh read-only review. It injects only a local
+framed provider host; the CLI, adapter transport, saver, checks and Git are real. The second injects
+provider/Git uncertainty and verifies no replay. The third extracts the retained source into an isolated
+fixture and exercises its CLI with the current Python environment, without conversion or installation.
+These tests use temporary projects: output preserves observed Git facts, not a retained application
+repository or live-model verdict. Capture this output through the existing issue #44 evidence route
+and associate it with the exact tested application/review revisions; a test pass alone is not durable
+functional-evidence delivery.
 
 The approved [CLI/Pi interface target](../specs/006-issue-linked-delivery/contracts/interfaces.md#cli-and-attached-parent)
 retains existing actions and adds directed parallel execution and durable targeted question resumption.

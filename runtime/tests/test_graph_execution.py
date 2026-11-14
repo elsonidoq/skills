@@ -19,6 +19,69 @@ class GraphExecutionTests(ProjectTest):
         owner.store.start(run, self.base, contract=contract, executor=EXECUTOR)
         return Engine(owner, run, contract, EXECUTOR, adapter=adapter, paid_scope={'apis': []})
 
+    def test_public_refresh_rejection_stops_until_explicit_resume(self):
+        from coherence_workflow.graph import run_graph
+        project, calls = self.project, []
+        class Adapter:
+            def __init__(self, *args, **kwargs): pass
+            def prompt(self, prompt, **kwargs):
+                calls.append('review' if kwargs.get('read_only') else 'worker')
+                return (json.dumps({'approved': False, 'findings': ['owned.txt:1 - fixture defect'],
+                                    'coverage': ['fixture'], 'coverage_gaps': []})
+                        if kwargs.get('read_only') else 'no change fixture')
+        contract = admit([{'id': 'one', 'description': 'fixture'}])
+        with Authority(project) as owner:
+            runner = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, question=lambda *_a, **_k: 'no')
+            with self.assertRaisesRegex(Blocked, 'did not authorize'):
+                runner.invoke()
+            rejection = owner.store.review_chain('refresh', private=True)['executions'][-1]
+            owner.store.authorize_owner_pair('refresh', 'grant', rejecting_execution_id=rejection['execution_id'],
+                review_base=self.base, review_head=self.base, original_scope=owner.store.review_scope('refresh'),
+                fixer_execution_id='assigned-fixer', reviewer_execution_id='assigned-reviewer')
+        (project/'incoming.txt').write_text('inspected target\n')
+        git(project, 'add', '--', 'incoming.txt')
+        git(project, 'commit', '-qm', 'fixture target advance')
+        with Authority(project) as owner:
+            runner = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, resume=True, question=lambda *_a, **_k: 'no')
+            before = len(calls)
+            result = run_graph(runner, action='refresh-review-target')
+            self.assertEqual(result['status'], 'rejected')
+            self.assertEqual(calls[before:], ['review'])
+            self.assertEqual(owner.store.db.execute("SELECT state FROM execution_runs WHERE run_id='refresh'").fetchone()[0], 'failed')
+        with Authority(project) as owner:
+            owner.store.resume('refresh')
+            runner = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, resume=True, question=lambda *_a, **_k: 'no')
+            with self.assertRaisesRegex(Blocked, 'did not authorize'):
+                runner.invoke()
+        self.assertEqual(calls[before:], ['review'])
+
+    def test_metric_commit_after_failure_does_not_invalidate_exact_scoped_recovery(self):
+        project = self.project
+        (project/'.gitignore').write_text('.coherence/workflow/\n')
+        git(project, 'add', '--', '.gitignore')
+        git(project, 'commit', '-qm', 'track optional metrics')
+        identity = {'id': 'retained-worker', 'file': '/private/fixture.jsonl'}
+        class Failed:
+            def __init__(self, *args, **kwargs): self.saved_session = identity
+            def prompt(self, prompt, **kwargs): raise Blocked('inspected fixture pipe failure')
+        contract = admit([{'id': 'one', 'description': 'fixture'}])
+        with Authority(project) as owner:
+            with self.assertRaisesRegex(Blocked, 'fixture pipe failure'):
+                Engine(owner, 'metrics-recovery', contract, EXECUTOR, adapter=Failed).invoke()
+        self.assertIn(b'workflow: metrics', git(project, 'log', '-1', '--format=%s'))
+        class Continued:
+            def __init__(self, *args, **kwargs): self.saved_session = identity
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    return json.dumps({'approved': True, 'findings': [], 'coverage': ['fixture'], 'coverage_gaps': []})
+                assert kwargs['saved_session'] == identity
+                return 'settled no-change fixture'
+        with Authority(project) as owner:
+            owner.store.resume('metrics-recovery')
+            result = Engine(owner, 'metrics-recovery', contract, EXECUTOR, adapter=Continued, resume=True,
+                            worker_recovery={'action': 'continue', 'diagnosis': 'Inspected fixture pipe failure; transport restored'}).invoke()
+        self.assertEqual(result['status'], 'complete')
+
     def test_graph_review_repair_reopen_and_fresh_cumulative_review(self):
         project, reviewers, prompts = self.project, [], []
         class Adapter:
@@ -186,7 +249,7 @@ class GraphExecutionTests(ProjectTest):
                         (project/'other.txt').write_text('consumer\n')
                     else:
                         kwargs['claim']('owned.txt')
-                        (project/'owned.txt').write_text('good\n' if 'Actual failure:' in prompt else 'bad\n')
+                        (project/'owned.txt').write_text('good\n' if 'Actual failed attempt:' in prompt else 'bad\n')
                     return 'done'
                 finally:
                     active.pop()

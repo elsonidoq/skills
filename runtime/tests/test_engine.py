@@ -285,7 +285,7 @@ print(json.dumps(RECORD), flush=True)
                 Engine._prompt_worker(type('Offline', (), {'prompt': lambda _self, _prompt: empty})(), 'fixture')
             self.assertEqual(prompt({'type': 'result', 'text': 'ordinary completed text', 'outcome': 'completed'}),
                              'ordinary completed text')
-            with self.assertRaisesRegex(Blocked, 'SDK result outcome must be completed'):
+            with self.assertRaisesRegex(Blocked, 'SDK result has an invalid outcome'):
                 prompt({'type': 'result', 'text': 'ignored', 'outcome': 'invalid'})
             with self.assertRaisesRegex(Blocked, 'SDK result text must be a string'):
                 prompt({'type': 'result', 'text': None, 'outcome': 'failed'})

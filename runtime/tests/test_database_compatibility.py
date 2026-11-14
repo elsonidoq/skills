@@ -37,6 +37,51 @@ class DatabaseCompatibilityTests(ProjectTest):
     def archives(self):
         return list(self.database.parent.glob('quarantine-*'))
 
+    def test_legacy_mutations_route_to_retained_revision_without_changes(self):
+        with Authority(self.project) as owner:
+            owner.store.start('legacy', self.base, contract={'tasks': []},
+                              executor={}, authority={'paid_scope': {'apis': []}})
+            owner.store.finish('legacy', 'failed', self.base, 'retained failure')
+        before = self.database.read_bytes()
+        self.assertEqual(status(self.project, 'legacy')['run']['state'], 'failed')
+        for action, extra in [('resume', []), ('abandon', []),
+                              ('authorize-routine-repairs', ['--scope', 'fixture']),
+                              ('refresh-review-target', []),
+                              ('recover-task', ['--owner-authorized', '--recovery', 'absent'])]:
+            with self.subTest(action=action), contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(main([action, '--project', str(self.project), '--run', 'legacy', *extra]), 2)
+                message = json.loads(out.getvalue())['reason']
+                self.assertIn('4c1725ebded2f89dec6933b8d193bf34997c62ce', message)
+                self.assertIn('coordinate-implementation ' + action, message)
+            self.assertEqual(self.database.read_bytes(), before)
+
+    def test_explicit_retained_revision_can_read_and_abandon_legacy_fixture(self):
+        """Exercise the documented compatible route without converting retained inputs."""
+        revision = '4c1725ebded2f89dec6933b8d193bf34997c62ce'
+        suite = self.root / 'retained-suite'
+        suite.mkdir()
+        root = Path(__file__).resolve().parents[2]
+        archive = subprocess.run(['git', 'archive', revision, 'runtime/coherence_workflow',
+                                  'scripts/coordinate-implementation'], cwd=root, capture_output=True)
+        self.assertEqual(archive.returncode, 0, 'Required legacy compatibility source unavailable: ' + archive.stderr.decode())
+        subprocess.run(['tar', '-x', '-C', str(suite)], input=archive.stdout, check=True)
+        with Authority(self.project) as owner:
+            owner.store.start('compatible', self.base, contract={'tasks': []}, executor={},
+                              authority={'paid_scope': {'apis': []}})
+            owner.store.finish('compatible', 'failed', self.base, 'isolated legacy fixture')
+            original = owner.store.input('compatible')
+        env = {**os.environ, 'COHERENCE_PYTHON': sys.executable}
+        for operation in ('status', 'abandon', 'history'):
+            command = [str(suite / 'scripts/coordinate-implementation'), operation,
+                       '--project', str(self.project), '--run', 'compatible']
+            result = subprocess.run(command, env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, 'Required compatible legacy environment failed: ' + result.stdout + result.stderr)
+            self.assertIsInstance(json.loads(result.stdout), dict)
+        self.assertEqual(status(self.project, 'compatible')['run']['state'], 'abandoned')
+        with Authority(self.project) as owner:
+            self.assertEqual(owner.store.input('compatible'), original)
+        self.assertFalse((self.database.parent / 'graph.sqlite').exists())
+
     def test_execution_status_and_missing_run_are_read_only(self):
         with Authority(self.project) as owner:
             owner.store.start('current', self.base)

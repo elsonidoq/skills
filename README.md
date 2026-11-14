@@ -188,11 +188,11 @@ Approval evidence: [combined approval, or specification and overall approvals]
 Approved current content/revisions and implementation scope: [evidence]
 ```
 
-Coordinate Implementation currently executes requested tasks sequentially using the existing CLI and
-installed Pi SDK. The approved target is one LangGraph controller with file-backed checkpoints,
-sequential default and explicitly owner-directed path-disjoint waves. Sibling mutation is quiescent
-for shared checks and focused commits; historical non-graph runs use an explicitly selected compatible
-runtime for inspected continuation, never automatic conversion or replay. This target is not yet implemented. Source worktrees reuse that Pi SDK rather than requiring copied runtime
+Coordinate Implementation executes requested tasks sequentially through one LangGraph controller,
+using the existing CLI and installed Pi SDK. File-backed checkpoints support task/review transitions
+and durable question resume. Explicitly owner-directed path-disjoint waves remain later work.
+Historical non-graph runs remain readable; mutation requires an explicitly selected compatible
+runtime, never automatic conversion or replay. See [legacy retention and rollback](docs/coordinate-implementation.md#legacy-run-retention-and-compatible-continuation). Source worktrees reuse that Pi SDK rather than requiring copied runtime
 `node_modules`; explicit isolated workflow setup retains its lockfile-resolved SDK. Ordinary direct
 owner-authorized coding needs no new planning artifacts.
 Task intake checks only readable file, parsed list, ID/work, unique IDs, existing dependencies
