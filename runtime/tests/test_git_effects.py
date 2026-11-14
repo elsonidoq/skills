@@ -55,6 +55,30 @@ class FocusedCheckpointTests(ProjectTest):
     def test_no_explicit_source_has_no_empty_commit(self):
         self.assertTrue(self.focused().checkpoint()['no_change'])
 
+    def test_pathspec_metacharacters_select_only_literal_owned_path(self):
+        f = self.focused()
+        f.claim('a[1].txt')
+        self.write('a[1].txt', 'owned\n')
+        self.write('a1.txt', 'unrelated\n')
+        result = f.checkpoint()
+        self.assertEqual(result['paths'], ['a[1].txt'])
+        self.assertEqual(git(self.project, 'show', 'HEAD:a[1].txt'), b'owned\n')
+        self.assertEqual((self.project/'a1.txt').read_text(), 'unrelated\n')
+
+    def test_staged_only_owned_path_is_genuine_no_change_and_preserved(self):
+        f = self.focused()
+        f.claim('owned.txt')
+        self.write('owned.txt', 'staged only\n')
+        git(self.project, 'add', '--', 'owned.txt')
+        self.write('owned.txt', 'base\n')
+        staged = git(self.project, 'show', ':owned.txt')
+        intent = []
+        result = f.checkpoint(intent.append)
+        self.assertTrue(result['no_change'])
+        self.assertTrue(intent[0]['no_change'])
+        self.assertEqual(git(self.project, 'show', ':owned.txt'), staged)
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
+
     def test_actual_write_boundary_preserves_preexisting_target_and_scope(self):
         self.write('owned.txt', 'prior work\n')
         with self.assertRaisesRegex(Blocked, 'pre-existing dirty'):

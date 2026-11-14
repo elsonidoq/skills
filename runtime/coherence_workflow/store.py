@@ -692,6 +692,55 @@ class Store:
         """Reconcile retained checkpoint results before dispatching unfinished work."""
         completed = {}
         for row in self.db.execute("SELECT task_id,state,baseline,result FROM execution_tasks WHERE run_id=?", (run,)):
+            events = list(self.db.execute("SELECT seq,state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='checkpoint' ORDER BY seq", (run, row['task_id'])))
+            started = next((event for event in reversed(events) if event['state'] == 'started'), None)
+            later = [event for event in events if started and event['seq'] > started['seq']]
+            settled = any(event['state'] == 'passed' or
+                          (event['state'] in ('failed', 'interrupted') and json.loads(event['details']).get('no_effect') is True)
+                          for event in later)
+            if started and not settled:
+                from .git_effects import FocusedGit
+                try:
+                    intent = json.loads(started['details'])
+                    paths, entries = intent['paths'], intent['entries']
+                    refs, checks = intent['check_refs'], intent['checks']
+                    if (not isinstance(paths, list) or sorted(set(paths)) != paths or
+                            not all(isinstance(name, str) and name for name in paths) or
+                            not isinstance(entries, dict) or set(entries) != set(paths) or
+                            not isinstance(refs, list) or not isinstance(checks, list) or len(refs) != len(checks) or
+                            not isinstance(intent['baseline'], str) or not isinstance(intent['parent'], str) or
+                            not isinstance(intent['artifacts'], list) or intent['task_id'] != row['task_id']):
+                        raise ValueError('invalid intent')
+                    for ref, check in zip(refs, checks):
+                        check_row = self.db.execute("SELECT details FROM execution_history WHERE seq=? AND run_id=? AND task_id=? AND kind='check' AND state='passed'", (ref, run, row['task_id'])).fetchone()
+                        if not check_row or json.loads(check_row['details']) != check:
+                            raise ValueError('missing passing check reference')
+                    focused = FocusedGit(self.authority.project, {})
+                    if intent.get('no_change') is True and not paths:
+                        result = {'baseline': intent['baseline'], 'sha': intent['parent'], 'parent': None,
+                                  'paths': [], 'artifacts': intent['artifacts'], 'no_change': True}
+                    elif paths:
+                        if not any(event['state'] == 'attempting' for event in later):
+                            if git(self.authority.project, 'rev-parse', 'HEAD').decode().strip() != intent['parent']:
+                                raise Blocked('checkpoint parent changed before Git attempt; preserve work and inspect Git effects')
+                            self.history(run, row['task_id'], 'checkpoint', 'failed',
+                                         {'error': 'interrupted before Git commit attempt', 'no_effect': True})
+                            continue
+                        result = focused.reconcile_intent(intent)
+                        if result is None:
+                            raise Blocked('checkpoint outcome is uncertain at its attempted parent; inspect Git effects before continuation')
+                    else:
+                        raise ValueError('invalid no-change intent')
+                    result.update({key: intent[key] for key in ('task_id', 'checkpoint_occurrence_id',
+                                   'producer_invocation_id', 'correction_chain')})
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise Blocked('checkpoint intent or check references are invalid for task ' + row['task_id'] + '; inspect retained history before continuation') from exc
+                self.history(run, row['task_id'], 'checkpoint', 'passed', result)
+                self.task(run, row['task_id'], 'complete', row['baseline'], result['sha'],
+                          {'summary': intent.get('summary'), 'checks': checks, 'paths': result['paths'],
+                           'generated_artifacts': result['artifacts']})
+                completed[row['task_id']] = result
+                continue
             history = self.db.execute("SELECT details FROM execution_history WHERE run_id=? AND task_id=? AND kind='checkpoint' AND state='passed' ORDER BY seq DESC LIMIT 1",
                                       (run, row['task_id'])).fetchone()
             if not history and row['state'] != 'complete':

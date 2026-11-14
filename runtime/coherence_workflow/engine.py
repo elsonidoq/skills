@@ -556,20 +556,26 @@ class Engine:
                 checkpoint_occurrence = recorder.occurrence()
                 recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=fix_task['id'], facts={
                     'baseline': focused.base, 'execution_id': execution_id})
-                try:
-                    selected = sorted(name for name in focused.task_edited if path_has_preexisting_changes(project, name))
-                    blobs = self._repair_blobs(project, selected)
+                def retain_fix_intent(intent):
+                    check_ref = store.db.execute("SELECT seq FROM execution_history WHERE run_id=? AND task_id IS NULL AND kind='fixer_checks' AND state='passed' ORDER BY seq DESC LIMIT 1", (self.run,)).fetchone()
+                    if not check_ref:
+                        raise Blocked('repair checkpoint lacks its passing check reference; rerun required checks')
                     store.history(self.run, None, 'fixer_checkpoint', 'started', {
-                        'execution_id': execution_id, 'baseline': focused.base,
-                        'parent': git(project, 'rev-parse', 'HEAD').decode().strip(),
-                        'paths': selected, 'artifacts': sorted(focused.known_artifacts), 'blobs': blobs})
+                        **intent, 'execution_id': execution_id, 'check_ref': check_ref['seq'],
+                        'checks': check_results})
+                focused.before_checkpoint = retain_fix_intent
+                focused.before_git_commit = lambda: store.history(self.run, None, 'fixer_checkpoint', 'attempting',
+                                                                   {'execution_id': execution_id})
+                try:
                     checkpoint = focused.checkpoint()
                 except BaseException as exc:
-                    store.history(self.run, None, 'fixer_checkpoint', 'failed',
-                                  {'execution_id': execution_id, 'error': str(exc)})
                     recorder.emit(checkpoint_occurrence, 'checkpoint', 'failed', task_id=fix_task['id'], facts={
                         'baseline': focused.base, 'execution_id': execution_id, 'error_category': _failure(exc)})
                     checkpoint = focused.reconcile_checkpoint()
+                    no_effect = (checkpoint is None and not (isinstance(exc, (KeyboardInterrupt, SystemExit))
+                                 and getattr(focused, 'git_commit_started', False)))
+                    store.history(self.run, None, 'fixer_checkpoint', 'failed',
+                                  {'execution_id': execution_id, 'error': str(exc), 'no_effect': no_effect})
                     if checkpoint is not None:
                         break
                     if isinstance(exc, (KeyboardInterrupt, SystemExit)) or str(exc) == checkpoint_error:
@@ -695,6 +701,52 @@ class Engine:
                 raise Blocked('returned repair index entries drifted; preserve staged and working bytes and inspect ownership before continuation')
         if checkpoints:
             state, checkpoint = checkpoints[-1]
+            latest_intent = next((facts for event_state, facts in reversed(checkpoints)
+                                  if event_state == 'started' and 'entries' in facts), None)
+            if latest_intent and state != 'passed' and not checkpoint.get('no_effect'):
+                ref = store.db.execute("SELECT details FROM execution_history WHERE seq=? AND run_id=? AND kind='fixer_checks' AND state='passed'", (latest_intent.get('check_ref'), self.run)).fetchone()
+                if not ref or json.loads(ref['details']).get('execution_id') != execution_id or not checks or checks[-1] != 'passed':
+                    raise Blocked('repair checkpoint lacks its passing check reference; inspect retained history')
+                focused = FocusedGit(project, {})
+                if latest_intent.get('no_change') is True and not latest_intent.get('paths'):
+                    checkpoint = {'baseline': latest_intent['baseline'], 'sha': latest_intent['parent'],
+                                  'parent': None, 'paths': [], 'artifacts': latest_intent['artifacts'], 'no_change': True}
+                else:
+                    start_index = max(index for index, (event_state, _) in enumerate(checkpoints)
+                                      if event_state == 'started')
+                    attempted = any(event_state == 'attempting' for event_state, _ in checkpoints[start_index + 1:])
+                    try:
+                        if not attempted and head != latest_intent['parent']:
+                            raise Blocked('repair checkpoint parent changed before Git attempt; preserve work and inspect Git effects')
+                        checkpoint = focused.reconcile_intent(latest_intent)
+                    except (KeyError, TypeError, ValueError) as exc:
+                        raise Blocked('repair checkpoint intent is invalid; inspect retained history') from exc
+                    if checkpoint is None:
+                        if attempted:
+                            raise Blocked('repair checkpoint outcome is uncertain at its attempted parent; inspect Git effects before continuation')
+                        # No commit is visible. Restore the returned repair only when its
+                        # full checked working state and the staged selection still match.
+                        effects = check_events[-1][1]
+                        selected = set(returned['paths']) | set(returned['artifacts'])
+                        if self._repair_source_state(project, selected) != effects.get('source_state'):
+                            raise Blocked('returned repair source bytes drifted; preserve them and inspect ownership before continuation')
+                        unselected = selected - set(latest_intent['paths'])
+                        expected_index = effects.get('index_state', {})
+                        if self._repair_index_state(project, unselected) != {name: expected_index.get(name) for name in unselected}:
+                            raise Blocked('returned repair index entries drifted; preserve them and inspect ownership before continuation')
+                        actual_index = self._repair_index_state(project, latest_intent['paths'])
+                        staged = {name: ([] if entry is None else [' '.join(entry) + ' 0'])
+                                  for name, entry in latest_intent['entries'].items()}
+                        checked = {name: expected_index.get(name) for name in latest_intent['paths']}
+                        if actual_index != staged and actual_index != checked:
+                            raise Blocked('repair checkpoint index entries drifted; preserve them and inspect ownership before continuation')
+                        return recovered
+                store.history(self.run, None, 'fixer_checkpoint', 'passed', {'execution_id': execution_id, **checkpoint})
+                if item['review_ordinal'] > 1 and head != checkpoint['sha']:
+                    raise Blocked('repair commit effects are missing or uncertain for the granted review target after HEAD advanced; recovered checkpoint retained, inspect target before continuation')
+                store.review_outcome(self.run, execution_id, 'approved', findings=[],
+                                     references={'base': review_base, 'head': head, 'commit': checkpoint['sha']})
+                return None
             if state not in ('passed', 'started') or not checks or checks[-1] != 'passed':
                 raise Blocked('repair checks/checkpoint are incomplete or failed; inspect actual effects before targeted continuation')
             if state == 'passed':
@@ -1840,9 +1892,17 @@ class Engine:
                         facts = {'ordinal': ordinal}
                         if code is not None: facts['exit_code'] = code
                         recorder.emit(occurrence, 'check', kind, task_id=task['id'], facts=facts)
+                    check_refs = []
                     def run_required_checks():
+                        check_refs.clear()
+                        def retain_check(state, attempt):
+                            store.history(self.run, task['id'], 'check', state, attempt)
+                            if state == 'passed':
+                                check_refs.append(store.db.execute(
+                                    "SELECT seq FROM execution_history WHERE run_id=? AND task_id=? AND kind='check' AND state='passed' ORDER BY seq DESC LIMIT 1",
+                                    (self.run, task['id'])).fetchone()['seq'])
                         return run_checks(project, task, lock_fd=self.authority.lock.fileno(), observe=check_observe,
-                            completed=lambda state, attempt: store.history(self.run, task['id'], 'check', state, attempt))
+                                          completed=retain_check)
                     def correct_required_checks():
                         nonlocal text
                         previous_failed_attempt = None
@@ -1877,13 +1937,25 @@ class Engine:
                     while True:
                         checkpoint_occurrence = recorder.occurrence()
                         recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=task['id'], facts={'baseline': focused.base})
+                        def retain_intent(intent):
+                            store.history(self.run, task['id'], 'checkpoint', 'started', {
+                                **intent, 'check_refs': list(check_refs), 'checks': checks,
+                                'task_id': task['id'], 'checkpoint_occurrence_id': checkpoint_occurrence,
+                                'producer_invocation_id': last_invocation[0], 'correction_chain': list(invocation_chain),
+                                'summary': text})
+                        focused.before_checkpoint = retain_intent
+                        focused.before_git_commit = lambda: store.history(self.run, task['id'], 'checkpoint',
+                                                                           'attempting', {'task_id': task['id']})
                         try:
                             checkpoint = focused.checkpoint()
                         except BaseException as exc:
                             state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                             recorder.emit(checkpoint_occurrence, 'checkpoint', state, task_id=task['id'], facts={'baseline': focused.base, 'error_category': _failure(exc)})
-                            store.history(self.run, task['id'], 'checkpoint', state, {'error': str(exc)})
                             checkpoint = focused.reconcile_checkpoint()
+                            no_effect = (checkpoint is None and not (isinstance(exc, (KeyboardInterrupt, SystemExit))
+                                         and getattr(focused, 'git_commit_started', False)))
+                            store.history(self.run, task['id'], 'checkpoint', state,
+                                          {'error': str(exc), 'no_effect': no_effect})
                             if checkpoint is not None:
                                 break
                             if isinstance(exc, (KeyboardInterrupt, SystemExit)):
