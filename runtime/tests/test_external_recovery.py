@@ -35,8 +35,15 @@ class ExternalRecoveryTests(ProjectTest):
                 if attempt: owner.store.resume('run')
                 with self.assertRaisesRegex(Blocked, 'incomplete transport'):
                     Engine(owner, 'run', contract, EXECUTOR, adapter=Adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=bool(attempt),
-                           question=lambda prompt: 'yes' if 'Approve this gate?' in prompt else 'inspected failure; targeted transport correction').invoke()
+                           question=lambda prompt: 'yes' if 'Approve this gate?' in prompt else 'inspected failure; targeted transport correction',
+                           worker_recovery={'action': 'continue', 'diagnosis': 'inspected incomplete transport; targeted correction'} if attempt else None).invoke()
         self.assertEqual(calls, ['old'] * 3)
+        with Authority(project) as owner:
+            owner.store.resume('run')
+            with self.assertRaisesRegex(Blocked, 'allowance exhausted'):
+                Engine(owner, 'run', contract, EXECUTOR, adapter=Adapter, resume=True,
+                       paid_scope={'agent_providers': ['fixture'], 'apis': []},
+                       worker_recovery={'action': 'continue', 'diagnosis': 'inspected incomplete transport; targeted correction'}).invoke()
         self.write('owned.txt', 'recovered\n')
         self.write('other.txt', 'unknown unrelated bytes\n')
         with Authority(project) as owner:
@@ -59,10 +66,6 @@ class ExternalRecoveryTests(ProjectTest):
         with Authority(self.project) as owner:
             original = [tuple(row) for row in owner.store.db.execute(
                 "SELECT * FROM execution_history WHERE kind IN ('worker_dispatch','worker_invocation')")]
-            owner.store.resume('run')
-            with self.assertRaisesRegex(Blocked, 'allowance exhausted'):
-                Engine(owner, 'run', self.contract, EXECUTOR, adapter=self.old_adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=True,
-                       question=lambda _: 'inspected targeted correction').invoke()
             result = self.recover(owner, transfer)
             self.assertFalse(result['no_change'])
             self.assertEqual(result['paths'], ['owned.txt'])
@@ -71,7 +74,9 @@ class ExternalRecoveryTests(ProjectTest):
             self.assertEqual(self.recover(owner, transfer)['sha'], result['sha'])
         calls, project = [], self.project
         class Healthy:
-            def __init__(self, _project, executor, **_kwargs): calls.append(executor)
+            def __init__(self, _project, executor, **_kwargs):
+                calls.append(executor)
+                self.saved_session = self.opened_session = {'id': 'healthy', 'file': '/fixture/healthy'}
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     self_test.assertIn(self_test.base, prompt)
@@ -82,8 +87,12 @@ class ExternalRecoveryTests(ProjectTest):
                 return 'dependent done'
         self_test = self
         with Authority(project) as owner:
-            owner.store.resume('run')
-            outcome = Engine(owner, 'run', self.contract, EXECUTOR, adapter=Healthy, resume=True).invoke()
+            continuation = Engine(owner, 'run', self.contract, EXECUTOR, adapter=Healthy, resume=True,
+                                  paid_scope={'agent_providers': ['fixture'], 'apis': []})
+            with graph_saver(owner) as saver:
+                outcome = graph_recovery_action(continuation, task_graph(continuation, saver, review=True),
+                                                {'configurable': {'thread_id': 'run'}}, 'external',
+                                                transfer=transfer, owner_authorized=True)['result']
             self.assertEqual(outcome['status'], 'complete')
             self.assertEqual(owner.store.input('run')['executor'], EXECUTOR)
             reviewed = owner.store.db.execute(
@@ -143,6 +152,7 @@ class ExternalRecoveryTests(ProjectTest):
                     (project/'owned.txt').write_text('partial\n')
                     raise Blocked('inspected parser failure')
                 calls.append('dependent')
+                self.saved_session = self.opened_session = {'id': 'dependent', 'file': '/fixture/dependent'}
                 return 'dependent complete'
         contract = admit([{'id': 'one', 'description': 'original acceptance', 'owned_paths': ['owned.txt'],
                            'checks': [['/bin/sh', '-c', 'test "$(cat owned.txt)" = recovered']]},
@@ -180,9 +190,19 @@ class ExternalRecoveryTests(ProjectTest):
         path = self.root / 'transfer.json'
         path.write_text(json.dumps(transfer))
         bridge = {key: value for key, value in os.environ.items() if not key.startswith('COHERENCE_PARENT_BRIDGE_')}
-        with patch.dict(os.environ, bridge, clear=True), contextlib.redirect_stdout(io.StringIO()) as output:
+        class Healthy:
+            def __init__(self, *_args, **_kwargs):
+                self.saved_session = self.opened_session = {'id': 'cli-dependent', 'file': '/fixture/cli-dependent'}
+            def prompt(self, _prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    return '{"approved":true,"coverage":["transfer"],"coverage_gaps":[],"findings":[]}'
+                kwargs['claim']('next.txt')
+                (self_project / 'next.txt').write_text('next\n')
+                return 'dependent complete'
+        self_project = self.project
+        with patch.dict(os.environ, bridge, clear=True), patch.object(cli, 'PiAdapter', Healthy), contextlib.redirect_stdout(io.StringIO()) as output:
             self.assertEqual(cli.main(['recover-task', '--project', str(self.project), '--run', 'run', '--recovery', str(path)]), 2)
-            self.assertEqual(cli.main(['recover-task', '--project', str(self.project), '--run', 'run', '--recovery', str(path), '--owner-authorized']), 0)
+            self.assertEqual(cli.main(['recover-task', '--project', str(self.project), '--run', 'run', '--recovery', str(path), '--owner-authorized']), 0, output.getvalue())
         self.assertNotIn(transfer['summary'], output.getvalue())
         status = cli.status(self.project, 'run')
         self.assertIn(transfer['invocation_id'], json.dumps(status))

@@ -293,17 +293,23 @@ class WorkerRecoveryTests(ProjectTest):
 
     def test_exhausted_session_can_be_replaced_without_resetting_history(self):
         calls, contract = [], self.contract()
-        adapter = self.adapter(calls)
+        base_adapter = self.adapter(calls)
+        class Adapter(base_adapter):
+            def prompt(self, prompt, **kwargs):
+                result = super().prompt(prompt, **kwargs)
+                if not kwargs.get('read_only') and len(calls) <= 3:
+                    return TaskOutcome('incomplete', 'inspected parser missing')
+                return result
+        adapter = Adapter
         with Authority(self.project) as owner:
             self.start_failure(owner, contract, adapter)
-            row = owner.store.db.execute("SELECT details FROM execution_history WHERE kind='worker_invocation' AND state='failed'").fetchone()
-            identity = json.loads(row['details'])['saved_session']
-            for ordinal in range(2):
-                invocation = 'retained-correction-' + str(ordinal)
-                owner.store.reserve_worker_dispatch('recovery', 'one', invocation, identity)
-                owner.store.history('recovery', 'one', 'worker_invocation', 'failed',
-                                    {'invocation_id': invocation, 'saved_session': identity,
-                                     'reuse_key': json.loads(row['details'])['reuse_key']})
+            for _ in range(2):
+                owner.store.resume('recovery')
+                with self.assertRaisesRegex(Blocked, 'incomplete'):
+                    Engine(owner, 'recovery', contract, EXECUTOR, adapter=adapter, resume=True,
+                           worker_recovery={'action': 'continue', 'diagnosis': DIAGNOSIS}).invoke()
+            row = owner.store.db.execute("SELECT details FROM execution_history WHERE kind='worker_invocation' AND state='failed' ORDER BY seq DESC LIMIT 1").fetchone()
+            identity = json.loads(row['details'])['session']
             with self.assertRaisesRegex(Blocked, 'allowance exhausted'):
                 owner.store.reserve_worker_dispatch('recovery', 'one', 'fourth', identity)
             owner.store.resume('recovery')
@@ -400,16 +406,14 @@ class WorkerRecoveryTests(ProjectTest):
                         'summary': 'External implementation with original acceptance; independent review remains.',
                         'paths': {'owned.txt': {'sha256': hashlib.sha256(content).hexdigest(), 'mode': 420}}}
             runner = Engine(owner, 'recovery', contract, EXECUTOR, resume=True)
-            if check_passes:
-                checkpoint = runner.recover_task(transfer, owner_authorized=True)
-                self.assertEqual(checkpoint['paths'], ['owned.txt'])
-            else:
+            if not check_passes:
                 with self.assertRaises(Blocked):
                     runner.recover_task(transfer, owner_authorized=True)
-            owner.store.resume('recovery')
+                owner.store.resume('recovery')
             test = self
             class Healthy:
-                def __init__(self, *_args, **_kwargs): pass
+                def __init__(self, *_args, **_kwargs):
+                    self.saved_session = self.opened_session = {'id': 'healthy', 'file': '/fixture/healthy'}
                 def prompt(self, _prompt, **kwargs):
                     if kwargs.get('read_only'):
                         calls.append(('review', 'reviewer'))
@@ -420,7 +424,12 @@ class WorkerRecoveryTests(ProjectTest):
             continuation = Engine(owner, 'recovery', contract, EXECUTOR, adapter=Healthy, resume=True,
                                   question=self.no_owner_question)
             if check_passes:
-                self.assertEqual(continuation.invoke()['status'], 'complete')
+                with graph_saver(owner) as saver:
+                    result = graph_recovery_action(continuation, task_graph(continuation, saver, review=True),
+                                                   {'configurable': {'thread_id': 'recovery'}}, 'external',
+                                                   transfer=transfer, owner_authorized=True)
+                self.assertEqual(result['result']['status'], 'complete')
+                self.assertEqual(result['checkpoints']['one']['paths'], ['owned.txt'])
                 self.assertEqual(calls, [('worker', 'worker'), ('worker', 'strong'),
                                          ('dependent', 'worker'), ('review', 'reviewer')])
                 self.assertTrue(owner.store.db.execute(

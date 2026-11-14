@@ -1,7 +1,7 @@
 """Offline prompt wiring checks; not proof that a provider follows instructions."""
 from unittest.mock import patch
 
-from coherence_workflow import engine
+from coherence_workflow import graph
 from coherence_workflow.engine import Engine
 from coherence_workflow.graph import graph_saver, task_graph
 from coherence_workflow.pi_adapter import effective_saved_session
@@ -183,8 +183,8 @@ class WorkerAuthorityTests(ProjectTest):
                 raise Blocked('labelled authority fixture interruption')
 
         with Authority(self.project) as owner:
-            with patch.object(engine, '_IMPLEMENTATION_AUTHORITY',
-                              engine._IMPLEMENTATION_AUTHORITY + prior_prompt_sentinel):
+            with patch.object(graph, '_IMPLEMENTATION_AUTHORITY',
+                              graph._IMPLEMENTATION_AUTHORITY + prior_prompt_sentinel):
                 with self.assertRaisesRegex(Blocked, 'labelled authority fixture interruption'):
                     Engine(owner, 'authority-resume', admit({'delivery_issue': ISSUE, 'tasks': [{
                         'id': 'resume', 'description': 'Scoped fixture. ' + scenario,
@@ -196,7 +196,8 @@ class WorkerAuthorityTests(ProjectTest):
             owner.store.resume('authority-resume')
 
             class Continued:
-                def __init__(self, *args, **kwargs): pass
+                def __init__(self, *args, **kwargs):
+                    self.saved_session = self.opened_session = identity
                 def prompt(self, prompt, **kwargs):
                     if kwargs.get('read_only'):
                         return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -211,7 +212,8 @@ class WorkerAuthorityTests(ProjectTest):
                 return 'diagnosed fixture interruption'
             result = Engine(owner, 'authority-resume', admit({'delivery_issue': ISSUE, 'tasks': [{
                 'id': 'resume', 'description': 'Scoped fixture. ' + scenario,
-            }]}), EXECUTOR, adapter=Continued, resume=True, question=diagnose).invoke()
+            }]}), EXECUTOR, adapter=Continued, resume=True, question=diagnose,
+                          worker_recovery={'action': 'continue', 'diagnosis': 'diagnosed fixture interruption'}).invoke()
             self.assertEqual(owner.store.db.execute(
                 "SELECT details FROM execution_history WHERE run_id='authority-resume' AND task_id='resume' "
                 "AND kind='worker_invocation' AND state='failed'").fetchone()['details'], retained_details)
@@ -221,7 +223,6 @@ class WorkerAuthorityTests(ProjectTest):
         self.assertIn('Continue only the unfinished same-task work.', prompts[0])
         self.assertIn('diagnosed fixture interruption', prompts[0])
         self.assertNotIn(prior_prompt_sentinel, prompts[0])
-        self.assertEqual(len(questions), 1)
-        self.assertNotIn(prior_prompt_sentinel, questions[0])
+        self.assertEqual(questions, [])
         self.assert_completion_ownership(prompts[0])
         self.assert_precedence_scenario(prompts[0], scenario)
