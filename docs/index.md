@@ -26,8 +26,8 @@ do not duplicate contracts or turn closeout into a repository-wide audit.
 | Completed changes, commit history and inventories | Git history; do not duplicate routine inventories. Issue-linked delivery's meaningful executive result and acceptance trace belong in the delivery issue and current owner chat via [finish-session](../skills/finish-session/SKILL.md#issue-linked-delivery). |
 | Coordinate Implementation executable operation and focused Git safety | [Runtime operating guide](coordinate-implementation.md); optional explicit runtime setup, thin executable interface |
 | Current task progress, historical SQLite and SDK interfaces | [Runtime schema owner](coordinate-implementation-schema.md) |
-| Local read-only workflow monitor package preparation, launch, rollback, correction lookup, HTTP boundary, and mockup-first UI approval rule | [Workflow monitor README](../workflow_monitor/README.md) |
-| Durable workflow monitor visual reference | [Workflow monitor mockup](workflow-monitor-mockup.html), proposed and not approved; [readable fixture/interaction source](workflow-monitor-mockup.jsx), [offline builder](workflow-monitor-mockup-build.mjs); [viewing, copy boundaries and approval rule](../workflow_monitor/README.md#visual-reference-and-ui-change-rule) |
+| Retired workflow monitor cutover, historical limitations and references | [Workflow monitor README](../workflow_monitor/README.md) |
+| Historical workflow monitor visual reference | [Workflow monitor mockup](workflow-monitor-mockup.html), [readable source](workflow-monitor-mockup.jsx), and [historical builder](workflow-monitor-mockup-build.mjs); see [cutover and historical viewing notes](../workflow_monitor/README.md#visual-reference-and-ui-change-rule). The retired builder requires its historical dependencies. |
 
 This repository's marked [Coherence adoption contract](../AGENTS.md) associates its single
 [project-memory index](../memory/MEMORY.md) at `memory/` for gotchas and explicit

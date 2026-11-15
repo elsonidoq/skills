@@ -44,7 +44,6 @@ from types import SimpleNamespace
 from .git_effects import FocusedGit
 from .pi_adapter import WaitingQuestion, effective_saved_session
 from .store import Blocked, canonical, git
-from .monitoring import Recorder
 import hashlib
 import re
 from .git_effects import _commit_result
@@ -173,8 +172,6 @@ def task_graph(engine, saver, *, review=False):
         raise TypeError('task_graph requires the existing Engine helpers')
     store, project, run = engine.authority.store, engine.authority.project, engine.run
     tasks = {task['id']: task for task in engine.contract['tasks']}
-    recorder = Recorder(store, run)
-    recorder.resume()
     adapters = {}
 
     def history(task_id, kind):
@@ -243,30 +240,7 @@ def task_graph(engine, saver, *, review=False):
     def prepare(task, complete, *, in_wave=False):
         baseline = git(project, 'rev-parse', 'HEAD').decode().strip()
         store.task(run, task['id'], 'running', baseline)
-        preparation = recorder.occurrence()
-        recorder.emit(preparation, 'prepare', 'started', task_id=task['id'])
-        gate_number = [0]
-        def gate_question(text):
-            gate_number[0] += 1
-            gate, question = recorder.occurrence(), recorder.occurrence()
-            facts = {'ordinal': gate_number[0]}
-            recorder.emit(gate, 'gate', 'started', task_id=task['id'], facts=facts)
-            recorder.emit(question, 'gate', 'question_requested', task_id=task['id'],
-                          facts={**facts, 'parent_occurrence_id': gate})
-            try:
-                answer = engine.question(text)
-            except BaseException:
-                recorder.emit(question, 'gate', 'delivery_failed', task_id=task['id'],
-                              facts={**facts, 'parent_occurrence_id': gate})
-                recorder.emit(gate, 'gate', 'failed', task_id=task['id'], facts=facts)
-                raise
-            recorder.emit(question, 'gate', 'answer_returned', task_id=task['id'],
-                          facts={**facts, 'parent_occurrence_id': gate})
-            recorder.emit(gate, 'gate', 'passed' if answer.strip().lower() in ('yes', 'y') else 'failed',
-                          task_id=task['id'], facts=facts)
-            return answer
-        manual_gates(task, gate_question)
-        recorder.emit(preparation, 'prepare', 'passed', task_id=task['id'])
+        manual_gates(task, engine.question)
         return {'task_id': task['id'], 'baseline': baseline, 'invocation_id': uuid.uuid4().hex,
                 'chain': [], 'prompt_kind': 'initial', 'correction_id': '',
                 'session': None, 'recovery': None, 'checkpoints': complete, 'next_node': 'worker',
@@ -303,8 +277,7 @@ def task_graph(engine, saver, *, review=False):
         profile = engine.implementation_fallback if recovery and recovery['action'] == 'escalate' else engine.executor
         if (task['id'] not in adapters or (recovery and state['prompt_kind'] == 'recovery'
                 and recovery['action'] in ('fresh', 'escalate'))):
-            adapters[task['id']] = engine.adapter(project, profile, question=engine.question,
-                                                 observe_question=lambda event: observe_question(event))
+            adapters[task['id']] = engine.adapter(project, profile, question=engine.question)
         adapter = adapters[task['id']]
         adapter.lock_fd = engine.authority.lock.fileno()
         if state.get('session') is not None:
@@ -320,18 +293,6 @@ def task_graph(engine, saver, *, review=False):
             if selected:
                 adapter.saved_session = selected['saved_session']
             store.history(run, task['id'], 'session', 'selected', selection)
-        occurrence = recorder.occurrence()
-        question_occurrence = [None]
-        def observe_question(event):
-            mapping = {'requested': 'question_requested', 'returned': 'answer_returned',
-                       'sent': 'answer_sent', 'delivery_failed': 'delivery_failed'}
-            if question_occurrence[0] is None:
-                question_occurrence[0] = recorder.occurrence()
-            recorder.emit(question_occurrence[0], 'worker', mapping[event], task_id=task['id'],
-                          facts={'parent_occurrence_id': occurrence})
-            if event in ('sent', 'delivery_failed'):
-                question_occurrence[0] = None
-        adapter.observe_question = observe_question
         if state['prompt_kind'] == 'initial':
             body = ('Execute this one requested task in the current project. Read relevant files, make the smallest '
                     'correct edits and run relevant actual checks. Never stage or commit; the runner creates the focused '
@@ -381,21 +342,11 @@ def task_graph(engine, saver, *, review=False):
         if dispatch_recovery and recovery['action'] == 'escalate':
             store.history(run, task['id'], 'implementation_escalation', 'started',
                           {**dispatch_recovery, 'executor': profile})
-        public = {'invocation_id': invocation, 'role': role,
-                  'invocation_kind': 'corrective_worker' if state['chain'] else 'task_worker',
-                  'correction_chain': [*state['chain'], invocation],
-                  'selected_input_checkpoints': [
-                      {key: item[key] for key in ('task_id', 'checkpoint_occurrence_id',
-                          'producer_invocation_id', 'correction_chain') if key in item}
-                      for task_id, item in state.get('checkpoints', {}).items()
-                      if task_id in task.get('depends', [])]}
-        if state['chain']:
-            public['predecessor_invocation_id'] = state['chain'][-1]
+        invocation_kind = 'corrective_worker' if state['chain'] else 'task_worker'
         store.history(run, task['id'], 'worker_invocation', 'started',
                       {'invocation_id': invocation, 'session': session, 'prompt': prompt, 'executor': profile})
-        recorder.emit(occurrence, 'worker', 'started', task_id=task['id'], facts=public)
         steering = {'run_id': run, 'task_id': task['id'], 'invocation_id': invocation,
-                    'role': public['invocation_kind']}
+                    'role': invocation_kind}
         if getattr(adapter, 'parent_steering_available', lambda: False)():
             adapter.enable_parent_steering(steering)
         adapter.last_interval = None
@@ -420,8 +371,6 @@ def task_graph(engine, saver, *, review=False):
                                'effects': effects(task['id']), 'prompt': prompt,
                                'diagnostic': getattr(exc, 'diagnostic', None)})
                 store.history(run, task['id'], 'worker', status, {'role': role, 'error': _safe_error(exc)})
-                recorder.emit(occurrence, 'worker', status, task_id=task['id'],
-                              facts={**public, 'stopped_by_invocation_id': invocation})
                 engine._append_metric(adapter, invocation_id=invocation, task_id=task['id'],
                                       role=role if role == 'fixing_worker' else 'corrective_worker' if state['chain'] else 'worker', outcome=status,
                                       selection=selection, continued=state['prompt_kind'] != 'initial',
@@ -431,7 +380,6 @@ def task_graph(engine, saver, *, review=False):
                                   role=role if role == 'fixing_worker' else 'corrective_worker' if state['chain'] else 'worker', outcome='settled',
                                   selection=selection, continued=state['prompt_kind'] != 'initial',
                                   expected_session_id=(session or {}).get('id'))
-        recorder.emit(occurrence, 'worker', 'returned', task_id=task['id'], facts=public)
         store.history(run, task['id'], 'worker', 'returned', {'role': role})
         actual = getattr(adapter, 'opened_session', None) or getattr(adapter, 'saved_session', None)
         if actual is not None:
@@ -485,11 +433,6 @@ def task_graph(engine, saver, *, review=False):
                 Engine._repair_index_state(project, selected) != facts['index_state']):
             raise Blocked('worker effects changed before checks; inspect Git and selected bytes before continuation')
         refs = []
-        check_occurrences = {}
-        def observe(kind, ordinal, code):
-            occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
-            recorder.emit(occurrence, 'check', kind, task_id=task['id'],
-                          facts={'ordinal': ordinal, **({'exit_code': code} if code is not None else {})})
         def retain(status, attempt):
             store.history(run, task['id'], 'check', status, attempt)
             if status == 'passed':
@@ -497,7 +440,7 @@ def task_graph(engine, saver, *, review=False):
                     "SELECT seq FROM execution_history WHERE run_id=? AND task_id=? AND kind='check' AND state='passed' ORDER BY seq DESC LIMIT 1",
                     (run, task['id'])).fetchone()['seq'])
         try:
-            results = run_checks(project, task, lock_fd=engine.authority.lock.fileno(), completed=retain, observe=observe)
+            results = run_checks(project, task, lock_fd=engine.authority.lock.fileno(), completed=retain)
         except CheckFailure as exc:
             if state.get('recovery') and state['recovery']['action'] == 'escalate':
                 store.history(run, task['id'], 'implementation_escalation', 'failed', {'error': canonical(exc.attempt)})
@@ -536,7 +479,6 @@ def task_graph(engine, saver, *, review=False):
                 'producer_invocation_id': state['chain'][-1], 'correction_chain': state['chain'], 'summary': summary})
         focused.before_checkpoint = intent
         focused.before_git_commit = lambda: store.history(run, task['id'], 'checkpoint', 'attempting', {'task_id': task['id']})
-        recorder.emit(occurrence, 'checkpoint', 'started', task_id=task['id'], facts={'baseline': focused.base})
         try:
             result = focused.checkpoint()
         except BaseException as exc:
@@ -546,7 +488,6 @@ def task_graph(engine, saver, *, review=False):
             status = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
             store.history(run, task['id'], 'checkpoint', status,
                           {'error': str(exc), 'no_effect': result is None and not uncertain})
-            recorder.emit(occurrence, 'checkpoint', status, task_id=task['id'], facts={'baseline': focused.base})
             if result is None:
                 if state.get('recovery') and state['recovery']['action'] == 'escalate':
                     store.history(run, task['id'], 'implementation_escalation', 'failed', {'error': str(exc)})
@@ -566,9 +507,6 @@ def task_graph(engine, saver, *, review=False):
         result['parent'] = None if result['no_change'] else git(project, 'rev-parse', result['sha'] + '^').decode().strip()
         result.update({'task_id': task['id'], 'checkpoint_occurrence_id': occurrence,
                        'producer_invocation_id': state['chain'][-1], 'correction_chain': state['chain']})
-        recorder.emit(occurrence, 'checkpoint', 'passed', task_id=task['id'],
-                      facts={'baseline': focused.base, 'head': result['sha'], 'no_change': result['no_change'],
-                             'producer_invocation_id': state['chain'][-1], 'correction_chain': state['chain']})
         store.history(run, task['id'], 'checkpoint', 'passed', result)
         settled = returned[0]
         if settled.get('request') and not (state.get('recovery') and state['recovery']['action'] == 'escalate'):
@@ -791,9 +729,6 @@ def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_autho
 
 def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_authorized=False, scope=None):
     """Run the public graph against its retained input and checkpoint."""
-    from .monitoring import descriptor
-    from .processes import process_identity
-
     store, project, run = engine.authority.store, engine.authority.project, engine.run
     if engine.resume:
         saved = store.input(run)
@@ -819,15 +754,6 @@ def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_auth
                     authority={'backend': 'langgraph-v1', 'paid_scope': engine.paid_scope, 'parallel': engine.parallel,
                                'routine_authority': True, 'review_policy': 'owner-pair-v1'},
                     review_base=review_base)
-        try:
-            identity = process_identity(os.getpid(), run)
-        except Exception:
-            identity = None
-        Recorder(store, run).register(descriptor(engine.contract, engine.executor, baseline), identity)
-    recorder = Recorder(store, run)
-    recorder.resume()
-    terminal = recorder.occurrence()
-    recorder.emit(terminal, 'terminal', 'started')
     config = {'configurable': {'thread_id': run}, 'recursion_limit': max(100, len(engine.contract['tasks']) * 20 + 50)}
     try:
         with graph_saver(engine.authority) as saver:
@@ -860,8 +786,6 @@ def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_auth
                     public['checkpoints'] = list(public['checkpoints'].values())
                 public['baseline'] = store.db.execute('SELECT baseline FROM execution_runs WHERE run_id=?', (run,)).fetchone()['baseline']
                 public['usage'] = engine.usage_summary()
-                recorder.emit(terminal, 'terminal', 'passed' if public.get('status') == 'complete' else 'failed',
-                              facts={'head': public.get('sha')})
                 return engine._finalize_metric_artifact(public)
             return result
     except BaseException as exc:
@@ -873,11 +797,6 @@ def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_auth
         retained = store.db.execute('SELECT state,result,error FROM execution_runs WHERE run_id=?', (run,)).fetchone()
         if tuple(retained) != (state, head, _safe_error(exc)):
             store.finish(run, state, head, _safe_error(exc))
-        stopped = store.db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind IN ('worker_invocation','fixer_invocation') AND state IN ('failed','interrupted') ORDER BY seq DESC LIMIT 1", (run,)).fetchone()
-        facts = {'head': git(project, 'rev-parse', 'HEAD').decode().strip()}
-        if stopped:
-            facts['stopped_by_invocation_id'] = json.loads(stopped['details']).get('invocation_id')
-        recorder.emit(terminal, 'terminal', state, facts=facts)
         engine._finalize_metric_artifact()
         raise
 
@@ -911,8 +830,6 @@ def _check_unfinished_escalation(store, run):
 def _add_review_nodes(builder, engine, validate):
     """Attach review transitions to the internal task graph, not the legacy controller."""
     store, project, run = engine.authority.store, engine.authority.project, engine.run
-    recorder = Recorder(store, run)
-    recorder.resume()
     scope = hashlib.sha256(canonical(engine.contract['tasks']).encode()).hexdigest()
 
     def retained():
@@ -1009,7 +926,7 @@ def _add_review_nodes(builder, engine, validate):
         if predecessor is not None and items[-1]['references'].get('head') != head:
             raise Blocked('review target drifted after repair; inspect affected continuation before dispatch')
         try:
-            engine._review(recorder=recorder, review_base=base(), head=head, ordinal=ordinal, fixing_round=round_,
+            engine._review(review_base=base(), head=head, ordinal=ordinal, fixing_round=round_,
                            trigger_execution_id=predecessor, predecessor_execution_id=predecessor,
                            input_checkpoints=inputs, execution_id=reviewer_id)
         except BaseException as exc:
@@ -1057,7 +974,7 @@ def _add_review_nodes(builder, engine, validate):
             if any(item['execution_id'] == fixer for item in items):
                 return {'next_node': 'review_route'}
         engine.run_fix(value(rejection)['findings'], trigger_execution_id=rejection['execution_id'], review_base=base(),
-                       recorder=recorder, execution_id=fixer, review_ordinal=rejection['review_ordinal'],
+                       execution_id=fixer, review_ordinal=rejection['review_ordinal'],
                        fixing_round=rejection['fixing_round'] + 1, predecessor_execution_id=rejection['execution_id'])
         return {'next_node': 'review_route'}
 
@@ -1071,7 +988,7 @@ def _add_review_nodes(builder, engine, validate):
         if recovered is not None:
             rejection = next(entry for entry in items if entry['execution_id'] == item['trigger_execution_id'])
             engine.run_fix(value(rejection)['findings'], trigger_execution_id=rejection['execution_id'], review_base=base(),
-                           recorder=recorder, execution_id=item['execution_id'], review_ordinal=item['review_ordinal'],
+                           execution_id=item['execution_id'], review_ordinal=item['review_ordinal'],
                            fixing_round=item['fixing_round'], predecessor_execution_id=item['predecessor_execution_id'], recovered=recovered)
         return {'next_node': 'review_route'}
 
@@ -1120,7 +1037,7 @@ def _add_review_nodes(builder, engine, validate):
                 review_base=base(), review_head=head, diagnosis=diagnosis if isinstance(diagnosis, str) else '', evidence_digest=digest)
         if any(item['execution_id'] == authorized['execution_id'] for item in items):
             return {'next_node': 'review_route'}
-        _, result, status = engine._review(recorder=recorder, review_base=base(), head=head,
+        _, result, status = engine._review(review_base=base(), head=head,
             ordinal=last['review_ordinal'] + 1, fixing_round=last['fixing_round'], trigger_execution_id=last['execution_id'],
             predecessor_execution_id=last['execution_id'], execution_id=authorized['execution_id'])
         if status == 'rejected' and not result['findings']:
@@ -1132,7 +1049,7 @@ def _add_review_nodes(builder, engine, validate):
         if any(item['execution_id'] == state['review_execution'] for item in retained()['executions']):
             return {'next_node': 'review_route', 'review_action': None}
         head = git(project, 'rev-parse', 'HEAD').decode().strip()
-        _, review, status = engine._review(recorder=recorder, review_base=base(), head=head, ordinal=0,
+        _, review, status = engine._review(review_base=base(), head=head, ordinal=0,
                                           execution_id=state['review_execution'], refresh_target=True)
         if status == 'rejected':
             store.finish(run, 'failed', head, 'fresh current-target review rejected; inspect findings before explicit resume')
@@ -1171,7 +1088,7 @@ def _add_review_nodes(builder, engine, validate):
             raise Blocked('review transport failure has no inspected matching payload-size diagnosis; inspect the original call before continuation')
         if git(project, 'rev-parse', 'HEAD').decode().strip() != head or git(project, 'status', '--porcelain=v1', '--untracked-files=no'):
             raise Blocked('review delivery target drifted; inspect the reviewed target before continuation')
-        engine._review(recorder=recorder, review_base=base(), head=head, ordinal=last['review_ordinal'],
+        engine._review(review_base=base(), head=head, ordinal=last['review_ordinal'],
             fixing_round=last['fixing_round'], trigger_execution_id=last['trigger_execution_id'],
             predecessor_execution_id=last['predecessor_execution_id'], input_checkpoints=last.get('input_checkpoints'),
             execution_id=last['execution_id'], retry_limit=int(match.group(1)))

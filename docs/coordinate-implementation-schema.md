@@ -167,8 +167,13 @@ Engine terminal-call boundaries attribute each actual worker/corrective/fixer/re
 
 ## Monitoring recording v1
 
-New runs may additionally retain a closed `execution_monitor_runs` descriptor and ordered
-`execution_observations`. These are append-only best-effort monitoring facts: registration or
+**Historical format:** the current runtime no longer registers monitor descriptors or appends
+monitor observations. Existing tables and rows remain in place; current status/history and metric
+readers remain available. See the [monitor cutover and history guide](../workflow_monitor/README.md).
+The following vocabulary describes retained records, not current emissions.
+
+Earlier runtimes retained a closed `execution_monitor_runs` descriptor and ordered
+`execution_observations`. These were append-only best-effort monitoring facts: registration or
 append failures warn safely and never alter normal progress, checks, Git, or errors. Descriptors
 retain declared task IDs/dependencies, safe optional labels, and complete explicit task
 `outcome`/`description` work text; missing work text remains unknown, not reconstructed from
@@ -189,10 +194,10 @@ distinct description version, phase labels with possible branches and pre-record
 safe optional presentation, requested executor, revision-or-unknown, declared correction, and private
 runner identity in its dedicated column. Descriptor/identity collection and warning output are best effort. If a later append recovers after a
 recording failure, the recorder appends a closed `gap` marker; it never reconstructs missing events.
-Engine emissions include
+Historical engine emissions included
 per-command check start/outcome and checkpoint start/outcome; command text and output remain private.
 
-Task-worker recording has a closed, future-run-only invocation vocabulary. Each actual prompt call emits one
+Historical task-worker recording used a closed invocation vocabulary. Each actual prompt call emits one
 run-scoped `invocation_id` at its real start and terminal return/failure, with `invocation_kind` of
 `task_worker` or `corrective_worker`. A corrective call names its exact selected predecessor and retains its
 ordered `correction_chain`. At task dispatch, `selected_input_checkpoints` records only the completed declared
@@ -222,12 +227,17 @@ present; the monitor's public chain DTO retains known dispatched review executio
 matching observations. Exact same-run execution/invocation identity reconciles their activities
 and call metrics; a fixing-round dispatch alone does not prove an individual prompt occurred.
 Acceptance attaches only to its explicit terminal reviewer ID and recorded range. Absent or corrupt
-monitoring is reported unknown. Explicit abandon preserves prior progress/error
-history and appends an `abandoned` observation when the run was registered.
+monitoring is reported unknown. Historical abandon preserved prior progress/error
+history and appended an `abandoned` observation when the run was registered.
 
 ## Preserved monitor recordings
 
-A later explicit preservation command may first use the monitor-only
+**Historical format and retired tooling:** the capture helper and preservation command below
+are not provided by the current checkout. Their retained format does not authorize capture,
+migration or deletion. Use the [cutover/history guide](../workflow_monitor/README.md) for the
+historical procedures and their compatible-tooling boundary; preserve existing data.
+
+The retired preservation command used the monitor-only
 `capture_stopped(source_worktree, private_dir)` helper. It verifies a distinct registered main,
 acquires the stopped source's ordinary `coherence-workflow.lock` without constructing or
 migrating `Authority`, and keeps it through consumer readback and the successful context-exit
@@ -243,7 +253,7 @@ and database/WAL/metric byte checks remain required, and no other mutation is au
 Absent metrics remain absent; existing unreadable/unsafe metrics or source identity/content drift
 fail actionably while retaining source and prior history. The helper neither publishes nor deletes.
 
-A later explicit preservation command may publish one monitor-only recording below a
+The retired preservation command could publish one monitor-only recording below a
 verified main worktree at `.coherence/preserved-recordings/<recording-id>/`.  A Reader
 recognizes only an owned, non-symlinked `recording.json` with the closed v1 fields
 `version`, `state: "complete"`, `recording_id`, and opaque `origin_id`, plus its
@@ -259,9 +269,9 @@ stopped source, its Git admin, process, or metric paths, and it reports preserve
 liveness as unknown rather than liveness of main.  Missing, partial, malformed, or
 unsupported evidence remains qualified by the existing read/normalization behavior.
 Copied artifact commitment references remain historical facts, not commits on main.
-Readers create, migrate, repair, or import nothing; publication/capture is a later
-explicit operation and must not write main's native live database. The prepared
-`workflow-monitor-preserve --source-worktree PATH` command uses that capture context to
+The historical reader created, migrated, repaired, or imported nothing; publication/capture
+were separate explicit operations and could not write main's native live database. The retired
+`workflow-monitor-preserve --source-worktree PATH` command used that capture context to
 create a command-owned private directory, verifies unchanged source before publication,
 reserves a no-overwrite target, moves prepared bytes beneath that invisible pending target,
 and writes closed complete metadata as the final publication boundary, then reopens it through

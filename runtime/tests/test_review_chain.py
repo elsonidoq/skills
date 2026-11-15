@@ -12,105 +12,12 @@ from coherence_workflow.engine import Engine
 from coherence_workflow.graph import graph_recovery_action, graph_saver, task_graph
 from coherence_workflow.intake import admit
 from coherence_workflow.metric_artifacts import artifact_relative
-from coherence_workflow.monitoring import Recorder, descriptor
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 
 
 EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
             'reviewer': {'provider': 'fixture', 'model': 'offline-review', 'effort': 'medium'}}
-
-
-class ChainRecordingTests(ProjectTest):
-    def test_closed_recording_round_trips_actual_chain_ids_without_inventing_stages(self):
-        contract = {'tasks': [{'id': 'fix', 'depends': []}]}
-        with Authority(self.project) as owner:
-            store = owner.store
-            store.start('recorded', self.base)
-            recorder = Recorder(store, 'recorded')
-            self.assertTrue(recorder.register(descriptor(contract, EXECUTOR, self.base)))
-
-            store.review_dispatch('recorded', 'review-1', review_base=self.base, review_head=self.base)
-            store.review_outcome('recorded', 'review-1', 'rejected', findings=['PRIVATE first rejection'],
-                                 references={'base': self.base, 'head': self.base, 'commit': self.base})
-            recorder.emit('review-1', 'review', 'failed', facts={
-                'role': 'reviewer', 'execution_id': 'review-1', 'review_ordinal': 1,
-                'review_base': self.base, 'review_head': self.base, 'approved': False,
-                'outcome': 'rejected', 'finding_count': 1,
-            })
-            store.review_dispatch('recorded', 'fix-1', role='fixer', review_ordinal=1, fixing_round=1,
-                                  trigger_execution_id='review-1', predecessor_execution_id='review-1',
-                                  review_base=self.base, review_head=self.base)
-            recorder.emit('fix-call-1', 'worker', 'started', task_id='fix', facts={
-                'role': 'fixing_worker', 'execution_id': 'fix-1', 'invocation_id': 'fix-call-1',
-                'invocation_kind': 'task_worker', 'selected_input_checkpoints': [],
-                'correction_chain': ['fix-call-1'], 'fixing_round': 1,
-                'trigger_execution_id': 'review-1', 'predecessor_execution_id': 'review-1',
-            })
-            recorder.emit('check-1', 'check', 'passed', task_id='fix', facts={
-                'ordinal': 1, 'exit_code': 0, 'execution_id': 'fix-1',
-            })
-            recorder.emit('checkpoint-1', 'checkpoint', 'passed', task_id='fix', facts={
-                'baseline': self.base, 'head': self.base, 'no_change': False, 'execution_id': 'fix-1',
-                'producer_invocation_id': 'fix-call-1', 'correction_chain': ['fix-call-1'],
-            })
-            store.review_outcome('recorded', 'fix-1', 'approved', findings=[],
-                                 references={'base': self.base, 'head': self.base, 'commit': self.base})
-            store.review_dispatch('recorded', 'review-2', review_ordinal=2, fixing_round=1,
-                                  trigger_execution_id='fix-1', predecessor_execution_id='fix-1',
-                                  review_base=self.base, review_head=self.base)
-            recorder.emit('review-2', 'review', 'passed', facts={
-                'role': 'reviewer', 'execution_id': 'review-2', 'review_ordinal': 2,
-                'trigger_execution_id': 'fix-1', 'predecessor_execution_id': 'fix-1',
-                'review_base': self.base, 'review_head': self.base, 'approved': True,
-                'outcome': 'approved', 'finding_count': 0,
-            })
-            store.review_outcome('recorded', 'review-2', 'approved', findings=[],
-                                 references={'base': self.base, 'head': self.base, 'commit': self.base})
-
-            # Question parenting is callback lineage only, never execution causality.
-            recorder.emit('question-1', 'review', 'question_requested', facts={
-                'parent_occurrence_id': 'review-1',
-            })
-            self.assertIsNone(recorder.emit('bad', 'review', 'passed', facts={
-                'role': 'reviewer', 'execution_id': 'review-3', 'review_ordinal': 3,
-                'review_base': self.base, 'review_head': self.base, 'outcome': 'approved',
-                'private_payload': 'PRIVATE',
-            }))
-            rows = [(row['occurrence_id'], row['phase'], json.loads(row['facts']))
-                    for row in store.monitor('recorded')['observations']]
-            self.assertEqual(store.monitor('recorded')['run']['recording_version'], 1)
-            self.assertEqual(rows[0][2]['outcome'], 'rejected')
-            self.assertEqual(rows[1][2]['trigger_execution_id'], 'review-1')
-            self.assertEqual(rows[2][2]['execution_id'], 'fix-1')
-            self.assertEqual(rows[3][2]['head'], self.base)
-            self.assertEqual(rows[4][2]['predecessor_execution_id'], 'fix-1')
-            self.assertEqual(rows[5][2], {'parent_occurrence_id': 'review-1'})
-            self.assertNotIn('review-3', [row[0] for row in rows])
-            self.assertNotIn('PRIVATE first rejection', json.dumps(rows))
-            chain = store.review_chain('recorded', private=True)
-            self.assertEqual(chain['executions'][0]['findings'], [['PRIVATE first rejection']])
-            self.assertEqual([item['state'] for item in chain['executions']], ['rejected', 'approved', 'approved'])
-
-    def test_optional_recording_failure_adds_gap_without_changing_required_chain(self):
-        with Authority(self.project) as owner:
-            store = owner.store
-            store.start('gap', self.base)
-            recorder = Recorder(store, 'gap')
-            self.assertTrue(recorder.register(descriptor({'tasks': []}, EXECUTOR, self.base)))
-            store.review_dispatch('gap', 'review-1', review_base=self.base, review_head=self.base)
-            store.review_outcome('gap', 'review-1', 'rejected', findings=['retained'],
-                                 references={'base': self.base, 'head': self.base})
-            with patch.object(store, 'append_monitor_observation', side_effect=RuntimeError('optional unavailable')):
-                self.assertIsNone(recorder.emit('review-1', 'review', 'failed', facts={
-                    'role': 'reviewer', 'execution_id': 'review-1', 'review_ordinal': 1,
-                    'review_base': self.base, 'review_head': self.base, 'outcome': 'rejected', 'finding_count': 1,
-                }))
-            with patch('coherence_workflow.monitoring.uuid.uuid4', side_effect=RuntimeError('id unavailable')):
-                self.assertIsNone(recorder.occurrence())
-            recorder.emit('later', 'terminal', 'passed', facts={'head': self.base})
-            self.assertEqual(store.review_chain('gap')['executions'][0]['state'], 'rejected')
-            self.assertIn('gap', [row['kind'] for row in store.monitor('gap')['observations']])
 
 
 class OwnerPairPrimitiveTests(ProjectTest):
@@ -619,8 +526,6 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
         with Authority(self.project) as owner:
             self.assertEqual(owner.store.completed_checkpoints('evidence-real'), self.checkpoints)
             chain = owner.store.review_chain('evidence-real')
-            monitor = owner.store.monitor('evidence-real')
-        self.assertNotIn('PRIVATE-WORKER-RETURN', json.dumps(monitor))
         self.assertNotIn('PRIVATE-WORKER-RETURN', json.dumps(chain))
         self.assertTrue(chain['executions'][0]['references'].get('check_evidence_digest'))
         self.assertEqual([item['state'] for item in chain['executions']], ['rejected', 'approved'])
@@ -739,12 +644,10 @@ class ChainHistoryTests(ProjectTest):
             with self.assertRaisesRegex(Blocked, 'uncertain'):
                 store.review_dispatch('uncertain', 'review-2', review_ordinal=2, fixing_round=1,
                                       review_base=self.base, review_head=self.base)
-            with patch.object(store, 'append_monitor_observation', side_effect=RuntimeError('optional gap')):
-                # Required chain history remains usable without a monitoring write.
-                store.start('separate', self.base)
-                store.review_dispatch('separate', 'review-1', review_base=self.base, review_head=self.base)
-                store.review_outcome('separate', 'review-1', 'approved', findings=[],
-                                     references={'base': self.base, 'head': self.base})
+            store.start('separate', self.base)
+            store.review_dispatch('separate', 'review-1', review_base=self.base, review_head=self.base)
+            store.review_outcome('separate', 'review-1', 'approved', findings=[],
+                                 references={'base': self.base, 'head': self.base})
             self.assertEqual(store.review_chain('separate')['executions'][0]['state'], 'approved')
             # The A4 continuation branch must not reinterpret an uncertain fixer call as
             # a settled failed call and relaunch it on resume.
@@ -794,11 +697,6 @@ class ChainHistoryTests(ProjectTest):
 
 
 class BoundedChainTests(ProjectTest):
-    def test_optional_identity_failure_does_not_block_required_chain(self):
-        with patch.object(Recorder, 'occurrence', return_value=None):
-            self.test_actionable_rejection_repairs_once_then_fresh_rereview(optional_identity_failure=True)
-
-
     def test_immediate_approval_skips_fixer_and_rereview(self):
         calls = []
         class Adapter:
@@ -946,7 +844,7 @@ class BoundedChainTests(ProjectTest):
                 self.assertEqual(len(repair_inputs), 1)
                 self.assertIn(finding, repair_inputs[0])
 
-    def test_actionable_rejection_repairs_once_then_fresh_rereview(self, optional_identity_failure=False):
+    def test_actionable_rejection_repairs_once_then_fresh_rereview(self):
         project, calls, review_outputs = self.project, [], []
         project.joinpath('unrelated.txt').write_text('intervening\n')
         from coherence_workflow.store import git
@@ -982,7 +880,6 @@ class BoundedChainTests(ProjectTest):
             result = Engine(owner, 'repaired', contract, EXECUTOR, adapter=Adapter,
                             paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
             chain = owner.store.review_chain('repaired')
-            observations = owner.store.monitor('repaired')['observations']
         self.assertEqual(result['status'], 'complete')
         self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
                          [('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'approved')])
@@ -1015,33 +912,9 @@ class BoundedChainTests(ProjectTest):
             self.assertIn('read-only inability to rerun does not negate a valid retained pass', prompt)
         self.assertTrue(all('REVIEW-OUTPUT-SENTINEL' in outputs for outputs in review_outputs))
         self.assertNotIn('REVIEW-OUTPUT-SENTINEL', json.dumps(status(project, 'repaired')))
-        self.assertNotIn('REVIEW-OUTPUT-SENTINEL', json.dumps(observations))
-
-        if any(row['phase'] == 'review' and row['kind'] == 'started' and
-               'selected_input_checkpoints' in json.loads(row['facts']) for row in observations):
-            # Optional recording loss cannot alter the required chain.
-            checkpoints = [row for row in observations if row['phase'] == 'checkpoint' and row['kind'] == 'passed'
-                           and row['task_id'] in ('no-change', 'task')]
-            first_review = next(row for row in observations
-                                if row['phase'] == 'review' and row['kind'] == 'started'
-                                and json.loads(row['facts'])['review_ordinal'] == 1)
-            first_facts = json.loads(first_review['facts'])
-            self.assertEqual(first_facts['selected_input_checkpoints'], [{
-                'checkpoint_occurrence_id': checkpoint['occurrence_id'], 'task_id': checkpoint['task_id'],
-                'producer_invocation_id': json.loads(checkpoint['facts'])['producer_invocation_id'],
-                'correction_chain': json.loads(checkpoint['facts'])['correction_chain'],
-            } for checkpoint in checkpoints])
-            self.assertEqual(chain['executions'][0]['input_checkpoints'], first_facts['selected_input_checkpoints'])
-            fixer_calls = [json.loads(row['facts']) for row in observations
-                           if row['phase'] == 'worker' and row['kind'] == 'started'
-                           and json.loads(row['facts']).get('role') == 'fixing_worker']
-            if optional_identity_failure:
-                self.assertEqual(fixer_calls, [])
-                return
-            self.assertEqual(len(fixer_calls), 1)
-            self.assertEqual(fixer_calls[0]['trigger_execution_id'], chain['executions'][0]['execution_id'])
-            self.assertEqual(fixer_calls[0]['correction_chain'], [fixer_calls[0]['invocation_id']])
-            self.assertEqual(fixer_calls[0]['fixing_round'], 1)
+        fields = ('task_id', 'checkpoint_occurrence_id', 'producer_invocation_id', 'correction_chain')
+        self.assertEqual(chain['executions'][0]['input_checkpoints'],
+                         [{key: checkpoint[key] for key in fields} for checkpoint in result['checkpoints']])
 
     def test_reviewer_context_and_model_survive_repair_and_check_correction(self):
         project, calls, instances = self.project, [], []
@@ -1148,15 +1021,9 @@ class BoundedChainTests(ProjectTest):
                      if row['role'] == 'fixing_worker']
             self.assertEqual([(row['outcome'], row['after']) for row in usage], [('failed', None)])
             chain = owner.store.review_chain('fixer-failure')
-            observations = owner.store.monitor('fixer-failure')['observations']
         self.assertEqual(Adapter.reviews, 1)
         self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
                          [('reviewer', 'rejected'), ('fixer', 'failed')])
-        failed = next(json.loads(row['facts']) for row in observations
-                      if row['phase'] == 'worker' and row['kind'] == 'failed')
-        terminal = next(json.loads(row['facts']) for row in observations
-                        if row['phase'] == 'terminal' and row['kind'] == 'failed')
-        self.assertEqual(terminal['stopped_by_invocation_id'], failed['invocation_id'])
 
     def test_new_policy_authorizes_one_later_pair_and_fresh_full_range_review(self):
         calls, decisions = [], []
@@ -1323,10 +1190,6 @@ class BoundedChainTests(ProjectTest):
             self.assertEqual(chain['executions'][-1]['references']['base'], self.base)
             self.assertEqual(chain['executions'][-1]['trigger_execution_id'], rejection)
             self.assertEqual(store.db.execute("SELECT count(*) FROM execution_tasks WHERE run_id='refresh'").fetchone()[0], 0)
-            refresh_terminal = [(row['kind'], json.loads(row['facts'])) for row in store.monitor('refresh')['observations']
-                                if row['phase'] == 'terminal']
-            self.assertIn(('started', {}), refresh_terminal)
-            self.assertIn(('failed', {'head': current}), refresh_terminal)
             store.resume('refresh')
             result = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, question=question,
                             paid_scope=paid, resume=True).invoke()
@@ -1635,12 +1498,10 @@ class FixExecutionTests(ProjectTest):
         with Authority(project) as owner:
             owner.store.start('fix-run', self.base, contract=contract, executor=EXECUTOR,
                               authority={}, review_base=self.base)
-            recorder = Recorder(owner.store, 'fix-run')
-            self.assertTrue(recorder.register(descriptor(contract, EXECUTOR, self.base)))
             result = Engine(owner, 'fix-run', contract, EXECUTOR, adapter=Fixer,
                             paid_scope={'agent_providers': ['fixture'], 'apis': []}).run_fix(
                                 ['owned.txt:1 - synthetic defect'], trigger_execution_id='review-1',
-                                review_base=self.base, recorder=recorder, execution_id='fix-1')
+                                review_base=self.base, execution_id='fix-1')
             from coherence_workflow.metric_artifacts import read_artifact
             usage = [row for row in read_artifact(self.project, 'fix-run')['records']
                      if row['role'] == 'fixing_worker']
@@ -1650,18 +1511,17 @@ class FixExecutionTests(ProjectTest):
             chain = owner.store.review_chain('fix-run', private=True)
             history = [dict(row) for row in owner.store.db.execute(
                 "SELECT kind,state,details FROM execution_history WHERE run_id='fix-run' ORDER BY seq")]
-            observations = [(row['phase'], json.loads(row['facts']))
-                            for row in owner.store.monitor('fix-run')['observations']]
 
         self.assertEqual(result['checkpoint']['paths'], ['owned.txt'])
         self.assertEqual(self.project.joinpath('other.txt').read_text(), 'unrelated dirty bytes\n')
         self.assertEqual([(item['role'], item['state']) for item in chain['executions']], [('fixer', 'approved')])
         self.assertEqual(chain['executions'][0]['trigger_execution_id'], 'review-1')
-        self.assertTrue(any(item['kind'] == 'fixer_check' and item['state'] == 'failed' for item in history))
-        self.assertTrue(any(item['kind'] == 'fixer_checkpoint' and item['state'] == 'passed' for item in history))
-        self.assertTrue(any(phase == 'check' and facts.get('execution_id') == 'fix-1' and facts.get('exit_code') == 1
-                            for phase, facts in observations))
-        self.assertTrue(any(phase == 'checkpoint' and facts.get('execution_id') == 'fix-1' and facts.get('head') == result['checkpoint']['sha']
-                            for phase, facts in observations))
+        failed_checks = [json.loads(item['details']) for item in history
+                         if item['kind'] == 'fixer_check' and item['state'] == 'failed']
+        passed_checkpoints = [json.loads(item['details']) for item in history
+                              if item['kind'] == 'fixer_checkpoint' and item['state'] == 'passed']
+        self.assertTrue(any(item['execution_id'] == 'fix-1' and item['exit_code'] == 1 for item in failed_checks))
+        self.assertTrue(any(item['execution_id'] == 'fix-1' and item['sha'] == result['checkpoint']['sha']
+                            for item in passed_checkpoints))
         self.assertIn('Actionable findings', Fixer.prompts[0])
         self.assertIn('Actual failed attempt', Fixer.prompts[1])

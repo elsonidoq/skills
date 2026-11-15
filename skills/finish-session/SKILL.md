@@ -217,12 +217,13 @@ issue change follows delivery or acceptance.
 
 When merging branches/worktrees, keep local workflow databases independent; Git merges source,
 not runtime state. For requested retention of completed monitor history, consult the installed
-[monitor merge and preservation guide](../../workflow_monitor/README.md#merge-source-without-merging-runtime-databases).
-It owns `workflow-monitor-preserve --source-worktree PATH`, its verified module invocation when the
-console command is absent, and legacy tracked-database precautions. Worktree into main may preserve
-history before source removal; main into worktree needs no database transfer. Do not silently archive
-history or use database conflict resolution as a substitute. No merge or migration authority follows
-from discovering the tool.
+[monitor cutover and history guide](../../workflow_monitor/README.md). Its
+`workflow-monitor-preserve` command and capture helpers are historical, not current interfaces.
+If an explicit retention requirement depends on that tooling, verify an available compatible
+historical procedure and its authority; otherwise report the capability gap and retain the required
+source. This does not create an automatic archive requirement. Preserve legacy tracked-database
+precautions; main into worktree needs no database transfer. Do not silently archive history or use
+database conflict resolution as a substitute. No merge, migration or deletion authority follows.
 
 ## Worktree-removal readiness, only when requested
 

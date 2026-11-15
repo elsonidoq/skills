@@ -797,22 +797,6 @@ class Store:
             completed[row['task_id']] = details
         return completed
 
-    def register_monitor_run(self, run, description, runner_identity=None):
-        """Add recording metadata without touching ordinary progress rows."""
-        from .monitoring import RECORDING_VERSION
-        self.authority.assert_held()
-        self.db.execute('INSERT INTO execution_monitor_runs(run_id,recording_version,description,started_at,runner_identity) VALUES(?,?,?,?,?)',
-                        (run, RECORDING_VERSION, canonical(description), time.time(), canonical(runner_identity) if runner_identity else None))
-
-    def append_monitor_observation(self, run, occurrence_id, phase, task_id, kind, facts):
-        """One short append; a caller treats all errors as optional warnings."""
-        self.authority.assert_held()
-        recorded = self.db.execute('SELECT recording_version FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()
-        if not recorded:
-            raise Blocked('monitor recording is not registered')
-        return self.db.execute('INSERT INTO execution_observations(run_id,recording_version,occurrence_id,phase,task_id,kind,recorded_at,facts) VALUES(?,?,?,?,?,?,?,?)',
-                               (run, recorded['recording_version'], occurrence_id, phase, task_id, kind, time.time(), canonical(facts))).lastrowid
-
     def monitor(self, run):
         row = self.db.execute('SELECT * FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()
         if not row:
@@ -1187,13 +1171,6 @@ class Store:
             current = db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone()
             if current:
                 db.execute("UPDATE execution_runs SET state='abandoned' WHERE run_id=?", (run,))
-                # Monitoring is optional: an append failure must not veto explicit abandon.
-                try:
-                    if db.execute('SELECT 1 FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone():
-                        db.execute('INSERT INTO execution_observations(run_id,recording_version,occurrence_id,phase,task_id,kind,recorded_at,facts) VALUES(?,?,?,?,?,?,?,?)',
-                                   (run, 1, uuid.uuid4().hex, 'terminal', None, 'abandoned', time.time(), canonical({})))
-                except sqlite3.Error:
-                    pass
                 return dict(db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone())
             if not db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_runs'").fetchone():
                 raise Blocked('unknown run; select the historical run to abandon')

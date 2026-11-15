@@ -236,8 +236,8 @@ else:
         self.assertEqual(json.loads(out.getvalue())['checkpoints'][0]['no_change'], True)
         observed = status(self.project, 'minimal')
         self.assertEqual(observed['run']['state'], 'complete')
-        self.assertEqual(observed['monitoring']['recording_version'], 1)
-        self.assertTrue(any(row['phase'] == 'review' for row in observed['monitoring']['observations']))
+        self.assertEqual(observed['monitoring'], {'state': 'unknown'})
+        self.assertEqual(observed['review_chain']['executions'][0]['state'], 'approved')
 
     def test_task_handoff_paths_reach_real_cli_execution_input(self):
         tasks, executor = self.root/'tasks.json', self.root/'executor.json'
@@ -405,19 +405,18 @@ else:
         self.assertEqual(json.loads(result.stdout), {'status': 'no tasks'})
         self.assertFalse((self.project/'.coherence').exists())
 
-    def test_abandon_appends_monitoring_without_erasing_failure(self):
-        from coherence_workflow.monitoring import Recorder, descriptor
+    def test_abandon_preserves_historical_monitoring_and_failure(self):
         with Authority(self.project) as owner:
             owner.store.start('recorded', self.base)
-            recorder = Recorder(owner.store, 'recorded')
-            recorder.register(descriptor({'tasks': []}, {}))
-            recorder.emit('review-id', 'review', 'failed', facts={'role': 'reviewer', 'review_base': self.base, 'review_head': self.base})
+            owner.store.db.execute('INSERT INTO execution_monitor_runs(run_id,recording_version,description,started_at) VALUES(?,?,?,?)',
+                                   ('recorded', 1, '{}', 1))
+            owner.store.db.execute('INSERT INTO execution_observations(run_id,recording_version,occurrence_id,phase,task_id,kind,recorded_at,facts) VALUES(?,?,?,?,?,?,?,?)',
+                                   ('recorded', 1, 'review-id', 'review', None, 'failed', 1, '{}'))
             owner.store.finish('recorded', 'failed', self.base, 'ordinary failure')
             owner.store.abandon('recorded')
         observed = status(self.project, 'recorded')
         self.assertEqual(observed['run']['error'], 'ordinary failure')
-        self.assertIn('review-id', [row['occurrence_id'] for row in observed['monitoring']['observations']])
-        self.assertEqual(observed['monitoring']['observations'][-1]['kind'], 'abandoned')
+        self.assertEqual([row['occurrence_id'] for row in observed['monitoring']['observations']], ['review-id'])
 
     def test_status_read_only_db_bytes_unchanged(self):
         with Authority(self.project) as owner:

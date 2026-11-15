@@ -25,6 +25,13 @@ names, role/model, safe outcome, timing and known invocation-local usage/cost. U
 omitted. It does not send prompts, responses, tool data, paths or errors. Completed boundary
 spans export while the run is open; this does not prove when the UI displays them.
 
+To inspect an unfinished run in Phoenix, open the project's **Spans** view and clear the
+`parent_id is None` root-only filter. Open a completed invocation to inspect its task/trace
+hierarchy. The root span arrives only when it ends. Reload and reopen the selected trace when
+needed; automatic selected-trace updates and active-root timers are not promised. Project
+navigation can restore the root-only filter. If usage/cost attributes are absent, Phoenix's
+zero aggregates are not measured zero use or spend: those values remain unknown.
+
 If Phoenix requires authorization, put the complete local `Authorization` header value in a
 private file owned by the project maintainer, and explicitly set
 `COHERENCE_PHOENIX_AUTHORIZATION_FILE` to its path in the runner environment. Do not put the
