@@ -71,6 +71,7 @@ class SequentialExecutionTests(ProjectTest):
                 if read_only:
                     case.assertIn('Diff:', prompt)
                     case.assertIn('consumer', prompt)
+                    case.assertEqual(git(project, 'show', 'HEAD:new.txt'), b'consumer\n')
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if len(sessions) == 1:
                     claim('owned.txt')
@@ -104,22 +105,16 @@ class SequentialExecutionTests(ProjectTest):
         self.assertEqual(git(project, 'rev-list', '--count', self.base+'..HEAD'), b'2\n')
         import sqlite3
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        observations = list(db.execute('SELECT phase,task_id,kind FROM execution_observations ORDER BY seq'))
-        kinds = [row[2] for row in observations]
-        descriptor = json.loads(db.execute("SELECT description FROM execution_monitor_runs WHERE run_id='fixture'").fetchone()[0])
-        identity = db.execute("SELECT runner_identity FROM execution_monitor_runs WHERE run_id='fixture'").fetchone()[0]
+        history = list(db.execute("SELECT kind,task_id,state FROM execution_history WHERE run_id='fixture' ORDER BY seq"))
+        review_base, review_started = db.execute("SELECT review_base,dispatched_at FROM execution_review_executions WHERE run_id='fixture'").fetchone()
+        checkpoint_passed = db.execute("SELECT recorded_at FROM execution_history WHERE run_id='fixture' AND task_id='consumer' AND kind='checkpoint' AND state='passed'").fetchone()[0]
         db.close()
-        self.assertIn('started', kinds)
-        self.assertIn('returned', kinds)
-        self.assertIn('passed', kinds)
-        self.assertIn('prepare', next(phase for phase in descriptor['phases'] if phase['id'] == 'checkpoint')['possible_branches'])
-        self.assertLess(observations.index(('worker', 'consumer', 'returned')),
-                        observations.index(('check', 'consumer', 'passed')))
-        self.assertLess(observations.index(('check', 'consumer', 'passed')),
-                        observations.index(('checkpoint', 'consumer', 'passed')))
-        self.assertLess(observations.index(('checkpoint', 'consumer', 'passed')),
-                        observations.index(('review', None, 'started')))
-        self.assertIsNotNone(identity)
+        self.assertLess(history.index(('worker', 'consumer', 'returned')),
+                        history.index(('check', 'consumer', 'passed')))
+        self.assertLess(history.index(('check', 'consumer', 'passed')),
+                        history.index(('checkpoint', 'consumer', 'passed')))
+        self.assertEqual(review_base, self.base)
+        self.assertLessEqual(checkpoint_passed, review_started)
 
     def test_exact_handoff_input_claims_preserved_recovery_bytes_and_checkpoints_only_owned_results(self):
         project = self.project
@@ -374,35 +369,14 @@ print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=Tr
         self.assertEqual(len(answers), 1)
         import sqlite3
         db = sqlite3.connect(self.project/'.coherence/workflow/workflow.sqlite')
-        rows = list(db.execute('SELECT occurrence_id,phase,kind,facts FROM execution_observations ORDER BY seq'))
+        history = list(db.execute("SELECT kind,state FROM execution_history WHERE run_id='fixture' ORDER BY seq"))
+        state = db.execute("SELECT state FROM execution_runs WHERE run_id='fixture'").fetchone()[0]
         db.close()
-        self.assertNotIn('worker', [row[1] for row in rows])
-        gate = [(row[0], row[2], json.loads(row[3])) for row in rows if row[1] == 'gate']
-        self.assertIn('question_requested', [row[1] for row in gate])
-        self.assertIn('answer_returned', [row[1] for row in gate])
-        self.assertNotIn('answer_sent', [row[1] for row in gate])
-        question = next(row for row in gate if row[1] == 'question_requested')
-        self.assertTrue(question[2]['parent_occurrence_id'])
+        self.assertFalse(any(kind in ('worker_dispatch', 'worker_invocation') for kind, _ in history))
+        self.assertEqual(state, 'failed')
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
-    def test_worker_question_lifecycle_uses_distinct_question_occurrence(self):
-        project = self.project
-        class OfflineQuestions:
-            def __init__(self, project, executor, **kwargs): self.observe_question = kwargs.get('observe_question')
-            def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
-                for state in ('requested', 'returned', 'sent'):
-                    self.observe_question(state)
-                return 'offline question adapter'
-        self.execute([{'id': 'fix', 'description': 'Fix'}], OfflineQuestions)
-        import sqlite3
-        db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        rows = list(db.execute("SELECT occurrence_id,kind,facts FROM execution_observations WHERE phase='worker' AND kind LIKE 'answer_%' OR phase='worker' AND kind='question_requested'"))
-        db.close()
-        self.assertEqual([row[1] for row in rows], ['question_requested', 'answer_returned', 'answer_sent'])
-        self.assertEqual(len({row[0] for row in rows}), 1)
-        self.assertTrue(json.loads(rows[0][2])['parent_occurrence_id'])
-
-    def test_real_framed_question_send_failure_records_delivery_failed(self):
+    def test_real_framed_question_send_failure_is_retained_without_public_payload(self):
         import os, sys
         from pathlib import Path
         host, closed = self.root/'broken_answer_host.py', self.root/'stdin-closed'
@@ -434,12 +408,11 @@ else:
                     Engine(owner, 'broken-send', contract, EXECUTOR, adapter=__import__('coherence_workflow.pi_adapter', fromlist=['PiAdapter']).PiAdapter, question=answer).invoke()
         import sqlite3
         db = sqlite3.connect(self.project/'.coherence/workflow/workflow.sqlite')
-        rows = list(db.execute("SELECT occurrence_id,kind,facts FROM execution_observations WHERE run_id='broken-send' AND phase='worker'"))
+        states = [row[0] for row in db.execute("SELECT state FROM execution_history WHERE run_id='broken-send' AND kind='worker_invocation' ORDER BY seq")]
         db.close()
-        sent = [(row[0], row[1], json.loads(row[2])) for row in rows if row[1] == 'delivery_failed']
-        self.assertEqual(len(sent), 1)
-        self.assertTrue(sent[0][2]['parent_occurrence_id'])
-        self.assertNotIn('PRIVATE-SENTINEL', str(rows))
+        self.assertIn('failed', states)
+        from coherence_workflow.cli import status
+        self.assertNotIn('PRIVATE-SENTINEL', canonical(status(self.project, 'broken-send')))
 
     def test_review_base_must_be_ancestor_and_actual_prompt_uses_it(self):
         project = self.project
@@ -488,13 +461,14 @@ else:
                             for prompt in prompts))
         import sqlite3
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        terminal = [row[0] for row in db.execute("SELECT kind FROM execution_observations WHERE run_id='original' AND phase='terminal'")]
-        roles = [json.loads(row[0]).get('role') for row in db.execute("SELECT facts FROM execution_observations WHERE run_id='fixing' AND phase='worker'")]
-        review_ranges = [json.loads(row[0]) for row in db.execute("SELECT facts FROM execution_observations WHERE run_id='fixing' AND phase='review'")]
+        original_state = db.execute("SELECT state FROM execution_runs WHERE run_id='original'").fetchone()[0]
+        roles = [json.loads(row[0]).get('role') for row in db.execute("SELECT details FROM execution_history WHERE run_id='fixing' AND kind='worker'")]
+        review_bases = [row[0] for row in db.execute("SELECT review_base FROM execution_review_executions WHERE run_id='fixing'")]
         db.close()
-        self.assertIn('failed', terminal)
+        self.assertEqual(original_state, 'failed')
         self.assertIn('fixing_worker', roles)
-        self.assertTrue(all(row['review_base'] == self.base for row in review_ranges if 'review_base' in row))
+        self.assertTrue(review_bases)
+        self.assertTrue(all(base == self.base for base in review_bases))
 
     def test_review_transport_failure_records_selected_range(self):
         project = self.project
@@ -509,48 +483,13 @@ else:
                 Engine(owner, 'review-failure', contract, EXECUTOR, adapter=Offline).invoke()
         import sqlite3
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        facts = json.loads(db.execute("SELECT facts FROM execution_observations WHERE run_id='review-failure' AND phase='review' AND kind='failed'").fetchone()[0])
+        review_base = db.execute("SELECT review_base FROM execution_review_executions WHERE run_id='review-failure'").fetchone()[0]
+        attempts = [row[0] for row in db.execute("SELECT state FROM execution_review_attempts WHERE run_id='review-failure'")]
         db.close()
-        self.assertEqual(facts['review_base'], self.base)
+        self.assertEqual(review_base, self.base)
+        self.assertIn('failed', attempts)
 
-    def test_store_recording_failures_do_not_veto_actual_engine_boundaries(self):
-        project = self.project
-        class Successful:
-            def __init__(self, *a, **k): pass
-            def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
-                kwargs['claim']('owned.txt')
-                project.joinpath('owned.txt').write_text('done\n')
-                return 'offline worker'
-        task = admit([{'id': 'fix', 'description': 'Fix', 'checks': [['python3', '-B', '-c', "assert open('owned.txt').read() == 'done\\n'"]]}])
-        # Initial registration failure leaves no fabricated eligible monitor run.
-        with Authority(project) as owner, patch.object(owner.store, 'register_monitor_run', side_effect=RuntimeError('setup unavailable')):
-            self.assertEqual(Engine(owner, 'registration-failure', task, EXECUTOR, adapter=Successful).invoke()['status'], 'complete')
-            self.assertIsNone(owner.store.monitor('registration-failure'))
-        # A transient append failure recovers with ordinary worker/check/Git/review execution intact.
-        with Authority(project) as owner:
-            original, calls = owner.store.append_monitor_observation, [0]
-            def transient(*args):
-                calls[0] += 1
-                if calls[0] == 1: raise RuntimeError('append unavailable')
-                return original(*args)
-            with patch.object(owner.store, 'append_monitor_observation', side_effect=transient):
-                result = Engine(owner, 'mid-failure', task, EXECUTOR, adapter=Successful).invoke()
-            self.assertEqual(result['status'], 'complete')
-            kinds = [row['kind'] for row in owner.store.monitor('mid-failure')['observations']]
-            self.assertIn('gap', kinds)
-            self.assertIn('passed', kinds)
-        # Final terminal append failure cannot replace the completed review/result.
-        with Authority(project) as owner:
-            original = owner.store.append_monitor_observation
-            def end_failure(*args):
-                if args[2] == 'terminal' and args[4] == 'passed': raise RuntimeError('end unavailable')
-                return original(*args)
-            with patch.object(owner.store, 'append_monitor_observation', side_effect=end_failure):
-                self.assertEqual(Engine(owner, 'end-failure', task, EXECUTOR, adapter=Successful).invoke()['status'], 'complete')
-            self.assertEqual(owner.store.db.execute("SELECT state FROM execution_runs WHERE run_id='end-failure'").fetchone()[0], 'complete')
-
-    def test_append_failure_preserves_original_worker_check_and_review_errors(self):
+    def test_worker_check_review_and_git_errors_are_preserved(self):
         project = self.project
         class WorkerFailure:
             def __init__(self, *a, **k): pass
@@ -565,7 +504,7 @@ else:
             ('append-worker', admit([{'id': 'worker', 'description': 'Worker'}]), WorkerFailure, 'original worker failure'),
             ('append-check', admit([{'id': 'check', 'description': 'Check', 'checks': ['exit 23']}]), ReviewFailure, 'exit 23'),
             ('append-review', admit([{'id': 'review', 'description': 'Review'}]), ReviewFailure, 'owner authorization unavailable')):
-            with self.subTest(run=run), Authority(project) as owner, patch.object(owner.store, 'append_monitor_observation', side_effect=RuntimeError('append unavailable')):
+            with self.subTest(run=run), Authority(project) as owner:
                 with self.assertRaisesRegex(Blocked, reason):
                     Engine(owner, run, task, EXECUTOR, adapter=adapter).invoke()
         class GitFailure:
@@ -580,7 +519,7 @@ else:
         hook.write_text('#!/bin/sh\nexit 9\n')
         hook.chmod(0o755)
         self.addCleanup(lambda: hook.unlink(missing_ok=True))
-        with Authority(project) as owner, patch.object(owner.store, 'append_monitor_observation', side_effect=RuntimeError('append unavailable')):
+        with Authority(project) as owner:
             with self.assertRaisesRegex(Blocked, 'Git operation failed'):
                 Engine(owner, 'append-git', admit([{'id': 'git', 'description': 'Git'}]), EXECUTOR, adapter=GitFailure).invoke()
 
