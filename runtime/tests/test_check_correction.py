@@ -60,15 +60,19 @@ class RequiredCheckCorrectionTests(ProjectTest):
         self.assertFalse((project/'web/dist/build.js').exists())
         self.assertNotIn('web/dist/build.js', git(project, 'show', '--name-only', '--format=', 'HEAD').decode())
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        facts = [json.loads(row[0]) for row in db.execute("SELECT facts FROM execution_observations WHERE phase='check'")]
-        workers = [json.loads(row[0]) for row in db.execute(
-            "SELECT facts FROM execution_observations WHERE phase='worker' AND kind='started'")]
+        checks = [(row[0], json.loads(row[1])) for row in db.execute(
+            "SELECT state,details FROM execution_history WHERE run_id='correction' AND task_id='build' AND kind='check' ORDER BY seq")]
+        invocations = [json.loads(row[0])['invocation_id'] for row in db.execute(
+            "SELECT details FROM execution_history WHERE run_id='correction' AND task_id='build' AND kind='worker_invocation' AND state='started' ORDER BY seq")]
+        checkpoint = json.loads(db.execute(
+            "SELECT details FROM execution_history WHERE run_id='correction' AND task_id='build' AND kind='checkpoint' AND state='passed'").fetchone()[0])
         db.close()
-        self.assertIn(1, [fact.get('exit_code') for fact in facts])
-        self.assertIn(0, [fact.get('exit_code') for fact in facts])
-        self.assertEqual([fact['invocation_kind'] for fact in workers], ['task_worker', 'corrective_worker'])
-        self.assertEqual(workers[1]['predecessor_invocation_id'], workers[0]['invocation_id'])
-        self.assertEqual(workers[1]['correction_chain'], [workers[0]['invocation_id'], workers[1]['invocation_id']])
+        self.assertEqual(checks[0][0], 'failed')
+        self.assertEqual(checks[0][1]['exit_code'], 1)
+        self.assertTrue(any(state == 'passed' and facts['exit_code'] == 0 for state, facts in checks[1:]))
+        self.assertEqual(len(invocations), 2)
+        self.assertEqual(checkpoint['correction_chain'], invocations)
+        self.assertEqual(checkpoint['producer_invocation_id'], invocations[-1])
 
     def test_unavailable_correction_returns_the_actual_blocker(self):
         project = self.project
