@@ -353,7 +353,8 @@ print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=Tr
                 claim('owned.txt')
                 (project/'owned.txt').write_text('changed\n')
                 return 'changed'
-        with self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
+        with patch('sys.stdin.isatty', return_value=False), \
+                self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
             self.execute([{'id': 'fix', 'description': 'Fix'}], OfflineReview)
         self.assertNotEqual(git(project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
@@ -505,7 +506,7 @@ else:
             ('append-check', admit([{'id': 'check', 'description': 'Check', 'checks': ['exit 23']}]), ReviewFailure, 'exit 23'),
             ('append-review', admit([{'id': 'review', 'description': 'Review'}]), ReviewFailure, 'owner authorization unavailable')):
             with self.subTest(run=run), Authority(project) as owner:
-                with self.assertRaisesRegex(Blocked, reason):
+                with patch('sys.stdin.isatty', return_value=False), self.assertRaisesRegex(Blocked, reason):
                     Engine(owner, run, task, EXECUTOR, adapter=adapter).invoke()
         class GitFailure:
             def __init__(self, *a, **k):

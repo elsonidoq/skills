@@ -683,7 +683,8 @@ class ChainHistoryTests(ProjectTest):
 
         contract = admit({'tasks': [{'id': 'original', 'description': 'PRIVATE-TASK-TEXT'}]})
         with Authority(project) as owner:
-            with self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
+            with patch('sys.stdin.isatty', return_value=False), \
+                    self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
                 Engine(owner, 'reviewed', contract, EXECUTOR, adapter=RejectedReview,
                        paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
         observed = status(project, 'reviewed')
@@ -754,7 +755,8 @@ class BoundedChainTests(ProjectTest):
                         calls.append(kwargs.get('read_only', False))
                         return verdict if kwargs.get('read_only') else 'worker answer'
                 with Authority(self.project) as owner:
-                    with self.assertRaisesRegex(Blocked, 'owner authorization unavailable|remaining coverage gaps'):
+                    with patch('sys.stdin.isatty', return_value=False), \
+                            self.assertRaisesRegex(Blocked, 'owner authorization unavailable|remaining coverage gaps'):
                         Engine(owner, name, admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
                                EXECUTOR, adapter=Adapter).invoke()
                     chain = owner.store.review_chain(name)
@@ -994,7 +996,8 @@ class BoundedChainTests(ProjectTest):
                             else '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:2 - final [basis: correctness]"]}')
                 return 'synthetic worker'
         with Authority(self.project) as owner:
-            with self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
+            with patch('sys.stdin.isatty', return_value=False), \
+                    self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
                 Engine(owner, 'final-rejection', admit({'tasks': [{'id': 'dummy', 'description': 'synthetic'}]}),
                        EXECUTOR, adapter=Adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
             chain = owner.store.review_chain('final-rejection')
