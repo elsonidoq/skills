@@ -112,30 +112,33 @@ class TrackOpenIssueContractTests(unittest.TestCase):
         self.text = SKILL.read_text()
 
     def test_source_contract_requires_investigation_before_create_and_readback(self):
+        text = " ".join(self.text.split())
         clauses = (
-            "Perform a bounded,\nevidence-based RCA",
-            "**verified observations:**",
-            "**verified cause:**",
-            "**hypotheses:**",
-            "**uncertainty and next useful investigation:**",
-            "An uncertain RCA does not block tracking\nindefinitely",
-            "Preserve the intended body and the independently read-back body",
-            "creation/readback is not that review",
-            "## Separate read-only quality review and one correction",
-            "selected reviewer configuration; do not hardcode a provider or model",
-            "original user intent, primary evidence, uncertainty/next investigation, and",
-            "the actual read-back body",
-            "downstream ambiguity or conflicts, omissions,",
-            "promoted assumptions, scope creep, and over-prescribed mechanisms or checks",
-            "immediately GET the exact issue",
-            "automatic\nmulti-round review loop",
-            "After every create, update, close, or reopen, independently GET the exact issue",
-            "do not blindly retry a possibly successful mutation",
+            "Perform bounded evidence-based RCA", "verified observations",
+            "verified cause only when causally established", "labelled hypotheses",
+            "uncertainty and the next useful investigation",
+            "Uncertain cause is not an indefinite filing block",
+            "retain both intended and actual read-back body for quality review",
+            "Creation/readback is not independent quality review",
+            "separate fresh read-only quality reviewer",
+            "selected reviewer configuration, preserving its model/effort; do not hardcode",
+            "original user intent, primary evidence, uncertainty/next investigation and actual read-back body",
+            "ambiguity/conflict, omission, promoted-assumption, scope-creep",
+            "over-prescribed-mechanism/check findings", "immediately GET, compare with the reviewed body",
+            "No automatic multi-round review loop",
+            "After every create, update, close or reopen, independently GET the exact issue",
+            "Do not blindly retry a possibly successful mutation",
         )
         for clause in clauses:
-            self.assertIn(clause, self.text)
-        self.assertLess(self.text.index("Perform a bounded,"), self.text.index("## Discover overlap"))
-        self.assertLess(self.text.index("## Discover overlap"), self.text.index("## Create, scoped change"))
+            self.assertIn(clause, text)
+        order = (
+            "Perform bounded evidence-based RCA", "inspect overlaps by problem",
+            "## Make the scoped effect and read it back",
+            "After every create, update, close or reopen",
+            "## Review a recorded problem body", "For one ordinary in-scope wording correction",
+        )
+        positions = [self.text.index(clause) for clause in order]
+        self.assertEqual(positions, sorted(positions))
 
     def test_simulated_rca_create_and_exact_readback_preserve_actual_body(self):
         body = investigated_body(
@@ -237,23 +240,22 @@ class TrackOpenIssueContractTests(unittest.TestCase):
         self.assertIn("Next: obtain a redacted request trace", body)
 
     def test_retained_safeguards_are_explicit(self):
+        text = " ".join(self.text.split())
         safeguards = (
             "confirm the same target from verified remote evidence",
-            "check that `gh` is usable, authenticated for the explicit host",
-            "current authorization to write issues must be explicit",
-            "across **all open and closed issues**",
-            "Exclude pull requests",
-            "`--body-file`",
-            "credentials, tokens, personal data, and sensitive payloads",
-            "only a narrowly authorized\nchange to the intended fields",
-            "immediately GET the exact issue",
-            "preserving unknown sections",
-            "If the issue changed, is ambiguous, or cannot be safely preserved, stop that",
-            "GET/list complete open+closed\nresults",
-            "Do not create or\nfall back to a persistent local register",
+            "verify usable `gh`, authentication for that explicit host",
+            "Current write authority must explicitly cover this target and operation",
+            "across **all open and closed issues**", "Exclude pull requests",
+            "`--body-file`", "credentials, tokens, personal data and sensitive payloads",
+            "make only the narrowly authorized change",
+            "Immediately before a body overwrite or state transition, GET the exact issue",
+            "Preserve unknown sections",
+            "Changed content, ambiguity or uncertain preservation stops the overwrite/transition",
+            "reconcile complete open+closed listings and exact GET before any retry",
+            "never create a persistent local fallback or write a historical register",
         )
         for safeguard in safeguards:
-            self.assertIn(safeguard, self.text)
+            self.assertIn(safeguard, text)
 
 
 if __name__ == "__main__":

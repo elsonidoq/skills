@@ -145,23 +145,30 @@ class IssueDeliveryInstructionTests(unittest.TestCase):
     """Local instruction walkthrough only; no tracker or owner actions."""
 
     def test_reviewed_delivery_and_conditional_branches(self):
-        for path, heading in (
-            ('skills/finish-session/SKILL.md', '## Issue-linked delivery'),
-            ('skills/track-open-issue/SKILL.md', '## Reviewed issue-linked delivery'),
-        ):
-            body = ' '.join(checker.section((ROOT / path).read_text(), heading).split())
-            for phrase in ('same meaningful executive text', 'verification and limits',
-                           'review focus', 'exact reviewed commit', 'attributable task/repair links',
-                           'unrelated range context', 'new exact reviewed SHA',
-                           'new requirements', 'operation-scoped closure authority',
-                           'partial result', 'missing operation', 'NOT VERIFIED'):
-                with self.subTest(path=path, phrase=phrase):
+        finish = ' '.join(checker.section(
+            (ROOT / 'skills/finish-session/SKILL.md').read_text(),
+            '## Issue-linked delivery').split())
+        for phrase in ('same meaningful executive text', 'verification and limits',
+                       'review focus', 'exact reviewed commit', 'attributable task/repair links',
+                       'unrelated range context', 'new exact reviewed SHA', 'new requirements'):
+            with self.subTest(owner='finish-session', phrase=phrase):
+                self.assertIn(phrase.lower(), finish.lower())
+        tracker = ' '.join(checker.section(
+            (ROOT / 'skills/track-open-issue/SKILL.md').read_text(),
+            '## Reviewed issue-linked delivery').split())
+        for phrase in ('../finish-session/SKILL.md#issue-linked-delivery',
+                       'Consume its meaningful executive text', 'evidence',
+                       'exact reviewed revision', 'acceptance trace'):
+            with self.subTest(owner='track-open-issue', phrase=phrase):
+                self.assertIn(phrase, tracker)
+        for body in (finish, tracker):
+            for phrase in ('operation-scoped closure authority', 'partial result',
+                           'missing operation', 'NOT VERIFIED', 'acceptance of an earlier',
+                           'explicit acceptance of the presented revision', 'read back',
+                           'corrective action'):
+                with self.subTest(phrase=phrase):
                     self.assertIn(phrase.lower(), body.lower())
-            self.assertIn('acceptance of an earlier', body.lower())
-            self.assertIn('explicit acceptance of the presented revision', body.lower())
-            self.assertIn('read back', body.lower())
             self.assertRegex(body.lower(), r'missing (?:tracker )?capability or authority')
-            self.assertIn('corrective action', body.lower())
 
 
 class PlanningCommitAuthorityTests(unittest.TestCase):
