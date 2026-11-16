@@ -5,198 +5,114 @@ description: Use when an owner-approved specification needs delegated architectu
 
 # Delegating Architectural Planning
 
-Delegate only after the owner approves the specification and asks for a plan.
-This skill requires the project's installed SpecKit planning capability. The
-planner owns architectural decomposition, not implementation or product scope.
+Arrange one delegated SpecKit planning pass from an approved specification and the owner's
+request for a plan. The coordinating caller supplies authority and handles owner decisions;
+the delegated producer reviews the specification, creates the plan and checks its outputs.
+Return that plan and its evidence to the caller, not implementation or a task breakdown.
 
-## Preflight
+## Arrange the bounded planning pass
 
-Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply to standalone approach decisions.
+Read the approved specification and approval evidence, repository instructions, governing
+principles, relevant contracts, existing architecture and upstream/downstream dependencies.
+Establish the intended plan location and allowed artifact writes from actual project paths.
+Standalone entry must verify equivalent Standard planning/preparation authority; invocation
+alone grants none.
 
-Before approved-specification/plan-request preflight, consult [save-adr](../save-adr/SKILL.md)'s
-**Consult and propagate** contract. In standalone or manager-governed entry, and in fresh or
-resumed contexts, read the discovered decision index and relevant accepted records/supersession
-links (or re-establish applicability from supplied accepted authority). Carry each exact applicable
-accepted outcome constraint and source link into the planning brief and any resume/handoff; verify
-its effect on a relevant architectural decision. Proposed or superseded records are not current
-policy. A contradictory accepted constraint, uncertain applicability, or scope/mechanism change
-that conflicts with an accepted outcome stops the affected continuation through the existing owner
-and approval-renewal gates. Compatible helper/mechanism cleanup that preserves the outcome needs
-no new gate.
+Before affected planning, use [Memory Handling](../memory-handling/SKILL.md) for relevant explicit
+owner guidance and gotchas from the verified unified index. Missing optional memory or STATE
+is nonblocking; retain that owner's retrieval, write and concurrency safeguards. In fresh or
+resumed, managed or standalone entry, consult
+[save-adr](../save-adr/SKILL.md#consult-and-propagate) for current accepted outcomes, explicit
+mechanism constraints and source links. Carry them into the producer brief and return; verify
+their effect on architectural decisions and observables, not merely their presence as links.
+Preserve dependency/gate and check needs for task-local REQUIRED checks and worker/reviewer
+briefs downstream. Source/owner authority remains binding; conflicting accepted authority or
+uncertain applicability stops only affected work through the existing decision/renewal gate.
 
-Use [Memory Handling](../memory-handling/SKILL.md) during initial understanding,
-including standalone/direct entry: retrieve relevant guidance from the verified unified index
-without auto-initialization; missing optional storage or STATE is nonblocking. Carry relevant
-explicit owner guidance, alongside gotchas, through source observables → dependencies or
-gates → task-local REQUIRED checks → worker/reviewer briefs; preserve its explicit-feedback
-authority and local path/symlink, sensitive-data, and dirty/concurrent safeguards. No default
-history intake, execution-time feedback routing, routine persistence, reflection, inferred
-lessons, or STATE maintenance. Verify their effect on a relevant decision, never override
-source/owner authority.
+Inspect the project's installed SpecKit planning command or skill, invocation instructions,
+template, prerequisite scripts and expected output paths. Verify it is usable in the delegated
+context. If not, report `SpecKit planning: UNAVAILABLE` and stop; do not write a generic plan or
+claim the stage ran. Use its supported interface, not a shell simulation of a slash command.
 
-Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
-verify it is readable or stop with a missing-install report. Standalone entry applies
-it locally, not an assumption that planner applied it. Planning schedules proofs, not
-execution without separate authority; preparation and installed SpecKit gates remain.
+Verify an allowed delegation tool and a configured planning-capable agent under
+[runtime requirements](../../REQUIREMENTS.md). Never invent an agent, model, command or
+configuration. Missing, unusable or unauthorized delegation stops the pass; no local fallback.
 
-Verify and provide:
+<a id="planner-standard-adapter-contract"></a>
 
-- The approved specification and evidence of approval.
-- Repository instructions, governing principles, relevant contracts, and the
-  intended plan location, using paths that exist. Load the project memory store
-  per the `memory-handling` skill and include verified trigger-first gotchas as
-  constraints for the planner.
-- Existing architecture decisions and upstream/downstream dependencies.
-- The planner's write scope and prohibited operations, including separately authorized
-  canonical research-document and necessary discovery-link destinations/allowed changes
-  in addition to detected SpecKit artifacts when durable guidance is required.
-- Shared dependency research triggers, local/version findings, reuse/skip rationale,
-  inspected supporting spans, usable permitted capability evidence and outstanding gaps.
-- The detected SpecKit planning command or skill, its invocation instructions,
-  template, prerequisite scripts, and expected output paths.
+For planner-managed Standard `plan_create`, the caller supplies the resolved
+`standard-plan-helper` saved assignment under the planner's
+[saved-assignment contract](../planner/SKILL.md#saved-planner-assignments). Use the suite-owned
+`coherence-producer` in a separate fresh bounded context for the entire pass. Carry the exact
+binding unchanged in brief and dispatch, and verify it is permitted and callable at dispatch.
+If invalid or unavailable, return the contract's focused owner-correction question; do not
+substitute or run a local pass. Record observed binding/effort separately; unknown stays unknown.
+The coordinating caller does not author fresh artifacts or make substantive repairs. Direct
+mechanical fixes use the [bounded mechanical correction contract](../planner/references/approval-and-recovery.md#bounded-mechanical-corrections)
+and its equivalence result; uncertain or substantive corrections return to suitable originating
+producer context or a fresh bounded correction delegate.
 
-Read and apply the shared [dependency research contract](../planner/references/dependency-research.md)
-before consequential architecture/plan decisions; verify it is readable or stop with
-a missing-install report. Discover repository guidance/dependency versions first;
-reuse adequate applicable evidence or refresh only deficient version-sensitive portions.
-Complete required research and authorized durable guidance before readiness, tracing
-documented recommendations/local evidence → plan constraints → observable verification;
-label repository-derived decisions/rationale and assumptions with defined checks.
+The producer may write only the detected SpecKit artifacts and authorized specification
+corrections. Canonical research-document and necessary discovery-link writes need additional
+explicit bounded permission: observed destinations, allowed changes and prohibited operations.
+Re-read targets and preserve unrelated content. This pass grants no arbitrary documentation or
+product-code edits, product-scope change, implementation, push, further delegation, or unrelated
+paid/live/deployment/release operations. Required write authority cannot be inferred from tooling.
 
-Standalone entry verifies equivalent Standard planning/preparation authority under the
-approved-specification/plan-request prerequisites, research availability and bounded
-canonical-owner/discovery writes; do not infer permission from invocation. Missing
-required tools, usable sources, version evidence or write authority stops affected
-design and returns exact missing evidence, affected decisions and needed authority to
-planner (or the standalone owner). No recollection-based completion or automatic deferral:
-planner/owner must explicitly resolve any bounded deferral with impact, allowed bounds
-and outstanding validation. Standalone entry cannot bypass required research.
-Research-driven approved-specification changes require renewed approval through the
-existing owner gate, including standalone entry; return them rather than assume approval.
+## Resolve architectural choices from evidence
 
-Verify that the planning capability is available to the planner in the
-delegated context. If it is missing or cannot be used there, report
-`SpecKit planning: UNAVAILABLE` and stop; do not write a generic plan or
-claim that the planning stage ran.
+Before consequential architecture/plan decisions, apply the
+[dependency research contract](../planner/references/dependency-research.md). Use local dependency
+and version evidence, reusable guidance, inspected supporting spans and usable permitted research
+capabilities from the caller or verify them locally. Consume its reuse/skip/refresh result and
+classify documented recommendations, repository-derived decisions/rationale and assumptions with
+defined checks. Translate evidence into plan constraints and observable verification. Persist
+required reusable guidance in the discovered technical owner/index within the write bounds above
+before readiness; this applies to standalone production too.
 
-Inspect the runtime for an allowed delegation tool (the `subagent` tool from the
-`pi-subagents` package is the suite's delegation mechanism; see the global
-configuration repository's `REQUIREMENTS.md`) and configured planning-capable
-agents. Never invent an agent, model, command, or configuration. For a managed
-Standard pass, the planner supplies the saved plan assignment; preserve it unchanged
-through dispatch and the complete pass. A missing, unsupported, or unavailable binding
-stops that affected pass with the resolver's focused owner-correction question, never a
-settings/default substitution or local pass.
+If required tools, evidence, versions or write permission are missing, stop affected design and
+return exact gaps, affected decisions and needed authority. The caller or standalone owner must
+resolve any explicit bounded deferral, with impact, allowed bounds and outstanding validation.
+No recollection-based completion or automatic deferral is permitted.
 
-Brief the planner to follow the detected SpecKit planning instructions, including the exact
-applicable accepted outcome constraints and source links, and verify the generated artifacts. On
-resume, re-establish their applicability before reissuing the brief or handoff. If the capability is exposed as
-`/speckit.plan`, use that installed capability through its supported runtime
-interface; do not simulate the slash command in a shell. The plan requirements
-below supplement the generated artifacts and do not replace the SpecKit stage.
+Apply [early risk reduction](../planner/references/early-risk-reduction.md) to sequencing and
+verification. Consume its justified proof selection/omission, necessary dependencies, applicability,
+reuse/lifetime, production acceptance and disproof/renewal results. Known bounded behavior can use
+actual-helper tests; consequential unknowns need the contract's appropriate proof and real gates.
+Failed or unrun proof cannot release assumed reliance. Planning schedules proof, not its execution.
+Verify both references are readable before use; missing packaging stops affected planning with a
+missing-install report. Do not assume the caller already applied them on standalone entry.
 
-## Intended executor before decomposition
+Use [Parsimony and Actionable Checks](../planner/references/parsimony.md) for approach and review
+in either entry mode. Tailor useful implementation guidance to the owner's selected coding model
+and effort, not a producer/reviewer substitute or universal model ranking. Name interfaces,
+invariants, non-obvious decisions and edge cases; state what is bounded, what remains open and
+what is uncertain. Do not shrink required acceptance, dependencies, safety or approval gates.
+Task-generation owns decomposition and task sizing; planning bindings do not select runtime ones.
 
-Use the owner's selected coding model and effort to tailor useful implementation guidance;
-never infer a substitute from the planner/producer/reviewer profile. Executor settings belong
-to actual runtime configuration. Task handoffs follow the shared `task-generation` six-check
-contract, not mandatory execution-intent, compatibility-assessment or provenance metadata.
+## Produce and inspect the plan
 
-Use owner-guided qualitative scaffolding, not universal rankings or fixed thresholds:
-state clear boundaries, non-obvious decisions, named interfaces/invariants and useful
-context/edge-case pointers; leave routine choices open only when justified. Effort and
-verified guidance refine assumptions; uncertainty calls for explicit instructions without
-unnecessary micro-tasks. Record what is explicit/bounded, what choices remain open and
-uncertainty. REQUIRED acceptance, dependencies, safety and approval gates never shrink.
+The specification is requirements truth; the plan provides derived architecture and sequencing.
+Do not forward or reread SDD as direct requirements input. Governing instructions, memory and
+actual permission/safety boundaries still apply. In one same-session pass:
 
-Preserve the selected executor and effort without silent substitution. Revise guidance when
-a real change affects the work, but do not require model assessments, approval/source receipts
-or regeneration of historical tasks to execute ordinary requested coding.
+1. Review/fix the approved specification within authorized bounds. Record unambiguous clerical
+   corrections. Changes to approved specification content, including research-driven changes,
+   return through the caller's renewed specification approval gate before leaving the affected
+   stage; standalone entry uses its owner gate. Apply the mechanical-equivalence exception only
+   under its canonical contract, never by assuming approval.
+2. Run the detected SpecKit planning capability once to create the plan. Supplement its outputs
+   with architecture, contracts, relevant interfaces/files (or discovery steps), sequencing,
+   dependencies, parallel-safety constraints and integration points. Include verification with
+   fail-then-pass checks for behavior changes and evidence-to-constraint-to-check mappings;
+   relevant security/privacy, migration/rollback and authorization gates; documentation scope
+   and specialized implementation capabilities.
+3. Review/fix the produced plan against the approved source, write bounds and evidence rules
+   above. Verify the installed stage actually ran, inspect its outputs and shared-link resolution,
+   and retain actual evidence and limits. Do not direct the caller to create the plan again.
 
-## Planner Standard adapter contract
-
-Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Carry into managed production and review.
-
-Apply the shared early-risk contract and task-generation boundaries (see the
-[task-generation contract](../task-generation/SKILL.md)) throughout the managed pass and
-its review/handoff. Justify proof selection/omission and include only genuinely necessary
-producer/consumer sequencing; do not imply each proof is a separate task or execute scheduled
-proofs.
-
-The managed producer uses the suite-owned `coherence-producer` role in a separate fresh bounded context for the entire plan pass;
-the manager never authors fresh artifacts or makes substantive repairs. Direct mechanical repairs
-follow the [bounded mechanical correction contract](../planner/references/approval-and-recovery.md#bounded-mechanical-corrections). Delegate uncertain or substantive corrections to suitable originating
-producer context or a fresh bounded correction delegate. Missing, unusable or unauthorized
-delegation stops; no managed direct/inline/local fallback. The specification is requirements
-truth; approved plan is derived sequencing only. No SDD forwarding/rereading as direct
-requirements input. Governing instructions/contracts, memory and permission/safety still apply.
-
-When `planner` invokes this helper from its Standard `plan_create` stage, it supplies
-its resolved `standard-plan-helper` saved assignment. Carry that exact binding unchanged
-in the helper brief and dispatch throughout the ENTIRE managed pass; ambient settings or
-observed profile never replace it. Verify that binding is permitted and callable at dispatch.
-If it is unsupported or unavailable, stop the affected pass with the resolver's exact
-focused owner-correction question; do not substitute or run a local pass. Record observed
-binding/effort separately; unknown stays unknown. Preserve mandatory stops, owner gates,
-approval renewal, and upstream context-coherent brief/handoff constraints. In that one
-same-session pass, review/fix the approved specification, run the detected planning capability
-once to create the plan, then review/fix the produced plan. Return evidence and resulting artifacts
-to the manager for inspection; do not direct it to create the plan again.
-Verify the manager's explicit bounded documentation permission against the preflight
-and boundary below; absence is not implied authority. Research-driven changes to any
-approved specification content return through the manager's renewed specification
-approval gate before leaving the affected stage; do not invent an owner ruling.
-
-## Planner Boundary
-
-The planner may read the supplied context and run the detected SpecKit planning
-stage to write its specified plan artifacts. In addition, only explicit bounded
-permission permits canonical research-document and necessary discovery-link writes
-at observed destinations with specified allowed changes and prohibited operations.
-Discover the repository technical owner/index, re-read targets before targeted updates,
-and preserve unrelated content. No arbitrary documentation edits or product code writes
-are authorized by this narrow exception; missing required authority stops the branch.
-Unless separately authorized, it must not:
-
-- Implement tasks or modify product code.
-- Change the approved product scope.
-- Run paid, live, deployment, or release operations unrelated to producing
-  the SpecKit planning artifacts.
-- It must not push or dispatch additional agents.
-
-For already-authorized planning outputs within the bounded write permission above, verify and
-make the focused path-limited task checkpoint required by the shared contract before completion or handoff. This mandatory checkpoint needs no separate commit opt-in; it does not authorize
-new writes, specification/adaptation changes, pushes, or additional delegation.
-
-Apply early risk reduction to plan sequencing/verification: justify selection/omission for
-a consequential unknown; known bounded behavior uses actual-helper acceptance tests, easy
-names/types use inspection, and non-isolatable risks use real-system validation with actual
-gates. Identify only necessary prototype prerequisites and consumer dependencies; ordinary
-tests, evidence and teardown stay within coherent delivery. The shared risk contract owns
-execution evidence, reuse and lifetime. These needs feed task generation, not an embedded
-task chain.
-
-Ensure the SpecKit plan covers:
-
-- Architecture, contracts, and relevant files or interfaces when knowable;
-  discovery steps when not.
-- Sequencing, dependencies, parallel-safety constraints, and integration points.
-- Verification strategy, including fail-then-pass checks for behavior changes and
-  supporting source spans → implementation constraints → observable checks.
-- Security, privacy, migration, rollback, and authorization gates where relevant.
-- Documentation scope and specialized capabilities needed for implementation.
-
-Leave implementation task breakdown to the SpecKit tasks stage; do not use the
-plan as a substitute for it. Carry source constraints, canonical
-research, applicable guidelines and observable verification needs for stable REQUIRED items
-through the task-generation contract. The executable runner verifies approved execution configuration;
-manager-governed planning-stage bindings remain unchanged.
-
-## Owner Gates
-
-The planner may correct an unambiguous clerical inconsistency and record it. For a
-material product, architecture, privacy, permission, irreversible, or paid-operation
-choice, it must stop that branch of planning and return:
+For a material product, architecture, privacy, permission, irreversible or paid-operation choice,
+stop that branch and return:
 
 ```text
 NEEDS_OWNER_DECISION
@@ -207,28 +123,20 @@ Options: ...
 Recommendation: ...
 ```
 
-The coordinator obtains the answer and resumes the same planning context when the
-runtime supports resumption. Never invent a ruling. A future live operation is not
-itself a planning blocker: represent it as an explicit authorization gate unless
-the required runtime policy is undefined.
+The caller obtains the answer and resumes the same planning context when supported. Do not
+invent a ruling. A future live operation can be an explicit authorization gate rather than a
+planning blocker, unless its required runtime policy is undefined.
 
-## Completion
+## Return the checked outputs
 
-Review and return risk rationale, executable criteria/applicability, genuinely necessary
-dependencies, proof reuse/lifetime, preserved production behavior and disproof/NOT VERIFIED
-blockers. Renew affected existing approvals, including standalone entry. Failed/unrun proofs
-cannot release assumed reliance. Routine cleanup stays with the task; no new gate or execution
-authority is implied.
+Return the plan path and content evidence, architecture/dependency summary, capability needs,
+corrections, accepted constraints and source links, open decisions and explicit deferral bounds.
+Include the research/risk results above, supporting spans, canonical owner/discovery locations,
+verification needs and remaining capability/permission gaps. These feed the caller's review
+and [task-generation](../task-generation/SKILL.md) with applicable guidelines and observable checks;
+leave implementation task breakdown to the SpecKit tasks stage, not an embedded task chain.
 
-Verify that the detected SpecKit planning stage ran and inspect its outputs
-against the approved spec and planner boundary. Verify shared-link resolution,
-version/provenance, canonical owner/discovery, targeted reuse, evidence classification,
-traceability and remaining capability/permission gaps before returning. Return these
-research results with the plan path, architecture/dependency summary, capability
-requirements, corrections, explicit deferral bounds/validation, and
-open owner decisions. Stop after planning and wait for owner approval before
-implementation.
-
-## Mandatory task checkpoint
-
-Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Only already-authorized planning/adaptation outputs may be retained; this contract never bypasses planner approval or grants broader writes.
+Checkpoint verified, already-authorized retained planning/adaptation outputs before completion
+or handoff under the shared [task-commit contract](../memory-handling/references/task-commit-contract.md).
+This grants no new write or adaptation authority. Stop after planning; implementation requires
+owner approval.

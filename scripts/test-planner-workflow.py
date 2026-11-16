@@ -798,8 +798,7 @@ class ParsimonyTests(unittest.TestCase):
             ("brainstorming", "## Decision Rules"),
             ("planning-brainstorming", "## Judge readiness"),
             ("tiny-spec", '## Write the what and how'),
-            ("delegating-architectural-planning", "## Preflight"),
-            ("delegating-architectural-planning", "## Planner Standard adapter contract"),
+            ("delegating-architectural-planning", '## Resolve architectural choices from evidence'),
             ("task-generation", "## Give each task sufficient proof"),
             ("requesting-code-review", "## Prepare The Review"),
             ("receiving-code-review", "## Evaluate Feedback"),
@@ -1328,7 +1327,7 @@ class DependencyResearchTests(unittest.TestCase):
         cases = [
             ("planner", "## Discovery and capability boundary", "[dependency research contract](references/dependency-research.md)", "research-planner-link"),
             ("tiny", '## Resolve the approach from evidence', "[dependency research contract](../planner/references/dependency-research.md)", "research-tiny"),
-            ("helper", "## Preflight", "[dependency research contract](../planner/references/dependency-research.md)", "research-helper"),
+            ("helper", '## Resolve architectural choices from evidence', "[dependency research contract](../planner/references/dependency-research.md)", "research-helper"),
             ("planner", "## Before selection:", "no dependency docs,\nsource, plan or decisions may be persisted", "research-preselection"),
             ("planner", "### TinySpec path", "before consequential approach decisions", "research-tiny-handoff"),
             ("planner", "spec_create", "Apply the shared stage rules, including research before consequential dependency constraints", "research-spec"),
@@ -1336,9 +1335,9 @@ class DependencyResearchTests(unittest.TestCase):
             ("planner", "plan_create", "For helper invocation or the direct Standard pass", "research-plan"),
             ("planner", "plan_create", "with explicit bounded permission\n   in addition to detected SpecKit artifacts", "research-plan"),
             ("tiny", '## Resolve the approach from evidence', "Standalone entry verifies those bounds itself", "research-tiny"),
-            ("helper", "## Preflight", "Standalone entry verifies equivalent Standard planning/preparation authority", "research-helper"),
-            ("helper", "## Planner Boundary", "only explicit bounded\npermission permits canonical research-document and necessary discovery-link writes", "research-boundary"),
-            ("helper", "## Planner Boundary", "No arbitrary documentation edits or product code writes", "research-boundary"),
+            ("helper", '## Arrange the bounded planning pass', "Standalone entry must verify equivalent Standard planning/preparation authority", "research-boundary"),
+            ("helper", '## Arrange the bounded planning pass', "Canonical research-document and necessary discovery-link writes need additional explicit bounded permission", "research-boundary"),
+            ("helper", '## Arrange the bounded planning pass', "no arbitrary documentation or product-code edits", "research-boundary"),
             ("research", "## Discover, trigger and reuse", "Read repository instructions, dependency declarations/lockfiles", "research-discovery"),
             ("research", "## Discover, trigger and reuse", "Trivial use can skip new internet\nresearch with a brief reason", "research-discovery"),
             ("research", "## Discover, trigger and reuse", "refresh only\nthose portions", "research-discovery"),
@@ -1358,9 +1357,9 @@ class DependencyResearchTests(unittest.TestCase):
             ("research", "## Persist within verified authority", "repository technical owner and its discoverability index", "research-persistence"),
             ("research", "## Persist within verified authority", "Re-read each target immediately before", "research-persistence"),
             ("tiny", '## Write the what and how', "Trace evidence to the implementation constraint and check", "research-tiny-traceability"),
-            ("helper", "## Planner Boundary", "supporting source spans → implementation constraints → observable checks", "research-boundary"),
-            ("helper", "## Preflight", "Standalone entry cannot bypass required research", "research-helper"),
-            ("helper", "## Planner Standard adapter contract", "absence is not implied authority", "research-helper-adapter"),
+            ("helper", '## Resolve architectural choices from evidence', "Translate evidence into plan constraints and observable verification", "research-boundary"),
+            ("helper", '## Resolve architectural choices from evidence', "Do not assume the caller already applied them on standalone entry", "research-helper"),
+            ("helper", '## Arrange the bounded planning pass', "Required write authority cannot be inferred from tooling", "research-helper-adapter"),
             ("planner", "## Selected production and stage handoffs", "supporting spans → constraints → observable checks", "research-review"),
             ("planner", "overall_review", "direct Standard\n   pass and helper-managed/standalone contract coverage", "research-standard-review"),
         ]
@@ -1375,7 +1374,7 @@ class DependencyResearchTests(unittest.TestCase):
     def test_whole_research_carriers_cannot_be_replaced_by_summary(self):
         for key, heading, label in (
             ("tiny", '## Resolve the approach from evidence', "research-tiny"),
-            ("helper", "## Preflight", "research-helper"),
+            ("helper", '## Resolve architectural choices from evidence', "research-helper"),
             ("research", "## Classify and translate", "research-traceability"),
             ("research", "## Safe failure and return", "research-failure"),
         ):
@@ -1399,7 +1398,7 @@ class DependencyResearchTests(unittest.TestCase):
         for key, before, after, label in (
             ("planner", "Before consequential plan decisions", "After consequential plan decisions", "research-plan"),
             ("planner", "before consequential dependency constraints", "after consequential dependency constraints", "research-spec"),
-            ("helper", "before consequential architecture/plan decisions", "after consequential architecture/plan decisions", "research-helper"),
+            ("helper", "Before consequential architecture/plan decisions", "After consequential architecture/plan decisions", "research-helper"),
         ):
             with self.subTest(route=label):
                 changed = dict(self.texts)
@@ -1447,7 +1446,7 @@ class DependencyResearchTests(unittest.TestCase):
     def test_unsafe_research_permissions_are_rejected(self):
         for key, heading, policy, label in (
             ("planner", "## Before selection:", "Persist dependency docs before selection.", "research-preselection"),
-            ("helper", "## Planner Boundary", "Arbitrary documentation edits are permitted.", "research-boundary"),
+            ("helper", '## Arrange the bounded planning pass', "Arbitrary documentation edits are permitted.", "research-boundary"),
             ("research", "## Safe failure and return", "Use model recollection when required research is unavailable.", "research-failure"),
         ):
             with self.subTest(policy=policy):
@@ -1473,7 +1472,7 @@ class DependencyResearchTests(unittest.TestCase):
             ("planner", "### TinySpec path", "before consequential approach decisions"),
             ("planner", "plan_create", "For helper invocation or the direct Standard pass"),
             ("tiny", '## Resolve the approach from evidence', "Standalone entry verifies those bounds itself"),
-            ("helper", "## Preflight", "Standalone entry verifies equivalent"),
+            ("helper", '## Arrange the bounded planning pass', "Standalone entry must verify equivalent"),
         ):
             with self.subTest(simulated_route=key, entry=heading):
                 carrier = checker.stage(self.texts[key], heading) if heading == "plan_create" else checker.section(self.texts[key], heading)
@@ -1534,9 +1533,9 @@ class UnifiedMemoryPlanningTests(unittest.TestCase):
         for key, heading, label in (("planner", "## Discovery and capability boundary", "unified-memory-planner"),
                                     ("tiny", '## Establish the source to write', "unified-memory-tiny"),
                                     ("tasks", '## Draft outcomes from the source', "unified-memory-tasks"),
-                                    ("helper", "## Preflight", "unified-memory-helper")):
+                                    ("helper", '## Arrange the bounded planning pass', "unified-memory-helper")):
             clauses = (("explicit owner guidance and gotchas", "task-local REQUIRED check", "worker/reviewer briefs")
-                       if key in ("tasks", "tiny") else
+                       if key in ("tasks", "tiny", "helper") else
                        ("alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs"))
             for clause in clauses:
                 with self.subTest(carrier=key, removed=clause):
@@ -1793,13 +1792,15 @@ class ArchitecturalAcceptedDecisionContinuityTests(unittest.TestCase):
                          "existing owner and approval-renewal gates")
 
         text = (ROOT / "skills/delegating-architectural-planning/SKILL.md").read_text()
-        preflight_text = checker.section(text, "## Preflight")
+        preflight_text = checker.section(text, '## Arrange the bounded planning pass')
         for clause in (
-            "standalone or manager-governed entry, and in fresh or resumed contexts",
-            "each exact applicable accepted outcome constraint and source link into the planning brief and any resume/handoff",
-            "existing owner and approval-renewal gates",
-            "Compatible helper/mechanism cleanup that preserves the outcome needs no new gate",
-            "including the exact applicable accepted outcome constraints and source links",
+            "In fresh or resumed, managed or standalone entry, consult",
+            "[save-adr](../save-adr/SKILL.md#consult-and-propagate)",
+            "current accepted outcomes, explicit mechanism constraints and source links",
+            "Carry them into the producer brief and return",
+            "verify their effect on architectural decisions and observables",
+            "conflicting accepted authority or uncertain applicability stops only affected work",
+            "existing decision/renewal gate",
         ):
             with self.subTest(clause=clause):
                 normalized = " ".join(clause.split())
@@ -2972,18 +2973,19 @@ class OwnerAssignmentHelperTests(unittest.TestCase):
         texts = checker.load_texts()
         self.assertFalse([error for error in checker.check_contracts(texts)
                           if error.startswith(("helper-assignment:", "helper-retired-routing:"))])
-        body = checker.section(texts["helper"], "## Planner Standard adapter contract")
-        for old, new in (
-            ("exact binding unchanged", "ambient binding"),
-            ("do not substitute or run a local pass", "run a local pass"),
-            ("once to create the plan", "twice to create the plan"),
+        for heading, old, new in (
+            ('## Arrange the bounded planning pass', "exact binding unchanged", "ambient binding"),
+            ('## Arrange the bounded planning pass', "do not substitute or run a local pass", "run a local pass"),
+            ('## Produce and inspect the plan', "once to create the plan", "twice to create the plan"),
         ):
             with self.subTest(mutation=new):
+                body = checker.section(texts["helper"], heading)
                 changed = dict(texts)
-                changed["helper"] = changed["helper"].replace(body, body.replace(old, new, 1), 1)
+                changed["helper"] = changed["helper"].replace(body, replace_clause(body, old, new), 1)
                 self.assertTrue(any(error.startswith("helper-assignment:")
                                     for error in checker.check_contracts(changed)))
         changed = dict(texts)
+        body = checker.section(texts["helper"], '## Arrange the bounded planning pass')
         changed["helper"] = changed["helper"].replace(body, body + "\nSol/medium\n", 1)
         self.assertTrue(any(error.startswith("helper-retired-routing:")
                             for error in checker.check_contracts(changed)))

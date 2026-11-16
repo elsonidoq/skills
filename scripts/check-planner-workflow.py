@@ -38,7 +38,7 @@ UNIFIED_MEMORY_CARRIERS = (
     ("planner", "## Discovery and capability boundary", ("verified unified index", "explicit owner guidance, alongside gotchas")),
     ("tiny", '## Establish the source to write', ("verified unified index", "explicit owner guidance and gotchas")),
     ("tasks", '## Draft outcomes from the source', ("verified unified index", "explicit owner guidance and gotchas")),
-    ("helper", "## Preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
+    ("helper", '## Arrange the bounded planning pass', ("verified unified index", "explicit owner guidance and gotchas")),
     ("coordinator", "# Coordinate Implementation", ("Memory Handling remains the unified owner", "execution-time feedback/routing")),
     ("adoption", "## Adoption", ("One associated index carries verified technical\n  gotchas and explicit future-directed owner guidance", "Do not scaffold a separate coordination or guidelines root")),
 )
@@ -162,7 +162,7 @@ MECHANICAL_CARRIERS = (
     ("planner", "## Selected production and stage handoffs"),
     ("planner", "item:4. **Review"),
     ("planner", "stage:overall_review"),
-    ("helper", "## Planner Standard adapter contract"),
+    ("helper", '## Arrange the bounded planning pass'),
 )
 MECHANICAL_GUARDS = (
     "typos, formatting or broken links only",
@@ -230,8 +230,7 @@ def check_contracts(texts):
     for key, heading in (("planner", "## Before selection"),
                          ("tiny", '## Write the what and how'),
                          ("brainstorm", "## Judge readiness"),
-                         ("helper", "## Preflight"),
-                         ("helper", "## Planner Standard adapter contract"),
+                         ("helper", '## Resolve architectural choices from evidence'),
                          ("tasks", '## Give each task sufficient proof')):
         require("parsimony-consumer", section(texts[key], heading), "parsimony.md")
 
@@ -539,15 +538,16 @@ def check_contracts(texts):
     require("task-contract", t, "SpecKit adapter", "direct adapter", "separate source and tasks file",
             "nonempty string `id`", "Optional `depends`", "IDs must be unique",
             "references must exist", "not cycle", "File order", "do not regenerate old tasks")
-    helper_adapter = section(texts["helper"], "## Planner Standard adapter contract")
-    require("adapter", helper_adapter, "Planner Standard adapter", "`planner`", "same-session pass",
-            "do not direct it to create the plan again")
+    helper_adapter = section(texts["helper"], '## Arrange the bounded planning pass')
+    helper_pass = section(texts["helper"], '## Produce and inspect the plan')
+    require("adapter", helper_adapter, "planner-managed Standard `plan_create`", "approved specification and approval evidence",
+            "SpecKit planning: UNAVAILABLE", "do not write a generic plan", "usable in the delegated context")
+    require("adapter", helper_pass, "one same-session pass", "Do not direct the caller to create the plan again")
     require("helper-assignment", helper_adapter,
             "`standard-plan-helper` saved assignment", "exact binding unchanged",
-            "ambient settings or\nobserved profile never replace it", "permitted and callable at dispatch",
-            "unsupported or unavailable", "resolver's exact\nfocused owner-correction question",
-            "do not substitute or run a local pass", "review/fix the approved specification",
-            "once to create the plan", "review/fix the produced plan")
+            "permitted and callable at dispatch", "invalid or unavailable", "focused owner-correction question",
+            "do not substitute or run a local pass", "observed binding/effort separately; unknown stays unknown")
+    require("helper-assignment", helper_pass, "Review/fix the approved specification", "once to create the plan", "Review/fix the produced plan")
     reject("helper-retired-routing", helper_adapter, "Sol/medium", "Sol family",
            "standalone local fallback", "separate-review policies", "fallback may bypass")
     c = texts["coordinator"]
@@ -644,21 +644,22 @@ def check_contracts(texts):
     approach_pos = texts["tiny"].find('## Write the what and how')
     if research_pos < 0 or approach_pos < 0 or research_pos > approach_pos:
         errors.append("research-order: TinySpec research must precede compact approach production")
-    h_pre = section(texts["helper"], "## Preflight")
+    h_pre = section(texts["helper"], '## Resolve architectural choices from evidence')
     require("research-helper", h_pre, "[dependency research contract](../planner/references/dependency-research.md)",
-            "before consequential architecture/plan decisions", "verify it is readable",
-            "Standalone entry verifies equivalent Standard planning/preparation authority",
-            "bounded\ncanonical-owner/discovery writes", "No recollection-based completion or automatic deferral",
-            "returns exact missing evidence, affected decisions and needed authority",
-            "Standalone entry cannot bypass required research",
-            "Research-driven approved-specification changes require renewed approval")
-    require("research-helper-adapter", section(texts["helper"], "## Planner Standard adapter contract"),
-            "explicit bounded documentation permission", "absence is not implied authority")
-    h_boundary = section(texts["helper"], "## Planner Boundary")
-    require("research-boundary", h_boundary, "only explicit bounded\npermission permits canonical research-document and necessary discovery-link writes",
-            "observed destinations with specified allowed changes and prohibited operations",
-            "No arbitrary documentation edits or product code writes", "missing required authority stops",
-            "supporting source spans → implementation constraints → observable checks")
+            "Before consequential architecture/plan decisions", "references are readable",
+            "within the write bounds above", "standalone production too",
+            "No recollection-based completion or automatic deferral", "return exact gaps, affected decisions and needed authority",
+            "Do not assume the caller already applied them on standalone entry")
+    require("research-helper-adapter", helper_adapter, "Required write authority cannot be inferred from tooling")
+    require("research-helper-adapter", helper_pass, "Changes to approved specification content, including research-driven changes",
+            "renewed specification approval gate", "standalone entry uses its owner gate")
+    h_boundary = helper_adapter
+    require("research-boundary", h_boundary,
+            "Canonical research-document and necessary discovery-link writes need additional explicit bounded permission",
+            "observed destinations, allowed changes and prohibited operations",
+            "no arbitrary documentation or product-code edits", "Required write authority cannot be inferred from tooling",
+            "Standalone entry must verify equivalent Standard planning/preparation authority")
+    require("research-boundary", h_pre, "Translate evidence into plan constraints and observable verification")
     reject("research-boundary", h_boundary, "Arbitrary documentation edits are permitted")
     r = texts.get("research", "")
     if not r:
@@ -700,14 +701,14 @@ def check_contracts(texts):
     entries = (("planner", "## Discovery and capability boundary", "unified-memory-planner"),
                ("tiny", '## Establish the source to write', "unified-memory-tiny"),
                ("tasks", '## Draft outcomes from the source', "unified-memory-tasks"),
-               ("helper", "## Preflight", "unified-memory-helper"))
+               ("helper", '## Arrange the bounded planning pass', "unified-memory-helper"))
     for key, heading, label in entries:
         body = section(texts[key], heading)
-        if key in ("tasks", "tiny"):
+        if key in ("tasks", "tiny", "helper"):
             require(label, body, "Memory Handling", "verified unified index", "nonblocking",
                     "explicit owner guidance and gotchas", "task-local REQUIRED check",
                     "worker/reviewer briefs")
-            require(label, body, "retrieval and authority rules" if key == "tasks" else "retrieval and write safeguards")
+            require(label, body, "retrieval and authority rules" if key == "tasks" else "retrieval and write safeguards" if key == "tiny" else "retrieval, write and concurrency safeguards")
         else:
             require(label, body, "Memory Handling", "unified index", "nonblocking",
                     "alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs",
@@ -873,21 +874,29 @@ RISK_CARRIERS = (
         'limits, permission gaps and affected approval renewals',
         'verification needs and unresolved blockers',
     )),
-    ("risk-helper-preflight", "helper", "## Preflight",
-     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "verify it is readable or stop with a missing-install report.",
-      "Standalone entry applies", "Planning schedules proofs", "separate authority")),
-    ("risk-helper-adapter", "helper", "## Planner Standard adapter contract",
-     ("Apply the shared early-risk contract", "task-generation boundaries", "genuinely necessary\nproducer/consumer sequencing",
-      "not imply each proof is a separate task", "execute scheduled proofs")),
-    ("risk-helper-plan", "helper", "## Planner Boundary",
-     ("early risk reduction", "consequential unknown", "known bounded behavior uses actual-helper acceptance tests",
-      "non-isolatable risks use real-system validation with actual\ngates", "necessary prototype prerequisites",
-      "ordinary\ntests, evidence and teardown stay within coherent delivery", "shared risk contract owns",
-      "not an embedded\ntask chain")),
-    ("risk-helper-return", "helper", "## Completion",
-     ("risk rationale", "genuinely necessary\ndependencies", "proof reuse/lifetime",
-      "preserved production behavior", "disproof/NOT VERIFIED", "Failed/unrun proofs\ncannot release assumed reliance",
-      "Routine cleanup stays with the task")),
+    ('risk-helper-preflight', 'helper', '## Resolve architectural choices from evidence', (
+        '[early risk reduction](../planner/references/early-risk-reduction.md)',
+        'references are readable',
+        'missing-install report',
+        'standalone entry',
+        'Planning schedules proof, not its execution',
+    )),
+    ('risk-helper-adapter', 'helper', '## Resolve architectural choices from evidence', (
+        'justified proof selection/omission',
+        'necessary dependencies',
+        'Task-generation owns decomposition and task sizing',
+    )),
+    ('risk-helper-plan', 'helper', '## Produce and inspect the plan', (
+        'sequencing, dependencies',
+        'verification',
+        'evidence-to-constraint-to-check mappings',
+        'evidence rules above',
+    )),
+    ('risk-helper-return', 'helper', '## Return the checked outputs', (
+        'research/risk results above',
+        'verification needs and remaining capability/permission gaps',
+        'not an embedded task chain',
+    )),
     ('risk-tasks', 'tasks', '## Give each task sufficient proof', (
         '[early risk reduction](../planner/references/early-risk-reduction.md)',
         'both routes, including direct entry',
@@ -1000,7 +1009,14 @@ DELEGATION_CARRIERS = (
     ("delegate-standard-tasks", "planner", "stage:tasks_create", ("delegate a separate fresh bounded-context", "task producer", "Apply the shared stage rules")),
     ("delegate-overall-correction", "planner", "stage:overall_review", ("Apply the shared stage rules for corrections", "independent reviewer", "does not become the producer")),
     ("delegate-recovery", "approval", "## Transition and invalidation table", ("Delegate uncertain or substantive artifact corrections", "originating producer context", "fresh bounded correction delegate", "No parent artifact authoring", "substantive task-level or upstream repair, including legacy recovery", "unauthorized delegation stops", "fallback or full transcript handoff")),
-    ("delegate-helper", "helper", "## Planner Standard adapter contract", ("separate fresh bounded context", "manager never authors fresh artifacts or makes substantive repairs", "Delegate uncertain or substantive corrections", "originating", "fresh bounded correction delegate", "unauthorized", "delegation stops", "`standard-plan-helper` saved assignment", "do not substitute or run a local pass")),
+    ('delegate-helper', 'helper', '## Arrange the bounded planning pass', (
+        'separate fresh bounded context',
+        'coordinating caller does not author fresh artifacts or make substantive repairs',
+        'uncertain or substantive corrections return to suitable originating producer context or a fresh bounded correction delegate',
+        'unauthorized delegation stops',
+        '`standard-plan-helper` saved assignment',
+        'do not substitute or run a local pass',
+    )),
     ("delegate-handoff", "planner", "## Selected production and stage handoffs", ("separate fresh bounded-context producer for each artifact", "Loading", "a skill in the parent\nis not delegation", "never fresh artifact authoring or substantive repair", "Do not forward full", "transcripts or unrelated history", "unauthorized delegation stops", "no inline/local fallback", "Delegate uncertain or substantive artifact corrections", "including task-level and upstream changes", "suitable originating context or a fresh bounded correction", "the independent reviewer never becomes the producer")),
 )
 
@@ -1018,7 +1034,12 @@ AUTHORITY_CARRIERS = (
     )),
     ("truth-shared", "planner", "## Selected production and stage handoffs", ("TinySpec/specification is requirements truth", "approved plan is derived\nsequencing only", "No SDD forwarding/rereading as direct requirements input downstream", "governing instructions/contracts, memory and permission/safety still apply")),
     ("truth-plan", "planner", "stage:plan_create", ("Apply the shared stage rules and source/task authority",)),
-    ("truth-helper", "helper", "## Planner Standard adapter contract", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "Governing instructions/contracts, memory and permission/safety still apply")),
+    ('truth-helper', 'helper', '## Produce and inspect the plan', (
+        'specification is requirements truth',
+        'plan provides derived architecture and sequencing',
+        'Do not forward or reread SDD as direct requirements input',
+        'Governing instructions, memory and actual permission/safety boundaries still apply',
+    )),
     ("truth-tiny-task-stage", "planner", "item:3. **Tasks", ("Apply the shared stage rules and source/task authority",)),
     ("truth-standard-task-stage", "planner", "stage:tasks_create", ("Apply the shared stage rules and source/task\n   authority",)),
     ('truth-speckit-adapter', 'tasks', '## Draft outcomes from the source', (
