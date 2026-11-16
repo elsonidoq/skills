@@ -2258,10 +2258,14 @@ class DelegationAuthorityTests(unittest.TestCase):
             owner = (ROOT / checker.PATHS[key]).parent / destination
             self.assertEqual(owner.resolve(), (ROOT / checker.PATHS["guidance"]).resolve())
             self.assertTrue(owner.is_file())
-        for selector in ("item:- A SpecKit adapter", "item:- A direct adapter"):
-            body = checker.operational_carrier(texts["tasks"], selector)
-            self.assertIn("Trace source", body)
-            self.assertIn("permission/safety", body)
+        common = texts["tasks"].split("Use the adapter matching the producing workflow:", 1)[0]
+        for clause in ("For both adapters", "Trace source criteria into task checks",
+                       "permission/safety constraints apply throughout"):
+            self.assertIn(clause, " ".join(common.split()))
+            changed = dict(texts)
+            changed["tasks"] = changed["tasks"].replace(clause, "REMOVED", 1)
+            self.assertTrue(any(e.startswith("truth-task-common:")
+                                for e in checker.check_contracts(changed)))
         self.assertIn("separate source and tasks file", texts["tasks"])
 
 

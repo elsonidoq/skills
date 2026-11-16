@@ -126,7 +126,7 @@ class ComposedAcceptanceTests(unittest.TestCase):
 class TaskGenerationContractTests(unittest.TestCase):
 
     def test_guidance_changes_dependency_check_and_brief_in_both_adapters(self):
-        preflight = TEXT.split("## Preconditions and adapters", 1)[1].split("## Task contract", 1)[0]
+        preflight = " ".join(TEXT.split("## Preconditions and adapters", 1)[1].split("## Executor guidance", 1)[0].split())
         for clause in ("including direct entry without planner", "relevant decision",
                        "task-local REQUIRED check and worker brief", "not merely a link"):
             self.assertIn(clause, preflight)
@@ -135,7 +135,7 @@ class TaskGenerationContractTests(unittest.TestCase):
     def test_direct_and_speckit_adapters(self):
         self.assertIn("SpecKit adapter", TEXT)
         self.assertIn("direct adapter", TEXT)
-        self.assertIn("does not\n  require a plan or SpecKit", TEXT)
+        self.assertIn("does not require a plan or SpecKit", TEXT)
         self.assertIn("authorization to\n**prepare** tasks", TEXT)
         self.assertIn("Do not require final task/implementation approval", TEXT)
 
@@ -173,10 +173,11 @@ class TaskGenerationContractTests(unittest.TestCase):
             "Separate tasks only for a concrete independently necessary deliverable, prerequisite, gate, resource boundary or material context incompatibility",
             "Test writing/running, evidence, verification, review preparation and routine teardown normally stay inside that outcome",
             "Do not split by a workflow noun or task-count quota",
-            "Known bounded behavior normally uses permanent actual-helper tests",
-            "verified earlier step inside its delivery task", "genuinely unknown consequential",
-            "ONE consequential question", "[PROTOTYPE]", "informational conclusion",
-            "both script code and actual observed execution evidence", "early risk reduction",
+            "Known bounded behavior uses permanent actual-helper tests", "verified step in its delivery",
+            "genuinely unknown consequential", "[PROTOTYPE]", "bounded informational scope",
+            "early risk reduction", "selection/omission, evidence, applicability/lifetime and disproof rules",
+            "Consume its findings as task dependencies, checks and blocked reliance, not report-only links",
+            "correction/approval-renewal route",
             "Both the direct and SpecKit adapters mark the task title **[PROTOTYPE]**",
         ):
             with self.subTest(clause=clause):
@@ -188,6 +189,22 @@ class TaskGenerationContractTests(unittest.TestCase):
         ):
             with self.subTest(clause=clause):
                 self.assertIn(" ".join(clause.split()), " ".join(review.split()))
+
+    def test_shared_owners_are_invoked_before_adapter_differences(self):
+        common, adapters = TEXT.split("Use the adapter matching the producing workflow:", 1)
+        clauses = ("[Memory Handling](../memory-handling/SKILL.md)",
+                   "[save-adr](../save-adr/SKILL.md)", "For both adapters",
+                   "direct entry and fresh/resumed", "source observables → dependencies or gates",
+                   "task-local REQUIRED checks → worker/reviewer briefs", "with source links",
+                   "source/task conflict or uncertain current supersession stops only the affected task mapping")
+        def complete(text):
+            normalized = " ".join(text.split())
+            return all(clause in normalized for clause in clauses)
+        self.assertTrue(complete(common))
+        for clause in clauses:
+            self.assertFalse(complete(" ".join(common.split()).replace(clause, "REMOVED", 1)), clause)
+        self.assertIn("A SpecKit adapter", adapters)
+        self.assertIn("A direct adapter", adapters)
 
     def test_producer_reads_actual_executor_json_before_both_adapter_decompositions(self):
         guidance = ' '.join(TEXT.split('## Executor guidance', 1)[1].split('## Task contract', 1)[0].split())
@@ -233,20 +250,15 @@ class TaskGenerationContractTests(unittest.TestCase):
         """Static authoring contrasts, not runtime closure or type-check validation."""
         recipe = TEXT.split("### Executor-sized outcomes", 1)[1].split(
             "State shared constraints once", 1)[0]
-        omitted = "Add the export control in `ui/export_controls.py`; own only\nthat file"
-        corrected = ("owning the\ncontrol, selector, harness, necessary final configuration/override support and applicable\nproducer check"
-                     " in the same bounded UI outcome")
         clauses = (
-            "acceptance selectors, coupled fixtures and admitting\n   harness alongside the product interface, and inspect the final configuration/override owners\n   that produce its final observable",
-            "Before a dependent relies on a producer fixture, inspect\n   that fixture's applicable admitting/type check",
-            omitted,
-            "`tests/test_export_controls.py::test_capture_export_button`",
-            "`scripts/run-ui-captures.py`",
-            "final configuration/override owners that make the export\ncontrol's final observable available",
-            "fixture's applicable admitting/type check",
-            corrected,
-            "ordinary already-observed success control needs only its\nexisting focused check",
-            "not a generic path/dependency-closure\nvalidator or a new task field",
+            "acceptance selectors, coupled fixtures and admitting harness alongside the product interface",
+            "inspect the final configuration/override owners that produce its final observable",
+            "Before a dependent relies on a producer fixture, inspect that fixture's applicable admitting/type check",
+            "include necessary in-scope changes with the control or name the real existing producer dependency",
+            "ordinary already-observed control needs only its existing focused check",
+            "ordinary cross-system wiring outcome may remain one task",
+            "focused wiring test, relevant documentation and ordinary support work establish the final observable",
+            "not a generic path/dependency-closure validator or a new task field",
         )
         recipe = " ".join(recipe.split())
         for clause in clauses:
