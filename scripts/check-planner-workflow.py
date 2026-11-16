@@ -227,7 +227,7 @@ def check_contracts(texts):
             "not application startup")
     for key, heading in (("planner", "## Before selection"),
                          ("tiny", "## Compact source contract"),
-                         ("brainstorm", "## 1. Gate assessment"),
+                         ("brainstorm", "## Judge readiness"),
                          ("helper", "## Preflight"),
                          ("helper", "## Planner Standard adapter contract"),
                          ("tasks", '## Give each task sufficient proof')):
@@ -474,23 +474,19 @@ def check_contracts(texts):
             "immediately proceed to handoff")
     b = texts["brainstorm"]
     require("brainstorm", b, "NO_BRAINSTORM_NEEDED", "BRAINSTORM_NEEDED", "no more than three items",
-            "one material item", "recorded owner decisions", "preselection", "read-only",
-            "session history", "Only in selected-production", "owner's rationale")
-    require("brainstorm-parent-gate", section(b, "## Capability preflight"),
-            "Gate assessment runs directly in the parent session", "owner-launched model and effort",
-            "Do not delegate the gate or resolve a saved `brainstorm-assessment` binding",
-            "missing delegation capability or a saved brainstorming assignment does not\nblock parent assessment or owner dialogue")
-    require("brainstorm-parent-gate", section(b, "## 1. Gate assessment"),
-            "The parent assesses readiness without a subagent call")
-    require("brainstorm-assignment", section(b, "## Capability preflight"),
-            "Only for authorized delegated decision application, resolve `brainstorm-application`",
-            "[shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)",
-            "shared saved `brainstorming` assignment", "exact binding\nunchanged in the bounded brief and dispatch",
-            "permitted and callable only\nat dispatch",
-            "focused owner-correction question and no\ncandidate recommendation, inference, substitution, or fallback",
-            "The parent still\nconducts owner dialogue")
-    require("brainstorm-assignment", section(b, "## 3. Apply decisions"),
-            "Only in selected-production or legacy-repair mode")
+            "one agenda item at a time", "exactly the recorded decisions", "Preselection", "read-only",
+            "session history", "Only with selected-production", "owner's rationale")
+    require("brainstorm-parent-gate", b.split("## Judge readiness", 1)[0],
+            "parent conducts assessment and dialogue", "owner-launched model and effort",
+            "neither requires a child call or a saved assignment")
+    require("brainstorm-parent-gate", section(b, "## Resolve the material questions with the owner"),
+            "missing delegation alone does not block parent dialogue")
+    require("brainstorm-assignment", section(b, "## Apply and return the decisions"),
+            "Only with selected-production or legacy-repair write authority",
+            "Resolve `brainstorm-application`", "[saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)",
+            "shared `brainstorming` assignment", "exact binding unchanged in the brief and dispatch",
+            "permitted and callable at dispatch", "stops only application", "focused correction question",
+            "no recommendation, inferred substitute or fallback binding", "Do not resolve `brainstorm-assessment` for the parent")
     reject("brainstorm-retired-routing", b, "qualified seed rubric", "six applicable factors",
            "family/effort", "Family and Effort rationales", "shared readiness conjunction",
            "owner-selected profile")
@@ -533,7 +529,7 @@ def check_contracts(texts):
     require("batch-legacy", a, "inadequate REQUIRED contracts", "producing review/approval gate", "renewed affected approval")
     require("batch-helper", texts["helper"], "applicable guidelines")
     require("batch-source", texts["tiny"], "stable task-local REQUIRED")
-    require("batch-brainstorm", texts["brainstorm"], "not implementation-task assignments")
+    require("batch-brainstorm", texts["brainstorm"], "does not select runtime bindings")
     t = texts["tasks"]
     require("task-contract", t, "SpecKit adapter", "direct adapter", "separate source and tasks file",
             "nonempty string `id`", "Optional `depends`", "IDs must be unique",

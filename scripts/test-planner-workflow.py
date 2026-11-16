@@ -796,7 +796,7 @@ class ParsimonyTests(unittest.TestCase):
         for path, heading in (
             ("planner", "## Before selection"),
             ("brainstorming", "## Decision Rules"),
-            ("planning-brainstorming", "## 1. Gate assessment"),
+            ("planning-brainstorming", "## Judge readiness"),
             ("tiny-spec", "## Compact source contract"),
             ("delegating-architectural-planning", "## Preflight"),
             ("delegating-architectural-planning", "## Planner Standard adapter contract"),
@@ -1016,7 +1016,7 @@ class InstructionTests(unittest.TestCase):
             ("approval", "inside tasks", "separate new source", "legacy:"),
             ("tasks", "nonempty string `id`", "missing ID", "task-contract:"),
             ("brainstorm", "no more than three items", "unbounded agenda", "brainstorm:"),
-            ("brainstorm", "Only in selected-production", "In any mode", "brainstorm:"),
+            ("brainstorm", "Only with selected-production", "In any mode", "brainstorm:"),
             ("coordinator", "checkpoint per implementation/repair task", "checkpoint per batch", "execution-checkpoints:"),
             ("coordinator", "real focused checkpoint", "Any report releases", "execution-sequential:"),
             ("coordinator", "exactly six linter checks", "required source checklist", "intake:"),
@@ -1285,7 +1285,7 @@ class InstructionTests(unittest.TestCase):
             ("approval", "inadequate REQUIRED contracts", "batch-legacy:"),
             ("tiny", "stable task-local REQUIRED", "batch-source:"),
             ("helper", "applicable guidelines", "batch-helper:"),
-            ("brainstorm", "not implementation-task assignments", "batch-brainstorm:"),
+            ("brainstorm", "does not select runtime bindings", "batch-brainstorm:"),
         ):
             with self.subTest(carrier=key):
                 self.assertIn(clause, self.texts[key])
@@ -1877,30 +1877,27 @@ class BrainstormAcceptedDecisionContinuityTests(unittest.TestCase):
 
     def test_read_through_requires_consult_timing_and_existing_boundaries(self):
         text = (ROOT / "skills/planning-brainstorming/SKILL.md").read_text()
-        preflight = checker.section(text, "## Capability preflight")
-        gate = checker.section(text, "## 1. Gate assessment")
-        handoff = checker.section(text, "## Durable handoff and resume")
+        readiness = checker.section(text, "## Judge readiness")
+        handoff = checker.section(text, "## Apply and return the decisions")
         for forbidden in ("do not discover", "session history only",
                           "from the supplied constraints/session history in preselection"):
             self.assertNotIn(forbidden, " ".join(text.split()))
-        self.assertIn("no source edits or", checker.section(text, "## Modes"))
-        self.assertIn("Only in selected-production or legacy-repair mode",
-                      checker.section(text, "## 3. Apply decisions"))
         for body, clause in (
-            (preflight, "Before gate assessment, consult [save-adr](../save-adr/SKILL.md)'s **Consult and\npropagate** contract."),
-            (preflight, "In all modes, including standalone fresh preselection, allow\nread-only discovery of existing project decision ownership, the whole decision index and\nrelevant accepted records in full before affected gate assessment, even when not supplied\nby the caller."),
-            (preflight, "Use supplied constraints and session history as additional context, not a\ndiscovery limit."),
-            (preflight, "Preselection forbids writes or artifact production, not reading existing\ndecision artifacts."),
-            (preflight, "An absent decision store alone is nonblocking; material authority or\nconflicts follow the canonical contract."),
-            (gate, "Applicable accepted outcome constraints and source links inform readiness and whether an owner question is material; they do not replace current bounded-source content or existing material-question authority."),
-            (handoff, "Handoff context includes settled decisions, applicable accepted outcome\nconstraints and source links, trade-offs, intentional deferrals, uncertainties, and the\nnext-stage readiness target."),
-            (handoff, "On resume in every mode, including preselection, re-establish\napplicability through read-only discovery and consultation of current project decision\nownership, the whole index and relevant accepted records under save-adr, not solely supplied\nconstraints/session history or an earlier-read claim."),
-            (handoff, "Keep preselection read-only and absent\nstore alone nonblocking."),
+            (readiness, "Before affected assessment, including fresh or resumed standalone entry, consult [save-adr]"),
+            (readiness, "Discover existing decision ownership and consult its index and relevant records even if the caller did not supply them"),
+            (readiness, "session history supplements, not replaces, this consultation"),
+            (readiness, "An absent decision store alone is nonblocking"),
+            (readiness, "Create no source, decision or state files, including for resume"),
+            (readiness, "Current source content and applicable accepted outcomes inform the judgment; they do not grant new decision authority"),
+            (handoff, "Only with selected-production or legacy-repair write authority"),
+            (handoff, "accepted constraints and source links, trade-offs and remaining uncertainties"),
+            (handoff, "On resume, repeat the applicability consultation above"),
+            (handoff, "If source or decisions changed materially, run the readiness judgment again"),
         ):
             with self.subTest(clause=clause):
-                self.assertIn(" ".join(clause.split()), " ".join(body.split()))
-                self.assertNotIn(" ".join(clause.split()),
-                                 " ".join(body.replace(clause, "OMITTED", 1).split()))
+                normalized = " ".join(body.split())
+                self.assertIn(clause, normalized)
+                self.assertNotIn(clause, normalized.replace(clause, "OMITTED", 1))
 
 
 class AcceptedDecisionTaskAdapterTests(unittest.TestCase):
@@ -3020,18 +3017,18 @@ class OwnerAssignmentBrainstormTests(unittest.TestCase):
         self.assertNotEqual(before, after)
         self.assertEqual(after, {"model": "owner/updated", "effort": "high"})
         self.assertEqual(self.skill.read_bytes(), skill_before)
-        preflight = checker.section(self.skill.read_text(), "## Capability preflight")
-        self.assertIn("Gate assessment runs directly in the parent session", preflight)
-        self.assertIn("missing delegation capability or a saved brainstorming assignment does not\nblock parent assessment or owner dialogue", preflight)
+        introduction = self.skill.read_text().split("## Judge readiness", 1)[0]
+        self.assertIn("parent conducts assessment and dialogue", introduction)
+        self.assertIn("neither\nrequires a child call or a saved assignment", introduction)
 
     def test_parent_gate_carrier_removals_fail_even_with_summary(self):
         texts = checker.load_texts()
         cases = (
             ("planner", "## Before selection:", "Do not delegate the gate or resolve a saved", "shared-invocation:"),
             ("planner", "## Before selection:", "without a child call", "shared-invocation:"),
-            ("brainstorm", "## Capability preflight", "Gate assessment runs directly in the parent session", "brainstorm-parent-gate:"),
-            ("brainstorm", "## Capability preflight", "missing delegation capability or a saved brainstorming assignment does not block parent assessment or owner dialogue", "brainstorm-parent-gate:"),
-            ("brainstorm", "## 1. Gate assessment", "The parent assesses readiness without a subagent call", "brainstorm-parent-gate:"),
+            ("brainstorm", "# Planning Brainstorming", "parent conducts assessment and dialogue", "brainstorm-parent-gate:"),
+            ("brainstorm", "## Resolve the material questions with the owner", "missing delegation alone does not block parent dialogue", "brainstorm-parent-gate:"),
+            ("brainstorm", "# Planning Brainstorming", "neither requires a child call or a saved assignment", "brainstorm-parent-gate:"),
         )
         for key, heading, clause, diagnostic in cases:
             with self.subTest(clause=clause):
@@ -3165,7 +3162,7 @@ class OwnerAssignmentComposedTests(unittest.TestCase):
         texts = checker.load_texts()
         for key, clause, diagnostic in (
             ("planner", "## Saved planner assignments", "saved-assignments:"),
-            ("brainstorm", "shared saved `brainstorming` assignment", "brainstorm-assignment:"),
+            ("brainstorm", "shared `brainstorming` assignment", "brainstorm-assignment:"),
             ("helper", "`standard-plan-helper` saved assignment", "helper-assignment:"),
         ):
             with self.subTest(carrier=clause):

@@ -5,125 +5,88 @@ description: Use when unresolved design or owner-direction questions may block s
 
 # Planning Brainstorming
 
-Provide the single shared brainstorming mechanism for workflow managers. It preserves
-owner direction; it does not create a specification, plan, task list, or implementation.
+Decide whether the request is ready for the caller's next stage. If a material decision is
+missing, help the owner make it and return the actual decision, rationale and any deferral.
+The parent conducts assessment and dialogue with the owner-launched model and effort; neither
+requires a child call or a saved assignment. This skill does not choose TinySpec/Standard or
+produce a specification, plan, task list or implementation.
 
-## Capability preflight
+## Judge readiness
 
-Before using this skill, verify that the runtime can ask the owner questions and that the
-planner can retain the selected source bounds, decisions, deferrals and handoff. In
-preselection mode retain interim answers in available session history, while allowing
-read-only inspection of existing project evidence; in selected-production or legacy
-repair mode use established project artifacts.
+Use the caller's request or bounded source, mode and readiness target. Read relevant source
+evidence, repository instructions and principles. Use [Memory Handling](../memory-handling/SKILL.md)
+to retrieve applicable guidance and gotchas. Before affected assessment, including fresh or
+resumed standalone entry, consult [save-adr](../save-adr/SKILL.md#consult-and-propagate) for current
+accepted constraints and source links. Discover existing decision ownership and consult its
+index and relevant records even if the caller did not supply them; session history supplements,
+not replaces, this consultation. An absent decision store alone is nonblocking. Apply the
+owner's conflict rules only to the affected decision.
 
-Gate assessment runs directly in the parent session with the owner-launched model and effort.
-Do not delegate the gate or resolve a saved `brainstorm-assessment` binding. A settled request
-needs no child call; missing delegation capability or a saved brainstorming assignment does not
-block parent assessment or owner dialogue.
+Keep the mode's authority clear:
 
-Only for authorized delegated decision application, resolve `brainstorm-application` through the planner's
-[shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments).
-It uses the shared saved `brainstorming` assignment. Pass its exact binding
-unchanged in the bounded brief and dispatch; verify it is permitted and callable only
-at dispatch. A missing, malformed, unsupported, or unavailable assignment stops that
-affected operation with the contract's focused owner-correction question and no
-candidate recommendation, inference, substitution, or fallback. The parent still
-conducts owner dialogue. This selection does not authorize implementation work.
+- **Preselection:** inspect existing evidence read-only and retain answers in session history.
+  The target is informed scope assessment, not immediate task production. Create no source,
+  decision or state files, including for resume.
+- **Selected production / legacy repair:** use the explicitly selected source or section and
+  established project artifacts. Existing task-embedded requirements remain valid; this skill
+  imposes no new source shape.
 
-Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites. If a required capability is unavailable, report the
-missing capability and stop before downstream production. When the runtime's permitted fallback
-is prose interaction, ask in prose and end the turn; do not continue downstream or infer an
-answer. A manager's explicit mandatory preflight may instead stop before the question is posed.
-Do not substitute an unavailable interactive dialogue with guessed decisions.
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md) to distinguish a
+material question from ordinary technical work. Current source content and applicable accepted
+outcomes inform the judgment; they do not grant new decision authority. Retain exactly one result:
 
-The caller supplies the request or bounded source, mode, and next-stage readiness target.
-Read applicable repository instructions, principles, source evidence and applicable memory.
-Before gate assessment, consult [save-adr](../save-adr/SKILL.md)'s **Consult and
-propagate** contract. In all modes, including standalone fresh preselection, allow
-read-only discovery of existing project decision ownership, the whole decision index and
-relevant accepted records in full before affected gate assessment, even when not supplied
-by the caller. Use supplied constraints and session history as additional context, not a
-discovery limit. Preselection forbids writes or artifact production, not reading existing
-decision artifacts. An absent decision store alone is nonblocking; material authority or
-conflicts follow the canonical contract. Preselection target is informed scope
-assessment, not immediate task production. Do not select TinySpec/Standard here. Generic
-brainstorming's design-depth labels do not replace the planner's mandatory user choice.
+- `NO_BRAINSTORM_NEEDED`: direction is settled, or evidence/mechanical work resolves the ambiguity.
+  Explain why the target is ready. Bias toward this result for naming, file placement, task
+  ordering, grouping, bounded clarification or an obvious mechanical default.
+- `BRAINSTORM_NEEDED`: an open design question, product-direction decision or material technical
+  trade-off blocks readiness. Return `## Brainstorm agenda` with no more than three items.
+  For each, state the topic, type (`open-design`, `product-decision` or `technical-tradeoff`),
+  blocking reason, two to four concrete alternatives and a recommended direction.
 
-## Modes
+## Resolve the material questions with the owner
 
-- **Preselection:** read-only source inspection and owner dialogue; no source edits or
-  planning/decision files. Keep exact answers, rationale and deferrals in session history.
-  If interrupted and evidence is unavailable, ask for missing answers instead of guessing.
-- **Selected production / legacy repair:** apply recorded decisions to the explicitly
-  selected source/section only and persist evidence using established project conventions.
-  A task-embedded requirement remains valid for legacy repair; no new source shape is imposed.
+The parent, not a delegated worker, presents one agenda item at a time. Verify the question
+capability and ability to retain answers under [runtime requirements](../../REQUIREMENTS.md).
+If the permitted fallback is prose interaction, ask in prose and end the turn; otherwise report
+the missing capability and stop. A caller's mandatory preflight can stop earlier. Missing
+answers, cancellation or unavailable dialogue never authorize inferred decisions or downstream
+production; missing delegation alone does not block parent dialogue.
 
-## 1. Gate assessment
-
-Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply before raising material owner questions. Applicable accepted outcome constraints and source links inform readiness and whether an owner question is material; they do not replace current bounded-source content or existing material-question authority.
-
-The parent assesses readiness without a subagent call and retains exactly one gate result:
-
-- `NO_BRAINSTORM_NEEDED` — direction is settled, or remaining ambiguity is mechanical or
-  answerable from the source/evidence. State why the target is ready for the next stage.
-- `BRAINSTORM_NEEDED` — only when an open-ended design question, owner product-direction
-  decision, or material technical trade-off blocks downstream work.
-
-Bias toward `NO_BRAINSTORM_NEEDED`. Do not invoke brainstorming for task ordering, naming,
-file placement, batch grouping, bounded clarification, or a decision with an obvious
-mechanical default.
-
-For `BRAINSTORM_NEEDED`, provide `## Brainstorm agenda` with no more than three items. Each
-item states its topic, type (`open-design`, `product-decision`, or `technical-tradeoff`), why
-it blocks readiness, two to four concrete alternatives, and a recommended direction.
-
-## 2. Owner dialogue
-
-The orchestrator, not a delegated worker, conducts the dialogue. Present one material item
-at a time through the available question capability. Offer concrete alternatives and a
-recommendation for product decisions and technical trade-offs; converge open-design dialogue
-on a specific downstream-ready direction. Retain each result, with the owner's rationale,
-in the mode's permitted carrier as:
+Offer alternatives and a recommendation for product decisions and technical trade-offs; converge
+open-design discussion on a specific direction usable by the next stage. Retain each actual
+answer and the owner's rationale in the mode's permitted carrier:
 
 ```text
 ## [item]
 Decision: [direction] — [detail]
 ```
 
-Record owner deferrals, including their rationale. For a missing question capability, use the
-permitted prose-and-end-turn fallback when available, then stop; otherwise report the stop. It
-is never permission to infer a material decision.
+Record deferrals and their rationale rather than treating them as answers. Planning depth remains
+the planner's owner choice, not a brainstorming design-depth label.
 
-## 3. Apply decisions
+## Apply and return the decisions
 
-Only in selected-production or legacy-repair mode, use bounded work with the shared saved
-`brainstorming` assignment to apply exactly the recorded owner decisions to the supplied bounded source. Update only
-claims affected by those decisions: settled decisions, outcome,
-acceptance criteria, exclusions, and open questions as applicable. Preserve the source's
-format; add a concise deferred note when the owner deferred work. Do not invent scope,
-rewrite unrelated sections, or replace the next stage with a plan.
+Only with selected-production or legacy-repair write authority, delegate bounded application of
+exactly the recorded decisions to the selected source. Resolve `brainstorm-application` through
+the planner's [saved-assignment contract](../planner/SKILL.md#saved-planner-assignments), which
+supplies the shared `brainstorming` assignment. Pass that exact binding unchanged in the brief
+and dispatch, and verify it is permitted and callable at dispatch. An invalid or unavailable
+binding stops only application with the owner's focused correction question; no recommendation,
+inferred substitute or fallback binding. Do not resolve `brainstorm-assessment` for the parent.
 
-Planning gate bindings are not implementation-task assignments. Carry settled source constraints,
-research links, applicable guidelines and observable verification needs into the next-stage handoff;
-leave task-local REQUIRED items and inherited executor intent to task generation; executable
-runtime bindings are approved separately, not selected by the brainstorming producer.
+Change only affected decisions, outcome, acceptance, exclusions and open questions. Preserve the
+source format and add a concise note for deferred work; do not expand scope or rewrite unrelated
+sections. Checkpoint authorized retained changes under the shared
+[task-commit contract](../memory-handling/references/task-commit-contract.md). Read-only
+preselection creates no empty commit and no mode may adopt inherited work.
 
-## Durable handoff and resume
+Return the readiness result, agenda if any, decisions/rationale, deferrals, accepted constraints
+and source links, trade-offs and remaining uncertainties for the caller's readiness target.
+Include relevant research links, guidelines and observable verification needs; task generation
+owns their task-level mapping, and this planning assignment does not select runtime bindings.
+Use session history before selection and established project conventions after selection.
 
-Retain the gate result, agenda when present, applicable accepted outcome constraints and
-source links, owner decisions/rationale, deferrals and concise handoff in session history
-before depth selection. Do not write a source or state file to make a preselection resume
-possible. After selection, persist them and the changed source using existing project
-conventions. Handoff context includes settled decisions, applicable accepted outcome
-constraints and source links, trade-offs, intentional deferrals, uncertainties, and the
-next-stage readiness target. On resume in every mode, including preselection, re-establish
-applicability through read-only discovery and consultation of current project decision
-ownership, the whole index and relevant accepted records under save-adr, not solely supplied
-constraints/session history or an earlier-read claim. Keep preselection read-only and absent
-store alone nonblocking. Then validate the bounded source and decision record; if owner answers are missing,
-re-present the saved agenda instead of regenerating decisions. If the source or decisions
-changed materially, re-run the gate before downstream production.
-
-## Mandatory task checkpoint
-
-Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Preselection remains read-only and creates no empty commit; any authorized retained decision artifact is a bounded task and never adopts inherited work.
+On resume, repeat the applicability consultation above and validate the bounded source and saved
+decisions. Re-present the saved agenda for missing answers rather than reconstructing decisions.
+If source or decisions changed materially, run the readiness judgment again before downstream
+production.
