@@ -31,6 +31,11 @@ Keep the mode's authority clear:
   established project artifacts. Existing task-embedded requirements remain valid; this skill
   imposes no new source shape.
 
+Before judging readiness, verify that the mode's permitted carrier can retain source bounds,
+decisions, deferrals and the handoff. If it cannot, report the missing retention capability and
+stop before returning readiness or producing downstream artifacts; restore a usable permitted carrier.
+Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites.
+
 Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md) to distinguish a
 material question from ordinary technical work. Current source content and applicable accepted
 outcomes inform the judgment; they do not grant new decision authority. Retain exactly one result:
@@ -84,6 +89,7 @@ Return the readiness result, agenda if any, decisions/rationale, deferrals, acce
 and source links, trade-offs and remaining uncertainties for the caller's readiness target.
 Include relevant research links, guidelines and observable verification needs; task generation
 owns their task-level mapping, and this planning assignment does not select runtime bindings.
+Executable runtime bindings require separate approval.
 Use session history before selection and established project conventions after selection.
 
 On resume, repeat the applicability consultation above and validate the bounded source and saved

@@ -32,6 +32,33 @@ class PlanningBrainstormingContractTests(unittest.TestCase):
             "Create no source, decision or state files, including for resume",
         ))
 
+    def test_retention_before_readiness_and_operation_boundary_capabilities(self):
+        self.require("## Judge readiness", (
+            "Before judging readiness, verify", "mode's permitted carrier",
+            "retain source bounds, decisions, deferrals and the handoff",
+            "report the missing retention capability",
+            "stop before returning readiness or producing downstream artifacts",
+            "restore a usable permitted carrier",
+        ))
+        self.assertLess(self.text.index("Before judging readiness, verify"),
+                        self.text.index("`NO_BRAINSTORM_NEEDED`"))
+        self.require("## Resolve the material questions with the owner", (
+            "Verify the question capability", "runtime requirements",
+        ))
+        self.require("## Apply and return the decisions", (
+            "permitted and callable at dispatch",
+        ))
+
+    def test_execution_rules_are_not_planning_prerequisites(self):
+        self.require("## Judge readiness", (
+            "Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites",
+        ))
+        self.require("## Apply and return the decisions", (
+            "task generation owns their task-level mapping",
+            "does not select runtime bindings",
+            "Executable runtime bindings require separate approval",
+        ))
+
     def test_parent_gate_needs_no_child_or_saved_assignment(self):
         self.require("# Planning Brainstorming", (
             "parent conducts assessment and dialogue", "owner-launched model and effort",
