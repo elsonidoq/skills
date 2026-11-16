@@ -36,7 +36,7 @@ PATHS = {
 UNIFIED_MEMORY_CARRIERS = (
     ("memory", "# Memory Handling", ("One verified\nproject association and one index", "two distinct evidence kinds")),
     ("planner", "## Discovery and capability boundary", ("verified unified index", "explicit owner guidance, alongside gotchas")),
-    ("tiny", "## Inputs and preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
+    ("tiny", '## Establish the source to write', ("verified unified index", "explicit owner guidance and gotchas")),
     ("tasks", '## Draft outcomes from the source', ("verified unified index", "explicit owner guidance and gotchas")),
     ("helper", "## Preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
     ("coordinator", "# Coordinate Implementation", ("Memory Handling remains the unified owner", "execution-time feedback/routing")),
@@ -50,12 +50,14 @@ SECOND_STORE_REINTRODUCTION = re.compile(
 
 # A5 adapter carriers: source acceptance must become a task-local gate/check/brief.
 ACCEPTED_ADAPTER_CARRIERS = (
-    ("accepted-tiny-source", "tiny", "## Inputs and preflight", (
-        "[save-adr](../save-adr/SKILL.md)",
-        "direct entry and fresh/resumed", "re-establish relevant accepted authority",
-        "current supersession", "source observable must yield its task dependency or gate",
-        "task-local REQUIRED check and worker brief", "not merely a link",
-        "source/task conflict or uncertain current\nsupersession stops only the affected acceptance mapping",
+    ('accepted-tiny-source', 'tiny', '## Establish the source to write', (
+        '[save-adr](../save-adr/SKILL.md#consult-and-propagate)',
+        'fresh or resumed production',
+        'current accepted outcomes, explicit mechanism constraints and source links',
+        'source observables and acceptance, not just citations',
+        'dependency or gate and check needs',
+        'task-local REQUIRED checks and worker/reviewer briefs',
+        'source/task conflict or uncertain supersession stops only the affected mapping',
     )),
     ('accepted-task-preflight', 'tasks', '## Draft outcomes from the source', (
         '[save-adr](../save-adr/SKILL.md#consult-and-propagate)',
@@ -226,7 +228,7 @@ def check_contracts(texts):
             "target drift stops affected continuation", "existing gates",
             "not application startup")
     for key, heading in (("planner", "## Before selection"),
-                         ("tiny", "## Compact source contract"),
+                         ("tiny", '## Write the what and how'),
                          ("brainstorm", "## Judge readiness"),
                          ("helper", "## Preflight"),
                          ("helper", "## Planner Standard adapter contract"),
@@ -279,9 +281,10 @@ def check_contracts(texts):
             "scripts/resolve-workflow-executor.py --project PROJECT_ROOT", "exact absolute stdout path unchanged",
             "producer itself\nmust read the actual JSON before decomposing work", "planner/parent/producer profile, remembered\ndefault",
             "missing, ambiguous or unreadable", "worker model/effort is absent\nor invalid", "affected producer", "role, path and\nproblem")
-    require("executor-tiny-handoff", section(texts["tiny"], "## Intended executor before decomposition"),
-            "selected executor JSON path from the planner", "direct task-producer\nbrief", "task producer itself reads that JSON before decomposition",
-            "does not select or copy runtime bindings", "affected task production")
+    require("executor-tiny-handoff", section(texts["tiny"], '## Return for review and separate tasks'),
+            "planner's selected executor JSON path unchanged to the task producer",
+            "Task-generation owns reading it", "missing-path/assignment correction",
+            "does not select or copy runtime bindings")
     reject("retired-routing-leftover", "\n".join((p, texts["tasks"], texts["tiny"])),
            "qualified seed rubric", "residual_reasoning", "owner-selected batch routing")
     for label, key, selector, clauses in ACCEPTED_ADAPTER_CARRIERS:
@@ -500,9 +503,11 @@ def check_contracts(texts):
     for key in ("planner", "brainstorm", "helper"):
         reject("obsolete-planning-class", texts[key], "sonnet-class", "opus-class")
     require("tiny-source", texts["tiny"], "explicit TinySpec selection/preparation authorization",
-            "Context/outcome", "Scope", "Decisions/constraints", "Approach", "Acceptance/validation",
-            "Risks/dependencies/notes", "Do not embed an implementation task checklist",
-            "separate task file is mandatory", "No SpecKit prerequisite", "one combined approval")
+            "Outcome and scope", "Decisions and constraints", "Approach", "Acceptance", "Risks and deferrals",
+            "do not embed an implementation checklist", "separate task file is mandatory",
+            "TinySpec needs no SpecKit", "one combined source/task approval",
+            "fresh independent read-only specification review", "On standalone entry, return to planner",
+            "No separate pre-task TinySpec source approval is required")
     a = texts["approval"]
     require("approval", a, "EVERY artifact-approval", "before calling `ask_user`",
             "only in tool arguments", "Intended outcome", "Exclusions", "Important settled decisions",
@@ -528,7 +533,7 @@ def check_contracts(texts):
     require("batch-standard", review, "verification item completeness")
     require("batch-legacy", a, "inadequate REQUIRED contracts", "producing review/approval gate", "renewed affected approval")
     require("batch-helper", texts["helper"], "applicable guidelines")
-    require("batch-source", texts["tiny"], "stable task-local REQUIRED")
+    require("batch-source", texts["tiny"], "task-local REQUIRED checks and worker/reviewer")
     require("batch-brainstorm", texts["brainstorm"], "does not select runtime bindings")
     t = texts["tasks"]
     require("task-contract", t, "SpecKit adapter", "direct adapter", "separate source and tasks file",
@@ -624,19 +629,19 @@ def check_contracts(texts):
             "observed allowed changes and prohibited operations, with explicit bounded permission\n   in addition to detected SpecKit artifacts",
             "Do not grant arbitrary documentation edits\n   or code writes", "missing required evidence/authority stops")
     require("research-standard-review", review, "direct Standard\n   pass and helper-managed/standalone contract coverage")
-    t_research = section(texts["tiny"], "## Dependency evidence before approach decisions")
+    t_research = section(texts["tiny"], '## Resolve the approach from evidence')
     require("research-tiny", t_research, "[dependency research contract](../planner/references/dependency-research.md)",
-            "before consequential dependency approach decisions", "Verify the reference is readable",
-            "reuse adequate applicable guidance", "Refresh only version-sensitive/stale/conflicting/missing portions",
-            "Direct/standalone entry verifies equivalent TinySpec selection/preparation authority",
-            "bounded canonical technical-owner/discovery-link writes", "during authorized production before readiness",
-            "required insufficient evidence cannot default to recollection", "return exact gaps, affected decisions",
-            "impact, allowed bounds and outstanding validation, never automatic deferral")
-    source_contract = section(texts["tiny"], "## Compact source contract")
-    require("research-tiny-traceability", source_contract, "Classify documented\n  recommendations, repository-derived decisions/rationale and assumptions",
-            "Trace source recommendation/local evidence → compact implementation\n  constraint → observable acceptance/check")
-    research_pos = texts["tiny"].find("## Dependency evidence before approach decisions")
-    approach_pos = texts["tiny"].find("## Compact source contract")
+            "Before consequential dependency choices", "references are readable",
+            "reuse/skip/refresh decision", "actual dependency/version evidence", "recollection cannot replace required evidence",
+            "persist reusable guidance in the discovered technical owner and necessary discovery link before claiming readiness",
+            "within verified write bounds", "Standalone entry verifies those bounds itself",
+            "stop affected design", "impact, allowed bounds and outstanding validation", "do not defer automatically")
+    source_contract = section(texts["tiny"], '## Write the what and how')
+    require("research-tiny-traceability", source_contract,
+            "Distinguish documented recommendations, repository-derived decisions and assumptions",
+            "Trace evidence to the implementation constraint and check", "assumptions defined validation")
+    research_pos = texts["tiny"].find('## Resolve the approach from evidence')
+    approach_pos = texts["tiny"].find('## Write the what and how')
     if research_pos < 0 or approach_pos < 0 or research_pos > approach_pos:
         errors.append("research-order: TinySpec research must precede compact approach production")
     h_pre = section(texts["helper"], "## Preflight")
@@ -693,15 +698,16 @@ def check_contracts(texts):
     reject("research-failure", failure, "Use model recollection when required research is unavailable")
     # Unified-memory obligations belong at actual entry boundaries, not a footer.
     entries = (("planner", "## Discovery and capability boundary", "unified-memory-planner"),
-               ("tiny", "## Inputs and preflight", "unified-memory-tiny"),
+               ("tiny", '## Establish the source to write', "unified-memory-tiny"),
                ("tasks", '## Draft outcomes from the source', "unified-memory-tasks"),
                ("helper", "## Preflight", "unified-memory-helper"))
     for key, heading, label in entries:
         body = section(texts[key], heading)
-        if key == "tasks":
+        if key in ("tasks", "tiny"):
             require(label, body, "Memory Handling", "verified unified index", "nonblocking",
                     "explicit owner guidance and gotchas", "task-local REQUIRED check",
-                    "worker/reviewer briefs", "retrieval and authority rules")
+                    "worker/reviewer briefs")
+            require(label, body, "retrieval and authority rules" if key == "tasks" else "retrieval and write safeguards")
         else:
             require(label, body, "Memory Handling", "unified index", "nonblocking",
                     "alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs",
@@ -847,15 +853,26 @@ RISK_CARRIERS = (
     ("risk-final-handoff", "planner", "## Handoff, not execution",
      ("risk rationale", "current applicability", "consumers\nuse applicable evidence", "permanent production tests",
       "retain proof\nthrough all consumers/validation", "routine cleanup does not become a separate task")),
-    ("risk-tiny", "tiny", "## Compact source contract",
-     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "verify it is readable or stop with a missing-install report",
-      "direct/standalone", "justify proof selection/omission", "permanent actual-helper\ntests",
-      "real-system validation", "genuine consequential unknown", "informational findings\nand tested limits",
-      "shared risk contract owns proof scope", "task generation decides", "not a task chain")),
-    ("risk-tiny-return", "tiny", "## Boundary and return",
-     ("risk rationale", "genuinely necessary producer/consumer dependency", "proof\napplicability and lifetime",
-      "execution gates", "failed/unrun\nreliance blockers", "affected approval renewal", "direct entry",
-      "imply separate consumer/cleanup tasks")),
+    ('risk-tiny', 'tiny', '## Resolve the approach from evidence', (
+        '[early risk reduction](../planner/references/early-risk-reduction.md)',
+        'reason to select or omit a proof',
+        'necessary dependencies',
+        'expected findings and tested limits',
+        'production acceptance and actual execution gates',
+        'actual-helper tests',
+        'consequential unknown',
+        'applicability/lifetime and disproof/renewal rules',
+        'Task-generation decides proof placement',
+        'not a task chain',
+        'does not authorize execution',
+        'references are readable',
+        'direct/standalone entry',
+    )),
+    ('risk-tiny-return', 'tiny', '## Return for review and separate tasks', (
+        'research and risk results above',
+        'limits, permission gaps and affected approval renewals',
+        'verification needs and unresolved blockers',
+    )),
     ("risk-helper-preflight", "helper", "## Preflight",
      ("[early risk reduction](../planner/references/early-risk-reduction.md)", "verify it is readable or stop with a missing-install report.",
       "Standalone entry applies", "Planning schedules proofs", "separate authority")),
@@ -991,7 +1008,14 @@ AUTHORITY_CARRIERS = (
     ("quality-discovery", "planner", "## Discovery and capability boundary", ("for specification creation only, including TinySpec", "Use the SDD quality guidance to prepare source-producer briefs", "not downstream requirements", "complete relevant behavior, approach, constraints and observable", "unresolved material gaps return through existing gates")),
     ("quality-tiny-stage", "planner", "item:1. **Source creation", ("Apply the shared stage rules", "SDD quality guidance for specification creation only")),
     ("quality-spec-stage", "planner", "stage:spec_create", ("SDD reference for specification creation only", "Apply the shared stage rules", "complete\n   relevant behavior, approach, constraints and observable acceptance")),
-    ("quality-tiny-producer", "tiny", "## Compact source contract", ("Read and apply the [SDD quality guidance]", "for specification creation only, including TinySpec", "missing guidance stops", "Retain complete relevant behavior, approach, constraints", "observable acceptance in this source", "gaps return through existing gates", "governing instructions/contracts, memory and permission/safety", "separate tasks remain mandatory")),
+    ('quality-tiny-producer', 'tiny', '## Write the what and how', (
+        'At source creation, read and apply the',
+        '[SDD quality guidance]',
+        'if unreadable, stop',
+        'complete relevant behavior, approach, constraints and observable acceptance in this source',
+        'Later tasks consume this source, not SDD as requirements input',
+        'governing instructions, memory and actual permission/safety boundaries still apply',
+    )),
     ("truth-shared", "planner", "## Selected production and stage handoffs", ("TinySpec/specification is requirements truth", "approved plan is derived\nsequencing only", "No SDD forwarding/rereading as direct requirements input downstream", "governing instructions/contracts, memory and permission/safety still apply")),
     ("truth-plan", "planner", "stage:plan_create", ("Apply the shared stage rules and source/task authority",)),
     ("truth-helper", "helper", "## Planner Standard adapter contract", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "Governing instructions/contracts, memory and permission/safety still apply")),
@@ -1023,8 +1047,11 @@ AUTHORED_COMMAND_CARRIERS = (
         'never compile prose into shell',
         'leave absent optional checks absent',
     )),
-    ("authored-command-tiny", "tiny", "## Intended executor before decomposition", (
-        "deterministic required command", "existing executable check\nfield once", "semantic criteria as prose", "optional absent checks absent",
+    ('authored-command-tiny', 'tiny', '## Return for review and separate tasks', (
+        '[task-generation direct adapter](../task-generation/SKILL.md)',
+        'Task-generation owns',
+        'executable check fields',
+        'Pass authored source checks and semantic criteria to that owner for executable handoff',
     )),
     ("authored-command-standard", "tasks_prompt", "## Task Generation Rules", (
         "authored deterministic", "existing executable fields once", "semantic criteria stay prose", "optional absent checks stay absent",

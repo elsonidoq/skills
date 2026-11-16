@@ -797,7 +797,7 @@ class ParsimonyTests(unittest.TestCase):
             ("planner", "## Before selection"),
             ("brainstorming", "## Decision Rules"),
             ("planning-brainstorming", "## Judge readiness"),
-            ("tiny-spec", "## Compact source contract"),
+            ("tiny-spec", '## Write the what and how'),
             ("delegating-architectural-planning", "## Preflight"),
             ("delegating-architectural-planning", "## Planner Standard adapter contract"),
             ("task-generation", "## Give each task sufficient proof"),
@@ -1283,7 +1283,7 @@ class InstructionTests(unittest.TestCase):
         for key, clause, diagnostic in (
             ("planner", "stable task-local REQUIRED", "batch-handoff:"),
             ("approval", "inadequate REQUIRED contracts", "batch-legacy:"),
-            ("tiny", "stable task-local REQUIRED", "batch-source:"),
+            ("tiny", "task-local REQUIRED checks and worker/reviewer", "batch-source:"),
             ("helper", "applicable guidelines", "batch-helper:"),
             ("brainstorm", "does not select runtime bindings", "batch-brainstorm:"),
         ):
@@ -1327,7 +1327,7 @@ class DependencyResearchTests(unittest.TestCase):
         # Remove the actual obligation inside its carrier, not a summary keyword.
         cases = [
             ("planner", "## Discovery and capability boundary", "[dependency research contract](references/dependency-research.md)", "research-planner-link"),
-            ("tiny", "## Dependency evidence before approach decisions", "[dependency research contract](../planner/references/dependency-research.md)", "research-tiny"),
+            ("tiny", '## Resolve the approach from evidence', "[dependency research contract](../planner/references/dependency-research.md)", "research-tiny"),
             ("helper", "## Preflight", "[dependency research contract](../planner/references/dependency-research.md)", "research-helper"),
             ("planner", "## Before selection:", "no dependency docs,\nsource, plan or decisions may be persisted", "research-preselection"),
             ("planner", "### TinySpec path", "before consequential approach decisions", "research-tiny-handoff"),
@@ -1335,7 +1335,7 @@ class DependencyResearchTests(unittest.TestCase):
             ("planner", "## Selected production and stage handoffs", "Supply the shared research contract before consequential source/plan", "research-review"),
             ("planner", "plan_create", "For helper invocation or the direct Standard pass", "research-plan"),
             ("planner", "plan_create", "with explicit bounded permission\n   in addition to detected SpecKit artifacts", "research-plan"),
-            ("tiny", "## Dependency evidence before approach decisions", "Direct/standalone entry verifies equivalent TinySpec selection/preparation authority", "research-tiny"),
+            ("tiny", '## Resolve the approach from evidence', "Standalone entry verifies those bounds itself", "research-tiny"),
             ("helper", "## Preflight", "Standalone entry verifies equivalent Standard planning/preparation authority", "research-helper"),
             ("helper", "## Planner Boundary", "only explicit bounded\npermission permits canonical research-document and necessary discovery-link writes", "research-boundary"),
             ("helper", "## Planner Boundary", "No arbitrary documentation edits or product code writes", "research-boundary"),
@@ -1357,7 +1357,7 @@ class DependencyResearchTests(unittest.TestCase):
             ("research", "## Obtain sufficient evidence", "verify actually usable, permitted", "research-evidence"),
             ("research", "## Persist within verified authority", "repository technical owner and its discoverability index", "research-persistence"),
             ("research", "## Persist within verified authority", "Re-read each target immediately before", "research-persistence"),
-            ("tiny", "## Compact source contract", "Trace source recommendation/local evidence → compact implementation\n  constraint → observable acceptance/check", "research-tiny-traceability"),
+            ("tiny", '## Write the what and how', "Trace evidence to the implementation constraint and check", "research-tiny-traceability"),
             ("helper", "## Planner Boundary", "supporting source spans → implementation constraints → observable checks", "research-boundary"),
             ("helper", "## Preflight", "Standalone entry cannot bypass required research", "research-helper"),
             ("helper", "## Planner Standard adapter contract", "absence is not implied authority", "research-helper-adapter"),
@@ -1374,7 +1374,7 @@ class DependencyResearchTests(unittest.TestCase):
 
     def test_whole_research_carriers_cannot_be_replaced_by_summary(self):
         for key, heading, label in (
-            ("tiny", "## Dependency evidence before approach decisions", "research-tiny"),
+            ("tiny", '## Resolve the approach from evidence', "research-tiny"),
             ("helper", "## Preflight", "research-helper"),
             ("research", "## Classify and translate", "research-traceability"),
             ("research", "## Safe failure and return", "research-failure"),
@@ -1422,7 +1422,7 @@ class DependencyResearchTests(unittest.TestCase):
 
     def test_tiny_research_moved_after_approach_is_rejected(self):
         changed = dict(self.texts)
-        body = checker.section(changed["tiny"], "## Dependency evidence before approach decisions")
+        body = checker.section(changed["tiny"], '## Resolve the approach from evidence')
         changed["tiny"] = changed["tiny"].replace(body, "", 1) + "\n" + body
         self.assert_diagnostic(changed, "research-order")
 
@@ -1472,7 +1472,7 @@ class DependencyResearchTests(unittest.TestCase):
         for key, heading, expected in (
             ("planner", "### TinySpec path", "before consequential approach decisions"),
             ("planner", "plan_create", "For helper invocation or the direct Standard pass"),
-            ("tiny", "## Dependency evidence before approach decisions", "Direct/standalone entry verifies equivalent"),
+            ("tiny", '## Resolve the approach from evidence', "Standalone entry verifies those bounds itself"),
             ("helper", "## Preflight", "Standalone entry verifies equivalent"),
         ):
             with self.subTest(simulated_route=key, entry=heading):
@@ -1532,17 +1532,17 @@ class UnifiedMemoryPlanningTests(unittest.TestCase):
     def test_each_planning_carrier_requires_actual_propagation(self):
         texts = checker.load_texts()
         for key, heading, label in (("planner", "## Discovery and capability boundary", "unified-memory-planner"),
-                                    ("tiny", "## Inputs and preflight", "unified-memory-tiny"),
+                                    ("tiny", '## Establish the source to write', "unified-memory-tiny"),
                                     ("tasks", '## Draft outcomes from the source', "unified-memory-tasks"),
                                     ("helper", "## Preflight", "unified-memory-helper")):
             clauses = (("explicit owner guidance and gotchas", "task-local REQUIRED check", "worker/reviewer briefs")
-                       if key == "tasks" else
+                       if key in ("tasks", "tiny") else
                        ("alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs"))
             for clause in clauses:
                 with self.subTest(carrier=key, removed=clause):
                     changed = dict(texts)
                     body = checker.section(changed[key], heading)
-                    changed[key] = changed[key].replace(body, body.replace(clause, "REMOVED"), 1)
+                    changed[key] = changed[key].replace(body, replace_clause(body, clause, "REMOVED"), 1)
                     self.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
 
     def test_custom_installed_skill_links_resolve_to_memory_handling(self):

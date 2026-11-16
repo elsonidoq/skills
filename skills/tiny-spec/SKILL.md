@@ -5,155 +5,119 @@ description: Use when an owner-selected lightweight planning path needs a compac
 
 # TinySpec
 
-Produce the compact what/how source for planner's selected lightweight path. Do not
-choose depth, generate tasks, approve artifacts, or implement work.
+Write the compact source that explains what must change and how the bounded solution will work.
+It is requirements truth for later tasks, not a task list. Return it to planner for independent
+specification review before task generation. This skill does not choose planning depth, approve
+artifacts or implement work; TinySpec needs no SpecKit installation.
 
-## Inputs and preflight
+## Establish the source to write
 
-Require explicit TinySpec selection/preparation authorization, inspected request or
-selected source bounds, recorded decisions/rationale/deferrals, verified constraints,
-source citations, and an observed or owner-selected destination. Read repository
-instructions, governing principles and applicable memory via discoverable
-`memory-handling` in suite-adopting projects. A missing required input/capability
-stops with a report; no invented path, model binding or project policy. Preserve dirty
-and unrelated content; inspect existing source immediately before changing it.
+Use the owner's established format where it is complete. Read repository instructions and
+governing principles alongside the inspected request or selected source bounds, recorded
+decisions/rationale/deferrals, verified constraints and source citations.
+Confirm explicit TinySpec selection/preparation authorization and an observed or owner-selected
+destination, including on standalone entry. Missing required input or capability stops affected
+production with the exact gap; do not invent a destination, binding or project policy. Inspect an
+existing source immediately before editing and preserve dirty, concurrent and unrelated content.
 
-Use [Memory Handling](../memory-handling/SKILL.md) during initial understanding,
-including standalone/direct entry: retrieve relevant guidance from the verified unified index
-without auto-initialization; missing optional storage or STATE is nonblocking. Carry relevant
-explicit owner guidance, alongside gotchas, through source observables → dependencies or
-gates → task-local REQUIRED checks → worker/reviewer briefs; no default history intake,
-execution-time feedback routing, routine persistence, reflection, inferred lessons, or STATE
-maintenance. Preserve its explicit-feedback authority and path/symlink, sensitive-data, and
-dirty/concurrent safeguards. Apply [save-adr](../save-adr/SKILL.md)'s consult/propagate contract. On direct entry and fresh/resumed
-production, re-establish relevant accepted authority and current supersession before carrying
-exact applicable constraints and source links into source acceptance: each relevant source
-observable must yield its task dependency or gate, task-local REQUIRED check and worker brief,
-not merely a link. Preserve source/owner authority; a source/task conflict or uncertain current
-supersession stops only the affected acceptance mapping. No default history intake; explicit
-relevant retrieval is index-first where useful and retains uncertainty on no match. Required
-gotcha-memory gates remain separate.
+Retrieve applicable explicit owner guidance and gotchas from the verified unified index through
+[Memory Handling](../memory-handling/SKILL.md), including direct entry. Missing optional memory
+or STATE is nonblocking; use that owner's retrieval and write safeguards, not a new store.
+For fresh or resumed production, consult [save-adr](../save-adr/SKILL.md#consult-and-propagate)
+for current accepted outcomes, explicit mechanism constraints and source links. Translate these
+into source observables and acceptance, not just citations. Preserve their dependency or gate
+and check needs for task-generation to carry into task-local REQUIRED checks and worker/reviewer
+briefs. A source/task conflict or uncertain supersession stops only the affected mapping;
+required gotcha-memory gates remain distinct.
 
-Carry the associated qualified issue URL, when supplied after understanding, into the source
-and return it for task generation and coordinator handoff. An absent issue is not an intake gate;
-tracker operations use [track-open-issue](../track-open-issue/SKILL.md) and actual authority.
+Link existing authoritative sources instead of copying transcripts. If the request exists only
+in conversation, retain enough context for a fresh executor. An Epic or intermediate research/design
+file chain is not required. Carry any supplied qualified issue URL in the source and return it
+for tasks and coordinator handoff; absence is not a gate. Tracker operations, if needed, require
+[track-open-issue](../track-open-issue/SKILL.md)'s authority and operation result.
 
-Use the owner's established source format where it is complete. Link authoritative
-existing sources rather than copying long transcripts. If the request exists only
-in conversation, preserve enough context for a fresh executor. No intermediary Epic,
-research/design file chain, or redundant requirement capture is required.
+## Resolve the approach from evidence
 
-## Dependency evidence before approach decisions
+Before consequential dependency choices, apply the
+[dependency research contract](../planner/references/dependency-research.md). Consume planner's
+applicable findings and usable permitted capability evidence, or verify them locally. Use the
+contract's reuse/skip/refresh decision, actual dependency/version evidence and supporting spans
+to derive implementation constraints and observable checks; recollection cannot replace required
+evidence. During authorized production, persist reusable guidance in the discovered technical
+owner and necessary discovery link before claiming readiness, within verified write bounds.
+Standalone entry verifies those bounds itself; invocation is not permission.
 
-Read and apply the shared [dependency research contract](../planner/references/dependency-research.md)
-before consequential dependency approach decisions. Verify the reference is readable;
-missing packaging stops with a missing-install report. Start with repository guidance
-and actual dependency/version evidence; reuse adequate applicable guidance or record a
-trivial skip reason. Refresh only version-sensitive/stale/conflicting/missing portions.
-Consume planner's research findings and usable permitted capability evidence, or verify
-them locally when needed; required insufficient evidence cannot default to recollection.
+If required evidence, version, capability or write authority is missing, stop affected design
+and return the gap and affected decision to planner (the owner on direct entry). Only an explicit
+bounded owner deferral can permit continuation, with impact, allowed bounds and outstanding
+validation; do not defer automatically or invent evidence.
 
-Direct/standalone entry verifies equivalent TinySpec selection/preparation authority,
-source destination and bounded canonical technical-owner/discovery-link writes; do not
-assume planner invocation or permission. Persist reusable guidance in the discovered
-repository owner/index during authorized production before readiness, re-reading targets
-and preserving unrelated content. This is not a mandatory intermediate research/design
-file chain or a new source approval. Missing required evidence/version/capability/write
-authority stops affected design: return exact gaps, affected decisions and evidence
-needed to planner (or the owner on direct entry) for explicit bounded deferral with
-impact, allowed bounds and outstanding validation, never automatic deferral.
+Use [early risk reduction](../planner/references/early-risk-reduction.md) to select sufficient
+proof before costly reliance. Record the reason to select or omit a proof, necessary dependencies,
+expected findings and tested limits, production acceptance and actual execution gates. Known
+bounded behavior can use actual-helper tests; a consequential unknown may need an experiment.
+Consume the contract's applicability/lifetime and disproof/renewal rules for source/task review;
+failed or unrun proof cannot release assumed reliance. Task-generation decides proof placement
+within delivery or a necessary prerequisite. This source states proof needs, not a task chain,
+and scheduling proof does not authorize execution.
 
-## Intended executor before decomposition
+Verify both references are readable before use; missing packaging stops affected work with a
+missing-install report. These evidence rules apply on direct/standalone entry as well.
 
-Carry the current project's selected executor JSON path from the planner into the direct task-producer
-brief; do not replace it with a source-producer model, remembered default or repository-specific
-path. The task producer itself reads that JSON before decomposition under
-[task-generation](../task-generation/SKILL.md); this source does not select or copy runtime bindings.
-If the selected path or worker assignment cannot be resolved, stop only the affected task production
-for the focused owner correction described there.
+## Write the what and how
 
-The executable task handoff follows [task-generation](../task-generation/SKILL.md): IDs, work
-descriptions and optional dependencies, not mandatory execution-intent, compatibility-assessment
-or provenance metadata. For a deterministic required command, use its existing executable check
-field once; retain semantic criteria as prose and leave optional absent checks absent. Executor
-settings belong to the selected runtime configuration. Existing optional context may remain.
+Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md) to approach and
+acceptance. At source creation, read and apply the
+[SDD quality guidance](../../docs/best_practices_spec_driven_development.md); if unreadable, stop
+with a missing-install report. Its result must be complete relevant behavior, approach,
+constraints and observable acceptance in this source, not merely a guidance link. Later tasks
+consume this source, not SDD as requirements input; governing instructions, memory and actual
+permission/safety boundaries still apply.
 
-## Compact source contract
+Include only relevant detail, but cover:
 
-Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md). Apply to approach and acceptance, including standalone entry.
+- **Outcome and scope:** beneficiary, required behavior, included surfaces, exclusions and
+  separately scheduled work, with source provenance.
+- **Decisions and constraints:** settled answers/rationale, integration/API/data constraints,
+  compatibility and security. Distinguish documented recommendations, repository-derived
+  decisions and assumptions. Cite supporting spans and canonical reusable guidance; give
+  assumptions defined validation rather than treating them as facts.
+- **Approach:** affected modules/interfaces, implementation shape, producer/consumer sequencing,
+  failure handling and applicable migration/rollback. Make material choices explicit.
+- **Acceptance:** independently observable criteria for relevant normal/error/edge behavior,
+  smallest sufficient checks, pass conditions and expected evidence. Include integration and
+  documentation obligations, unavailable external checks and manual/permission gates. Trace
+  evidence to the implementation constraint and check. Criterion IDs are useful, not mandatory.
+- **Risks and deferrals:** unresolved uncertainty, explicit owner deferrals and verified
+  non-obvious execution context.
 
-Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
-verify it is readable or stop with a missing-install report, including direct/standalone
-entry. In approach/acceptance, justify proof selection/omission: use permanent actual-helper
-tests for known bounded behavior, inspection for easy names/types, and real-system validation
-with actual gates for non-isolatable risks. For a genuine consequential unknown, state the
-question, why inexpensive evidence matters before reliance, required informational findings
-and tested limits, and applicable execution gates. The shared risk contract owns proof scope, execution evidence and lifetime; task generation
-decides whether a prerequisite is a separate outcome or a verified step inside delivery
-(see the [task-generation contract](../task-generation/SKILL.md)). Planning schedules proofs,
-not execution without separate authority; this source describes needs, not a task chain.
+Resolve mechanical gaps by bounded inspection. Return material choices with alternatives and a
+recommendation to planner, not speculative defaults. Resolve scope-affecting UNVERIFIED claims
+or retain explicit owner deferral. Excluded work stays excluded.
 
-Read and apply the [SDD quality guidance](../../docs/best_practices_spec_driven_development.md)
-for specification creation only, including TinySpec; missing guidance stops with a
-missing-install report. Retain complete relevant behavior, approach, constraints and
-observable acceptance in this source, not merely in a guidance link. Unresolved material
-gaps return through existing gates. Downstream plans/tasks use this source as requirements
-truth, not the SDD reference; governing instructions/contracts, memory and permission/safety
-still apply and separate tasks remain mandatory.
+## Return for review and separate tasks
 
-Include these semantics, using only relevant detail rather than empty ceremony:
+Return the source path/bounds and content evidence, source links, decisions/deferrals, constraints,
+verification needs and unresolved blockers. Include the research and risk results above: reusable
+owner/discovery links, version/provenance, rationale, supporting evidence-to-check mappings, limits,
+permission gaps and affected approval renewals. Report source production, not implementation
+readiness or feature acceptance.
 
-- **Context/outcome:** beneficiary, desired behavior and source provenance.
-- **Scope:** included surfaces, exclusions and separately scheduled work.
-- **Decisions/constraints:** settled answers and rationale, verified integration/API/data
-  constraints, compatibility/security rules and evidence citations. Classify documented
-  recommendations, repository-derived decisions/rationale and assumptions; cite supporting
-  spans and link canonical reusable guidance rather than duplicating the research note.
-- **Approach:** implementation shape, affected modules/interfaces, producer/consumer
-  sequencing, failure handling, migration/rollback when applicable. Keep bounded detail
-  sufficient for execution; do not conceal unresolved material choices behind a default.
-- **Acceptance/validation:** independently observable criteria, relevant normal/error/edge
-  behavior, test/check expectations, integration/documentation obligations and unavailable
-  external checks. Trace source recommendation/local evidence → compact implementation
-  constraint → observable acceptance/check; give assumptions defined validation.
-  Criterion identifiers are useful for task references, not mandatory.
-- **Risks/dependencies/notes:** remaining uncertainty, explicit owner deferrals and any
-  verified non-obvious execution context.
+Planner obtains a fresh independent read-only specification review under its
+[shared review contract](../planner/SKILL.md#shared-specification-review-contract), consumes the
+findings and necessary source-producer corrections, then invokes the
+[task-generation direct adapter](../task-generation/SKILL.md). Unresolved material intent gaps
+stop task generation. On standalone entry, return to planner for this review rather than skipping
+it or inventing a binding. A separate task file is mandatory; do not embed an implementation
+checklist in the source. Tasks reference its criteria instead of copying the source.
 
-Resolve mechanically answerable gaps through bounded inspection. Return unresolved
-material questions to planner with alternatives/recommendation; never decide them
-speculatively. Resolve scope-affecting UNVERIFIED claims or retain explicit owner
-deferral. Do not reintroduce excluded work.
+Carry the planner's selected executor JSON path unchanged to the task producer. Task-generation
+owns reading it, missing-path/assignment correction, task decomposition and executable check
+fields; this source does not select or copy runtime bindings. Pass authored source checks and
+semantic criteria to that owner for executable handoff, without creating a second task schema.
 
-## Boundary and return
-
-Return the risk rationale, any genuinely necessary producer/consumer dependency, proof
-applicability and lifetime, required production acceptance, execution gates and failed/unrun
-reliance blockers for source/task review, with affected approval renewal. Do not assume
-planner applied the shared contract on direct entry or imply separate consumer/cleanup tasks.
-
-Do not embed an implementation task checklist. A separate task file is mandatory:
-planner first obtains a fresh independent read-only specification review focused on user-intent
-fidelity under its [shared review contract](../planner/SKILL.md#shared-specification-review-contract),
-then invokes `task-generation`'s direct adapter after necessary source-producer corrections.
-Unresolved material intent gaps stop task generation. This applies on direct/standalone entry
-as well: return to planner for review, rather than skipping review or inventing a binding. Acceptance
-criteria describe behavior; tasks describe work units and their evidence. Tasks link
-to this source rather than duplicating it wholesale. No SpecKit prerequisite exists
-for TinySpec; installation alone does not change its depth.
-
-Return the source path/bounds, content evidence, source links, decisions/deferrals,
-constraints and unresolved blockers to planner. Include dependency/version/provenance,
-reuse/skip or refresh rationale, canonical owner/discovery links, supporting spans →
-constraints → checks, capability/permission gaps and explicit deferral bounds.
-Return source verification needs for stable task-local REQUIRED items in task generation,
-with pass criteria, smallest sufficient checks, expected evidence and manual/permission gates.
-Preserve the selected executor settings separately from task work; no per-task routing requirements.
-Planner coordinates independent specification review, evaluates findings and owns parent
-task review and one combined approval, including an executive brief before `ask_user`. A standalone
-TinySpec approval before task production is not required. Report source production,
-not readiness for implementation or feature acceptance.
-
-## Mandatory task checkpoint
-
-Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). An authorized TinySpec source is a retained bounded deliverable separate from task generation and checkpoints before combined artifact approval; do not infer implementation or guideline authority.
+Planner owns task review and one combined source/task approval with its executive brief. No
+separate pre-task TinySpec source approval is required. Checkpoint the authorized retained source
+separately from task production, before combined approval, under the shared
+[task-commit contract](../memory-handling/references/task-commit-contract.md); this grants neither
+implementation nor guideline-write authority.
