@@ -139,6 +139,17 @@ class ComposedAcceptanceTests(unittest.TestCase):
 
 class TaskGenerationContractTests(unittest.TestCase):
 
+    def test_absent_owned_paths_hands_edit_time_ownership_to_execution_owner(self):
+        """Instruction routing only; this does not prove runtime file protection."""
+        require_clauses(self, '## Encode the tasks for their consumer', (
+            'When `owned_paths` is absent, hand off edit-time ownership to the runner',
+            '../coordinate-implementation/SKILL.md#execute-and-integrate',
+            'omitting it does not authorize adoption of dirty files or arbitrary staging',
+        ))
+        owner = Path(__file__).parents[2] / 'coordinate-implementation' / 'SKILL.md'
+        self.assertTrue(owner.is_file())
+        self.assertIn('## Execute and Integrate', owner.read_text())
+
     def test_guidance_changes_dependency_check_and_brief_in_both_adapters(self):
         require_clauses(self, '## Draft outcomes from the source', (
             'For both routes, including direct and fresh/resumed entry',
@@ -173,11 +184,16 @@ class TaskGenerationContractTests(unittest.TestCase):
         ))
         require_clauses(self, '## Return a checked task artifact', ('authorization neutrality need judgment',))
         planner = (Path(__file__).parents[2] / 'planner' / 'SKILL.md').read_text()
-        for start, end in (('**Review — fresh independent reviewer with planner-parent binding', '**Combined approval'),
-                           ('**`overall_review`', '\n## ')):
+        for start, end in (('### TinySpec', '### Standard'),
+                           ('### Standard', '### Shared specification-review contract')):
+            # Both routes invoke the shared review rather than duplicate its policy.
             stage = planner.split(start, 1)[1].split(end, 1)[0]
-            self.assertIn('../task-generation/SKILL.md#authorization-neutral-tasks', stage)
-            self.assertIn('temporary phase/approval status belongs in the approval record', stage)
+            self.assertIn('shared final task-review contract', stage)
+        review = planner.split('### Shared final task-review contract', 1)[1].split(
+            '### Shared simplicity-review contract', 1)[0]
+        self.assertIn("task-generation's independently executable outcome and authorization-neutral contracts",
+                      ' '.join(review.split()))
+
 
     def test_adapter_legacy_and_checkpoint_boundaries_remain(self):
         require_clauses(self, '## Draft outcomes from the source', (
@@ -244,12 +260,12 @@ class TaskGenerationContractTests(unittest.TestCase):
             'Established cross-system wiring may also stay one task',
         ))
         planner = (Path(__file__).parents[2] / "planner" / "SKILL.md").read_text()
-        review = planner.split("## Proportionate validation", 1)[1].split(
-            "## Before selection", 1)[0]
-        self.assertIn("../task-generation/SKILL.md#executor-sized-outcomes", review)
-        self.assertIn("milestones that leave several independently testable interfaces unfinished together",
-                      " ".join(review.split()))
-        self.assertIn("configured executor/effort", review)
+        self.assertIn("../task-generation/SKILL.md#executor-sized-outcomes", planner)
+        self.assertIn("Consume independently finishable outcomes sized for that executor, not the planner profile",
+                      ' '.join(planner.split()))
+        review = planner.split('### Shared final task-review contract', 1)[1].split(
+            '### Shared simplicity-review contract', 1)[0]
+        self.assertIn("task-generation's independently executable outcome", review)
 
     def test_ui_control_supporting_ownership_example(self):
         """Static authoring contrasts, not runtime closure or type-check validation."""

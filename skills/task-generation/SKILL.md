@@ -147,7 +147,9 @@ old tasks merely to remove metadata. Markdown may remain the human presentation.
 
 Dedicated paths, interfaces, acceptance and shared-context fields are optional; descriptions
 can carry them. Optional `owned_paths` restricts mutation when supplied; omitting it does not
-authorize adoption of dirty files or arbitrary staging. Existing `required` check mappings remain
+authorize adoption of dirty files or arbitrary staging. When `owned_paths` is absent, hand off
+edit-time ownership to the runner under [Coordinate Implementation's execution contract](../coordinate-implementation/SKILL.md#execute-and-integrate).
+Existing `required` check mappings remain
 consumed when supplied. Put an authored deterministic required command once in an existing
 `checks`, `check`, or `required[].check` field. Keep semantic criteria as prose; never compile
 prose into shell, and leave absent optional checks absent. Sources may supply context without
