@@ -40,6 +40,39 @@ def replace_clause(text, clause, replacement="REMOVED"):
     return changed
 
 
+def assert_planner_mutations(test, labels=None):
+    """Remove operational clauses; an inert summary must not rescue the obligation."""
+    texts = checker.load_texts()
+    test.assertEqual(checker.check_contracts(texts), [])
+    selected = [entry for entry in checker.PLANNER_CARRIERS if labels is None or entry[0] in labels]
+    if labels is not None:
+        test.assertEqual({entry[0] for entry in selected}, set(labels))
+    for label, selector, clauses in selected:
+        body = checker.operational_carrier(texts["planner"], selector)
+        test.assertTrue(body, selector)
+        for clause in clauses:
+            with test.subTest(operation=label, removed=clause):
+                changed = dict(texts)
+                changed["planner"] = texts["planner"].replace(body, replace_clause(body, clause), 1)
+                changed["planner"] += "\n## Inert summary\n" + clause
+                test.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
+
+
+class PlannerCoordinatorContractTests(unittest.TestCase):
+    """Coordinator call boundaries and output consumption, not live model obedience."""
+
+    def test_all_operations_reject_missing_obligations_even_with_summary(self):
+        assert_planner_mutations(self)
+
+    def test_whole_operation_removal_is_not_rescued_by_summary(self):
+        text = checker.load_texts()["planner"]
+        for label, selector, _ in checker.PLANNER_CARRIERS:
+            with self.subTest(operation=label):
+                body = checker.operational_carrier(text, selector)
+                changed = text.replace(body, "REMOVED", 1) + "\n## Inert summary\n" + body.replace(selector, "Removed operation", 1)
+                self.assertTrue(any(e.startswith(label + ":") for e in checker.check_planner(changed)))
+
+
 class SkillAssessmentWalkthroughTests(unittest.TestCase):
     """Bounded reader and authored reasoning walkthrough, not live tracker or model proof."""
 
@@ -101,13 +134,7 @@ class SkillAssessmentWalkthroughTests(unittest.TestCase):
 
 class IssueAssociationWalkthroughTests(unittest.TestCase):
     def test_understanding_precedes_optional_association_and_issue_carriers(self):
-        planner = (ROOT / 'skills/planner/SKILL.md').read_text()
-        section = planner.split('## Before selection: understand → brainstorm → assess → ask', 1)[1]
-        self.assertIn('Direct intake needs no issue', section)
-        self.assertIn('After understanding and any\nbrainstorming', section)
-        self.assertIn('qualify a supplied issue against the declared target and reuse it', section)
-        self.assertIn('Never create\na duplicate or local fallback', section)
-        self.assertIn('name the affected tracker operation and correction', section)
+        assert_planner_mutations(self, ('issue-association',))
         for path in ('skills/tiny-spec/SKILL.md', 'skills/task-generation/SKILL.md',
                      '.pi/prompts/speckit.specify.md', '.pi/prompts/speckit.plan.md',
                      '.pi/prompts/speckit.tasks.md'):
@@ -141,24 +168,7 @@ class PlanningCommitAuthorityTests(unittest.TestCase):
     """Static regression guard, not proof of runtime model compliance."""
 
     def test_planning_commit_authority_is_explicit_and_required(self):
-        texts = checker.load_texts()
-        self.assertEqual(checker.check_contracts(texts), [])
-        clauses = (
-            "writing and committing the selected path's bounded planning artifacts",
-            "Do not ask for separate\nplanning-commit authorization",
-            "or defer these checkpoints until artifact approval",
-            "Artifact approvals govern content and downstream progression",
-            "Pass this commit authority unchanged to\nplanning delegates",
-            "Genuine Git, policy, verification or ownership conflicts stop",
-        )
-        for clause in clauses:
-            with self.subTest(removed=clause):
-                changed = dict(texts)
-                changed["planner"] = replace_clause(changed["planner"], clause)
-                self.assertTrue(any(
-                    error.startswith("planning-commit-authority:")
-                    for error in checker.check_contracts(changed)
-                ))
+        assert_planner_mutations(self, ('planning-commit-authority', 'approval-handoff'))
 
 
 class EarlyRiskReductionTests(unittest.TestCase):
@@ -794,7 +804,7 @@ class ParsimonyTests(unittest.TestCase):
                        "paginated read", "target drift", "existing gates", "not application startup"):
             self.assertIn(clause, text)
         for path, heading in (
-            ("planner", "## Before selection"),
+            ("planner", "## Understand the work and choose depth"),
             ("brainstorming", "## Decision Rules"),
             ("planning-brainstorming", "## Judge readiness"),
             ("tiny-spec", '## Write the what and how'),
@@ -865,14 +875,7 @@ class ProportionateValidationTests(unittest.TestCase):
                             for e in checker.check_contracts(texts)))
 
     def test_selection_wiring_gets_focused_check_not_automatic_matrix(self):
-        for clause in (
-            "lowest validation layer", "smallest sufficient check",
-            "selected result or argument reaches the intended consumer",
-            "Do not automatically add\nexhaustive matrices, fault injection, new test infrastructure or broad suites",
-            "necessary integration layer",
-        ):
-            with self.subTest(clause=clause):
-                self.assert_clause_required("planner", clause, "validation-focused")
+        assert_planner_mutations(self, ('job-first', 'executor-planner-handoff'))
 
     def test_batch_profile_feedback_and_diagnosed_repair_carriers(self):
         for key, clause, diagnostic in (
@@ -884,11 +887,10 @@ class ProportionateValidationTests(unittest.TestCase):
             self.assert_clause_required(key, clause, diagnostic)
 
     def test_schema_security_durability_retain_necessary_checks(self):
-        self.assert_clause_required("planner", "migration, authorization or persistence", "validation-risk")
+        assert_planner_mutations(self, ('job-first', 'executor-planner-handoff'))
 
     def test_optional_checks_cannot_silently_block(self):
         for key, clause, diagnostic in (
-            ("planner", "Optional checks are not acceptance blockers", "validation-authority"),
             ("tasks", "optional task context", "validation-tasks"),
             ("coordinator", "Project check commands are optional", "validation-execution"),
         ):
@@ -896,9 +898,7 @@ class ProportionateValidationTests(unittest.TestCase):
                 self.assert_clause_required(key, clause, diagnostic)
 
     def test_owner_required_checks_need_authority_to_change(self):
-        self.assert_clause_required("planner",
-            "Never drop an owner-required check or approved\nsafety criterion without explicit authority",
-            "validation-authority")
+        assert_planner_mutations(self, ("job-first",))
         self.assert_clause_required("coordinator", "preserve pre-existing/unknown bytes; never adopt them", "validation-execution")
         self.assert_clause_required("tasks", "real outcome", "validation-tasks")
 
@@ -908,9 +908,7 @@ class ProportionateValidationTests(unittest.TestCase):
             self.assert_clause_required("coordinator", clause, "validation-timeout")
 
     def test_reuse_and_causal_repairs_avoid_repeated_intake(self):
-        for clause in ("Reuse valid unchanged evidence", "Avoid repeated historical intake", "actually blocks"):
-            with self.subTest(clause=clause):
-                self.assert_clause_required("planner", clause, "validation-reuse")
+        assert_planner_mutations(self, ('job-first', 'executor-planner-handoff'))
 
 
 class VerificationCarrierTests(unittest.TestCase):
@@ -974,7 +972,7 @@ class InstructionTests(unittest.TestCase):
         standard = checker.section(self.texts["planner"], "### Standard path")
         self.assertNotIn("### Standard path", tiny)
         self.assertNotIn("## Approval, resume", standard)
-        self.assertIn("immediately proceed to handoff", tiny)
+        self.assertIn("then continue to handoff", tiny)
 
     def test_preservation_ledger_maps_retired_carriers(self):
         ledger = (ROOT / "docs/plans/planner-refactor.md").read_text()
@@ -986,32 +984,8 @@ class InstructionTests(unittest.TestCase):
 
     def test_negative_mutations(self):
         mutations = [
-            ("planner", "BOTH options", "one option", "choice:"),
-            ("planner", "call `ask_user` and STOP", "continue directly", "choice:"),
-            ("planner", "no source edits", "source edits permitted", "choice:"),
-            ("planner", "Session history", "state file", "choice:"),
-            ("planner", "Either choice is valid", "Follow the recommendation", "choice:"),
-            ("planner", "positive and negative claims", "positive claims", "discovery:"),
-            ("planner", "explicit owner deferral", "default deferral", "discovery:"),
-            ("planner", "constraints **verbatim**", "constraints summarized", "handoff:"),
-            ("planner", "Create separate tasks", "Use source checklist", "tiny-flow:"),
-            ("planner", "**Review — fresh independent reviewer with planner-parent binding", "**Review — parent only", "tiny-flow:"),
-            ("planner", "Parent evaluates the actual report", "Ignore the actual report", "final-task-review:"),
-            ("planner", "template-only", "generic", "standard-preflight:"),
-            ("planner", "verify repaired output", "assume valid output", "standard-preflight:"),
-            ("planner", "Durably record that approval before `plan_create`", "approval later", "spec-review:"),
-            ("planner", "Only when no adapter is invoked", "After the adapter returns", "plan:"),
-            ("planner", "do not create the plan again", "create the plan again", "plan:"),
-            ("planner", "renewed specification approval", "existing specification approval", "plan:"),
-            ("planner", "independent review and final approval remain required", "producer approval suffices", "task-stage:"),
-            ("planner", "independent saved reviewer assignment", "implementer reviewer", "review:"),
             ("approval", "before calling `ask_user`", "after calling `ask_user`", "approval:"),
             ("approval", "Every actual task ID separately", "unstructured paragraphs", "approval:"),
-            ("planner", "brief bullet-list executive summary", "summary in tool context", "tiny-flow:"),
-            ("planner", "immediately continue to `plan_create`", "wait for another prompt", "spec-review:"),
-            ("planner", "immediately proceed to handoff", "report readiness and stop", "tiny-flow:"),
-            ("planner", "Do not end the turn merely to report approval", "End the turn after approval", "continuation:"),
-            ("planner", "automatically invoke `coordinate-implementation`", "wait for a separate execution request", "final-continuation:"),
             ("approval", "inside tasks", "separate new source", "legacy:"),
             ("tasks", "nonempty string `id`", "missing ID", "task-contract:"),
             ("brainstorm", "no more than three items", "unbounded agenda", "brainstorm:"),
@@ -1034,45 +1008,17 @@ class InstructionTests(unittest.TestCase):
                 self.assertTrue(any(e.startswith(diagnostic) for e in errors), errors)
 
     def test_job_first_contract_and_targeted_mutations(self):
-        body = checker.section(self.texts["planner"], "## Job first; no coordinator bookkeeping")
-        self.assertTrue(body)
-        self.assertLess(self.texts["planner"].index(body),
-                        self.texts["planner"].index("## Discovery and capability boundary"))
-        obligations = (
-            "no coordinator bookkeeping",
-            "Do not maintain administrative ledgers, progress records, evidence manifests",
-            "Runtime-owned operational state stays runtime-owned",
-            "Once required prerequisites are satisfied, advance the next authorized stage",
-            "Reuse applicable settled evidence and decisions",
-            "State each required fact once",
-            "No repeated record polishing, duplicate evidence",
-            "concrete invalidating evidence",
-            "Carry this rule into every stage brief",
-            "Never waive required approvals, safety checks, permissions, reviews or commits",
-            "exact blocker and smallest required resolution",
-        )
-        for removed in (*obligations, body):
-            with self.subTest(removed=removed):
-                self.assertIn(" ".join(removed.split()), " ".join(body.split()))
-                changed = dict(self.texts)
-                changed["planner"] = re.sub(r"\s+".join(re.escape(w) for w in removed.split()), "", changed["planner"], count=1)
-                self.assertTrue(any(e.startswith("job-first:")
-                                    for e in checker.check_contracts(changed)))
+        assert_planner_mutations(self, ('job-first',))
 
     def test_scoped_constraints_concision_and_unsubmitted_editing(self):
         # Regression: a 37 KB task contract must not inherit a worker read-tool bound;
         # shortening an unsubmitted draft is ordinary production, not independent review.
         cases = (
-            ("planner", "actual enforced limit at the consuming interface", "constraint-scope:"),
-            ("planner", "An agent inference is not an owner requirement", "constraint-scope:"),
-            ("planner", "interpret owner agreement within the explanation and scope actually presented", "constraint-scope:"),
             ("tasks", "do not generalize a tool limit", "task-concision:"),
             ("tasks", "State shared constraints once", "task-concision:"),
             ("tasks", "outcome-specific work and checks", "task-concision:"),
             ("approval", "Ordinary drafting is not submitted-artifact correction", "draft-editing:"),
             ("approval", "without a supervisor decision", "draft-editing:"),
-            ("planner", "producers may draft, revise, shorten and mechanically", "task-stage:"),
-            ("planner", "independent review and final approval remain required", "task-stage:"),
         )
         for key, phrase, diagnostic in cases:
             with self.subTest(phrase=phrase):
@@ -1083,27 +1029,10 @@ class InstructionTests(unittest.TestCase):
                                     for e in checker.check_contracts(changed)))
 
     def test_bulleted_brief_and_automatic_continuation_contract(self):
-        self.assertIn("Every actual task ID separately", self.texts["approval"])
-        self.assertIn("Do not end the turn merely to report approval", self.texts["planner"])
-        self.assertIn("automatically invoke `coordinate-implementation`", self.texts["planner"])
-        self.assertIn("explicitly requested planning-only", self.texts["planner"])
-        self.assertIn("immediately continue to `plan_create`", " ".join(checker.stage(self.texts["planner"], "spec_review").split()))
-        self.assertIn("immediately proceed to handoff", checker.section(self.texts["planner"], "### TinySpec path"))
+        assert_planner_mutations(self, ('approval-handoff', 'stage-dispatch'))
 
     def test_shared_invocation_cannot_be_satisfied_by_prerequisite_mentions(self):
-        mutations = [
-            ("Invoke `planning-brainstorming` in preselection mode", "Inspect the request directly", "shared-invocation:"),
-            ("readiness target “informed scope assessment.”", "readiness target task generation", "shared-invocation:"),
-            ("Apply recorded decisions through the shared mechanism inside selected bounds only.", "Apply recommendations directly.", "shared-application:"),
-            ("invoke `tiny-spec`", "write a source directly", "tiny-flow:"),
-            ("invoke `task-generation` direct adapter", "write a task checklist directly", "tiny-flow:"),
-        ]
-        for old, new, diagnostic in mutations:
-            with self.subTest(mutation=old):
-                changed = dict(self.texts)
-                self.assertIn(old, changed["planner"])
-                changed["planner"] = changed["planner"].replace(old, new, 1)
-                self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
+        assert_planner_mutations(self, ('shared-invocation', 'saved-assignments', 'tiny-flow'))
 
     def test_whole_stage_deletion_and_swap(self):
         for name in ("spec_create", "spec_review", "plan_create", "tasks_create", "overall_review"):
@@ -1118,146 +1047,25 @@ class InstructionTests(unittest.TestCase):
         self.assertTrue(any(e.startswith("standard-order:") for e in checker.check_contracts(changed)))
 
     def test_standard_spec_review_carrier_mutations_are_not_summary_satisfied(self):
-        """Static E/T002 carrier sensitivity; it is not A–D behavioral evidence."""
-        review = checker.stage(self.texts["planner"], "spec_review")
-        self.assertTrue(review)
-        mutations = (
-            ("stage deletion", "", "spec-review:"),
-            ("discovery cap restored", review.replace("no discovery cap", "at most five findings", 1), "spec-review:"),
-            ("hidden remainder", review.replace("reports the total findings and meaningful areas", "reports only five findings", 1), "spec-review:"),
-            ("missing all/grouped views", replace_clause(review, "show all findings or a grouped overview", "show only the initial batch"), "spec-review:"),
-            ("findings discarded", review.replace("Retain the complete returned findings", "Retain only five findings", 1), "spec-review:"),
-            ("stops after five", review.replace("do not stop merely because five were answered", "stop after five answers", 1), "spec-review:"),
-            ("remaining decisions bypassed", replace_clause(review, "every remaining material decision must be answered or explicitly deferred by the owner", "ignore remaining material decisions"), "spec-review:"),
-            ("writable reviewer", review.replace("read-only tool/profile", "writable tool/profile", 1), "spec-review:"),
-            ("wrong routing", review.replace("standard-spec-review", "standard-overall-review", 1), "spec-review:"),
-            ("parent repair", review.replace("parent never substantively repair", "parent may substantively repair", 1), "spec-review:"),
-            ("automatic rereview", review.replace("automatically rereview", "rerun a review every correction", 1), "spec-review:"),
-            ("approval bypass", review.replace("Durably record that approval before `plan_create`", "plan without approval", 1), "spec-review:"),
-        )
-        for name, replacement, diagnostic in mutations:
-            with self.subTest(mutation=name):
-                changed = dict(self.texts)
-                changed["planner"] = changed["planner"].replace(review, replacement, 1)
-                # An inert summary cannot satisfy an operational-stage carrier.
-                changed["planner"] += "\n## Summary\n" + review
-                self.assertTrue(any(error.startswith(diagnostic) or error.startswith("standard-order:")
-                                    for error in checker.check_contracts(changed)))
-
-        plan = checker.stage(self.texts["planner"], "plan_create")
-        changed = dict(self.texts)
-        changed["planner"] = changed["planner"].replace(review, "TEMP", 1).replace(plan, review, 1).replace("TEMP", plan, 1)
-        self.assertTrue(any(error.startswith("standard-order:") for error in checker.check_contracts(changed)))
-
-        for clause in ("Source/spec/context drift invalidates only", "Ask one material question at a time",
-                       "clarification-taxonomy rerun, default, or\nrereview releases it"):
-            with self.subTest(recovery_clause=clause):
-                changed = dict(self.texts)
-                changed["approval"] = changed["approval"].replace(clause, "REMOVED", 1)
-                self.assertTrue(any(error.startswith("spec-review-recovery:")
-                                    for error in checker.check_contracts(changed)))
-
-    def assert_standard_spec_review_carrier_trace(self, planner):
-        """Extract instruction order, not a model execution or semantic obedience trace."""
-        standard = checker.section(planner, "### Standard path")
-        inventory = re.findall(r"(?m)^\d+\. \*\*`([^`]+)`", standard)
-        expected_stages = ["spec_create", "spec_review", "plan_create", "tasks_create", "overall_review", "simplicity_review"]
-        self.assertEqual(inventory, expected_stages, "Standard operational stage inventory")
-        # Locate actual action clauses inside each operational carrier. Summaries outside
-        # Standard and references to a later stage cannot supply a missing action.
-        actions = {
-            "spec_create": (
-                ("ordinary_clarification", "after that ordinary clarification"),
-                ("parent_inspection", "parent inspection of the exact current specification"),
-            ),
-            "spec_review": (
-                ("review_dispatch", "Dispatch exactly that saved binding unchanged"),
-                ("owner_question", "parent asks one concrete `ask_user` question at a time"),
-                ("producer_correction", "Send actual answers to the originating `standard-spec-create` producer"),
-                ("answer_incorporation", "The producer updates relevant requirements/scenarios/acceptance"),
-                ("correction_inspection", "parent inspects the returned change"),
-                ("zero_skip", "With explicit zero findings, skip question interaction"),
-                ("spec_approval", "present the existing current-specification executive brief and `ask_user` approval gate"),
-                ("record_spec_approval", "Durably record that approval before `plan_create`"),
-            ),
-            "plan_create": (("plan_producer", "Delegate a separate fresh bounded-context plan producer"),),
-            "tasks_create": (("task_producer", "delegate a separate fresh bounded-context task producer"),),
-            "overall_review": (
-                ("overall_inspection", "inspect source → spec → plan → tasks traceability"),
-                ("join_reviews", "Join both review reports"),
-            ),
-            "simplicity_review": (
-                ("simplicity_inspection", "dispatch alongside stage 5 using the shared simplicity-review contract"),
-            ),
-        }
-        approval = standard[standard.index("7. **Overall approval:"):]
-        self.assertIn("obtain current overall approval", approval)
-        observed = []
-        for name in inventory:
-            body = " ".join(checker.stage(standard, name).split())
-            positions = []
-            for event, clause in actions[name]:
-                self.assertEqual(body.count(clause), 1, f"{name}: missing/duplicate {event}")
-                positions.append((body.index(clause), event))
-            actual = [event for _, event in sorted(positions)]
-            self.assertEqual(actual, [event for event, _ in actions[name]], f"{name}: action order")
-            observed.extend([name, *actual])
-        return observed
-
-    def test_standard_spec_review_static_trace_inventory_is_explicitly_nonbehavioral(self):
-        observed = self.assert_standard_spec_review_carrier_trace(self.texts["planner"])
-        print("T002 carrier-derived static trace (zero_skip is an alternative branch, not a live event): "
-              + " → ".join(observed)
-              + "; not live reviewer, ask_user, producer, or approval evidence")
+        assert_planner_mutations(self, ('spec-review', 'intent-review'))
 
     def test_standard_spec_review_carrier_trace_rejects_changed_actions_and_order(self):
-        planner = self.texts["planner"]
-        review = checker.stage(planner, "spec_review")
-        summary = "\n## Summary only\n" + review
-        mutations = [
-            ("deleted stage", planner.replace(review, "", 1)),
-            ("folded stage", planner.replace(
-                "2. **`spec_review` — independent saved reviewer assignment:** resolve\n", "", 1)),
-            ("missing question", planner.replace("parent asks one concrete `ask_user` question at\n   a time", "REMOVED", 1)),
-            ("missing correction inspection", planner.replace("parent\n   inspects the returned change", "REMOVED", 1)),
-            ("missing zero skip", planner.replace("With explicit zero findings, skip question interaction", "REMOVED", 1)),
-            ("missing approval", planner.replace("Durably record that approval before `plan_create`", "REMOVED", 1)),
-        ]
-        for label, first, second in (
-            ("correction before owner answer", "For each unresolved material decision", "Send actual answers"),
-            ("approval before incorporation", "The producer updates", "Durably record that approval"),
+        text = self.texts["planner"]
+        self.assertEqual(checker.check_planner(text), [])
+        for selector, markers, diagnostic in (
+            ("### Standard path", ("**`spec_review`", "**`plan_create`"), "standard-order:"),
+            ("stage:spec_review", ("Ask one material", "Send actual answers"), "spec-review-order:"),
+            ("stage:spec_review", ("Inspect corrections", "current-specification approval"), "spec-review-order:"),
+            ("### TinySpec path", ("`tinyspec-spec-review`", "`tinyspec-tasks`"), "tiny-review-order:"),
+            ("### Shared final task-review contract", ("2. Before", "3. Launch"), "coordinator-review-order:"),
         ):
-            # Swap complete carrier paragraphs rather than inventing an unrelated trace.
-            paragraphs = review.split("\n\n")
-            left = next(i for i, paragraph in enumerate(paragraphs) if first in paragraph)
-            right = next(i for i, paragraph in enumerate(paragraphs) if second in paragraph)
-            if left == right:
-                # The owner-question and correction clauses share a paragraph.
-                body = paragraphs[left]
-                boundary = body.index(second)
-                paragraphs[left] = body[boundary:] + "\n" + body[:boundary]
-            else:
-                paragraphs[left], paragraphs[right] = paragraphs[right], paragraphs[left]
-            mutations.append((label, planner.replace(review, "\n\n".join(paragraphs), 1)))
-        plan = checker.stage(planner, "plan_create")
-        mutations.append(("plan before review", planner.replace(review, "TEMP_STAGE", 1)
-                          .replace(plan, review, 1).replace("TEMP_STAGE", plan, 1)))
-        diagnostics = {
-            "deleted stage": "Standard operational stage inventory",
-            "folded stage": "Standard operational stage inventory",
-            "missing question": "spec_review: missing/duplicate owner_question",
-            "missing correction inspection": "spec_review: missing/duplicate correction_inspection",
-            "missing zero skip": "spec_review: missing/duplicate zero_skip",
-            "missing approval": "spec_review: missing/duplicate record_spec_approval",
-            "correction before owner answer": "spec_review: action order",
-            "approval before incorporation": "spec_review: action order",
-            "plan before review": "Standard operational stage inventory",
-        }
-        for label, changed in mutations:
-            with self.subTest(mutation=label):
-                self.assertNotEqual(changed, planner, "Mutation must change the actual carrier")
-                with self.assertRaisesRegex(AssertionError, re.escape(diagnostics[label])):
-                    self.assert_standard_spec_review_carrier_trace(changed + summary)
+            body = checker.operational_carrier(text, selector)
+            first, second = markers
+            for replacement in (body.replace(first, "REMOVED", 1),
+                                body.replace(first, "TEMP", 1).replace(second, first, 1).replace("TEMP", second, 1)):
+                with self.subTest(selector=selector, markers=markers):
+                    changed = text.replace(body, replacement, 1) + "\n## Inert summary\n" + body
+                    self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_planner(changed)))
 
     def test_contradictions(self):
         policies = ("Automatically choose TinySpec", "Automatically choose Standard",
@@ -1280,7 +1088,6 @@ class InstructionTests(unittest.TestCase):
 
     def test_batch_handoff_mutations_and_adapter_items(self):
         for key, clause, diagnostic in (
-            ("planner", "stable task-local REQUIRED", "batch-handoff:"),
             ("approval", "inadequate REQUIRED contracts", "batch-legacy:"),
             ("tiny", "task-local REQUIRED checks and worker/reviewer", "batch-source:"),
             ("helper", "applicable guidelines", "batch-helper:"),
@@ -1325,15 +1132,8 @@ class DependencyResearchTests(unittest.TestCase):
     def test_research_clause_removals_have_named_diagnostics(self):
         # Remove the actual obligation inside its carrier, not a summary keyword.
         cases = [
-            ("planner", "## Discovery and capability boundary", "[dependency research contract](references/dependency-research.md)", "research-planner-link"),
             ("tiny", '## Resolve the approach from evidence', "[dependency research contract](../planner/references/dependency-research.md)", "research-tiny"),
             ("helper", '## Resolve architectural choices from evidence', "[dependency research contract](../planner/references/dependency-research.md)", "research-helper"),
-            ("planner", "## Before selection:", "no dependency docs,\nsource, plan or decisions may be persisted", "research-preselection"),
-            ("planner", "### TinySpec path", "before consequential approach decisions", "research-tiny-handoff"),
-            ("planner", "spec_create", "Apply the shared stage rules, including research before consequential dependency constraints", "research-spec"),
-            ("planner", "## Selected production and stage handoffs", "Supply the shared research contract before consequential source/plan", "research-review"),
-            ("planner", "plan_create", "For helper invocation or the direct Standard pass", "research-plan"),
-            ("planner", "plan_create", "with explicit bounded permission\n   in addition to detected SpecKit artifacts", "research-plan"),
             ("tiny", '## Resolve the approach from evidence', "Standalone entry verifies those bounds itself", "research-tiny"),
             ("helper", '## Arrange the bounded planning pass', "Standalone entry must verify equivalent Standard planning/preparation authority", "research-boundary"),
             ("helper", '## Arrange the bounded planning pass', "Canonical research-document and necessary discovery-link writes need additional explicit bounded permission", "research-boundary"),
@@ -1360,8 +1160,6 @@ class DependencyResearchTests(unittest.TestCase):
             ("helper", '## Resolve architectural choices from evidence', "Translate evidence into plan constraints and observable verification", "research-boundary"),
             ("helper", '## Resolve architectural choices from evidence', "Do not assume the caller already applied them on standalone entry", "research-helper"),
             ("helper", '## Arrange the bounded planning pass', "Required write authority cannot be inferred from tooling", "research-helper-adapter"),
-            ("planner", "## Selected production and stage handoffs", "supporting spans → constraints → observable checks", "research-review"),
-            ("planner", "overall_review", "direct Standard\n   pass and helper-managed/standalone contract coverage", "research-standard-review"),
         ]
         for key, heading, clause, label in cases:
             with self.subTest(diagnostic=label, removed=clause):
@@ -1385,19 +1183,10 @@ class DependencyResearchTests(unittest.TestCase):
                 self.assert_diagnostic(changed, label)
 
     def test_planner_stage_deletions_preserve_summary_but_fail_research(self):
-        for name, label in (("spec_create", "research-spec"), ("plan_create", "research-plan"),
-                            ("overall_review", "research-standard-review")):
-            with self.subTest(stage=name):
-                changed = dict(self.texts)
-                body = checker.stage(changed["planner"], name)
-                changed["planner"] = changed["planner"].replace(body, f"**`{name}`**\n", 1)
-                self.assertIn("Supply the shared research contract", changed["planner"])
-                self.assert_diagnostic(changed, label)
+        assert_planner_mutations(self, ('spec', 'plan', 'review', 'research-review'))
 
     def test_standard_and_helper_after_design_wording_is_rejected(self):
         for key, before, after, label in (
-            ("planner", "Before consequential plan decisions", "After consequential plan decisions", "research-plan"),
-            ("planner", "before consequential dependency constraints", "after consequential dependency constraints", "research-spec"),
             ("helper", "Before consequential architecture/plan decisions", "After consequential architecture/plan decisions", "research-helper"),
         ):
             with self.subTest(route=label):
@@ -1445,7 +1234,6 @@ class DependencyResearchTests(unittest.TestCase):
 
     def test_unsafe_research_permissions_are_rejected(self):
         for key, heading, policy, label in (
-            ("planner", "## Before selection:", "Persist dependency docs before selection.", "research-preselection"),
             ("helper", '## Arrange the bounded planning pass', "Arbitrary documentation edits are permitted.", "research-boundary"),
             ("research", "## Safe failure and return", "Use model recollection when required research is unavailable.", "research-failure"),
         ):
@@ -1469,8 +1257,6 @@ class DependencyResearchTests(unittest.TestCase):
         self.assertIn("precedes close", check["observable"])
         self.assertTrue(assumption["check"])
         for key, heading, expected in (
-            ("planner", "### TinySpec path", "before consequential approach decisions"),
-            ("planner", "plan_create", "For helper invocation or the direct Standard pass"),
             ("tiny", '## Resolve the approach from evidence', "Standalone entry verifies those bounds itself"),
             ("helper", '## Arrange the bounded planning pass', "Standalone entry must verify equivalent"),
         ):
@@ -1514,9 +1300,9 @@ class DependencyResearchTests(unittest.TestCase):
             with self.subTest(simulated_case=case):
                 for obligation in obligations:
                     self.assertIn(obligation, carrier)
-        pre = checker.section(self.texts["planner"], "## Before selection:")
-        self.assertIn("no dependency docs, source, plan or decisions may be persisted", " ".join(pre.split()))
-        self.assertIn("Carry findings in session until selection", pre)
+        pre = checker.section(self.texts["planner"], "## Understand the work and choose depth")
+        self.assertIn("plans, tasks or dependency-document writes", " ".join(pre.split()))
+        self.assertIn("session history", pre)
 
 
 class UnifiedMemoryPlanningTests(unittest.TestCase):
@@ -1530,13 +1316,13 @@ class UnifiedMemoryPlanningTests(unittest.TestCase):
 
     def test_each_planning_carrier_requires_actual_propagation(self):
         texts = checker.load_texts()
-        for key, heading, label in (("planner", "## Discovery and capability boundary", "unified-memory-planner"),
+        for key, heading, label in (("planner", "## Understand the work and choose depth", "unified-memory-planner"),
                                     ("tiny", '## Establish the source to write', "unified-memory-tiny"),
                                     ("tasks", '## Draft outcomes from the source', "unified-memory-tasks"),
                                     ("helper", '## Arrange the bounded planning pass', "unified-memory-helper")):
             clauses = (("explicit owner guidance and gotchas", "task-local REQUIRED check", "worker/reviewer briefs")
                        if key in ("tasks", "tiny", "helper") else
-                       ("alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs"))
+                       ("explicit owner guidance and gotchas", "task-local REQUIRED checks", "worker/reviewer briefs"))
             for clause in clauses:
                 with self.subTest(carrier=key, removed=clause):
                     changed = dict(texts)
@@ -1635,19 +1421,7 @@ class ProjectCoordinationWiringTests(unittest.TestCase):
 class StageDispatchTests(unittest.TestCase):
     """Authored symbolic direct/earned-workflow cases, not a provider/tool invocation."""
     def test_stage_dispatch_guards_are_scoped_and_not_footer_rescuable(self):
-        texts = checker.load_texts()
-        clauses = ("direct asynchronous single-stage dispatch", "resolved saved assignment unchanged",
-                   "Inspect the returned artifact/checkpoint", "before the next authorized stage",
-                   "Never prewire dependent source→tasks", "direct delegation cannot adequately serve",
-                   "stage sequence alone is insufficient", "do not authorize parallel implementation batches")
-        for clause in clauses:
-            changed = dict(texts)
-            body = checker.section(changed["planner"], "## Selected production and stage handoffs")
-            pattern = r"\s+".join(re.escape(w) for w in clause.split())
-            self.assertRegex(body, pattern)
-            changed["planner"] = changed["planner"].replace(body, re.sub(pattern, "REMOVED", body))
-            changed["planner"] += "\n## Footer\n" + clause
-            self.assertTrue(any(e.startswith("stage-dispatch:") for e in checker.check_contracts(changed)))
+        assert_planner_mutations(self, ('stage-dispatch',))
 
     def test_direct_async_parent_inspection_then_next_authorized_stage(self):
         trace = ["direct-async-source", "parent-artifact-checkpoint-inspection", "direct-async-tasks"]
@@ -1676,8 +1450,8 @@ class StageDispatchTests(unittest.TestCase):
         for unsafe in ("Default to a single-child workflow wrapper", "Prewire source→tasks without parent inspection",
                        "Sequential convenience justifies workflows"):
             changed = dict(texts)
-            changed["planner"] = changed["planner"].replace("## Selected production and stage handoffs",
-                                                          "## Selected production and stage handoffs\n" + unsafe)
+            changed["planner"] = changed["planner"].replace("## Arrange the next authorized stage",
+                                                          "## Arrange the next authorized stage\n" + unsafe)
             self.assertTrue(any(e.startswith("stage-dispatch:") for e in checker.check_contracts(changed)))
 
 
@@ -1733,25 +1507,7 @@ class AcceptedDecisionBriefContinuityTests(unittest.TestCase):
             assert_continuity(missing_carrier)
 
     def test_read_through_carriers_reject_omission(self):
-        texts = checker.load_texts()
-        cases = (
-            ("## Discovery and capability boundary", "[save-adr](../save-adr/SKILL.md)",
-             "accepted-decision-consultation:"),
-            ("## Discovery and capability boundary", "whole discovered decision index",
-             "accepted-decision-consultation:"),
-            ("## Selected production and stage handoffs", "each applicable accepted outcome constraint\nand source link",
-             "accepted-decision-stage-brief:"),
-            ("## Handoff, not execution", "applicable accepted outcome constraints and source links",
-             "accepted-decision-handoff:"),
-        )
-        for heading, clause, diagnostic in cases:
-            with self.subTest(carrier=heading):
-                changed = dict(texts)
-                body = checker.section(changed["planner"], heading)
-                changed["planner"] = changed["planner"].replace(
-                    body, replace_clause(body, clause, "OMITTED"), 1)
-                self.assertTrue(any(error.startswith(diagnostic)
-                                    for error in checker.check_contracts(changed)))
+        assert_planner_mutations(self, ('accepted-decision-consultation', 'brief', 'approval-handoff'))
 
 
 class ArchitecturalAcceptedDecisionContinuityTests(unittest.TestCase):
@@ -2627,38 +2383,12 @@ class IntentSpecificationReviewTests(unittest.TestCase):
     """Carrier/order and mutation evidence for both paths, not live model obedience."""
 
     def test_both_paths_require_shared_intent_review_before_downstream_work(self):
-        texts = checker.load_texts()
-        self.assertEqual(checker.check_contracts(texts), [])
-        planner = texts["planner"]
-        tiny = checker.section(planner, "### TinySpec path")
-        standard = checker.section(planner, "### Standard path")
-        self.assertEqual(tiny.count("**Specification review"), 1)
-        self.assertEqual(standard.count("**`spec_review`"), 1)
-        for old, new, diagnostic in (
-            (tiny, tiny[:tiny.index("2. **Specification review")] + tiny[tiny.index("3. **Tasks"):], "tiny-spec-review:"),
-            (tiny, tiny.replace("2. **Specification review", "2. **Tasks bypass review", 1), "tiny-review-order:"),
-            (tiny, tiny.replace("tinyspec-spec-review", "standard-spec-review", 1), "tiny-spec-review:"),
-            (standard, standard.replace("shared specification-review contract above", "unrelated review", 1), "spec-review:"),
-        ):
-            with self.subTest(diagnostic=diagnostic):
-                changed = dict(texts)
-                # A retained summary must not satisfy a deleted operational carrier.
-                changed["planner"] = planner.replace(old, new, 1) + "\nSummary: " + old
-                self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
+        assert_planner_mutations(self, ('tiny-flow', 'spec-review'))
 
     def test_intent_inputs_dispositions_and_prompt_requirements_cannot_be_dropped(self):
+        assert_planner_mutations(self, ("intent-review",))
         texts = checker.load_texts()
         for key, clauses, diagnostic in (
-            ("planner", (
-                "original\nuser request, actual owner clarifications/decisions",
-                "Do not supply producer rationale, conclusions, or full unrelated transcripts",
-                "saved exact binding is permitted and callable",
-                "No writes, implementation, external action, or delegation",
-                "Parent evaluates", "Material decisions go to the owner",
-                "Parent inspects producer corrections",
-                "Neither path may progress beyond specification review\nwith unresolved material intent gaps",
-                "No automatic rereview loop",
-            ), "intent-review:"),
             ("spec_review_prompt", (
                 "relevant user-intent evidence", "affected specification section",
                 "concrete consequence", "correction or\nowner question",
@@ -2677,39 +2407,12 @@ class IntentSpecificationReviewTests(unittest.TestCase):
                     self.assertTrue(any(e.startswith(diagnostic) for e in checker.check_contracts(changed)))
 
     def test_coordinator_analysis_before_independent_review_dispatch(self):
-        """Static instruction coverage, not proof of model obedience."""
-        texts = checker.load_texts()
-        contract = checker.section(texts["planner"], "### Shared final task-review contract")
-        clauses = (
-            "1. Write both bounded reviewer handoff instructions",
-            "2. Before launching either reviewer", "independently inspect that snapshot",
-            "Does the current plan induce scope creep or over complexities?",
-            "Do not defer this judgment to the reviewers",
-            "3. Launch both fresh independent read-only reviewers",
-            "Keep the coordinator's analysis out of both handoffs",
-            "4. After both reports return, assess all three analyses together",
-            "resume its existing context when useful", "launch a fresh correction",
-            "Do not launch a fixer when there are no supported corrections",
-        )
-        self.assertEqual(checker.check_contracts(texts), [])
-        positions = [contract.index(clause) for clause in clauses if clause[0].isdigit()]
-        self.assertEqual(positions, sorted(positions))
-        for clause in clauses:
-            with self.subTest(clause=clause):
-                changed = dict(texts)
-                changed["planner"] = texts["planner"].replace(contract, replace_clause(contract, clause), 1)
-                self.assertTrue(any(e.startswith("coordinator-review-sequence:")
-                                    for e in checker.check_contracts(changed)))
+        assert_planner_mutations(self, ('coordinator-review-sequence',))
 
     def test_final_review_focus_and_fresh_simplicity_inputs(self):
         texts = checker.load_texts()
         contract = checker.section(texts["planner"], "### Shared simplicity-review contract")
-        for clause in ("In parallel with final correctness review", "same artifact snapshot", "before final owner approval",
-                       "subagent get", "prior verdicts", "Never fork or resume",
-                       "No automatic full-review loop", "recheck only the affected changes"):
-            changed = dict(texts)
-            changed["planner"] = texts["planner"].replace(contract, replace_clause(contract, clause), 1)
-            self.assertTrue(any(e.startswith("simplicity-review:") for e in checker.check_contracts(changed)))
+        assert_planner_mutations(self, ("coordinator-review-sequence", "simplicity-review"))
         prompt = (ROOT / "skills/planner/references/simplicity-review.md").read_text()
         self.assertIn("Is this the simplest", prompt)
         self.assertIn("show why it", prompt)
@@ -2722,17 +2425,6 @@ class IntentSpecificationReviewTests(unittest.TestCase):
         texts = checker.load_texts()
         self.assertEqual(checker.check_contracts(texts), [])
         for key, heading, clauses, diagnostic in (
-            ("planner", "## Proportionate validation", (
-                "simplest sufficient specification and delivery",
-                "supporting means, not independent products",
-                "TinySpec source and tasks", "Standard specification, plan and tasks",
-                "removal or simplification", "do not weaken required acceptance",
-            ), "simplest-review:"),
-            ("planner", "### Shared specification-review contract", (
-                "coverage, downstream clarity and simplicity",
-                "Inspect reported evidence limitations", "targeted completion",
-                "not an automatic second review or new gate",
-            ), "review-evaluation:"),
             ("spec_review_prompt", "# Independent specification review", (
                 "simplest specification that achieves the user's goals",
                 "supporting\nmeans, not independent products", "removal or simplification",
@@ -2742,12 +2434,6 @@ class IntentSpecificationReviewTests(unittest.TestCase):
                 "evidence supporting coverage, downstream clarity and simplicity",
                 "without a separate matrix", "preserve justified zero findings",
             ), "review-consequences:"),
-            ("planner", "### TinySpec path", (
-                "**Simplicity review:** dispatch alongside stage 4 using the shared simplicity-review contract",
-            ), "tiny-simplest-review:"),
-            ("planner", "### Standard path", (
-                "dispatch alongside stage 5 using the shared simplicity-review contract",
-            ), "standard-simplest-review:"),
         ):
             carrier = checker.section(texts[key], heading)
             for clause in clauses:
@@ -3026,8 +2712,6 @@ class OwnerAssignmentBrainstormTests(unittest.TestCase):
     def test_parent_gate_carrier_removals_fail_even_with_summary(self):
         texts = checker.load_texts()
         cases = (
-            ("planner", "## Before selection:", "Do not delegate the gate or resolve a saved", "shared-invocation:"),
-            ("planner", "## Before selection:", "without a child call", "shared-invocation:"),
             ("brainstorm", "# Planning Brainstorming", "parent conducts assessment and dialogue", "brainstorm-parent-gate:"),
             ("brainstorm", "## Resolve the material questions with the owner", "missing delegation alone does not block parent dialogue", "brainstorm-parent-gate:"),
             ("brainstorm", "# Planning Brainstorming", "neither requires a child call or a saved assignment", "brainstorm-parent-gate:"),
@@ -3163,7 +2847,6 @@ class OwnerAssignmentComposedTests(unittest.TestCase):
     def test_checker_rejects_removed_assignment_carriers(self):
         texts = checker.load_texts()
         for key, clause, diagnostic in (
-            ("planner", "## Saved planner assignments", "saved-assignments:"),
             ("brainstorm", "shared `brainstorming` assignment", "brainstorm-assignment:"),
             ("helper", "`standard-plan-helper` saved assignment", "helper-assignment:"),
         ):
