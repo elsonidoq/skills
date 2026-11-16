@@ -800,7 +800,7 @@ class ParsimonyTests(unittest.TestCase):
             ("tiny-spec", "## Compact source contract"),
             ("delegating-architectural-planning", "## Preflight"),
             ("delegating-architectural-planning", "## Planner Standard adapter contract"),
-            ("task-generation", "## Preconditions and adapters"),
+            ("task-generation", "## Give each task sufficient proof"),
             ("requesting-code-review", "## Prepare The Review"),
             ("receiving-code-review", "## Evaluate Feedback"),
         ):
@@ -1067,9 +1067,9 @@ class InstructionTests(unittest.TestCase):
             ("planner", "actual enforced limit at the consuming interface", "constraint-scope:"),
             ("planner", "An agent inference is not an owner requirement", "constraint-scope:"),
             ("planner", "interpret owner agreement within the explanation and scope actually presented", "constraint-scope:"),
-            ("tasks", "A worker file-tool bound is not a task-contract loader bound", "task-concision:"),
+            ("tasks", "do not generalize a tool limit", "task-concision:"),
             ("tasks", "State shared constraints once", "task-concision:"),
-            ("tasks", "Keep task-specific work and useful checks clear", "task-concision:"),
+            ("tasks", "outcome-specific work and checks", "task-concision:"),
             ("approval", "Ordinary drafting is not submitted-artifact correction", "draft-editing:"),
             ("approval", "without a supervisor decision", "draft-editing:"),
             ("planner", "producers may draft, revise, shorten and mechanically", "task-stage:"),
@@ -1533,9 +1533,12 @@ class UnifiedMemoryPlanningTests(unittest.TestCase):
         texts = checker.load_texts()
         for key, heading, label in (("planner", "## Discovery and capability boundary", "unified-memory-planner"),
                                     ("tiny", "## Inputs and preflight", "unified-memory-tiny"),
-                                    ("tasks", "## Preconditions and adapters", "unified-memory-tasks"),
+                                    ("tasks", '## Draft outcomes from the source', "unified-memory-tasks"),
                                     ("helper", "## Preflight", "unified-memory-helper")):
-            for clause in ("alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs"):
+            clauses = (("explicit owner guidance and gotchas", "task-local REQUIRED check", "worker/reviewer briefs")
+                       if key == "tasks" else
+                       ("alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs"))
+            for clause in clauses:
                 with self.subTest(carrier=key, removed=clause):
                     changed = dict(texts)
                     body = checker.section(changed[key], heading)
@@ -2258,10 +2261,12 @@ class DelegationAuthorityTests(unittest.TestCase):
             owner = (ROOT / checker.PATHS[key]).parent / destination
             self.assertEqual(owner.resolve(), (ROOT / checker.PATHS["guidance"]).resolve())
             self.assertTrue(owner.is_file())
-        for selector in ("item:- A SpecKit adapter", "item:- A direct adapter"):
-            body = checker.operational_carrier(texts["tasks"], selector)
-            self.assertIn("Trace source", body)
-            self.assertIn("permission/safety", body)
+        body = checker.section(texts["tasks"], "## Draft outcomes from the source")
+        for adapter in ("**SpecKit adapter**", "**direct adapter**"):
+            self.assertIn(adapter, body)
+        self.assertIn("Both routes use the source's criteria, not SDD", body)
+        self.assertIn("repository instructions, governing principles", body)
+        self.assertIn("task dependency or gate, task-local REQUIRED check", body)
         self.assertIn("separate source and tasks file", texts["tasks"])
 
 
@@ -2877,7 +2882,7 @@ class OwnerAssignmentExecutorIntakeTests(unittest.TestCase):
         self.assertEqual(checker.check_contracts(texts), [])
         changed = dict(texts)
         changed["tasks"] = changed["tasks"].replace(
-            "producer itself must read the current project's selected\nexecutor JSON", "producer may use the brief", 1)
+            "read the selected executor JSON yourself", "producer may use the brief", 1)
         self.assertTrue(any(error.startswith("executor-producer-intake:")
                             for error in checker.check_contracts(changed)))
         changed = dict(texts)
