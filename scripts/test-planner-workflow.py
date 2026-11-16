@@ -1599,6 +1599,26 @@ class ArchitecturalAcceptedDecisionContinuityTests(unittest.TestCase):
                 self.assertNotIn(normalized, " ".join(removed.split()))
 
 
+class ArchitecturalPlanningInputTransferTests(unittest.TestCase):
+    """Check the dispatch instruction, not live producer behavior."""
+
+    def test_both_entry_modes_transfer_discovered_inputs_before_dispatch(self):
+        text = (ROOT / "skills/delegating-architectural-planning/SKILL.md").read_text()
+        arrange = checker.section(text, '## Arrange the bounded planning pass')
+        paragraphs = [" ".join(p.split()) for p in arrange.split("\n\n")]
+        transfer = next((p for p in paragraphs if "Before dispatch" in p), "")
+        for content in (
+            "managed and standalone entry", "producer brief", "already-discovered",
+            "approved specification and approval evidence", "instruction/principle/contract paths",
+            "architecture decisions and dependencies", "intended plan location",
+            "allowed writes and prohibited operations", "research results and gaps",
+            "SpecKit command or skill", "invocation instructions", "template",
+            "prerequisite scripts", "expected output paths", "Reuse",
+        ):
+            with self.subTest(content=content):
+                self.assertIn(content, transfer)
+
+
 class BrainstormAcceptedDecisionContinuityTests(unittest.TestCase):
     """Static contract plus synthetic read-only walkthrough; not model-obedience proof."""
 

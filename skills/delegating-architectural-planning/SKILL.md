@@ -38,6 +38,13 @@ Verify an allowed delegation tool and a configured planning-capable agent under
 [runtime requirements](../../REQUIREMENTS.md). Never invent an agent, model, command or
 configuration. Missing, unusable or unauthorized delegation stops the pass; no local fallback.
 
+Before dispatch in managed and standalone entry, give the fresh producer brief the
+already-discovered inputs: approved specification and approval evidence, repository
+instruction/principle/contract paths, architecture decisions and dependencies, intended plan
+location, allowed writes and prohibited operations, research results and gaps, and the observed
+SpecKit command or skill, invocation instructions, template, prerequisite scripts and expected
+output paths. Reuse this input package; do not repeat discovery or create a separate artifact.
+
 <a id="planner-standard-adapter-contract"></a>
 
 For planner-managed Standard `plan_create`, the caller supplies the resolved
