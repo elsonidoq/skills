@@ -3,9 +3,12 @@ name: finish-session
 description: Use when closing a working session that may need documentation, unresolved-work, deployment, memory, or explicit feedback.
 ---
 
-You are closing a working session whose implementation work has already ended. Reconcile documentation
-and other authorized owners with what actually happened; do not reopen implementation or turn closeout
-into a repository audit, test campaign or acceptance review.
+# Finish Session
+
+Consume ended implementation and existing evidence. Route attributable durable facts to their
+owners and explain the delivery to the owner. Do not reopen implementation, audit the repository,
+rerun implementation checks, launch a fresh review or adjudicate acceptance. Existing workflow
+acceptance requirements remain in force; closeout neither adds nor waives them.
 
 ## Step 0: Documentation Initialization Gate
 
@@ -32,168 +35,106 @@ missing paths or owners, instruct the user to use the `initialize-coherence`
 skill, and stop. Continue with the remaining steps only after all required
 documentation owners and indexes exist.
 
-## Core Invariants
+## Establish attributable findings before writing
 
-1. Affected authoritative documentation describes what is built now.
-2. Discovered work deliberately left unresolved has one canonical owner: the project's declared unresolved-work owner, followed through `track-open-issue`.
-3. For a deployed project, deploy-time work pending since the last confirmed deploy has one canonical owner.
-4. The one verified project memory association/index may contain verified trigger-first gotchas and explicitly authorized future owner guidance; each retains its distinct evidence and authority.
-5. The memory index remains usable.
-6. A project with a persistent database has authoritative schema documentation that describes its current tables or collections, fields and types, keys and relationships, constraints, and indexes where applicable.
-7. No automatic STATE maintenance, coordination summaries, routine index updates, or reflection. Only explicit future-directed user feedback may authorize guidance; never infer lessons or disguise them as gotchas.
+Start with `git status --short`, `git diff --name-status` and
+`git diff --cached --name-status`. Inspect full diffs, identifiable session commits and relevant
+untracked contents only for attributable paths; diff summaries do not include untracked contents.
+Report pre-existing or uncertain attribution rather than adopting it.
 
-## Safety Rules
+Use repository instructions, relevant indexes and the documentation-routing guide to identify
+existing owners. Do not initialize fallback artifacts or migrate records. Preserve existing
+runbooks and authoritative documents. For a verified finding without an owner, report the gap
+and ask for its location/format; a missing documentation owner routes to `initialize-coherence`.
+Preserve the existing declared local register until approved cutover. For active GitHub routing,
+`track-open-issue` owns target resolution and unavailable/deferred handling; missing capability or
+write authority never reactivates a historical register or creates a local fallback.
 
-- Start with `git status --short`, `git diff --name-status`, and `git diff --cached --name-status`. From those summaries, inspect full diffs and relevant untracked files only for paths attributable to this session; neither diff command includes untracked contents. Treat pre-existing or unattributable changes as out of scope and report the uncertainty.
-- Record each prospective target's initial dirty state and content before editing. Do not edit a target that was already dirty unless the user explicitly approves that overlap. Re-read and compare it with the recorded content immediately before applying a patch; if it changed concurrently, stop and report the conflict.
-- Do not discard, stage, commit, or rewrite unrelated work. Limit edits to closeout documentation, issue or deployment records, a verified project memory store, and explicit feedback under Step 6. Do not modify application code, tests, generated application assets, or completed implementation artifacts.
-- Verify a durable claim against its primary artifact: code, configuration, schema, generator output, or external source explicitly configured by the repository. Never record an unverified claim as current truth.
-- Do not write credentials, tokens, personal data, or sensitive payloads. Use redacted placeholders such as `$SERVICE_TOKEN`.
-- Do not execute deployment procedures. Do not invent deployment commands, rollback steps, or environment state. Record an unknown or verification gap instead.
-- Git owns changelogs, file-and-line inventories and plan/task completion metadata; do not
-  duplicate those as routine closeout bookkeeping. For issue-linked delivery, publish the
-  meaningful executive result, verification, limits, review focus, exact presented commit,
-  owner feedback/correction links and acceptance trace in the delivery issue and current
-  owner chat. This does not authorize routine inventories in memory/docs, automatic RCA,
-  skill changes, PRs or unrelated tracker writes.
+Derive candidates from primary artifacts: code, configuration, schemas, generator output or an
+external source explicitly configured by the repository, not session narrative alone. Inspect
+only documents plausibly affected by attributable behavior or data. Compare affected schema
+text with authoritative migrations, definitions or available introspection. Recompute changed
+counts and name the source or generating command. Leave accurate text unchanged; mark historical
+records superseded in place. Unverified claims remain `unknown`; a concrete uncertainty with
+missing evidence can be an investigation candidate.
 
-## Step 1: Discover Existing Owners
+This is the candidate-before-write insertion point for optional `finish-session-jev` triage.
+It does not authorize a classifier to establish truth, choose final owners or write artifacts.
 
-Read repository instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent) and the relevant indexes. For unresolved issues, load `track-open-issue` and follow the project's declared canonical owner. Preserve the existing declared local register until approved cutover; preparing GitHub skills or an inconclusive import proof does not switch authority. For a project already using GitHub, use only its explicitly resolved target, never create a local fallback or write to a retained historical register. Missing GitHub capability or write authority defers the candidate in the response; it does not reactivate old local ownership. Do not migrate records during closeout. For other information, preserve existing authoritative documentation owners and runbooks.
+Before any write, record the target's initial content and dirty state. An initially dirty target
+needs explicit approval for overlap. Re-read immediately before patching; concurrent changes stop
+the affected write. Preserve unrelated staged/unstaged work and custom STATE/history/gotchas.
+Limit edits to authorized closeout documents, issue/deployment records and verified project
+memory. Do not edit application code, tests, generated application assets or completed
+implementation artifacts. Never record credentials, tokens, personal data or sensitive payloads.
+No automatic STATE maintenance, routine summaries/index refreshes, reflection, evidence-only
+records, changelogs, file inventories or plan/task completion bookkeeping; Git owns those histories.
 
-Do not initialize fallback artifacts during discovery. If a verified finding has
-no owner, report the missing owner and ask the user to choose its location and
-format. For unresolved issues already routed to GitHub, `track-open-issue` reports an
-unavailable target, capability, authentication, or write-authority gap with candidate
-evidence and a resumption condition; it never creates a local fallback.
+## Route findings to their owners
 
-## Step 2: Derive Candidate Findings From Attributable Work
+Apply the project's routing guide first, including categories beyond these examples. Use one
+canonical owner per fact; a secondary pointer is useful only for a distinct warning or dependency,
+not a duplicate narrative.
 
-Use the actual working tree, relevant commits made during the session when identifiable, code, configuration, schemas, and generated output. Do not rely on the session narrative alone.
-
-Inspect only documents plausibly affected by changed behavior or data. This can include architecture docs, database-schema documents, README files, API/reference docs, configuration examples, runbooks, generated docs, and active decision records. For database-backed projects, compare schema documentation with the authoritative migrations, schema definitions, or database introspection available to the repository; update the affected schema document when tables or collections, fields, types, keys, relationships, constraints, or indexes changed. Leave accurate text unchanged. Recompute any count changed by attributable work and name its source or generating command. Mark historical records superseded in place rather than rewriting history.
-
-If the repository declares a targeted, known-safe, bounded generator whose outputs are closeout documentation relevant to the changed area, run it and inspect its diff. Ask before running an expensive or broad generator. Do not run a generator that may modify application code, tests, or generated application assets; report its command as a verification gap instead.
-
-## Step 3: Route Each Verified Finding
-
-Use one canonical owner. A secondary pointer is allowed only when it provides a distinct warning or makes a dependency discoverable; never duplicate a full narrative. In particular, documentation explains current system behavior while a memory may separately warn how a future action can break it.
-
-First apply the project's documentation-routing guide. It defines its own
-material change categories and their documentation owners; treat it as
-authoritative and do not limit closeout to the examples below. The examples are
-non-exhaustive seed guidance for a repository that has not yet defined more
-specific categories. The filenames illustrate a `docs/architecture/` layout
-only. Preserve an equivalent established owner rather than creating a
-competing document. If the guide identifies a missing owner, report it and
-direct the user to `initialize-coherence` instead of selecting a path
-during closeout.
-
-| Changed area | Required documentation | Example owner |
-| --- | --- | --- |
-| New endpoint or changed API contract | Endpoints, request and response contracts, authentication and error behavior | `docs/architecture/api-conventions.md` |
-| Changed server pattern | Helpers, middleware, and server conventions that other code must follow | `docs/architecture/server-conventions.md` |
-| Changed frontend pattern | Hooks, state patterns, component conventions, or authentication flow | `docs/architecture/frontend-conventions.md` |
-| Changed schema or migration | Current tables or collections, fields and types, keys and relationships, constraints, and indexes where applicable | `docs/architecture/db-schema.md` |
-| Changed data shape or query pattern | Domain data shapes, ownership, lifecycle, and query/access patterns | `docs/architecture/data-model.md` |
-| New test pattern or test-file convention | Test structure, fixtures, helpers, and required testing conventions | `docs/architecture/testing-conventions.md` |
-| New import or module pattern | Module boundaries, import/export rules, and dependency-direction conventions | `docs/architecture/index-conventions.md` |
-
-| Finding | Owner |
+| Finding | Action and result to consume |
 | --- | --- |
-| Current convention, contract, invariant, module shape, API behavior, operational procedure, user-facing fact, or database schema | The most specific affected authoritative document; use the documented architecture owner when no more specific owner exists. |
-| Unfixed bug, risk, shortcut, missing capability, or unresolved investigation | Project-declared unresolved-work owner, through `track-open-issue`. |
-| Verified action required around a future deployment | The established deploy runbook, or the documented deployment-step owner when it is the local owner. |
-| Verified non-obvious trap, counterintuitive rationale, or failed approach that would surprise an agent who read the code and docs | The project's memory store as a technical gotcha. |
-| Explicit future-directed user guidance | The same project's memory association/index, only under the `memory-handling` authorized-guidance rule and with user provenance. |
+| Current behavior, contract or convention | Update the most specific existing document; use the documented architecture owner if no more specific owner exists. Cover affected API endpoints, request/response, authentication/errors; server helpers/middleware; frontend hooks/state/components/auth flow; data ownership/lifecycle/access; module/import direction; test fixtures/helpers/conventions; operational and user-facing facts. |
+| Changed persistent schema | Update its authoritative document: current tables/collections, fields/types, keys/relationships, constraints and applicable indexes. |
+| Unfixed bug, risk, shortcut, missing capability or unresolved investigation | Give `track-open-issue` the verified problem, primary evidence and resumption condition. Consume its qualified issue/result or deferred candidate with missing requirement and corrective action. Do not file documentation-only facts, deploy prerequisites, memories or non-actionable claims; no candidate means no tracker operation. |
+| Verified future deployment action | Reconcile the established runbook/deployment-step owner under the conditional procedure below. |
+| Verified non-obvious action-triggered trap, rationale or failed approach | Use `memory-handling` for the associated project store and gotcha evidence; consume its entry/write or unavailable result. |
+| Explicit future-directed user guidance | Use `memory-handling` for provenance and bounded guidance authority, not inferred lessons. Consume its authorized entry or no-write result. |
+| Explicitly approved consequential decision needing durable rationale | Use `save-adr` for canonical decision discovery/history and consume the decision record/link. Do not create routine ADRs, retrospective backfill or agent-inferred decisions. |
 
-If a fact cannot be verified, do not write it as fact. Report it as `unknown`; if it is actionable unresolved work, treat the verified uncertainty and its missing evidence as an investigation candidate.
+Load a routed skill before use. If unavailable, report the affected route and retain its candidate,
+evidence and corrective action rather than substitute an owner. Documentation, schema, runbooks,
+issues, memory and decisions retain their distinct jobs.
 
-For each verified issue candidate, load and follow `track-open-issue` with its verified problem statement,
-primary evidence, and resumption condition. Follow its declared-local-owner branch before cutover; for an
-active GitHub owner it resolves the explicit target and requires usable `gh`,
-authentication, issue capability, and current scoped write authority; never infer write authority from a read or
-create a local fallback. Apply the base workflow's evidence, concurrent-edit, and unrelated-target protections
-to every issue write; do not change unrelated issues. If the skill cannot be loaded or its target/capability/
-authority is unavailable, report `issue tracking: UNAVAILABLE` or `deferred` and leave the candidate unwritten
-with its evidence, resumption condition, missing requirement, and corrective action. Do not substitute another
-tracker. Do not track documentation-only facts, deployment prerequisites, memories, unverified non-actionable
-claims, or when no issue candidate exists. Include the result in the closeout report.
+Run a declared, known-safe, bounded documentation generator only for the affected area, then
+inspect its diff. Ask before an expensive or broad generator. If it can change application code,
+tests or generated application assets, do not run it; report the command as a verification gap.
 
-Route an explicitly approved consequential decision that warrants durable rationale to the canonical `save-adr` skill. This is not a per-session requirement: do not create an ADR for ordinary sessions, agent-inferred implementation lessons, retrospective backfill, or acceptance/provenance that cannot be attributed. `save-adr` owns decision discovery and history; it complements rather than replaces the current-state documentation, schema, runbook, issue, memory, explicit-feedback, and validation routes in this workflow.
+## Deployment, when relevant
 
-## Step 4: Deployment Steps, Only When Relevant
+Enter only for concrete deployment implications in attributable work or verified deploy evidence
+that can change an existing entry. Otherwise report `not examined: no deployment-relevant evidence
+in attributable work` without inspecting deployment state or its owner.
 
-Enter this step only when attributable changes have plausible deployment implications or verified evidence of a deploy may change an existing entry's status. Otherwise do not investigate deployment state or inspect its owner; report `not examined: no deployment-relevant evidence in attributable work`.
+Determine `deployed`, `not deployed` or `unknown` from repository evidence or user-provided context.
+Record verified prerequisites such as migrations, configuration/service setup, cache invalidation,
+regeneration or release ordering even for `not deployed` or `unknown`; state how that affects the
+entry lifecycle. Do not invent hypothetical work or execute deployment procedures. Close/archive
+an entry only when confirmed deploy evidence proves completion; preserve useful history.
 
-When this step applies, determine deployment state from repository evidence or user-provided session context: `deployed`, `not deployed`, or `unknown`. Do not guess.
+Each entry states timing, environment, procedure/command with provenance, verification/success
+condition and verified rollback/irreversibility. Record a verified prerequisite even if its procedure
+is incomplete: mark each missing field `unknown`, name needed evidence and its resolving owner/action.
+Never infer commands, rollback steps or environment state.
 
-Only inspect or reconcile the existing deployment owner when attributable changes have concrete deployment implications or verified evidence of a deploy may change an existing entry's status. Do not scan or rewrite the deployment register during an unrelated closeout.
+## Memory, when needed
 
-For any deployment state with such evidence, inspect attributable changes for prerequisites such as schema/data migration, configuration or external-service setup, cache invalidation, data/content regeneration, or release ordering. Record a concrete, verified prerequisite even when deployment state is `not deployed` or `unknown`; make that state and its effect on the entry lifecycle explicit. Do not record speculative future work. Close or archive an existing entry only when confirmed deploy evidence proves it completed. Preserve useful history.
+Enter only for a routed gotcha, explicit future-directed feedback or an already-discovered project
+instruction requiring an index check; otherwise report `not needed` without searching for storage.
+Use `memory-handling` to verify the one project association, read the whole index and matching
+entries, reuse related entries and recheck after writes. Missing optional storage is nonblocking;
+never substitute global memory or create storage implicitly. Gotchas retain trigger, consequence
+and evidence; guidance retains actual user provenance and future trigger/action, not a surprise test.
+Clear bounded feedback needs no routine second approval; ambiguity asks, and explanation-only,
+no-feedback or explicit no-write cases write nothing. Its local-path/symlink and sensitive-data
+protections apply.
 
-Record a verified prerequisite even when part of its procedure is unknown. Each entry states timing, applicable environment, procedure or command with provenance, verification and success condition, and rollback or irreversibility where verified; mark every missing field `unknown`, name the evidence needed, and assign an owner or action to resolve it. Never fill a gap by inference.
-
-For `not deployed` or `unknown`, report the state and any evidence gap. Do not create hypothetical deployment work.
-
-## Step 5: Unified Memory and Compaction, Only When Available
-
-Enter this step only when a verified technical-gotcha finding routes to memory, explicit future-directed user feedback may authorize guidance, or an already-discovered project instruction requires a closeout index check. Otherwise report `not needed` without searching for a memory store.
-
-Use the same verified project association/index for both kinds. A technical gotcha remains a verified, non-obvious, action-triggered warning with trigger, consequence, and evidence; explicit owner guidance retains its actual user provenance and concise future trigger/action and need not meet the gotcha-surprise test. No feedback means no guidance write. Do not infer guidance from implementation work, observations, failed runs, explanations, or closeout reflection.
-
-Discover the memory store and index before writing, following the `memory-handling` skill's discovery rule. Treat it as project-associated only when repository instructions, project configuration, or a path inside the current repository explicitly associates it with this project; a store named by the `initialize-coherence` contract section is valid association. A global memory command, `~/.pi/...` store, or similarly named index is not evidence of association. Read the whole index first, selectively open relevant entries, update or reuse a related entry rather than duplicating it, and recheck after an actual write. If no verified project memory mechanism exists, report that capability as unavailable; do not create or modify one implicitly.
-
-After all memory writes, check any threshold or hook explicitly configured for that verified project memory. If no
-threshold is breached, report `not needed`. If one is breached, use a compactor only when its definition explicitly
-targets the discovered project memory, limits writes to that memory store and its declared documentation owners, and
-has been inspected for dirty-target and concurrent-edit protection. Record its prospective targets' initial content
-and compare them immediately before invoking it. When no such compactor is available, report `compaction needed`
-with the measured threshold breach and leave compaction to the user. Never compact with unsaved findings.
-
-## Step 6: Explicit Guidance Authority Only
-
-Do not create, edit or remove STATE during closeout; leave custom/concurrent content untouched.
-Do not create routine summaries, refresh indexes, reflect, or commit evidence-only records.
-Apply the `memory-handling` skill's unified guidance authority: clear bounded explicit
-future-directed user feedback may authorize a project-local guidance entry in the verified
-association/index without a routine second gate; ambiguity asks before writing, and
-explanation-only, no-feedback, or explicit no-write boundaries write nothing. Keep guidance
-separate from technical-gotcha evidence even though both share the index. Keep local
-path/symlink, sensitive-data and dirty/concurrent ownership protections. Missing optional
-memory storage or STATE is nonblocking. Recovery starts with available summary/recent context
-and selective authoritative artifact/Git/check/runtime reconstruction; reconcile active/unknown
-children before replacement, never guess completion or blindly retry.
-
-## Step 7: Validate Only What You Changed
-
-Check that links, issue references, memory-index entries, and supersession pointers introduced or changed by this closeout resolve. Do not conduct a whole-repository link audit.
-
-## Existing completion and validation facts
-
-Consume existing session results and, when needed, authoritative runner status to document what
-happened. Do not launch or require a fresh review, rerun implementation checks, reopen implementation,
-or adjudicate final acceptance during closeout. Implementation's own acceptance requirements remain
-owned by its workflow; this skill neither waives nor adds to them.
-
-Report known completion, validation and acceptance outcomes accurately. Do not infer acceptance from
-worker reports or `implementation_complete` alone. Reuse existing full-range and cumulative repair-review
-outcomes without requiring another review. Missing evidence is `unknown` or `NOT RUN`, not a new closeout
-gate or permission to claim success. Report known unfinished work or unresolved findings through the
-existing issue route; do not repair them as part of closeout.
-
-Preserve focused commits, custom STATE/history/gotchas and unrelated dirty work; no
-execution-memory closeout ledger. Keep SQL/Pi evidence needed for active recovery or an explicit
-project retention requirement. Completed workflow databases, transcripts, screenshots and temporary
-reports do not require an archive merely because they exist. Retain their still-required facts in
-existing authoritative owners, not a duplicate session summary. This distinction grants no deletion
-permission and does not waive paid-data, failure-evidence or other explicit retention requirements.
+After memory writes, check only thresholds/hooks configured for that verified store. No breach
+means `not needed`. On a breach, use a compactor only after inspecting its definition for explicit
+project targeting, bounded memory/documentation writes and dirty/concurrent protection. Record and
+compare its prospective targets immediately before invocation; never compact unsaved findings.
+If unavailable, report `compaction needed` with the measured breach and leave it to the user.
 
 ## Issue-linked delivery
 
 After actual implementation, specified checks, focused checkpoints and fresh independent
 review, use `track-open-issue` for the associated qualified issue and operation-scoped
-tracker authority. Present the same meaningful executive text in the issue and current owner
+tracker authority. It owns tracker mutation, reconciliation and readback; consume those
+observed outcomes for the delivery report. Present the same meaningful executive text in the issue and current owner
 chat: result and important changes, actual verification and limits, review focus, exact reviewed
 commit, attributable task/repair links, unrelated range context and acceptance status. Distinguish
 internal completion from awaiting explicit owner acceptance. Do not treat a whole commit range
@@ -202,7 +143,7 @@ as attributable without inspection.
 If real feedback occurs, link corrections by purpose: approved implementation/internal-review
 fix, owner-review correction, or new/changed requirement. Renew applicable approval for new
 requirements; after correction and applicable checks/review, present the new exact reviewed SHA.
-Acceptance of an earlier revision is not acceptance of that revision. Retain the actual feedback,
+Acceptance of an earlier revision is not acceptance of the new revision. Retain the actual feedback,
 correction links and explicit acceptance trace. Close only after explicit acceptance of the
 presented revision and separate operation-scoped closure authority; read back the closure.
 
@@ -213,62 +154,61 @@ it does not prevent an authorized chat report. Unobserved feedback, acceptance a
 NOT VERIFIED, not a reason to manufacture them. No automatic RCA, skill edit, PR or unrelated
 issue change follows delivery or acceptance.
 
-## Workflow history at source integration
+## Retention and recovery
 
-When merging branches/worktrees, keep local workflow databases independent; Git merges source,
-not runtime state. For requested retention of completed monitor history, consult the installed
-[monitor cutover and history guide](../../workflow_monitor/README.md). Its
-`workflow-monitor-preserve` command and capture helpers are historical, not current interfaces.
-If an explicit retention requirement depends on that tooling, verify an available compatible
-historical procedure and its authority; otherwise report the capability gap and retain the required
-source. This does not create an automatic archive requirement. Preserve legacy tracked-database
-precautions; main into worktree needs no database transfer. Do not silently archive history or use
-database conflict resolution as a substitute. No merge, migration or deletion authority follows.
+Consume existing results, full-range/cumulative repair-review outcomes and authoritative runner
+status as needed. Worker reports or `implementation_complete` alone do not prove acceptance.
+Missing evidence is `unknown` or `NOT RUN`, not another closeout gate. Route unfinished findings
+to the tracker, not implementation repair. Recovery uses available summary/recent context and
+selective artifact/Git/check/runtime reconstruction; reconcile active/unknown children before
+replacement, never guess completion or blindly retry.
+
+Keep SQL/Pi evidence needed for active recovery or explicit retention, including paid-data and
+failure-evidence requirements. Completed databases, transcripts, screenshots and temporary reports
+need no automatic archive. Retain required facts in existing owners, not a session ledger. This
+distinction grants no deletion permission.
+
+At branch/worktree integration, Git merges source, not runtime state: keep workflow databases
+independent and preserve legacy tracked-database precautions. Main into a worktree needs no database
+transfer. For requested completed-monitor-history retention, consult the installed
+[monitor cutover and history guide](../../workflow_monitor/README.md).
+`workflow-monitor-preserve` and its capture helpers are historical, not current interfaces. Verify
+an available compatible historical procedure and authority, or report the capability gap and retain
+the required source. No silent archive, database conflict-resolution substitute, merge, migration
+or deletion authority follows.
 
 ## Worktree-removal readiness, only when requested
 
-Apply this section when the owner requests worktree closeout or deletion readiness; ordinary session
-closeout does not require a worktree audit. It applies equally to host-created worktrees, including
-Paseo, and manually created ones. Respect exclusions: if the owner excludes a worktree from inspection,
-report its readiness as not assessed rather than infer safety.
+Apply only when the owner requests worktree closeout or deletion readiness, for host-created
+(including Paseo) and manual worktrees alike. An excluded worktree is `not assessed`. Use context,
+Git state and targeted reads of attributable or potentially unique untracked/ignored files, not a
+recursive temporary-file audit or assumptions from directory names. Check only:
 
-Use existing session context, Git state and targeted reads of attributable or potentially unique
-untracked/ignored files. Do not recursively inspect all temporary contents or classify value from a
-name such as `.local/` alone. Check only:
-
-1. **Source retained:** verify required commits are reachable from the intended retained branch and
-   inspect outstanding tracked and relevant untracked source. A commit only on the disposable branch
-   is not sufficient; verify remote inclusion only when remote retention is required. Do not merge,
-   push or discard changes without authority.
-2. **Information retained:** route still-unique required facts through Step 3, then verify their owners
-   survive removal (including committed documentation on the retained branch or the external tracker).
-   Reuse already-recorded facts. Temporary evidence is disposable by default after completed work,
-   subject to the active-recovery and explicit-retention exceptions above. An unknown potentially
-   unique asset needs a specific ownership/retention decision, not silent disposal or blanket archival.
+1. **Source retained:** required commits must be reachable from the intended retained branch,
+   not only the disposable branch. Inspect outstanding tracked and relevant untracked source;
+   verify remote inclusion only when required. No unauthorized merge, push or discard.
+2. **Information retained:** route still-unique required facts through the routing table and verify
+   their owners survive removal (retained-branch documentation or external tracker). Reuse recorded
+   facts. Temporary evidence is disposable after completion except for active recovery/explicit
+   retention. A potentially unique unknown asset needs a specific ownership/retention decision,
+   not silent disposal or blanket archival.
 3. **Dependencies independent:** check known required processes, mounts, configurations and private
-   runtime assets for dependence on this worktree. Use project-approved persistent storage; an ignored
-   directory alone is neither proof of independence nor a backup. Do not require relocation of an
-   already-independent asset merely to rename its directory.
+   runtime assets for worktree dependence. Use project-approved persistent storage; an ignored
+   directory is neither independence nor backup. Do not relocate an independent asset merely to rename it.
 
-Report **ready to delete** with the retained branch and durable owners only when these checks support
-it; otherwise name the missing information or dependency, affected removal and concrete corrective
-action. Readiness is not permission to delete files, stop services, migrate data, merge or push.
-Ask only for consequential unresolved retention, ownership or permission choices. Do not add a file
-registry, routine closeout ledger, fresh test campaign or automatic archive.
+Report **ready to delete**, retained branch and durable owners only when these checks support it.
+Otherwise name the missing information/dependency, affected removal and corrective action. Readiness
+is not permission to delete, stop services, migrate, merge or push. Ask only for consequential
+retention, ownership or permission choices; no file registry, fresh test campaign or automatic archive.
 
-## Step 8: Report
+## Validate and report
 
-State separately whether the session's work is implemented, verified, and deployable; each positive claim must cite evidence. List:
+Validate only links, issue references, memory-index entries and supersession pointers changed by
+closeout. Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md)
+to authorized retained closeout artifacts before reporting; read-only/no-change work makes no empty commit.
 
-- local artifacts initialized and existing authoritative owners used
-- documents checked and changed, including generated-document status
-- unresolved items and the issue-tracking result
-- deployment state and prerequisites added, or why none were added
-- memories written or updated and compaction status
-- any explicitly authorized guidance write, or `not needed`; STATE remains untouched
-- changed-reference validation
-- deliberately skipped candidates, uncertain session attribution, and unverifiable claims
-
-## Mandatory task checkpoint
-
-Apply the shared [task-commit contract](../memory-handling/references/task-commit-contract.md). Authorized retained closeout artifacts checkpoint as bounded tasks; reporting and read-only validation alone create no empty commit.
+State implemented, verified and deployable separately, with evidence for each positive claim. Report
+owners used and artifacts changed; documents checked and generator status; unresolved work and tracker
+result; deployment state/prerequisites or why not examined; memory/guidance writes and compaction or
+`not needed`; changed-reference checks; skipped candidates, attribution uncertainty and unverifiable
+claims. STATE remains untouched. Do not imply that initialization or an inapplicable route ran.
