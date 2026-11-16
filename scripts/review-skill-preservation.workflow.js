@@ -90,9 +90,12 @@ Do not read the replacement, current working-tree skill, change diff, author
 reports or later revisions. Establish the original contract before judging any
 rewrite. Return a compact numbered rubric: each item states one behavioral
 obligation, its condition/applicability, and a supporting revision:path:line citation.
-Cover job/trigger, inputs, decisions, outputs/consumer, authority/approval boundaries,
-conditional/standalone/recovery routes and relevant guarantees. Distinguish behavior
-owned here from behavior obtained from an existing canonical owner. Capture actual
+Cover job/trigger, inputs, decisions, outputs/consumer, authority/approval boundaries
+and conditional/standalone/recovery routes. Where applicable, also extract actors
+and independence; ordering and automatic progression; evidence and success conditions;
+state/data preservation and safe repetition; defaults, optionality and non-goals.
+These are coverage dimensions, not extra procedures to impose on every skill.
+Distinguish behavior owned here from results obtained from an existing canonical owner. Capture actual
 behavior, not headings, repeated wording or incidental examples. Expose conflicts
 and uncertainty; do not silently decide which original obligation to discard.
 `,
@@ -116,7 +119,10 @@ or missing, or uncertain. Cite candidate evidence. For an existing-owner result,
 verify the owner actually supplies the behavior and the skill invokes it at the
 right boundary and consumes its result. A bare link is insufficient.
 Consult cited original evidence at ${originalRevision} to resolve ambiguity or
-suspected extraction errors; distinguish rubric defects from rewrite defects.
+suspected extraction errors; distinguish rubric defects and original contradictions
+from rewrite defects. Do not force a rewrite to reproduce a contradiction silently.
+Check actors, ordering, evidence, preservation and optional behavior where applicable,
+not merely whether the replacement contains similar words.
 Also check for new unintended obligations, broken callers/anchors and complexity
 merely relocated into references. Preserve required behavior, not old structure.
 Return coverage, supported findings with impact and smallest correction, and gaps.
