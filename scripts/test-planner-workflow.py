@@ -171,6 +171,32 @@ class IssueDeliveryInstructionTests(unittest.TestCase):
             self.assertRegex(body.lower(), r'missing (?:tracker )?capability or authority')
 
 
+class HandoffRecoveryInstructionTests(unittest.TestCase):
+    """Current recovery-owner wiring, not a live continuation or model-obedience test."""
+
+    def test_executable_handoff_carries_observations_not_obsolete_admission(self):
+        text = (ROOT / 'skills/handoff-prompt/SKILL.md').read_text()
+        body = ' '.join(checker.section(text, '## Executable continuation').split())
+        for clause in (
+            'observed run ID, runtime/status, unfinished work', 'actual scope/authority',
+            'uncertain calls, partial writes', 'identities and configuration needed by the next supported operation',
+            '../coordinate-implementation/SKILL.md#recover-context',
+            'active/unknown writers, failed calls and uncertain effects',
+            'Do not blindly restart', 'required capability is unavailable',
+            '../../docs/coordinate-implementation.md#legacy-run-retention-and-compatible-continuation',
+            'explicitly selected compatible runtime', 'original supported action/arguments',
+            'actual authority', 'Do not silently convert history',
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, body)
+        for obsolete in ('gate/input/nonce', 'authorization envelope/action limits',
+                         'tool receipts', 'host/resource identities'):
+            self.assertNotIn(obsolete, body)
+        self.assertIn('## Prompt Contract', text)
+        self.assertIn('## Delegation Capability', text)
+        self.assertIn('`Delegation: UNAVAILABLE`', text)
+
+
 class PlanningCommitAuthorityTests(unittest.TestCase):
     """Static regression guard, not proof of runtime model compliance."""
 
