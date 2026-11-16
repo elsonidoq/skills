@@ -40,11 +40,12 @@ assignment owner, not reusable skill text.
 
 1. Use a lowercase, hyphenated directory name and matching frontmatter `name`.
 2. Start `description` with "Use when..." and state only concrete loading triggers, symptoms, or contexts. Do not summarize the workflow.
-3. State the purpose and core decision rules before detail.
-4. Use observable predicates for every branch and fallback.
+3. Identify the job, inputs, decisions, outputs/consumers and authority boundary. Separate behavior this skill owns from results it consumes from an existing owner.
+4. Draft a fresh procedure from that conceptual contract, not the old headings or sentence inventory. Lead with normal work; put prerequisites and exceptions at the operation that needs them. Use observable conditions for branches and fallbacks.
 5. Prefer a positive recipe or output contract for shape problems. Reserve prohibitions for demonstrated safety or discipline failures.
-6. Keep `SKILL.md` concise. Retain supporting files only for necessary reusable tools or substantial reference material linked from the main file.
-7. Include an example only when it explains a non-obvious decision better than the rule itself.
+6. State each rule once. Delete duplication rather than move it into references. For an existing owner, state when to use it and which result to consume. Retain supporting files only for necessary reusable tools or substantial reference material linked from the main file.
+7. After drafting, compare the source and canonical contracts for lost behavior, capabilities or guarantees. Restore necessary behavior, not old prose; surface genuine conflicts rather than silently changing authority.
+8. Read the procedure for repeated rules, excessive setup, jargon and checklists that restate the steps. Choose headings that explain this job; no identical template or size cap is required. Include an example only when it explains a non-obvious decision better than the rule itself.
 
 ## Validation
 
@@ -58,7 +59,7 @@ Before publishing, verify:
 - the main file contains no redundant sections or examples
 - every supporting file is still required and referenced
 
-For a discipline-enforcing or high-risk skill, test realistic pressure scenarios before and after the change. For ordinary guidance, run a focused read-through or static validation that would have exposed the original defect.
+Use the smallest meaningful check of the changed behavior and report its limits. For a discipline-enforcing or high-risk change, use realistic pressure scenarios where they test the affected risk; paired before/after runs are not universally required. For ordinary guidance, a focused read-through or static check may suffice. Preserve applicable required runtime, integration, application, security and permission checks. Static or fixture checks do not prove model obedience or replace required live acceptance and its authority.
 
 ## Mandatory task checkpoint
 
