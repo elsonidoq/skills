@@ -37,7 +37,7 @@ UNIFIED_MEMORY_CARRIERS = (
     ("memory", "# Memory Handling", ("One verified\nproject association and one index", "two distinct evidence kinds")),
     ("planner", "## Discovery and capability boundary", ("verified unified index", "explicit owner guidance, alongside gotchas")),
     ("tiny", "## Inputs and preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
-    ("tasks", "## Establish the inputs", ("verified unified index", "explicit owner guidance and", "gotchas")),
+    ("tasks", "## Preconditions and adapters", ("verified unified", "explicit owner guidance, alongside gotchas")),
     ("helper", "## Preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
     ("coordinator", "# Coordinate Implementation", ("Memory Handling remains the unified owner", "execution-time feedback/routing")),
     ("adoption", "## Adoption", ("One associated index carries verified technical\n  gotchas and explicit future-directed owner guidance", "Do not scaffold a separate coordination or guidelines root")),
@@ -57,22 +57,17 @@ ACCEPTED_ADAPTER_CARRIERS = (
         "task-local REQUIRED check and worker brief", "not merely a link",
         "source/task conflict or uncertain current\nsupersession stops only the affected acceptance mapping",
     )),
-    ('accepted-task-preflight', "tasks", '## Establish the inputs', (
-        '[save-adr](../save-adr/SKILL.md)',
-        'direct, standalone, fresh and resumed',
-        'current accepted decisions and supersession',
-        'task dependency or gate, task-local REQUIRED check and worker/reviewer brief',
-        'not merely appear as a link',
-        'stops only the affected mapping',
+    ("accepted-task-preflight", "tasks", "## Preconditions and adapters", (
+        "[save-adr](../save-adr/SKILL.md)",
+        "direct entry and fresh/resumed", "re-establish relevant accepted authority",
+        "current supersession", "task's\ndependency or gate, task-local REQUIRED check and worker brief",
+        "not merely a link", "source/task conflict\nor uncertain current supersession stops only the affected task mapping",
     )),
-    ('accepted-speckit-adapter', "tasks", '## Establish the inputs', (
-        'For both routes',
-        'source observable and memory/accepted constraint',
-        'with its source link',
+    ("accepted-speckit-adapter", "tasks", "item:- A SpecKit adapter", (
+        "fresh/resumed", "source observable → dependency or gate → REQUIRED\n  check → brief mapping",
     )),
-    ('accepted-direct-adapter', "tasks", '## Establish the inputs', (
-        'including standalone entry',
-        'task dependency or gate, task-local REQUIRED check and worker/reviewer brief',
+    ("accepted-direct-adapter", "tasks", "item:- A direct adapter", (
+        "direct fresh/resumed", "source observable → dependency\n  or gate → REQUIRED check → brief mapping",
     )),
 )
 
@@ -226,7 +221,7 @@ def check_contracts(texts):
                          ("brainstorm", "## 1. Gate assessment"),
                          ("helper", "## Preflight"),
                          ("helper", "## Planner Standard adapter contract"),
-                         ("tasks", "## Establish the inputs")):
+                         ("tasks", "## Preconditions and adapters")):
         require("parsimony-consumer", section(texts[key], heading), "parsimony.md")
 
     p = texts["planner"]
@@ -259,17 +254,17 @@ def check_contracts(texts):
             "contradictory accepted authority or uncertain applicability stops only the\naffected continuation",
             "owner decision")
     require("task-concision", texts["tasks"],
-            "State shared constraints once", "reference source criteria",
-            "observable result needs supporting edits", "verify the exact operation",
-            "A file-tool read limit is not a task-loader", "an inferred remedy is not a new owner requirement")
-    executor_intake = section(texts["tasks"], "## Read the execution binding")
+            "State shared constraints once", "concise presentation, not a prose",
+            "Keep task-specific work and useful checks clear",
+            "verify the exact affected operation", "A worker file-tool bound is not a task-contract loader bound",
+            "An inference or agreement to a narrowly explained remedy")
+    executor_intake = section(texts["tasks"], "## Executor guidance")
     require("executor-producer-intake", executor_intake,
-            "Before either route decomposes work", "producer itself must read",
-            "exact absolute path supplied", "valid worker model and effort",
-            "planner/parent/producer profile or a remembered default",
-            "Valid configuration needs no executor-selection question",
+            "Before either adapter decomposes work", "producer itself must read",
+            "exact path supplied in its brief", "valid worker model and effort",
+            "planner/parent/producer profile, remembered\ndefault", "present valid JSON needs no executor-selection\nquestion",
             "path is missing, ambiguous or unreadable", "worker model/effort is missing or invalid",
-            "role, path and problem", "Do not substitute assignments")
+            "affected role, path and problem", "concrete\ninterfaces, owned paths, earlier dependencies, local checks and real permission/manual gates")
     require("executor-planner-handoff", section(p, "## Intended executor before decomposition"),
             "resolve the current project's selected executor JSON path once", "both direct TinySpec and Standard task-producer briefs",
             "scripts/resolve-workflow-executor.py --project PROJECT_ROOT", "exact absolute stdout path unchanged",
@@ -531,9 +526,9 @@ def check_contracts(texts):
     require("batch-source", texts["tiny"], "stable task-local REQUIRED")
     require("batch-brainstorm", texts["brainstorm"], "not implementation-task assignments")
     t = texts["tasks"]
-    require("task-contract", t, "**SpecKit:**", "**Direct:**", "separate source and tasks file",
-            "nonempty string `id`", "Optional `depends`", "Unique IDs", "Existing dependency references",
-            "Acyclic dependencies", "File order", "regenerate legacy tasks just to")
+    require("task-contract", t, "SpecKit adapter", "direct adapter", "separate source and tasks file",
+            "nonempty string `id`", "Optional `depends`", "IDs must be unique",
+            "references must exist", "not cycle", "File order", "Do not regenerate old tasks")
     helper_adapter = section(texts["helper"], "## Planner Standard adapter contract")
     require("adapter", helper_adapter, "Planner Standard adapter", "`planner`", "same-session pass",
             "do not direct it to create the plan again")
@@ -565,8 +560,8 @@ def check_contracts(texts):
     require("validation-reuse", validation,
             "Reuse valid unchanged evidence", "scope, revisions and environment",
             "Avoid repeated historical intake", "small causal\nsteps", "actually blocks")
-    require("validation-tasks", section(t, "## Choose evidence before reliance"), "smallest relevant project check",
-            "optional task context", "not universal acceptance boilerplate", "real outcome")
+    require("validation-tasks", section(t, "## Task contract"), "smallest relevant project check",
+            "optional task context", "not mandatory universal acceptance items", "real outcome")
     require("validation-execution", section(c, "## Execute and Integrate"), "Project check commands are optional",
             "no universal collection-count/receipt", "preserve pre-existing/unknown bytes; never adopt them")
     require("validation-timeout", section(c, "## Recover Context"),
@@ -694,14 +689,12 @@ def check_contracts(texts):
     # Unified-memory obligations belong at actual entry boundaries, not a footer.
     entries = (("planner", "## Discovery and capability boundary", "unified-memory-planner"),
                ("tiny", "## Inputs and preflight", "unified-memory-tiny"),
-               ("tasks", "## Establish the inputs", "unified-memory-tasks"),
+               ("tasks", "## Preconditions and adapters", "unified-memory-tasks"),
                ("helper", "## Preflight", "unified-memory-helper"))
     for key, heading, label in entries:
         body = section(texts[key], heading)
-        propagation = (("source observable and memory/accepted constraint", "task-local REQUIRED check", "worker/reviewer brief")
-                       if key == "tasks" else
-                       ("alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs"))
-        require(label, body, "Memory Handling", "unified index", "nonblocking", *propagation,
+        require(label, body, "Memory Handling", "unified index", "nonblocking",
+                "alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs",
                 "default history intake", "execution-time feedback routing")
     require("unified-memory-owner", texts["memory"],
             "One verified", "two distinct evidence kinds", "Owner guidance",
@@ -766,10 +759,10 @@ COMPOSED_CARRIERS = (
         'Use a separate proof prerequisite only when the consequential unknown and costly downstream reliance justify it',
         'block reliance only on insufficient or invalidated evidence, not on unrelated seams',
     )),
-    ('composed-tasks', "tasks", '## Choose evidence before reliance', (
+    ('composed-tasks', 'tasks', '## Task contract', (
         'separate green components cannot establish a genuine risky boundary',
         'smallest composed check that observes the final observable, order or custody',
-        'Reuse an existing focused check',
+        'Reuse an existing focused check that already observes the boundary',
         'Only an independently necessary prerequisite becomes an earlier task',
         'otherwise verify before reliance inside the same task',
     )),
@@ -777,8 +770,8 @@ COMPOSED_CARRIERS = (
         'only genuinely necessary producer/consumer dependencies', 'original permission/manual gates',
         'accessible proof/pass conditions',
     )),
-    ('composed-adapters', "tasks", '## Check and return', (
-        'work-specific checks, item mappings, exclusions and material permission boundaries in briefs',
+    ('composed-adapters', 'tasks', '## Review and handoff', (
+        'Carry work-specific checks', 'permission boundaries', 'worker brief',
     )),
 )
 
@@ -867,65 +860,45 @@ RISK_CARRIERS = (
      ("risk rationale", "genuinely necessary\ndependencies", "proof reuse/lifetime",
       "preserved production behavior", "disproof/NOT VERIFIED", "Failed/unrun proofs\ncannot release assumed reliance",
       "Routine cleanup stays with the task")),
-    ('risk-tasks', "tasks", '## Choose evidence before reliance', (
-        '[early risk reduction](../planner/references/early-risk-reduction.md)',
-        'missing-install report',
-        'both routes',
-        'direct/standalone entry',
-        'selection, evidence, applicability/lifetime, consumption, teardown and disproof rules',
-        'Planning schedules proofs',
-        'without separate authority',
-        'permanent actual-helper tests',
-        'one genuinely unknown consequential question',
-        'script code and actual observed execution evidence',
-        '**[PROTOTYPE]**',
-        'Only an independently necessary prerequisite becomes an earlier task',
-        'Failed or unrun evidence cannot release assumed reliance',
-    )),
-    ('risk-task-review', "tasks", '## Check and return', (
-        'selection/omission rationale',
-        'runtime evidence',
-        'proof lifetime/reuse',
-        'production acceptance',
-        'failed/unrun reliance blockers',
-        'Challenge gratuitous splits and disproportionate checks',
-    )),
+    ("risk-tasks", "tasks", "## Task contract",
+     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "missing-install report",
+      "Both adapters and direct entry", "Planning schedules proofs", "separate authority",
+      "Known bounded behavior normally uses permanent actual-helper\ntests",
+      "ONE consequential question", "script code and actual\nobserved execution evidence",
+      "Both the direct and SpecKit adapters", "mark the task title **[PROTOTYPE]**",
+      "Only an independently necessary\nprerequisite becomes an earlier task", "Failed or unrun evidence cannot release assumed reliance")),
+    ("risk-task-review", "tasks", "## Review and handoff",
+     ("Review selection/omission", "applicable dependencies", "proof lifetime",
+      "Challenge redundant task splits, duplicate proofs/report chains and disproportionate checks",
+      "only necessary producer/consumer\ndependencies", "For a [PROTOTYPE] task", "marker and bounded informational\nscope",
+      "Reuse unchanged applicable proof once with all mappings", "routine teardown inside its task",
+      "actual independently consequential resource or outcome")),
 )
 
 
 BOUNDARY_CARRIERS = (
-    ('task-boundaries', "tasks", '## Find work that can finish', (
-        'one bounded behavior or interface',
-        'without unfinished downstream implementation',
-        'ordinary test writing/running, evidence, review preparation and routine teardown',
-        'independently necessary deliverable, prerequisite, gate, resource boundary or material context incompatibility',
-        'not a workflow noun or quota',
-    )),
+    ("task-boundaries", "tasks", "## Task contract",
+     ("A task delivers an independently verifiable outcome, not a phase label",
+      "Separate tasks only for a concrete independently necessary deliverable, prerequisite, gate, resource boundary or material context incompatibility",
+      "Test writing/running, evidence, verification, review preparation and routine teardown normally stay inside that outcome",
+      "Do not split by a workflow noun or task-count quota")),
     ("planner-boundaries", "planner", "## Proportionate validation",
      ("During production and the simplicity review", "workflow or phase noun is not a reason to split",
       "task-generation outcome rule", "Reject duplicate proof/report chains and disproportionate checks")),
-    ('task-review-boundaries', "tasks", '## Check and return', (
-        'Challenge gratuitous splits',
-        'without weakening acceptance or gates',
-    )),
+    ("task-review-boundaries", "tasks", "## Review and handoff",
+     ("Challenge redundant task splits", "without weakening acceptance or original gates",
+      "For a [PROTOTYPE] task, preserve the marker and bounded informational\nscope in the handoff and worker brief")),
 )
 
 
 # Contract carriers only: they preserve the six intake-linter rules and do not score tasks.
 ATOMIC_OUTCOME_CARRIERS = (
-    ('atomic-creator', "tasks", '## Find work that can finish', (
-        'meaningful acceptance passes with completed predecessors and its own result',
-        'without unfinished downstream implementation',
-        'Split independently testable concerns',
-        'ordinary cross-system wiring through established interfaces can remain one task',
-        'focused wiring test, docs and support work establish the final observable',
-    )),
-    ('atomic-direct-review', "tasks", '## Check and return', (
-        'For either route',
-        'Reject multi-interface milestones',
-        'accept independent slices using completed predecessors',
-        'ordinary established wiring with focused tests/docs',
-    )),
+    ("atomic-creator", "tasks", "### Executor-sized outcomes",
+     ("one bounded behavior or interface whose meaningful acceptance\n   passes using completed prerequisites and its own result, without unfinished downstream\n   implementation",
+      "Challenge a milestone bundle that leaves several independently testable\n   interfaces unfinished together", "ordinary cross-system wiring outcome may remain one task",
+      "focused wiring test, relevant documentation and ordinary support work establish the final\nobservable")),
+    ("atomic-direct-review", "tasks", "## Review and handoff",
+     ("either adapter and direct tasking", "reject a multi-interface milestone whose interfaces must all\nremain unfinished for acceptance", "accept independently verifiable slices with completed\nprerequisites", "ordinary established cross-system wiring with its focused tests/docs")),
     ("atomic-planner", "planner", "## Proportionate validation",
      ("Each task must deliver one bounded behavior or interface whose meaningful acceptance passes using\ncompleted prerequisites and its own result, without unfinished downstream implementation",
       "milestones that leave several independently testable interfaces unfinished together",
@@ -939,16 +912,10 @@ ATOMIC_OUTCOME_CARRIERS = (
 
 # Material risk handoff uses existing review/brief carriers, not a new schema or admission gate.
 RISK_HANDOFF_CARRIERS = (
-    ('risk-task-handoff', "tasks", '## Check and return', (
-        'task-specific material execution risks or prerequisites',
-        'affected task',
-        'observed evidence versus unknowns',
-        'investigation, mitigation or necessary permission',
-        'coordinator must consume these findings before affected worker reliance',
-        'later discoveries use the same handoff',
-        'unavailable capability, access, paid, data or external operation and corrective action',
-        'Block only affected work',
-        'do not add a risk schema',
+    ("risk-task-handoff", "tasks", "## Review and handoff", (
+        "task-specific material execution risks or prerequisites", "affected\ntask", "observed evidence versus unknowns", "next investigation, mitigation, or necessary permission",
+        "coordinator must consume these findings before\naffected worker reliance", "later discoveries use the same handoff", "Do not create a risk schema",
+        "unavailable capability,\naccess, paid, data, or external boundary", "affected operation and corrective action", "unrelated safe work continues",
     )),
     ("risk-shared-review-handoff", "planner", "## Proportionate validation", (
         "At both TinySpec review and Standard overall review", "material task-specific execution\nrisk or prerequisite", "affected task",
@@ -1002,34 +969,16 @@ AUTHORITY_CARRIERS = (
     ("truth-helper", "helper", "## Planner Standard adapter contract", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "Governing instructions/contracts, memory and permission/safety still apply")),
     ("truth-tiny-task-stage", "planner", "item:3. **Tasks", ("Apply the shared stage rules and source/task authority",)),
     ("truth-standard-task-stage", "planner", "stage:tasks_create", ("Apply the shared stage rules and source/task\n   authority",)),
-    ('truth-speckit-adapter', "tasks", '## Establish the inputs', (
-        '**SpecKit:**',
-        'specification as requirements truth',
-        'approved plan only as derived sequencing',
-        'create-only',
-        'For both routes, source criteria govern task checks',
-        'Do not forward or reread SDD guidance as direct requirements input',
-        'Governing instructions, memory and permission/safety contracts still apply',
-    )),
-    ('truth-direct-adapter', "tasks", '## Establish the inputs', (
-        '**Direct:**',
-        'TinySpec or legacy requirement as requirements truth',
-        'No plan or SpecKit is required',
-        'For both routes, source criteria govern task checks',
-        'Do not forward or reread SDD guidance as direct requirements input',
-        'Governing instructions, memory and permission/safety contracts still apply',
-    )),
+    ("truth-speckit-adapter", "tasks", "item:- A SpecKit adapter", ("Specification is requirements truth", "approved plan is derived", "sequencing only", "No SDD forwarding/rereading as direct requirements input", "Trace source", "criteria into task checks", "Governing instructions/contracts, memory and permission/safety", "create-only")),
+    ("truth-direct-adapter", "tasks", "item:- A direct adapter", ("legacy source is requirements truth", "No SDD forwarding/rereading as direct requirements", "input", "Trace source criteria into task checks", "Governing instructions/contracts, memory", "permission/safety still apply")),
     ("brief-coverage", "approval", "## Executive brief before approval", ("concrete included scope", "Every actual ordered plan stage separately", "meaningful outcome", "Every actual task ID separately", "execution order", "Never truncate beyond six, merge IDs/stages", "catch-alls or empty headings", "TinySpec has no plan; specification-only approval", "This adds no plan approval gate", "Renewals regenerate the complete brief from current artifacts", "before calling `ask_user`")),
 )
 
 
 AUTHORED_COMMAND_CARRIERS = (
-    ('authored-command-shared', "tasks", '## Write the deliverables', (
-        'authored deterministic required command once',
-        'existing `checks`, `check`, or `required[].check` field',
-        'Keep semantic criteria as prose',
-        'never compile prose into shell',
-        'leave absent optional checks absent',
+    ("authored-command-shared", "tasks", "## Structured executable handoff (both adapters)", (
+        "When authoring a deterministic required command", "existing `checks`, `check`, or `required[].check` field",
+        "keep semantic criteria as prose", "never compile prose into shell", "leave absent optional checks absent",
     )),
     ("authored-command-tiny", "tiny", "## Intended executor before decomposition", (
         "deterministic required command", "existing executable check\nfield once", "semantic criteria as prose", "optional absent checks absent",
@@ -1044,16 +993,10 @@ AUTHORED_COMMAND_CARRIERS = (
 
 
 VERIFICATION_CARRIERS = (
-    ('verification-practical', "tasks", '## Choose evidence before reliance', (
-        'State the observable and pass condition',
-        'selected ID reaches the consumer unchanged',
-        'representative-sample STOP needs a real source/risk reason',
-    )),
-    ('verification-legacy', "tasks", '## Write the deliverables', (
-        'File order and ID numbering do not determine execution order',
-        'regenerate legacy tasks just to remove metadata',
-        'existing `required` check mappings must be consumed',
-    )),
+    ("verification-practical", "tasks", "## Task contract",
+     ("Use practical observables", "Both adapters", "item mappings", "no special manual gate")),
+    ("verification-legacy", "tasks", "## Structured executable handoff (both adapters)",
+     ("No required order", "Do not regenerate old tasks", "Useful existing `required` check mappings")),
     ("verification-planner", "planner", "## Proportionate validation",
      ("practical observables", "generic green suite", "STOP and explicit user approval")),
     ("verification-handoff", "planner", "## Selected production and stage handoffs",

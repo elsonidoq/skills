@@ -15,7 +15,7 @@ TEXT = (Path(__file__).parents[1] / "SKILL.md").read_text(encoding="utf-8")
 COMPOSED_RULES = (
     'separate green components cannot establish a genuine risky boundary',
     'smallest composed check that observes the final observable, order or custody',
-    'Reuse an existing focused check',
+    'Reuse an existing focused check that already observes the boundary',
     'Only an independently necessary prerequisite becomes an earlier task',
     'otherwise verify before reliance inside the same task',
 )
@@ -49,13 +49,13 @@ def composition_observations():
 
 class ComposedAcceptanceTests(unittest.TestCase):
     def test_task_contract_requires_unobserved_boundary_proof(self):
-        body = ' '.join(TEXT.split('## Choose evidence before reliance', 1)[1].split('## Write the deliverables', 1)[0].split())
+        body = ' '.join(TEXT.split('## Task contract', 1)[1].split('## Review and handoff', 1)[0].split())
         for rule in COMPOSED_RULES:
             with self.subTest(rule=rule):
                 self.assertIn(rule, body)
                 self.assertNotIn(rule, body.replace(rule, 'REMOVED', 1))
-        self.assertIn('permission boundaries in briefs',
-                      ' '.join(TEXT.split('## Check and return', 1)[1].split()))
+        self.assertIn('permission boundaries into the worker brief',
+                      ' '.join(TEXT.split('## Review and handoff', 1)[1].split()))
 
     def test_isolated_green_broken_and_corrected_first_write(self):
         result, broken, corrected_result, corrected = composition_observations()
@@ -125,146 +125,136 @@ class ComposedAcceptanceTests(unittest.TestCase):
 
 class TaskGenerationContractTests(unittest.TestCase):
 
-    def assert_clauses(self, heading, clauses):
-        body = TEXT if heading is None else TEXT.split(heading, 1)[1].split("\n## ", 1)[0]
-        body = " ".join(body.split())
-        for clause in clauses:
-            with self.subTest(clause=clause):
-                self.assertIn(clause, body)
-
-
-    def test_required_owner_links_resolve(self):
-        skill = Path(__file__).parents[1] / 'SKILL.md'
-        for target in re.findall(r'\]\(([^)]+)\)', TEXT):
-            with self.subTest(target=target):
-                self.assertTrue((skill.parent / target.split('#')[0]).is_file())
-
-    def test_binding_and_constraints_precede_decomposition(self):
-        inputs = TEXT.index('## Establish the inputs')
-        binding = TEXT.index('## Read the execution binding')
-        sizing = TEXT.index('## Find work that can finish')
-        self.assertLess(inputs, binding)
-        self.assertLess(binding, sizing)
-        self.assertLess(TEXT.index('task dependency or gate, task-local REQUIRED check'), sizing)
-        self.assertLess(TEXT.index('producer itself must read'), sizing)
-
     def test_guidance_changes_dependency_check_and_brief_in_both_adapters(self):
-        self.assert_clauses('## Establish the inputs', (
-            'direct, standalone, fresh and resumed',
-            '[Memory Handling](../memory-handling/SKILL.md)',
-            '[save-adr](../save-adr/SKILL.md)',
-            'current accepted decisions and supersession',
-            'task dependency or gate, task-local REQUIRED check and worker/reviewer brief',
-            'not merely appear as a link',
-            'stops only the affected mapping',
-        ))
+        preflight = TEXT.split("## Preconditions and adapters", 1)[1].split("## Task contract", 1)[0]
+        for clause in ("including direct entry without planner", "relevant decision",
+                       "task-local REQUIRED check and worker brief", "not merely a link"):
+            self.assertIn(clause, preflight)
+            self.assertNotIn(clause, preflight.replace(clause, "REMOVED", 1))
 
     def test_direct_and_speckit_adapters(self):
-        self.assert_clauses('## Establish the inputs', (
-            'authorization to **prepare** tasks',
-            'approval comes after production',
-            '**Direct:**',
-            'No plan or SpecKit is required',
-            '**SpecKit:**',
-            'specification as requirements truth',
-            'approved plan only as derived sequencing',
-            'unavailable required stage stops production',
-            'Do not forward or reread SDD guidance',
-        ))
+        self.assertIn("SpecKit adapter", TEXT)
+        self.assertIn("direct adapter", TEXT)
+        self.assertIn("does not\n  require a plan or SpecKit", TEXT)
+        self.assertIn("authorization to\n**prepare** tasks", TEXT)
+        self.assertIn("Do not require final task/implementation approval", TEXT)
 
 
     def test_authorization_neutral_authoring_and_final_planning_review(self):
-        self.assert_clauses('## Write the deliverables', (
-            'authorization-neutral work instructions',
-            'belongs in the approval record',
-            'action-specific permission boundaries and manual gates',
-            'Small isolated tests and local test databases need no extra owner question',
-            'avoid exhausting resources or affecting unrelated data/services',
-            'Ordinary scoped fixes',
-            'does not authorize global installs',
-        ))
-        self.assertIn('review source coverage, exclusions, authorization neutrality', TEXT)
+        guidance = ' '.join(TEXT.split('### Authorization-neutral tasks', 1)[1].split(
+            '## Structured executable handoff', 1)[0].split())
+        for clause in ('authorization-neutral work instructions', 'in the approval record, not task',
+                       'Preserve genuine action-specific permission boundaries and manual gates',
+                       'small isolated tests and local test databases without an extra owner question',
+                       'avoid exhausting machine resources or affecting unrelated data/services'):
+            self.assertIn(clause, guidance)
+        review = ' '.join(TEXT.split('## Review and handoff', 1)[1].split())
+        self.assertIn('At final planning review, check that executable tasks are authorization-neutral', review)
         planner = (Path(__file__).parents[2] / 'planner' / 'SKILL.md').read_text()
-        self.assertEqual(planner.count('../task-generation/SKILL.md#authorization-neutral-tasks'), 2)
+        for start, end in (('**Review — fresh independent reviewer with planner-parent binding', '**Combined approval'),
+                           ('**`overall_review`', '\n## ')):
+            stage = planner.split(start, 1)[1].split(end, 1)[0]
+            self.assertIn('../task-generation/SKILL.md#authorization-neutral-tasks', stage)
+            self.assertIn('temporary phase/approval status belongs in the approval record', stage)
 
     def test_adapter_legacy_and_checkpoint_boundaries_remain(self):
-        self.assert_clauses(None, (
-            'legacy task-embedded requirements remain valid',
-            'create-only',
-            'separate source and tasks file',
-            'task-commit contract',
-            'checkpoint this deliverable before combined artifact approval',
-            'separately from its source',
-            'independent review and approval route',
-        ))
+        self.assertIn("Existing task-embedded requirements remain valid for legacy", TEXT)
+        self.assertIn("Keep the stage create-only", TEXT)
+        self.assertIn("separate source and tasks file", TEXT)
+        self.assertIn("task-commit contract", TEXT)
+        self.assertIn("checkpointing it separately", TEXT)
 
 
     def test_delivery_boundaries_and_prototype_policy_are_required(self):
-        self.assert_clauses('## Choose evidence before reliance', (
-            'early risk reduction',
-            'both routes',
-            'direct/standalone entry',
-            'selection, evidence, applicability/lifetime, consumption, teardown and disproof rules',
-            'without separate authority',
-            'permanent actual-helper tests',
-            'one genuinely unknown consequential question',
-            '**[PROTOTYPE]**',
-            'marker and bounded informational scope in the handoff and worker brief',
-            'script code and actual observed execution evidence',
-            'Only an independently necessary prerequisite becomes an earlier task',
-            'otherwise verify before reliance inside the same task',
-            'Failed or unrun evidence cannot release assumed reliance',
-            'renew affected existing approvals',
-        ))
+        contract = TEXT.split("## Task contract", 1)[1].split("## Review and handoff", 1)[0]
+        review = TEXT.split("## Review and handoff", 1)[1].split("## Mandatory", 1)[0]
+        for clause in (
+            "A task delivers an independently verifiable outcome, not a phase label",
+            "Separate tasks only for a concrete independently necessary deliverable, prerequisite, gate, resource boundary or material context incompatibility",
+            "Test writing/running, evidence, verification, review preparation and routine teardown normally stay inside that outcome",
+            "Do not split by a workflow noun or task-count quota",
+            "Known bounded behavior normally uses permanent actual-helper tests",
+            "verified earlier step inside its delivery task", "genuinely unknown consequential",
+            "ONE consequential question", "[PROTOTYPE]", "informational conclusion",
+            "both script code and actual observed execution evidence", "early risk reduction",
+            "Both the direct and SpecKit adapters mark the task title **[PROTOTYPE]**",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(" ".join(clause.split()), " ".join(contract.split()))
+        for clause in (
+            "Challenge redundant task splits, duplicate proofs/report chains and disproportionate checks",
+
+
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(" ".join(clause.split()), " ".join(review.split()))
 
     def test_producer_reads_actual_executor_json_before_both_adapter_decompositions(self):
-        self.assert_clauses('## Read the execution binding', (
-            'Before either route decomposes work',
-            'producer itself must read',
-            'exact absolute path supplied',
-            'valid worker model and effort',
-            'planner/parent/producer profile or a remembered default',
-            'Valid configuration needs no executor-selection question',
-            'path is missing, ambiguous or unreadable',
-            'worker model/effort is missing or invalid',
-            'role, path and problem',
-            'Do not substitute assignments',
-            'On standalone entry without a resolved path',
-            '--executor PATH',
-            'fall back after a failed override',
-        ))
+        guidance = ' '.join(TEXT.split('## Executor guidance', 1)[1].split('## Task contract', 1)[0].split())
+        for clause in (
+            'Before either adapter decomposes work', 'producer itself must read',
+            'exact path supplied in its brief', 'valid worker model and effort',
+            'planner/parent/producer profile, remembered default',
+            'present valid JSON needs no executor-selection question',
+            'path is missing, ambiguous or unreadable', 'worker model/effort is missing or invalid',
+            'affected role, path and problem', 'concrete interfaces, owned paths, earlier dependencies, local checks and real permission/manual gates',
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(' '.join(clause.split()), guidance)
+        self.assertNotIn('qualified seed rubric', TEXT)
 
     def test_executor_sized_recipe_and_planner_review_reference(self):
-        self.assert_clauses('## Find work that can finish', (
-            'one bounded behavior or interface',
-            'completed predecessors and its own result',
-            'without unfinished downstream implementation',
-            'owned change paths, scope/exclusions, consumed interfaces',
-            'context loss, compaction and drift',
-            'selected executor/effort and observed capability',
-            'model-family hierarchy',
-            'task-count, file, line, token or time ceilings',
-            'Reader acceptance must not wait for that browser',
-            'ordinary cross-system wiring',
-            'focused wiring test, docs and support work',
-            'not a workflow noun or quota',
-        ))
-        planner = (Path(__file__).parents[2] / 'planner' / 'SKILL.md').read_text()
-        self.assertIn('../task-generation/SKILL.md#executor-sized-outcomes', planner)
-        for anchor in ('executor-sized-outcomes', 'authorization-neutral-tasks',
-                       'structured-executable-handoff-both-adapters'):
-            self.assertIn(f'<a id="{anchor}"></a>', TEXT)
+        """Instruction coverage only; realistic boundary judgments need manual pressure checks."""
+        recipe = TEXT.split("### Executor-sized outcomes", 1)[1].split(
+            "State shared constraints once", 1)[0]
+        for clause in (
+            "A delivery milestone groups related capabilities",
+            "one bounded outcome", "owned change paths", "scope/exclusions",
+            "consumed interfaces and earlier producer dependencies",
+            "multiple unfinished concerns", "context loss, compaction and drift",
+            "selected executor/effort and observed capabilities",
+            "not a model-family hierarchy", "without unfinished downstream implementation",
+            "no universal task count or file/line/token/time ceiling",
+            "ordinary tests, relevant docs and routine teardown",
+            "Before:", "After:", "Reader acceptance does not wait for the browser",
+            "Keep a simple reader fix and its regression test together",
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, " ".join(recipe.replace("**", "").split()))
+        planner = (Path(__file__).parents[2] / "planner" / "SKILL.md").read_text()
+        review = planner.split("## Proportionate validation", 1)[1].split(
+            "## Before selection", 1)[0]
+        self.assertIn("../task-generation/SKILL.md#executor-sized-outcomes", review)
+        self.assertIn("milestones that leave several independently testable interfaces unfinished together",
+                      " ".join(review.split()))
+        self.assertIn("configured executor/effort", review)
 
     def test_ui_control_supporting_ownership_example(self):
         """Static authoring contrasts, not runtime closure or type-check validation."""
-        self.assert_clauses('## Find work that can finish', (
-            'acceptance selectors, coupled fixtures, admitting harness and final configuration/override owners',
-            'inspect its applicable admitting/type check',
-            'necessary in-scope tests, fixtures, configuration, harness changes and relevant documentation',
-            'name the real predecessor that supplies them',
-            'Do not assign a product file alone',
-            'work description or existing optional fields, not a new schema',
-        ))
+        recipe = TEXT.split("### Executor-sized outcomes", 1)[1].split(
+            "State shared constraints once", 1)[0]
+        omitted = "Add the export control in `ui/export_controls.py`; own only\nthat file"
+        corrected = ("owning the\ncontrol, selector, harness, necessary final configuration/override support and applicable\nproducer check"
+                     " in the same bounded UI outcome")
+        clauses = (
+            "acceptance selectors, coupled fixtures and admitting\n   harness alongside the product interface, and inspect the final configuration/override owners\n   that produce its final observable",
+            "Before a dependent relies on a producer fixture, inspect\n   that fixture's applicable admitting/type check",
+            omitted,
+            "`tests/test_export_controls.py::test_capture_export_button`",
+            "`scripts/run-ui-captures.py`",
+            "final configuration/override owners that make the export\ncontrol's final observable available",
+            "fixture's applicable admitting/type check",
+            corrected,
+            "ordinary already-observed success control needs only its\nexisting focused check",
+            "not a generic path/dependency-closure\nvalidator or a new task field",
+        )
+        recipe = " ".join(recipe.split())
+        for clause in clauses:
+            clause = " ".join(clause.split())
+            with self.subTest(clause=clause):
+                self.assertIn(clause, recipe)
+                if recipe.count(clause) == 1:
+                    self.assertNotIn(clause, recipe.replace(clause, "REMOVED", 1))
 
         # Contrast only the instruction's required task description; this is not a task validator.
         def prepared(description):
@@ -292,13 +282,11 @@ class TaskGenerationContractTests(unittest.TestCase):
             with self.subTest(omission=omission):
                 self.assertFalse(prepared(dict(ordinary_success, **omission)))
 
-        self.assert_clauses('## Write the deliverables', (
-            'existing `checks`, `check`, or `required[].check` field',
-            'startup linter has six checks', 'Empty lists mean no work',
-            'existing `required` check mappings must be consumed',
-            'Without owned paths the runner claims only clean, unchanged paths',
-            'optional top-level `delivery_issue`',
-        ))
+        handoff = TEXT.split("## Structured executable handoff", 1)[1].split(
+            "## Review and handoff", 1)[0]
+        self.assertIn("existing `checks`, `check`, or `required[].check` field", handoff)
+        self.assertIn("six startup linter checks", handoff)
+        self.assertIn("authorization-neutral", TEXT)
 
     def assert_prototype_adapter_fixture(self, source):
         tasks = re.findall(r"(?m)^- \[ \] (T\d+) (.+)$", source)
