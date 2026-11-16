@@ -58,10 +58,16 @@ ACCEPTED_ADAPTER_CARRIERS = (
         "source/task conflict or uncertain current\nsupersession stops only the affected acceptance mapping",
     )),
     ("accepted-task-preflight", "tasks", "## Preconditions and adapters", (
-        "For both adapters", "[save-adr](../save-adr/SKILL.md)",
+        "[save-adr](../save-adr/SKILL.md)",
         "direct entry and fresh/resumed", "re-establish relevant accepted authority",
         "current supersession", "task's\ndependency or gate, task-local REQUIRED check and worker brief",
         "not merely a link", "source/task conflict\nor uncertain current supersession stops only the affected task mapping",
+    )),
+    ("accepted-speckit-adapter", "tasks", "item:- A SpecKit adapter", (
+        "fresh/resumed", "source observable → dependency or gate → REQUIRED\n  check → brief mapping",
+    )),
+    ("accepted-direct-adapter", "tasks", "item:- A direct adapter", (
+        "direct fresh/resumed", "source observable → dependency\n  or gate → REQUIRED check → brief mapping",
     )),
 )
 
@@ -856,20 +862,17 @@ RISK_CARRIERS = (
       "Routine cleanup stays with the task")),
     ("risk-tasks", "tasks", "## Task contract",
      ("[early risk reduction](../planner/references/early-risk-reduction.md)", "missing-install report",
-      "Both adapters and direct entry", "selection/omission, evidence, applicability/lifetime and disproof rules",
-      "Planning schedules proofs", "separate authority",
-      "Consume its findings as task dependencies, checks and blocked reliance, not report-only links",
-      "Known bounded behavior uses permanent actual-helper tests", "verified step in its delivery",
-      "Both the direct and SpecKit adapters mark the task title **[PROTOTYPE]**",
-      "bounded informational scope into the handoff and worker brief",
-      "Only an independently necessary prerequisite becomes an earlier task",
-      "Failed or unrun evidence cannot release assumed reliance",
-      "correction/approval-renewal route")),
+      "Both adapters and direct entry", "Planning schedules proofs", "separate authority",
+      "Known bounded behavior normally uses permanent actual-helper\ntests",
+      "ONE consequential question", "script code and actual\nobserved execution evidence",
+      "Both the direct and SpecKit adapters", "mark the task title **[PROTOTYPE]**",
+      "Only an independently necessary\nprerequisite becomes an earlier task", "Failed or unrun evidence cannot release assumed reliance")),
     ("risk-task-review", "tasks", "## Review and handoff",
-     ("Apply the early-risk owner's review contract", "selection/omission", "applicable dependencies",
-      "proof lifetime", "production acceptance", "disproof/renewal", "both adapters/direct entry",
-      "Return its applicable evidence/limits and blocked reliance", "producing review and coordinator handoff",
-      "Challenge redundant task splits, duplicate proofs/report chains and disproportionate checks")),
+     ("Review selection/omission", "applicable dependencies", "proof lifetime",
+      "Challenge redundant task splits, duplicate proofs/report chains and disproportionate checks",
+      "only necessary producer/consumer\ndependencies", "For a [PROTOTYPE] task", "marker and bounded informational\nscope",
+      "Reuse unchanged applicable proof once with all mappings", "routine teardown inside its task",
+      "actual independently consequential resource or outcome")),
 )
 
 
@@ -884,7 +887,7 @@ BOUNDARY_CARRIERS = (
       "task-generation outcome rule", "Reject duplicate proof/report chains and disproportionate checks")),
     ("task-review-boundaries", "tasks", "## Review and handoff",
      ("Challenge redundant task splits", "without weakening acceptance or original gates",
-      "Apply the early-risk owner's review contract")),
+      "For a [PROTOTYPE] task, preserve the marker and bounded informational\nscope in the handoff and worker brief")),
 )
 
 
@@ -966,12 +969,8 @@ AUTHORITY_CARRIERS = (
     ("truth-helper", "helper", "## Planner Standard adapter contract", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "Governing instructions/contracts, memory and permission/safety still apply")),
     ("truth-tiny-task-stage", "planner", "item:3. **Tasks", ("Apply the shared stage rules and source/task authority",)),
     ("truth-standard-task-stage", "planner", "stage:tasks_create", ("Apply the shared stage rules and source/task\n   authority",)),
-    ("truth-task-common", "tasks", "## Preconditions and adapters", (
-        "For both adapters", "Trace source criteria into task checks",
-        "No SDD forwarding/rereading as direct requirements input",
-        "Governing instructions, memory and permission/safety constraints apply throughout")),
-    ("truth-speckit-adapter", "tasks", "item:- A SpecKit adapter", ("Specification is requirements truth", "approved plan is derived", "sequencing only", "create-only")),
-    ("truth-direct-adapter", "tasks", "item:- A direct adapter", ("legacy source is requirements truth", "does not require a plan or SpecKit")),
+    ("truth-speckit-adapter", "tasks", "item:- A SpecKit adapter", ("Specification is requirements truth", "approved plan is derived", "sequencing only", "No SDD forwarding/rereading as direct requirements input", "Trace source", "criteria into task checks", "Governing instructions/contracts, memory and permission/safety", "create-only")),
+    ("truth-direct-adapter", "tasks", "item:- A direct adapter", ("legacy source is requirements truth", "No SDD forwarding/rereading as direct requirements", "input", "Trace source criteria into task checks", "Governing instructions/contracts, memory", "permission/safety still apply")),
     ("brief-coverage", "approval", "## Executive brief before approval", ("concrete included scope", "Every actual ordered plan stage separately", "meaningful outcome", "Every actual task ID separately", "execution order", "Never truncate beyond six, merge IDs/stages", "catch-alls or empty headings", "TinySpec has no plan; specification-only approval", "This adds no plan approval gate", "Renewals regenerate the complete brief from current artifacts", "before calling `ask_user`")),
 )
 

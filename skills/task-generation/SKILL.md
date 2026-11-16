@@ -5,10 +5,9 @@ description: Use when producing or reviewing dependency-aware implementation tas
 
 # Task Generation
 
-Turn authoritative requirements into independent, executor-sized implementation tasks.
-Read the source and selected executor, decompose and verify the task boundaries, then return
-human tasks, an executable handoff and material risks to the producing review/coordinator.
-This contract owns task semantics, not workflow selection, planning or execution.
+Produce complete, dependency-aware, independently verifiable implementation tasks. This
+shared contract owns task semantics and validation; it does not select a workflow origin,
+create a plan, or execute tasks.
 
 ## Preconditions and adapters
 
@@ -22,37 +21,46 @@ creates the task artifact. If a required source, preparation authorization, appl
 approval, or capability is missing, report the missing evidence and stop rather than inventing
 an artifact.
 
-For both adapters, including direct entry without planner, apply these common inputs on
-direct entry and fresh/resumed production. Verify the linked owners are readable; missing
-required guidance stops the affected mapping with a missing-install report:
+Use [Memory Handling](../memory-handling/SKILL.md) during initial understanding,
+including direct entry without planner: retrieve relevant guidance from the verified unified
+index without auto-initialization; missing optional storage or STATE is nonblocking. Carry
+relevant explicit owner guidance, alongside gotchas, through source observables → dependencies
+or gates → task-local REQUIRED checks → worker/reviewer briefs; no default history intake,
+execution-time feedback routing, routine persistence, reflection, inferred lessons, or STATE
+maintenance. Preserve its explicit-feedback authority and path/symlink, sensitive-data, and
+dirty/concurrent safeguards. Apply [save-adr](../save-adr/SKILL.md)'s consult/propagate contract. On direct entry and fresh/resumed
+production, re-establish relevant accepted authority and current supersession. Both adapters
+carry exact applicable constraints and source links from source observables into the task's
+dependency or gate, task-local REQUIRED check and worker brief; verify the relevant decision
+affects that mapping, not merely a link. Preserve source/owner authority: source/task conflict
+or uncertain current supersession stops only the affected task mapping. No default history
+intake; explicit relevant retrieval is index-first where useful and retains uncertainty on no
+match. Required gotcha-memory gates remain separate.
 
-- Use [Memory Handling](../memory-handling/SKILL.md) to retrieve relevant guidance from the
-  verified unified index. Missing optional storage or STATE is nonblocking; do not initialize
-  storage or perform routine persistence, default history intake or execution-time feedback routing.
-- Apply [save-adr](../save-adr/SKILL.md)'s consult/propagate contract to re-establish relevant
-  accepted authority and current supersession. Carry applicable accepted constraints and
-  explicit owner guidance, alongside gotchas, through source observables → dependencies or
-  gates → task-local REQUIRED checks → worker/reviewer briefs, with source links. Each
-  relevant decision must affect the task's dependency or gate, task-local REQUIRED check and
-  worker brief, not merely a link. A source/task conflict or uncertain current supersession
-  stops only the affected task mapping; required gotcha-memory gates remain separate.
-- Trace source criteria into task checks. Source criteria are requirements truth; a plan
-  supplies derived sequencing only. No SDD forwarding/rereading as direct requirements input.
-  Governing instructions, memory and permission/safety constraints apply throughout.
+Execution uses the owner-selected configured binding without silent substitutions.
 
 Use the adapter matching the producing workflow:
 
-- A SpecKit adapter accepts planner's Standard specification/plan. Verify the project's
-  observed task-stage command and follow its instructions; unavailable required stage
-  capability is a stop. Specification is requirements truth; approved plan is derived
-  sequencing only. Keep the stage create-only when its producer requires it. Authorized
-  drafting, revision, shortening and mechanical validation of unsubmitted output need no
-  supervisor gate. Submitted defects follow the producing workflow's review/correction route.
-- A direct adapter accepts an owner-authorized durable TinySpec or legacy requirement/source;
-  it does not require a plan or SpecKit. TinySpec/legacy source is requirements truth.
-  Final approval follows produced-artifact review.
-
-Production does not substitute for independent review or authorize upstream requirement changes.
+- A SpecKit adapter accepts planner's Standard specification/plan, first verifies the
+  project's observed task-stage command and follows its instructions; unavailable required
+  stage capability is a stop. Specification is requirements truth; approved plan is derived
+  sequencing only. No SDD forwarding/rereading as direct requirements input. Trace source
+  criteria into task checks. Re-establish accepted-decision authority for fresh/resumed
+  production and preserve each applicable source observable → dependency or gate → REQUIRED
+  check → brief mapping. Governing instructions/contracts, memory and permission/safety still
+  apply. Keep the stage create-only when its producer requires it: ordinary drafting,
+  revision, shortening and mechanical validation of unsubmitted output are permitted within
+  authorized scope, without a supervisor gate. Production does not substitute for independent
+  review or authorize upstream requirement changes. Submitted defects follow the producing
+  workflow's review/correction route.
+- A direct adapter derives tasks from an owner-authorized durable TinySpec or legacy
+  requirement/source and does not
+  require a plan or SpecKit; final approval follows the produced-artifact review. TinySpec/
+  legacy source is requirements truth. No SDD forwarding/rereading as direct requirements
+  input. Trace source criteria into task checks. Re-establish accepted-decision authority for
+  direct fresh/resumed production and preserve each applicable source observable → dependency
+  or gate → REQUIRED check → brief mapping. Governing instructions/contracts, memory and
+  permission/safety still apply.
 
 Carry the associated qualified issue URL from the source or planner brief into the human tasks
 and executable handoff as optional top-level `delivery_issue`, and into the coordinator handoff.
@@ -99,17 +107,20 @@ interfaces, owned paths, earlier dependencies, local checks and real permission/
 
 Read and apply [early risk reduction](../planner/references/early-risk-reduction.md);
 verify it is readable or stop with a missing-install report. Both adapters and direct entry
-use its selection/omission, evidence, applicability/lifetime and disproof rules; do not assume
-planner already did. Planning schedules proofs, not execution without separate authority.
-Consume its findings as task dependencies, checks and blocked reliance, not report-only links.
-Known bounded behavior uses permanent actual-helper tests or a verified step in its delivery.
-For a genuinely unknown consequential behavior, select a disposable experiment only under that
-owner's criteria. Both the direct and SpecKit adapters mark the task title **[PROTOTYPE]**
-(or an explicit equivalent only for an incompatible observed format), and carry its bounded
-informational scope into the handoff and worker brief. Only an independently necessary
+apply it without assuming planner already did. Planning schedules proofs, not execution
+without separate authority. Known bounded behavior normally uses permanent actual-helper
+tests or a verified earlier step inside its delivery task; do not add a prototype task when
+that proof suffices. Select a disposable experiment only for a genuinely unknown consequential
+behavior, to answer ONE consequential question before costly reliance. If selected, use existing
+task fields to scope its informational conclusion/limits, with both script code and actual
+observed execution evidence; the shared owner defines the complete evidence, applicability and
+lifetime contract. Both the direct and SpecKit adapters mark the task title **[PROTOTYPE]** (or an
+explicit equivalent only for an incompatible observed format) and carry its bounded
+informational scope through the task handoff and worker brief. Only an independently necessary
 prerequisite becomes an earlier task; otherwise verify before reliance inside the same task.
-Consumers use applicable findings and keep permanent production acceptance tests. Failed or
-unrun evidence cannot release assumed reliance; use the owner's correction/approval-renewal route.
+Consumers use applicable findings and preserve behavior with permanent production acceptance
+tests. Failed or unrun evidence cannot release assumed reliance; retain limits, correct/replan
+and renew affected existing approvals rather than label a failed technique proven.
 
 A task delivers an independently verifiable outcome, not a phase label. Separate tasks only
 for a concrete independently necessary deliverable, prerequisite, gate, resource boundary or
@@ -150,21 +161,33 @@ During authoring and review:
    bundles and gratuitous splits: no universal task count or file/line/token/time ceiling; more
    prose or reading executor configuration alone does not make a task bounded.
 
-**Before:** “Deliver the reader, privacy mapper, HTTP service and browser; verify the app.”
-This bundles independently testable contracts into a milestone.
+**Before:** “Deliver the read-only graph viewer: snapshot reader, privacy mapping, HTTP
+service and usable browser; verify the complete app.” This is a milestone with several
+independently testable contracts, not one execution task.
 
-**After:** Deliver the reader against existing storage, with consistency/no-write checks and
-its docs; exclude mapper, HTTP and browser work. Then deliver each dependent interface against
-its completed predecessor with local acceptance. Reader acceptance does not wait for the browser.
-Keep a simple reader fix and its regression test together; this example sets no task count.
+**After:** First deliver the snapshot reader against the existing storage contract, owning
+only reader code, readback tests and its contract docs; verify snapshot consistency and no
+writes with actual storage. Exclude mapping, HTTP and browser work. Then deliver the mapper
+against that reader, HTTP against the public mapped contract, and browser against HTTP,
+each with its local tests/docs and concrete checks. Reader acceptance does not wait for the
+browser. Keep a simple reader fix and its regression test together; do not force this example's
+number of tasks onto other work. A bounded slice is acceptable when its completed predecessor
+contract and its own result make that slice meaningful without later unfinished work.
 
-**Supporting ownership:** A UI export control may also need its capture selector, admitting
-harness, final configuration/override support and producer fixture's admitting/type check.
-Inspect these owners; include necessary in-scope changes with the control or name the real
-existing producer dependency. An ordinary already-observed control needs only its existing
-focused check. An ordinary cross-system wiring outcome may remain one task when established
-interfaces, its focused wiring test, relevant documentation and ordinary support work establish
-the final observable. Multiple files alone do not justify a split. This is authoring guidance,
+**Supporting ownership example:** “Add the export control in `ui/export_controls.py`; own only
+that file” obviously omits the coupled capture selector
+`tests/test_export_controls.py::test_capture_export_button`, its admitting harness
+`scripts/run-ui-captures.py`, and the final configuration/override owners that make the export
+control's final observable available. It also cannot rely on an export-state producer fixture
+without inspecting that fixture's applicable admitting/type check. Correct it by owning the
+control, selector, harness, necessary final configuration/override support and applicable
+producer check in the same bounded UI outcome when they need changes, or by naming the real
+existing producer that supplies unchanged support as a dependency. The final observable still
+needs its smallest sufficient check; an ordinary already-observed success control needs only its
+existing focused check. An ordinary cross-system wiring outcome may remain one task when it uses
+established interfaces and its focused wiring test, relevant documentation and ordinary support
+work establish the final observable; do not split it merely because it changes several files. This
+is authoring guidance,
 not a generic path/dependency-closure validator or a new task field.
 
 State shared constraints once in their authoritative context. Task entries contain
@@ -254,26 +277,31 @@ descriptions and dependency graph; no contiguous numbering or story-group constr
 
 ## Review and handoff
 
+For a [PROTOTYPE] task, preserve the marker and bounded informational
+scope in the handoff and worker brief. Reuse unchanged applicable proof once with all mappings;
+keep routine teardown inside its task. A separate cleanup task needs an
+actual independently consequential resource or outcome.
+
 At final planning review, check that executable tasks are authorization-neutral and temporary
 approval status is confined to the approval record; retain real action-specific permission gates.
 
-Apply the early-risk owner's review contract to selection/omission, applicable dependencies,
-proof lifetime, production acceptance, disproof/renewal and feasibility in both adapters/direct
-entry. Return its applicable evidence/limits and blocked reliance through the producing review
-and coordinator handoff. Before handoff, return concise task-specific material execution risks
-or prerequisites: name the affected task, concrete runtime/interface/access or predecessor need,
-observed evidence versus unknowns,
+Review selection/omission, real-runtime evidence, applicable dependencies, proof lifetime,
+production acceptance, disproof/renewal and feasibility through both adapters/direct entry. Before
+handoff, return concise task-specific material execution risks or prerequisites: name the affected
+task, concrete runtime/interface/access or predecessor need, observed evidence versus unknowns,
 and the next investigation, mitigation, or necessary permission. Do not create a risk schema,
 score, admission checklist, or universal report. The coordinator must consume these findings before
 affected worker reliance; later discoveries use the same handoff. Exact unavailable capability,
 access, paid, data, or external boundary names the affected operation and corrective action, while
 unrelated safe work continues.
 Challenge redundant task splits, duplicate proofs/report chains and disproportionate checks
-without weakening acceptance or original gates. Syntax/order validation alone cannot prove
-consumption or appropriate granularity. Apply the executor-sized outcome recipe at final review
-for either adapter and direct tasking: reject a multi-interface milestone whose interfaces must all remain unfinished for acceptance; accept
-independently verifiable slices with completed prerequisites and ordinary established cross-system
-wiring with its focused tests/docs.
+without weakening acceptance or original gates. Return only necessary producer/consumer
+dependencies, applicable evidence/limits and blocked reliance to the existing producing review
+and coordinator handoff; syntax/order validation alone cannot prove consumption or appropriate
+task granularity. Apply the executor-sized outcome recipe above at this review boundary. In
+final review for either adapter and direct tasking, reject a multi-interface milestone whose
+interfaces must all remain unfinished for acceptance; accept independently verifiable slices with
+completed prerequisites and ordinary established cross-system wiring with its focused tests/docs.
 
 Carry work-specific checks, exclusions and genuinely material permission boundaries into
 the worker brief. Verify the dependency graph with
