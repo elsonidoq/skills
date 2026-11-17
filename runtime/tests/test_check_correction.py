@@ -69,6 +69,10 @@ class RequiredCheckCorrectionTests(ProjectTest):
         db.close()
         self.assertEqual(checks[0][0], 'failed')
         self.assertEqual(checks[0][1]['exit_code'], 1)
+        self.assertIn('FileNotFoundError', checks[0][1]['output'])
+        self.assertEqual(checks[0][1]['producer_invocation_id'], invocations[0])
+        self.assertTrue(all(facts['producer_invocation_id'] == invocations[-1]
+                            for state, facts in checks if state == 'passed'))
         self.assertTrue(any(state == 'passed' and facts['exit_code'] == 0 for state, facts in checks[1:]))
         self.assertEqual(len(invocations), 2)
         self.assertEqual(checkpoint['correction_chain'], invocations)

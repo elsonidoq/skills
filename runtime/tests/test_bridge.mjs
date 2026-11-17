@@ -143,6 +143,50 @@ test('runner output stays off the parent RPC stdout channel', async () => {
   } finally { await fs.rm(root, {recursive: true, force: true}); }
 });
 
+test('admitted launch scope reaches real CLI argv unchanged; resume cannot replace it', async () => {
+  const {importPiDependency} = await import('../pi-host/sdk.mjs');
+  const {validateToolArguments} = await importPiDependency('@earendil-works/pi-ai');
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-scope-'));
+  const tools = new Map(), messages = [];
+  const pi = mockPi(messages, tools);
+  try {
+    await fs.mkdir(path.join(root, 'scripts'));
+    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'),
+      `#!${process.execPath}\nrequire('node:fs').writeFileSync('argv.json', JSON.stringify(process.argv.slice(2)));\n`, {mode: 0o700});
+    const {default: bridge} = await import(bridgeModule);
+    bridge(pi);
+    const tool = tools.get('coordinate_implementation_start');
+    const scope = {target: 'https://github.com/owner/repo/issues/45', authority: {
+      run_id: 'transport', target: 'https://github.com/owner/repo/issues/45',
+      operations: ['trace_comment', 'link_comment'], approval_ref: 'owner message — exact'}, known_linked_prs: []};
+    const params = {tasks: 'bare.json', executor: 'original.json', run: 'transport', delivery_scope: scope};
+    const admitted = validateToolArguments(tool, {name: tool.name, arguments: params});
+    assert.deepEqual(admitted, params);
+    assert.throws(() => validateToolArguments(tool, {name: tool.name, arguments: {
+      ...params, delivery_scope: {...scope, token: 'not-a-carrier-field'}}}), /Validation failed/);
+    const ctx = {cwd: root, sessionManager: {getSessionId: () => 'scope-parent'}};
+    await assert.rejects(tool.execute('resume', {run: 'transport', resume: true, delivery_scope: scope},
+      undefined, undefined, ctx), /start-only/);
+    await tool.execute('start', admitted, undefined, undefined, ctx);
+    while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete'))
+      await new Promise(resolve => setTimeout(resolve, 10));
+    const argv = JSON.parse(await fs.readFile(path.join(root, 'argv.json'), 'utf8'));
+    assert.deepEqual(JSON.parse(argv[argv.indexOf('--delivery-scope') + 1]), scope);
+    assert.deepEqual(argv.slice(0, 9), ['start', '--project', root, '--tasks', 'bare.json', '--executor', 'original.json', '--run', 'transport']);
+    assert.doesNotMatch(JSON.stringify(argv), /COHERENCE_PARENT_BRIDGE|TOKEN|SOCKET/);
+    await pi.shutdown();
+    messages.length = 0;
+    await tool.execute('resume', {run: 'transport', resume: true}, undefined, undefined, ctx);
+    while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete'))
+      await new Promise(resolve => setTimeout(resolve, 10));
+    assert.deepEqual(JSON.parse(await fs.readFile(path.join(root, 'argv.json'), 'utf8')),
+      ['resume', '--project', root, '--run', 'transport']);
+  } finally {
+    await pi.shutdown?.();
+    await fs.rm(root, {recursive: true, force: true});
+  }
+});
+
 function mockPi(messages, tools) {
   return {
     registerTool(tool) { tools.set(tool.name, tool); },
@@ -175,14 +219,14 @@ async function fixture({hold = false, paidScope = false, paidApis = []} = {}) {
 json = __import__('json')
 request=json.loads(input())
 if request['readOnly']:
- print(json.dumps({'type':'result','text':'{"approved":true,"findings":[]}'}), flush=True)
+ print(json.dumps({'type':'result','text':'{"approved":true,"findings":[],"coverage":["offline fixture"],"coverage_gaps":[]}'}), flush=True)
 else:
  pathlib.Path(${JSON.stringify(marker)}).write_text(str(os.getpid()))
  time.sleep(1000)
 ` : `import json, sys
 request=json.loads(input())
 if request['readOnly']:
- print(json.dumps({'type':'result','text':'{"approved":true,"findings":[]}'}), flush=True)
+ print(json.dumps({'type':'result','text':'{"approved":true,"findings":[],"coverage":["offline fixture"],"coverage_gaps":[]}'}), flush=True)
 else:
  print(json.dumps({'type':'question','question':'Fixture owner question?'}), flush=True)
  assert json.loads(input()) == {'answer':'yes'}
@@ -335,8 +379,13 @@ for (const mode of ['idle', 'busy']) test(`bridge wakes ${mode} parent and retur
     await assert.rejects(() => tools.get('coordinate_implementation_reply').execute('wrong-session', {request_id: requestId, run: `run-${mode}`, answer: 'yes'}, undefined, undefined, {...ctx, sessionManager: {getSessionId: () => 'other'}}), /no matching pending/);
     while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete')) await new Promise(resolve => setTimeout(resolve, 10));
     const database = await fs.readFile(path.join(value.project, '.coherence/workflow/workflow.sqlite'));
-    assert.equal(database.includes(Buffer.from('Fixture owner question?')), false);
-    assert.equal(database.includes(Buffer.from('yes')), false);
+    assert.match(messages.at(-1).message.content, /exit 0/);
+    // Full meaningful Q/A is now retained privately; public status is still metadata-only.
+    assert.equal(database.includes(Buffer.from('Fixture owner question?')), true);
+    const publicStatus = execFileSync(path.join(repository, 'scripts/coordinate-implementation'),
+      ['status', '--project', value.project, '--run', `run-${mode}`], {encoding: 'utf8'});
+    assert.doesNotMatch(publicStatus, /Fixture owner question\?/);
+    assert.equal(database.includes(Buffer.from('COHERENCE_PARENT_BRIDGE_TOKEN')), false);
   } finally {
     if (originalNode === undefined) delete process.env.COHERENCE_NODE; else process.env.COHERENCE_NODE = originalNode;
     await pi.shutdown?.();

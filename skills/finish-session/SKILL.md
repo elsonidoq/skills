@@ -147,6 +147,21 @@ Acceptance of an earlier revision is not acceptance of the new revision. Retain 
 correction links and explicit acceptance trace. Close only after explicit acceptance of the
 presented revision and separate operation-scoped closure authority; read back the closure.
 
+For every known delivery PR, use `track-open-issue` to confirm two-way traversal:
+PR → qualified delivery issue and issue → qualified PR, regardless of trace host.
+A PR-hosted trace also needs issue → every confirmed trace part. Reuse verified body or
+comment links; append only missing link comments under actual run/target/`link_comment`
+authority. Confirm full comment body, identity and destination independently; incomplete
+pages, missing authority or uncertain readback mean incomplete linkage, never success.
+Do not create a PR, push, edit issue/PR bodies or change state to establish links.
+
+When a delivery PR is discovered after finish, establish only missing reciprocal links
+and refer to the already confirmed trace. Do not republish the trace, rerun implementation
+or reopen review. Late linkage does not change the reviewed revision, owner acceptance
+or closure authority. Trace/link comments do not require problem-body quality review;
+a substantive problem-body change still does. Changed global skills need the host's normal
+activation procedure; in Paseo prepare a fresh-session handoff, not `/reload`.
+
 Inspect uncertain publication or readback before retry. If only issue or chat publication
 succeeded, report the partial result and retry only the missing operation after inspection.
 Missing tracker capability or authority defers the affected operation with a corrective action;

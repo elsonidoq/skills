@@ -8,6 +8,181 @@ path-disjoint worker waves use standard LangGraph fanout and keyed reduction. Hi
 compatible runtime for inspected continuation, never silent conversion or replay. The six task-linter checks remain the entire startup linter; no extra
 graph/host/custody/session/evidence admission rules. Historical approvals and rows are not rewritten.
 
+## Optional delivery scope transport
+
+`start --delivery-scope 'JSON'` accepts an optional launch-only carrier. The attached
+`coordinate_implementation_start` tool accepts the same JSON object as `delivery_scope`.
+It transports **already granted** scope; supplying it does not create approval. Example
+shape (replace with the actual run, target and approval reference, not these examples):
+
+```json
+{
+  "target": "https://github.com/OWNER/REPO/issues/45",
+  "authority": {
+    "run_id": "EXACT-RUN-ID",
+    "target": "https://github.com/OWNER/REPO/issues/45",
+    "operations": ["trace_comment"],
+    "approval_ref": "actual owner approval reference"
+  },
+  "known_linked_prs": []
+}
+```
+
+Use `--run EXACT-RUN-ID` at start to bind the supplied grant. Supported carrier fields
+are `target`, `authority` and optional `known_linked_prs` (qualified PR URL strings).
+The authority fields are `run_id`, `target`, `operations` (operation name strings) and
+`approval_ref`. `trace_comment` permits only the publisher's factual trace operation;
+`link_comment` remains a separate operation, not implied by trace permission. An omitted
+`target` defaults to the retained delivery issue at publication; the authority must still
+match that exact destination. A PR destination must be an explicitly known linked PR.
+Never include credentials, bridge tokens, environment dumps or paid API approval here.
+
+The carrier is saved unchanged in private run authority. Resume takes no new carrier
+and restores the original one, like the original executor and parallel direction. Old
+inputs, bare lists and tasks without an issue or delivery metadata remain valid. Missing
+or drifted authority defers only publication with a concrete correction at the publisher
+boundary; issue context, credentials and task fields are not grants. It does not change
+routine worker permissions or paid/manual gates. `Engine.publish_delivery_trace()`
+forwards the retained carrier unchanged to the existing publisher. Normal run finish
+now invokes that boundary automatically as described below.
+
+Changed installed bridge code requires a fresh Paseo session before use. The fresh agent
+must verify checkout, revision, current approval and loaded bridge capabilities. Do not
+reload or restart the current session automatically.
+
+## Terminal factual trace delivery
+
+Normal start/resume/recovery execution drains the parent bridge before the factual
+snapshot, publication and local tracing teardown, even with no pending worker question.
+Parent batches are persisted in the existing SQLite history before acknowledgement.
+Normal attached questions also bind this observer automatically; the owner tool's actual
+answer remains distinct from the coordinator's resolution. No extra agent, manual log or
+provider replay is used.
+
+A returned run result keeps its implementation `status` and adds `trace`:
+
+- `capture`: partial/unavailable coverage, parent acknowledgement and known gaps. An
+  acknowledged drain does not establish complete conversation coverage.
+- `publication`: `confirmed`, `partial`, `deferred`, `failed` or `uncertain`, snapshot
+  identity, confirmed part URLs and a concrete correction when needed. Confirmed
+  publication can contain partial-coverage facts; it is not owner acceptance.
+- `linkage`: when publication is confirmed, the separate reciprocal-link result.
+  Missing/unconfirmed PR links are `incomplete`, not complete delivery. Existing links
+  are independently verified; missing links require `link_comment` scope for each target.
+  The launch carrier's single authority never grants writes to another target. Use the
+  existing explicit finish/linkage operation with actual per-target grants for missing
+  PR-side links; do not republish the trace merely to add a late PR.
+
+On an exception or cancellation, practical failure facts and capture gaps are published
+where possible; the original exception is re-raised unchanged. A separate
+`coherence trace finish: {…}` record on stderr reports capture/publication outcomes.
+Optional storage, callback or export failure cannot change implementation success or
+mask its original failure. Waiting runs drain without finalizing parent capture or
+publishing a terminal snapshot; resume remains required, not fabricated completion.
+
+Missing target or authority defers writes only. Correct the reported target/access/scope
+problem and inspect retained publication intent and remote effects before publication
+recovery; never blindly resend an uncertain comment. Keep the SQLite run, snapshot and
+part intents until full GitHub bodies and required links are independently confirmed.
+There is no automatic database deletion, fallback issue or continuous publication.
+Abrupt death can prevent drain/finish entirely and lose unpersisted parent facts; retained
+facts may support later explicit publication recovery, never invented missing events.
+
+Offline production-seam tests cover drain/persist/ack, projection and subprocess
+publication, not genuine live model/owner behavior. Live acceptance additionally needs
+an observed representative run and checkout-independent full-body readback, with named
+issue/known-PR authority. Issue-only permission leaves PR-dependent proof unmet.
+Changed global bridge/tools or skills require a fresh-session handoff before reliance:
+verify checkout, exact revision, current approval and loaded capabilities in the fresh
+session. Do not auto reload/restart, synthesize owner events or rerun coding to create
+missing trace evidence. Phoenix remains a separate metadata-only opt-in exporter.
+
+## Owner-selected durable assessment
+
+On an explicit owner-selected qualified issue or PR URL, use
+[Assess Skill Improvements](../skills/assess-skill-improvements/SKILL.md), not an automatic
+post-run investigation. From either entry, verify the reciprocal delivery association and
+read every relevant conversation/review page and trace continuation part on both sides.
+Inspect accessible approved source, code at cited revisions and supported later commits/PR
+fixes. No original execution checkout identity/path, SQLite or session is required.
+Missing/inaccessible parts, links or code make affected conclusions partial; they do not
+show zero failures. Publication recovery is needed only when selected evidence requires it
+and remains a separately authorized operation, not coding replay.
+
+Cite original intent and observed facts; separate reusable planning/skill/tool/worker
+weaknesses from user/issue-specific omissions, and supported causes from hypotheses.
+Attribution needs supported links and content, not author, time or a blind commit range.
+Propose small changes to existing owners only. Assessment is read-only by default: no
+edits, agents, PR creation, tracker transitions or implementation. Optional assessment
+label/comment writes require their own target/operation scope and independent readback;
+trace-comment permission alone does not grant assessment writes.
+
+For changed skills in Paseo, prepare a fresh-session handoff with the selected URL,
+current authority, known evidence gaps and pending live criteria. The fresh agent verifies
+checkout, exact revision and the loaded updated assessment skill before reliance; do not
+automatically reload/restart. This activation checkout is not a dependency on the old
+execution worktree. Offline `python3 scripts/test-assess-skill-improvements.py` checks
+actual carrier obligations and controlled evidence from both entries, including unavailable
+parts/links/code and supported versus unrelated fixes. It is not model-obedience proof.
+Actual explicitly selected issue AND PR assessments from GitHub without the execution
+checkout remain required live proof; fixture results or issue-only reads cannot pass both.
+
+## Publication-only recovery
+
+From a terminal, or an attached agent's normal shell, use the same command:
+
+```sh
+scripts/coordinate-implementation recover-publication \
+  --project /absolute/project --run EXACT-RUN-ID
+```
+
+Options: `--snapshot EXACT-SNAPSHOT-ID` selects a retained prepared snapshot. Without
+it, recovery selects the latest prepared snapshot; only if none exists does it project
+retained facts. It never invents missing parent events. `--delivery-scope 'JSON'` accepts
+the same already-granted carrier described above when no launch carrier was retained;
+if a launch carrier exists, any supplied carrier must match it unchanged. Neither
+option grants permission. Restore missing storage/facts or obtain actual matching
+run/target/operation scope as directed by the diagnostic; do not replay coding to
+recover a log.
+
+The publisher automatically recognizes the specific HTTP 422 `IssueComment` /
+`unprocessable` / `data` validation, `Body is too long (maximum is N characters)`.
+It completes a paginated exact-marker/full-body reconciliation before splitting a
+rejected payload into lossless continuations. Each continuation includes its wire
+prefix and gets independent full-body readback. No manual `LengthProof` is needed
+for this response. Other validation, access, rate or malformed responses do not
+trigger splitting. A retained recognized rejection is reconciled before splitting
+on recovery, without resending the known rejected body; old status-only records
+still use the existing complete-scan-before-targeted-attempt path.
+
+Consumer evidence: the parent observed `maximum is 65536 characters` from the
+[GitHub create-issue-comment endpoint](https://docs.github.com/rest/issues/comments#create-an-issue-comment)
+for [issue #45](https://github.com/elsonidoq/skills/issues/45), run
+`issue-45-final-code-sol-20261117`, prepared snapshot
+`74c229ae20013724a2d8d85d8708aebedf2eebefce86127630bc20e7ef2d0d9a`.
+The parent retained the raw validation response and confirmed zero created comments
+by complete pagination. This is observed endpoint evidence, not an OpenAPI limit
+claim or successful delivery. The publisher uses progressive splitting, not a
+hard-coded character budget, truncation or a new limit registry. If even a minimal
+continuation fails, it reports the safe length diagnostic and asks for correction
+of endpoint/envelope validation, rather than repeating the same send.
+
+Recovery uses the existing publisher and linkage helper under the ordinary writer lock.
+It independently reads confirmed parts, completely scans uncertain destinations before
+any missing write, preserves exact part bodies and supported links, and does not resend
+confirmed content on repeated calls. Incomplete scans or ambiguous effects stop writes
+with a correction. Missing PR-side link grants remain separate incomplete linkage.
+There is no attached recovery tool or bridge route. No graph, worker, reviewer, project
+check, Git commit or provider is called; read-only Git identity checks support the lock.
+
+JSON reports `implementation.state` from retained storage with `replayed: false`,
+separately from `publication` and, once confirmed, `linkage`. Recovery does not update
+implementation outcome or establish owner acceptance. Exit 0 means publication and
+linkage are confirmed; exit 2 reports deferred/uncertain/failed/incomplete delivery,
+not failed implementation. Retain storage until independent full-body readback confirms
+all effects. Live recovery proof requires the actual retained representative run and
+its unchanged factual/link publication permission; offline fixtures are not live proof.
+
 ## Local Phoenix configuration
 
 Local monitoring is opt-in. Add the following object to the task input's top level;
@@ -571,6 +746,9 @@ runtime dependencies. The SDK dependency lock is install metadata, not exact SDK
 admission. The shared `runtime/pi-host/sdk.mjs` loader uses an available local package first
 (including an explicit isolated installation), then Pi's `PI_PACKAGE_DIR`, then the installed
 release named by `PI_CODING_AGENT_DIR/install/current-version` or the default `~/.pi/agent`.
+As a final fallback, it finds the first runnable `pi` file on `PATH`, follows its symlink,
+and checks its owning package metadata for the Pi SDK name. Discovery does not execute
+the CLI or scan other global installations; an unrelated runnable `pi` is not bypassed.
 A new Git/Paseo worktree does not need copied `node_modules`. An invalid explicitly selected
 package reports its actual error rather than silently switching SDKs.
 

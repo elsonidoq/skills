@@ -10,7 +10,7 @@ import sys
 from unittest.mock import patch
 
 from coherence_workflow.cli import main, status
-from coherence_workflow.store import Authority, Blocked, canonical, execution_schema
+from coherence_workflow.store import Authority, Blocked, canonical, execution_schema, read_trace_source
 from coherence_workflow.processes import process_identity
 from fixtures.support import ProjectTest
 
@@ -127,6 +127,34 @@ class DatabaseCompatibilityTests(ProjectTest):
             owner.store.db.execute('DROP TABLE execution_history')
         self.assertEqual(status(self.project, 'early')['run']['state'], 'failed')
         self.assertEqual(self.archives(), [])
+
+    def test_trace_reader_missing_tables_is_read_only_and_does_not_upgrade_old_rows(self):
+        from coherence_workflow.trace_projection import project_trace, render_markdown
+        with Authority(self.project) as owner:
+            owner.store.start('early-trace', self.base)
+            owner.store.history('early-trace', 'one', 'worker_invocation', 'returned',
+                                {'summary': 'meaningful historical submission'})
+            owner.store.finish('early-trace', 'failed', error='original failure')
+            owner.store.db.execute('DROP TABLE execution_review_attempts')
+            owner.store.db.execute('DROP TABLE execution_review_suggestions')
+        before = self.database.read_bytes()
+        db = sqlite3.connect(self.database.as_uri() + '?mode=ro', uri=True)
+        db.row_factory = sqlite3.Row
+        try:
+            db.execute('BEGIN')
+            source = read_trace_source(db, 'early-trace')
+            snapshot = project_trace(None, 'early-trace', source=source)
+            self.assertEqual(source, read_trace_source(db, 'early-trace'))
+            self.assertIn('execution_review_attempts', source['missing_tables'])
+            self.assertEqual(snapshot['counts']['review_invocations'], {'observed': 0, 'total': None})
+            self.assertIn('meaningful historical submission', render_markdown(snapshot))
+            self.assertTrue(any('older or absent capture' in gap for gap in snapshot['gaps']))
+        finally:
+            db.close()
+        self.assertEqual(self.database.read_bytes(), before)
+        safe = json.dumps(status(self.project, 'early-trace'))
+        self.assertNotIn('meaningful historical submission', safe)
+        self.assertEqual(self.database.read_bytes(), before)
 
     def test_incompatible_execution_columns_are_quarantined(self):
         with sqlite3.connect(self.database) as db:

@@ -58,6 +58,124 @@ def assert_planner_mutations(test, labels=None):
                 test.assertTrue(any(e.startswith(label + ":") for e in checker.check_contracts(changed)))
 
 
+class InteractiveDesignContractTests(unittest.TestCase):
+    """Operational carrier sensitivity and actual page JS; not live consent/browser proof."""
+
+    def test_each_stage_obligation_is_local_and_mutation_sensitive(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_design_contracts(texts), [])
+        for key, heading, clauses in checker.DESIGN_CARRIERS:
+            body = checker.section(texts[key], heading)
+            self.assertTrue(body, (key, heading))
+            for clause in clauses:
+                with self.subTest(carrier=key, removed=clause):
+                    changed = dict(texts)
+                    changed[key] = texts[key].replace(body, replace_clause(body, clause), 1)
+                    changed[key] += '\n## Inert design summary\n' + clause
+                    self.assertTrue(any(e.startswith('design-' + key + ':')
+                                        for e in checker.check_design_contracts(changed)))
+
+    def test_gate_order_rejects_late_agreement(self):
+        texts = checker.load_texts()
+        changed = dict(texts)
+        body = checker.section(texts['plan_prompt'], '## Design agreement before setup or detail')
+        changed['plan_prompt'] = texts['plan_prompt'].replace(body, '', 1) + '\n' + body
+        self.assertTrue(any(e.startswith('design-order:') for e in checker.check_design_contracts(changed)))
+        changed = dict(texts)
+        body = checker.section(texts['tiny'], '## Write the what and how')
+        start = body.index('Apply [interactive design agreement before detail]')
+        end = body.index('Apply [Parsimony and Actionable Checks]')
+        gate = body[start:end]
+        changed['tiny'] = texts['tiny'].replace(gate, '', 1).replace(
+            '## Return for review and separate tasks', gate + '\n## Return for review and separate tasks')
+        self.assertTrue(any(e.startswith('design-order:') for e in checker.check_design_contracts(changed)))
+
+    def test_producers_review_and_task_proof_are_connected(self):
+        texts = checker.load_texts()
+        for key in ('tasks', 'tasks_prompt', 'tasks_template', 'plan_template'):
+            text = ' '.join(texts[key].split())
+            self.assertIn('meaningful submitted completion evidence', text)
+            self.assertIn('manual/permission gates', text)
+            self.assertIn('whole REQUIRED mappings', text)
+        planner = ' '.join(texts['planner'].split())
+        self.assertIn('obtain the design agreement above before resuming the producer', planner)
+        self.assertIn('before setup-plan or detailed plan production/continuation', planner)
+        self.assertIn('[design and task proof review]', planner)
+        for key in ('planner', 'tiny', 'helper', 'brainstorm', 'tasks'):
+            self.assertIn('approval-and-recovery.md#interactive-design-agreement-before-detail', texts[key])
+            self.assertNotIn('007-execution-tracing/design-review.html', texts[key])
+            self.assertNotIn('#45', texts[key])
+
+    def test_actual_page_structure_and_script_for_all_components(self):
+        page = (ROOT / 'specs/007-execution-tracing/design-review.html').read_text()
+        self.assertIn('name="viewport"', page)
+        self.assertIn('@media (max-width:', page)
+        self.assertIn('grid-template-columns:1fr;', page)
+        self.assertNotRegex(page, r'<(?:script|link)[^>]+(?:src|href)=')
+        self.assertIn('Amber arrows = required workflow order, not evidence movement', page)
+        self.assertIn('Cyan arrows = evidence flow', page)
+        self.assertIn('PROPOSED DESIGN BASELINE', page)
+        self.assertIn('final feature acceptance pending', page)
+        self.assertIn('Page creation, interaction, silence, no answer, cancellation or denial', page)
+        keys = re.findall(r'<button[^>]+data-brief="([^"]+)"', page)
+        self.assertTrue(keys)
+        self.assertEqual(len(keys), len(set(keys)))
+        for key in keys:
+            with self.subTest(component=key):
+                button = re.search(r'<button[^>]+data-brief="' + key + r'"[^>]*>', page).group()
+                self.assertIn('aria-haspopup="dialog"', button)
+                brief = re.search(r'<div id="content-' + key + r'">(.*?)</div>', page).group(1)
+                self.assertIn('<ul>', brief)
+                for term in ('Purpose:', 'Input → output:', 'Boundary:'):
+                    self.assertIn(term, brief)
+                self.assertRegex(brief, r'(Choice:|Proposed capture:)')
+        overall = re.search(r'<section class="notes".*?</section>', page, re.S).group()
+        for label in ('Goal:', 'Tradeoff:', 'Safety:', 'Proof still needed later:'):
+            self.assertIn(label, overall)
+        script = re.search(r'<script>(.*?)</script>', page, re.S).group(1)
+        # Execute the delivered JS against a deliberately small DOM seam. This does not
+        # prove layout, native dialog focus trapping, pointer or browser keyboard behavior.
+        harness = r'''
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+let input = ''; process.stdin.on('data', x => input += x);
+process.stdin.on('end', () => {
+  const {script, keys} = JSON.parse(input);
+  let focused = null;
+  const element = id => ({id, handlers: {}, addEventListener(n, f) {this.handlers[n] = f;},
+    focus() {focused = this;}, removeAttribute(n) {delete this[n];},
+    cloneNode() {return element(this.id);},
+    replaceChildren(child) {this.firstElementChild = child;}});
+  const elements = Object.fromEntries(['brief-dialog', 'popup-title', 'popup-content', 'close',
+    ...keys.map(k => 'content-' + k)].map(k => [k, element(k)]));
+  const dialog = elements['brief-dialog'];
+  dialog.showModal = function() {this.open = true;};
+  dialog.close = function() {this.open = false; this.handlers.close();};
+  const buttons = keys.map(k => Object.assign(element(k), {dataset: {brief: k},
+    querySelector() {return {textContent: k};}}));
+  vm.runInNewContext(script, {document: {getElementById: k => elements[k],
+    querySelectorAll: () => buttons}});
+  for (const button of buttons) {
+    for (const mode of ['close', 'escape']) {
+      button.handlers.click();
+      assert.equal(dialog.open, true);
+      assert.equal(elements['popup-title'].textContent, button.id);
+      assert.equal(elements['popup-content'].firstElementChild.id, undefined);
+      assert.equal(focused, elements.close);
+      if (mode === 'close') elements.close.handlers.click();
+      else {let prevented = false; dialog.handlers.cancel({preventDefault() {prevented = true;}});
+        assert.equal(prevented, true);}
+      assert.equal(dialog.open, false);
+      assert.equal(focused, button);
+    }
+  }
+});
+'''
+        result = subprocess.run(['node', '-e', harness], input=json.dumps({'script': script, 'keys': keys}),
+                                text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
 class PlannerCoordinatorContractTests(unittest.TestCase):
     """Coordinator call boundaries and output consumption, not live model obedience."""
 
@@ -133,7 +251,7 @@ class SkillAssessmentWalkthroughTests(unittest.TestCase):
 
 
 class IssueAssociationWalkthroughTests(unittest.TestCase):
-    def test_understanding_precedes_optional_association_and_issue_carriers(self):
+    def test_understanding_precedes_required_association_and_issue_carriers(self):
         assert_planner_mutations(self, ('issue-association',))
         for path in ('skills/tiny-spec/SKILL.md', 'skills/task-generation/SKILL.md',
                      '.pi/prompts/speckit.specify.md', '.pi/prompts/speckit.plan.md',
@@ -141,8 +259,50 @@ class IssueAssociationWalkthroughTests(unittest.TestCase):
             self.assertIn('issue', (ROOT / path).read_text().lower(), path)
 
 
+    def test_association_carriers_cannot_be_rescued_by_inert_summary(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_issue_association(texts), [])
+        for key, heading, clauses in checker.ISSUE_ASSOCIATION_CARRIERS:
+            body = checker.section(texts[key], heading)
+            for clause in clauses:
+                with self.subTest(carrier=key, removed=clause):
+                    changed = dict(texts)
+                    changed[key] = texts[key].replace(body, replace_clause(body, clause), 1)
+                    changed[key] += '\n## Inert issue summary\n' + clause
+                    self.assertTrue(any(e.startswith('issue-' + key + ':')
+                                        for e in checker.check_contracts(changed)))
+
+    def test_coupled_tracker_lifecycle_fixtures_after_carrier_validation(self):
+        # These authored transcripts check expected branch/order semantics only.
+        # The actual skill prose is the production carrier; no model or remote is run.
+        self.assertEqual(checker.check_contracts(checker.load_texts()), [])
+        tracker = load('planner_tracker_fixture', 'test-track-open-issue.py')
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(tracker.PlannerAssociationFixtureTests)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 3)
+        self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
+        planner = ' '.join(checker.section(checker.load_texts()['planner'],
+                                          '## Understand the work and choose depth').split())
+        self.assertNotIn('when available in artifacts', planner)
+        self.assertNotIn('not unrelated safe planning', planner)
+        self.assertIn('bare runtime tasks and execution without a delivery issue remain valid', planner)
+
+
 class IssueDeliveryInstructionTests(unittest.TestCase):
     """Local instruction walkthrough only; no tracker or owner actions."""
+
+    def test_linkage_obligations_cannot_be_replaced_by_inert_summary(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_contracts(texts), [])
+        for label, key, heading, clauses in checker.LINKAGE_CARRIERS:
+            body = checker.section(texts[key], heading)
+            for clause in clauses:
+                with self.subTest(owner=key, removed=clause):
+                    changed = dict(texts)
+                    changed[key] = texts[key].replace(body, replace_clause(body, clause), 1)
+                    changed[key] += '\n## Inert summary\n' + clause
+                    self.assertTrue(any(e.startswith(label + ':') for e in checker.check_contracts(changed)))
 
     def test_reviewed_delivery_and_conditional_branches(self):
         finish = ' '.join(checker.section(

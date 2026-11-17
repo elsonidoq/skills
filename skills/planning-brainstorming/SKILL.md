@@ -71,6 +71,26 @@ the planner's owner choice, not a brainstorming design-depth label.
 
 ## Apply and return the decisions
 
+Readiness is not issue association or artifact-production authority. For planner no-issue entry,
+return the understood request and actual owner decisions to planner for
+[track-open-issue's association lifecycle](../track-open-issue/SKILL.md#establish-planner-issue-association)
+before planned artifact production: confirmed creation with body-quality review, or qualified
+exact open/closed reuse without duplicate/reopen. Missing prerequisites leave association pending
+with concrete corrective action, not a fallback register. Needed dialogue remains available;
+do not create an issue from brainstorming readiness or ask again for unchanged creation scope
+that the owner has actually granted.
+
+Readiness is not design consent. For selected TinySpec or Standard production, apply
+[interactive design agreement before detail](../planner/references/approval-and-recovery.md#interactive-design-agreement-before-detail).
+Return significant choices and actual answers to the producer of the project-owned
+self-contained interactive HTML high-level design. The parent shows that actual page and
+obtains explicit owner design agreement before detailed architecture plan production or
+continuation. Preselection remains read-only; it does not create a page. Page interaction,
+silence, denial or cancellation grants no consent. Significant design changes require the
+updated page and renewed agreement before affected detail. Keep requirements approval,
+design agreement and final implementation approval distinct, reusing a settled grant for
+its actual shown scope. Routine mechanics remain autonomous.
+
 Only with selected-production or legacy-repair write authority, delegate bounded application of
 exactly the recorded decisions to the selected source. Resolve `brainstorm-application` through
 the planner's [saved-assignment contract](../planner/SKILL.md#saved-planner-assignments), which

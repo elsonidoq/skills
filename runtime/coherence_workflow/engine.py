@@ -15,6 +15,7 @@ from .metric_artifacts import (MetricArtifactError, artifact_relative, create_ar
 from .metrics import interval_record
 from .pi_adapter import PiAdapter, TaskOutcome, terminal_question
 from .store import Blocked, canonical, git, safe_path
+from .trace_capture import capture_questions, question_scope
 from .verification import CheckFailure, commands, manual_gates, run_checks
 
 
@@ -29,14 +30,17 @@ def _failure(exc):
 
 def _safe_error(exc):
     """Use the existing public error carrier without projecting host-returned text."""
-    return getattr(exc, 'safe_error', str(exc))
+    import os
+    from .trace_capture import _public
+    token = os.environ.get('COHERENCE_PARENT_BRIDGE_TOKEN')
+    return _public(getattr(exc, 'safe_error', str(exc)), [], [token] if token else [])
 
 
 class _UnsuccessfulOutcome(Blocked):
     """Private host diagnostic paired with a safe existing error summary."""
     def __init__(self, status, explanation):
         self.safe_error = 'worker explicitly ' + status + '; partial work retained'
-        self.diagnostic = 'worker explicitly ' + status + '; ' + explanation + '; partial work retained'
+        self.diagnostic = 'worker explicitly ' + status + '; ' + _safe_error(explanation) + '; partial work retained'
         super().__init__(self.diagnostic)
 
 
@@ -126,7 +130,8 @@ _ROUTINE_AUTHORITY = (
 
 
 class Engine:
-    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False, worker_recovery=None, parallel=False):
+    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False, worker_recovery=None, parallel=False, delivery_scope=None):
+        self.delivery_scope = delivery_scope
         self.parallel = parallel
         self.worker_recovery = worker_recovery
         if worker_recovery is not None:
@@ -149,7 +154,8 @@ class Engine:
             for key in ('provider', 'model', 'effort')
         ):
             raise Blocked('reviewer needs provider, model and effort strings; correct the reviewer profile in --executor JSON')
-        self.adapter, self.question, self.paid_scope = adapter, question, paid_scope
+        self.adapter, self.paid_scope = adapter, paid_scope
+        self.question = capture_questions(question, authority.store, run)
         # Private, run-local facts only. A failed or unfinished worker is never added.
         self.session_candidates = []
         self.session_settlement_sequence = 0
@@ -280,6 +286,76 @@ class Engine:
         return request, canonical({key: request[key] for key in (
             'role', 'worktree', 'executor', 'resources', 'instructions', 'settings', 'authority')})
 
+    def publish_delivery_trace(self, **kwargs):
+        """Transport retained launch scope to the publisher; never infer a grant.
+
+        Called at terminal run boundaries, never at individual task completion.
+        Scope absence/drift defers delivery only, not implementation or intake.
+        """
+        from .trace_publication import publish_trace
+        saved = self.authority.store.input(self.run)
+        retained = saved['authority'].get('delivery_scope') if saved else None
+        if self.delivery_scope != retained:
+            return {'state': 'deferred', 'snapshot_id': None, 'urls': [],
+                    'correction': 'Delivery scope differs from retained launch; restore the original run scope before publication.'}
+        carrier = self.delivery_scope
+        if carrier is None:
+            carrier = {}
+        if (not isinstance(carrier, dict) or set(carrier) - {'target', 'authority', 'known_linked_prs'}
+                or ('known_linked_prs' in carrier and
+                    (not isinstance(carrier['known_linked_prs'], list) or
+                     any(not isinstance(url, str) for url in carrier['known_linked_prs'])))):
+            return {'state': 'deferred', 'snapshot_id': None, 'urls': [],
+                    'correction': 'Delivery scope carrier invalid; supply target, authority and optional known_linked_prs in launch JSON.'}
+        return publish_trace(self.authority.store, self.run, **carrier, **kwargs)
+
+    def finish_delivery_trace(self, *, waiting=False, error=None):
+        """Best-effort capture/export, separate from implementation return or exception."""
+        from .trace_capture import finish_parent_capture, optional_record, persist_parent_events
+        from .trace_projection import project_trace
+        from .trace_publication import confirm_delivery_links
+        report = {'capture': {'state': 'unavailable', 'gaps': []},
+                  'publication': {'state': 'deferred', 'urls': [],
+                                  'correction': 'Run is waiting; resume execution before terminal publication.'}}
+        try:
+            report['capture'] = finish_parent_capture(self.authority.store, self.run, final=not waiting)
+            if error is not None:
+                optional_record(persist_parent_events, self.authority.store, self.run, [{
+                    'version': 1, 'id': uuid.uuid4().hex, 'kind': 'gap',
+                    'reason': 'Terminal execution raised ' + type(error).__name__ +
+                              '; retained run/task failure records contain available error facts.'}])
+            if not waiting:
+                snapshot = project_trace(self.authority.store, self.run)
+                report['capture']['coverage'] = snapshot['coverage']
+                report['capture']['gaps'] = sorted(set(report['capture']['gaps'] + snapshot['gaps']))
+                # Even if optional gap persistence failed, include the observed
+                # terminal coverage in the prepared, reproducible public snapshot.
+                snapshot['gaps'] = report['capture']['gaps'][:]
+                from .trace_publication import digest
+                snapshot['snapshot_id'] = digest(canonical({key: value for key, value in snapshot.items()
+                                                          if key != 'snapshot_id'}))
+                report['publication'] = self.publish_delivery_trace(snapshot=snapshot)
+                carrier = self.delivery_scope or {}
+                if report['publication']['state'] == 'confirmed':
+                    try:
+                        report['linkage'] = confirm_delivery_links(
+                            self.authority.store, self.run, issue=snapshot['delivery_issue'],
+                            known_prs=carrier.get('known_linked_prs', []), snapshot_id=snapshot['snapshot_id'],
+                            authorities=[carrier.get('authority')])
+                    except BaseException as exc:
+                        report['linkage'] = {'state': 'incomplete', 'associations': [],
+                            'correction': 'Link confirmation failed (' + type(exc).__name__ +
+                                          '); inspect retained links and restore read access before recovery.'}
+        except BaseException as exc:
+            # Never leak arbitrary exception text (transport paths/credentials), or
+            # replace an implementation exception, including cancellation.
+            report['capture']['gaps'].append('Terminal capture/export did not finish; retained coverage may be incomplete.')
+            report['publication'] = {'state': 'uncertain', 'urls': report['publication'].get('urls', []),
+                'correction': 'Trace finish failed (' + type(exc).__name__ +
+                              '); inspect retained capture/publication history before recovery.'}
+        self.trace_finish = report
+        return report
+
     def _delivery_issue_context(self):
         issue = self.contract.get('delivery_issue')
         return 'Delivery issue context: ' + canonical(issue) + '\n' if issue is not None else ''
@@ -287,12 +363,15 @@ class Engine:
     @staticmethod
     def _prompt_worker(worker, prompt, **kwargs):
         """Keep older offline adapters usable while the real adapter gets reuse facts."""
+        submission = kwargs.pop('submission', None)
         parameters = inspect.signature(worker.prompt).parameters.values()
         accepts_keywords = any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in parameters)
         if not accepts_keywords:
             names = {parameter.name for parameter in parameters}
             kwargs = {key: value for key, value in kwargs.items() if key in names}
         result = worker.prompt(prompt, **kwargs)
+        from .trace_capture import optional_record
+        optional_record(submission, result)
         # Task and repair consumers share this boundary: transport resolution is
         # not acceptance. Ordinary text remains the compatible completion path.
         if isinstance(result, TaskOutcome):
@@ -423,7 +502,8 @@ class Engine:
                 focused.claim(name)
                 claimed_paths.add(name)
         def gate_question(text):
-            return self.question(text)
+            with question_scope(task_id=fix_task['id'], purpose='manual_gate'):
+                return self.question(text)
         try:
             if not recovered or not recovered.get('returned'):
                 manual_gates(fix_task, gate_question)
@@ -456,13 +536,28 @@ class Engine:
                 'or commit, bypass checks/hooks/signing, or adopt unrelated/pre-existing bytes.\n'
                 + _DECISION_CONSTRAINTS + self.paid_authority() + '\nOriginal task contracts: '
                 + canonical(original_tasks) + '\n' + self._delivery_issue_context())
+            correction_ref = [None]
             def prompt_fix_impl(prompt, **kwargs):
                 prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + repair_context + prompt
                 invocation_id = uuid.uuid4().hex
                 predecessor = last_fixer_invocation[0]
+                from .trace_capture import optional_record, record_worker_question
+                def question_trace(state, **facts):
+                    optional_record(record_worker_question, store, self.run, fix_task['id'],
+                                    invocation_id, state, **facts)
+                worker.question_trace = question_trace
                 chain = [*fixer_chain, invocation_id]
                 store.history(self.run, fix_task['id'], 'fixer_invocation', 'started',
-                              {'invocation_id': invocation_id, 'execution_id': execution_id})
+                              {'invocation_id': invocation_id, 'execution_id': execution_id,
+                               'predecessor_invocation_id': predecessor,
+                               'trigger_execution_id': trigger_execution_id,
+                               'decision_ref': correction_ref[0]})
+                submitted = {'submission': {'version': 1, 'report': None, 'evidence': [],
+                                            'gaps': ['submission report unavailable or capture failed']}}
+                def retain_submission(result):
+                    from .trace_capture import submission_facts
+                    submitted.update(submission_facts(project, fix_task, result,
+                                                      claimed_paths=focused.task_edited | focused.known_artifacts))
                 outcome = 'settled'
                 expected_session_id = (getattr(worker, 'saved_session', {}) or {}).get('id')
                 # Do not attribute the previous prompt's observations to a failed call.
@@ -478,13 +573,14 @@ class Engine:
                 if session and session.get('compatibility', {}).get('readOnly') is True:
                     kwargs['review_repair'] = True
                 try:
-                    result = self._prompt_worker(worker, prompt, **kwargs)
+                    result = self._prompt_worker(worker, prompt, submission=retain_submission, **kwargs)
                 except BaseException as exc:
                     outcome = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                     if terminal_stop is not None:
                         terminal_stop[0] = invocation_id
                     details = {'invocation_id': invocation_id, 'execution_id': execution_id,
-                               'error': _safe_error(exc) or type(exc).__name__}
+                               'error': _safe_error(exc) or type(exc).__name__,
+                               'predecessor_invocation_id': predecessor, **submitted}
                     if isinstance(exc, _UnsuccessfulOutcome):
                         details.update({'diagnostic': exc.diagnostic, 'baseline': focused.base,
                                         'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
@@ -496,6 +592,8 @@ class Engine:
                 else:
                     store.history(self.run, fix_task['id'], 'fixer_invocation', 'returned',
                                   {'invocation_id': invocation_id, 'execution_id': execution_id,
+                                   'predecessor_invocation_id': predecessor,
+                                   'summary': submitted.get('submission', {}).get('report') or result, **submitted,
                                    'baseline': focused.base, 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
                                    **focused.facts(), 'blobs': self._repair_blobs(project, focused.task_edited),
                                    'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts),
@@ -520,20 +618,26 @@ class Engine:
                       'executor and its scoped writer transition.\nActionable findings: ' + canonical(findings))
             if recovered and recovered.get('diagnosis'):
                 prompt += '\nInspected prior settled unsuccessful fixer diagnosis and targeted correction: ' + recovered['diagnosis']
-            text = '' if recovered and recovered.get('returned') else prompt_fix(
+            text = recovered.get('summary', '') if recovered and recovered.get('returned') else prompt_fix(
                 prompt, claim=claim, command=focused.command, cleanup=focused.cleanup_artifact,
                 saved_session=saved, reuse_key=reuse_key)
+            def latest_history(kind):
+                row = store.db.execute("SELECT seq FROM execution_history WHERE run_id=? AND kind=? "
+                    "AND json_extract(details, '$.execution_id')=? ORDER BY seq DESC LIMIT 1",
+                    (self.run, kind, execution_id)).fetchone()
+                return row['seq'] if row else None
             def correct_checks():
                 nonlocal text
                 previous = None
                 while True:
                     try:
-                        store.history(self.run, None, 'fixer_checks', 'started', {'execution_id': execution_id})
+                        store.history(self.run, None, 'fixer_checks', 'started', {
+                            'execution_id': execution_id, 'producer_invocation_id': last_fixer_invocation[0]})
                         results = run_checks(project, fix_task, lock_fd=self.authority.lock.fileno(),
                             completed=lambda state, attempt: store.history(self.run, None, 'fixer_check', state,
-                                {'execution_id': execution_id, **attempt}))
+                                {'execution_id': execution_id, 'producer_invocation_id': last_fixer_invocation[0], **attempt}))
                         store.history(self.run, None, 'fixer_checks', 'passed', {
-                            'execution_id': execution_id, 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
+                            'execution_id': execution_id, 'producer_invocation_id': last_fixer_invocation[0], 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
                             'blobs': self._repair_blobs(project, focused.task_edited),
                             'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts),
                             'index_state': self._repair_index_state(project, focused.task_edited | focused.known_artifacts)})
@@ -542,6 +646,7 @@ class Engine:
                         if failure.attempt == previous:
                             raise Blocked('fixing required check remains unchanged after scoped correction: ' + canonical(failure.attempt))
                         previous = failure.attempt
+                        correction_ref[0] = latest_history('fixer_check')
                         text = prompt_fix(
                             'A runner-owned REQUIRED check in this assigned fixing round failed. Make a reasoned, '
                             'authorized scoped correction, then return; the runner will rerun the affected command '
@@ -557,6 +662,7 @@ class Engine:
                         raise Blocked('repair checkpoint lacks its passing check reference; rerun required checks')
                     store.history(self.run, None, 'fixer_checkpoint', 'started', {
                         **intent, 'execution_id': execution_id, 'check_ref': check_ref['seq'],
+                        'producer_invocation_id': last_fixer_invocation[0], 'correction_chain': fixer_chain,
                         'checks': check_results})
                 focused.before_checkpoint = retain_fix_intent
                 focused.before_git_commit = lambda: store.history(self.run, None, 'fixer_checkpoint', 'attempting',
@@ -574,6 +680,7 @@ class Engine:
                     if isinstance(exc, (KeyboardInterrupt, SystemExit)) or str(exc) == checkpoint_error:
                         raise
                     checkpoint_error = str(exc)
+                    correction_ref[0] = latest_history('fixer_checkpoint')
                     text = prompt_fix(
                         'A runner-owned focused repair checkpoint failed. Make a reasoned authorized scoped correction; '
                         'do not bypass hooks/signing or adopt unrelated work. The runner will rerun affected required '
@@ -584,7 +691,9 @@ class Engine:
                 break
             checkpoint['parent'] = (None if checkpoint['no_change'] else
                                     git(project, 'rev-parse', checkpoint['sha'] + '^').decode().strip())
-            store.history(self.run, None, 'fixer_checkpoint', 'passed', {'execution_id': execution_id, **checkpoint})
+            store.history(self.run, None, 'fixer_checkpoint', 'passed', {
+                'execution_id': execution_id, 'producer_invocation_id': last_fixer_invocation[0],
+                'correction_chain': fixer_chain, **checkpoint})
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             store.review_outcome(self.run, execution_id, 'approved', findings=[],
                                  references={'base': review_base, 'head': head, 'commit': checkpoint['sha']})
@@ -667,7 +776,9 @@ class Engine:
                    for name in returned['paths']):
                 raise Blocked('retained repair paths exceed original scope; inspect ownership before continuation')
         recovered = {'returned': True, 'baseline': returned['baseline'], 'invocations': list(calls),
+                     'summary': returned.get('summary', ''),
                      'facts': {'paths': returned['paths'], 'artifacts': returned['artifacts']}}
+        checkpoint_links = {'producer_invocation_id': returned['invocation_id'], 'correction_chain': list(calls)}
         # Earlier local failures remain history, not stages of this returned
         # correction. Only reconcile checks/checkpoints begun after its return;
         # every call above still participates in the uncertain-call guard.
@@ -728,7 +839,8 @@ class Engine:
                         if actual_index != staged and actual_index != checked:
                             raise Blocked('repair checkpoint index entries drifted; preserve them and inspect ownership before continuation')
                         return recovered
-                store.history(self.run, None, 'fixer_checkpoint', 'passed', {'execution_id': execution_id, **checkpoint})
+                store.history(self.run, None, 'fixer_checkpoint', 'passed',
+                              {'execution_id': execution_id, **checkpoint_links, **checkpoint})
                 if item['review_ordinal'] > 1 and head != checkpoint['sha']:
                     raise Blocked('repair commit effects are missing or uncertain for the granted review target after HEAD advanced; recovered checkpoint retained, inspect target before continuation')
                 store.review_outcome(self.run, execution_id, 'approved', findings=[],
@@ -774,7 +886,8 @@ class Engine:
                 if 'blobs' not in checkpoint:
                     raise Blocked('repair checkpoint lacks exact content facts; inspect effects without recommitting')
                 checkpoint = {**matched, 'parent': checkpoint['parent']}
-                store.history(self.run, None, 'fixer_checkpoint', 'passed', {'execution_id': execution_id, **checkpoint})
+                store.history(self.run, None, 'fixer_checkpoint', 'passed',
+                              {'execution_id': execution_id, **checkpoint_links, **checkpoint})
             store.review_outcome(self.run, execution_id, 'approved', findings=[],
                                  references={'base': review_base, 'head': head, 'commit': checkpoint['sha']})
             return None
@@ -1096,7 +1209,8 @@ class Engine:
             store.review_outcome(self.run, execution_id, state, findings=[], suggestions=[],
                                  uncertainty=state != 'failed' or isinstance(exc, _ReviewFormat),
                                  references={'base': review_base, 'head': head,
-                                             'failure_category': 'malformed' if isinstance(exc, _ReviewFormat) else _failure(exc)})
+                                             'failure_category': 'malformed' if isinstance(exc, _ReviewFormat) else _failure(exc),
+                                             'error': _safe_error(exc)})
             self._append_metric(reviewer, invocation_id=execution_id, task_id=None, role='reviewer',
                                 outcome=state, selection={'session_id': None, 'reason': 'reviewer_fresh'},
                                 review_ordinal=ordinal)
@@ -1155,10 +1269,11 @@ class Engine:
             raise Blocked('review recovery target drifted; inspect the original reviewed head before continuation')
         if git(project, 'status', '--porcelain=v1', '--untracked-files=no'):
             raise Blocked('review recovery target has tracked changes; preserve and reconcile them before continuation')
-        path = self.question('A first read-only review has an uncertain failed outcome. If inspection found its exact completed '
-            'reviewer transcript with a compound-location format failure, provide its path; otherwise leave empty to stop. '
-            'The artifact will be checked against the original task scope, review range and committed diff; this does not '
-            'assert a historically retained session link. Execution: ' + item['execution_id'])
+        with question_scope(execution_id=item['execution_id'], purpose='review_recovery'):
+            path = self.question('A first read-only review has an uncertain failed outcome. If inspection found its exact completed '
+                'reviewer transcript with a compound-location format failure, provide its path; otherwise leave empty to stop. '
+                'The artifact will be checked against the original task scope, review range and committed diff; this does not '
+                'assert a historically retained session link. Execution: ' + item['execution_id'])
         if not isinstance(path, str) or not path.strip():
             raise Blocked('review recovery needs the exact completed reviewer transcript; inspect the failed invocation')
         try:
@@ -1288,7 +1403,8 @@ class Engine:
             index = self._repair_index_state(project, paths)
             store.history(self.run, task_id, 'external_recovery', 'authorized', {
                 'recovery_id': recovery_id, 'decision': 'affirmative_actual_owner', 'transfer': recovery})
-            manual_gates(task, self.question)
+            with question_scope(task_id=task_id, recovery_id=recovery_id, purpose='manual_gate'):
+                manual_gates(task, self.question)
             checks = run_checks(project, task, lock_fd=self.authority.lock.fileno(),
                 completed=lambda state, attempt: store.history(self.run, task_id, 'check', state, attempt))
             focused.accept_completed_handoff(paths)

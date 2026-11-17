@@ -51,12 +51,32 @@ class TaskLinterTests(unittest.TestCase):
                 admit([task])
 
     def test_packaged_task_schema_has_no_hidden_metadata_requirements(self):
-        from jsonschema import validate
-        schema = json.loads((ROOT/'runtime/coherence_workflow/schemas/task.schema.json').read_text())
-        for value in ([], [{'id': 'fix', 'outcome': 'Fix title'}],
-                      {'tasks': [{'id': 'fix', 'description': 'Fix title', 'notes': 'optional context'}]}):
-            validate(value, schema)
+        import subprocess
+        values = [[], [{'id': 'fix', 'outcome': 'Fix title'}],
+                  {'tasks': [{'id': 'fix', 'description': 'Fix title', 'notes': 'optional context'}]}]
+        for value in values:
             admit(value)
+        # Use the installed SDK validator instead of an undeclared Python test
+        # dependency. Exercise rejected inputs too, including the task $ref.
+        script = r'''
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {importPiDependency} from './runtime/pi-host/sdk.mjs';
+const {validateToolArguments} = await importPiDependency('@earendil-works/pi-ai');
+const schema = JSON.parse(fs.readFileSync('runtime/coherence_workflow/schemas/task.schema.json', 'utf8'));
+const tool = {name: 'tasks', parameters: schema};
+const validate = value => validateToolArguments(tool, {name: tool.name, arguments: value});
+for (const value of JSON.parse(fs.readFileSync(0, 'utf8'))) {
+  assert.deepEqual(validate(value), value);
+}
+for (const value of [null, {}, [{outcome: 'missing ID'}], [{id: 'missing-work'}],
+                     [{id: '', outcome: 'empty ID'}]]) {
+  assert.throws(() => validate(value), /Validation failed/);
+}
+'''
+        result = subprocess.run(['node', '--input-type=module', '-e', script], cwd=ROOT,
+                                input=json.dumps(values), text=True, capture_output=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_delivery_issue_is_optional_context_not_an_intake_check(self):
         issue = 'https://github.com/elsonidoq/skills/issues/44'

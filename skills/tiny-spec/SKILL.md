@@ -66,6 +66,18 @@ missing-install report. These evidence rules apply on direct/standalone entry as
 
 ## Write the what and how
 
+Apply [interactive design agreement before detail](../planner/references/approval-and-recovery.md#interactive-design-agreement-before-detail),
+including standalone/resumed entry. Discover the project-owned page destination. First draft
+what/acceptance and the self-contained interactive HTML high-level design covering approach,
+interfaces, dependencies and material risks, not detailed architecture. Return the actual page
+for explicit owner design agreement before producing or continuing the detailed how; resume
+this source producer after the grant. A direct caller must obtain the same actual agreement.
+Carry shown content identity, actual answer/scope and ordering into the source and return.
+Page creation/interaction, silence, denial or cancellation is not consent. Significant design
+changes renew agreement before affected detail. Reuse a settled grant for its actual shown
+scope; keep requirements approval, design agreement and final implementation approval distinct
+without a separate TinySpec requirements-approval gate. Routine mechanics remain autonomous.
+
 Apply [Parsimony and Actionable Checks](../planner/references/parsimony.md) to approach and
 acceptance. At source creation, read and apply the
 [SDD quality guidance](../../docs/best_practices_spec_driven_development.md); if unreadable, stop

@@ -1184,7 +1184,73 @@ class Store:
             self.event(db,run,None,'abandoned',{'reason':'explicit operator abandon; partial work and incomplete effects retained'})
             return dict(db.execute('SELECT * FROM wf_runs WHERE run_id=?',(run,)).fetchone())
 
+    def trace_publication_history(self, run):
+        """Retained publication intents/effects, in order; no remote transaction."""
+        return [dict(row) for row in self.db.execute(
+            "SELECT seq,state,details FROM execution_history "
+            "WHERE run_id=? AND kind='trace_publication' ORDER BY seq", (run,))]
+
+    def trace_source(self, run):
+        """Read a fixed factual source without writes, locks or graph deserialization."""
+        db = sqlite3.connect(self.path.resolve().as_uri() + '?mode=ro', uri=True)
+        db.row_factory = sqlite3.Row
+        try:
+            db.execute('BEGIN')
+            return read_trace_source(db, run)
+        finally:
+            db.close()
+
     def close(self): self.db.close()
+
+def trace_bookkeeping(kind):
+    """Publication cannot recursively become part of its own factual snapshot."""
+    return kind.startswith(('trace_publication', 'trace_linkage', 'trace_delivery'))
+
+
+def read_trace_source(db, run):
+    """Read only existing execution tables. Caller holds a SQLite read snapshot.
+
+    Optional absent tables remain absent coverage, never migrated/backfilled here.
+    Review attempts and suggestions are retained individually, not latest-only.
+    """
+    tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if 'execution_runs' not in tables:
+        raise Blocked('trace source needs execution history; use the compatible historical reader for legacy storage')
+    row = db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone()
+    if row is None:
+        raise Blocked('trace run not found: ' + run)
+    source = {'run': dict(row), 'missing_tables': []}
+    for name, order in (('execution_history', 'seq'),
+                        ('execution_review_executions', 'dispatched_at,execution_id'),
+                        ('execution_review_attempts', 'seq'),
+                        ('execution_review_inputs', 'execution_id')):
+        if name not in tables:
+            source[name] = []
+            source['missing_tables'].append(name)
+        else:
+            source[name] = [dict(item) for item in db.execute(
+                'SELECT * FROM ' + name + ' WHERE run_id=? ORDER BY ' + order, (run,))]
+    source['execution_history'] = [item for item in source['execution_history']
+                                   if not trace_bookkeeping(item['kind'])]
+    source['execution_review_suggestions'] = []
+    if 'execution_review_suggestions' in tables and 'execution_review_attempts' in tables:
+        source['execution_review_suggestions'] = [dict(item) for item in db.execute(
+            'SELECT s.* FROM execution_review_suggestions s JOIN execution_review_attempts a '
+            'ON a.seq=s.attempt_seq WHERE a.run_id=? ORDER BY s.attempt_seq', (run,))]
+    else:
+        source['missing_tables'].append('execution_review_suggestions')
+    saved = (db.execute('SELECT contract FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()
+             if 'execution_run_inputs' in tables else None)
+    try:
+        source['delivery_issue'] = json.loads(saved['contract']).get('delivery_issue') if saved else None
+    except (ValueError, TypeError, AttributeError):
+        source['delivery_issue'] = None
+    source['boundary'] = {
+        'history_seq': max((item['seq'] for item in source['execution_history']), default=0),
+        'review_attempt_seq': max((item['seq'] for item in source['execution_review_attempts']), default=0),
+        'review_execution_ids': [item['execution_id'] for item in source['execution_review_executions']]}
+    return source
+
 
 # Semantic reader v1. Internal proof tables are intentionally not a consumer API.
 HISTORY_FIELDS = frozenset(('task_id', 'attempt_id', 'attempt', 'runtime_revision',

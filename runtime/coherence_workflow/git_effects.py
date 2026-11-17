@@ -105,6 +105,10 @@ class FocusedGit:
                 path = editable_path(self.project, name)
             except Blocked as exc:
                 raise Blocked('cannot transfer handoff path ' + name + ': operation transfer requires an exact safe regular file; correct handoff_paths') from exc
+            limits = self.task.get('owned_paths')
+            if (limits is not None and not self._matches(name, limits) and
+                    not self._matches(name, self.task.get('generated_outputs', []))):
+                raise Blocked('path outside optional owned_paths: ' + name)
             if not path.is_file() or not path_has_preexisting_changes(self.project, name):
                 raise Blocked('cannot transfer ' + name + ' for handoff: operation transfer requires an explicitly named pre-existing regular dirty file')
             info = path.stat(follow_symlinks=False)
@@ -141,8 +145,10 @@ class FocusedGit:
         # bytes that were already modified when the task selected this path.
         limits = self.task.get('owned_paths')
         artifact = self._matches(name, self.task.get('generated_outputs', []))
-        known = name in (self.known_artifacts if artifact else self.resumed_paths)
-        if handoff:
+        known = name in (self.known_artifacts if artifact else self.task_edited)
+        # Verify transfer bytes only before the first successful claim. Later writes
+        # belong to this task, but still pass the safe-path and scope checks above/below.
+        if handoff and not known:
             self._verify_handoff(name)
         if path_has_preexisting_changes(self.project, name) and not (known or handoff):
             raise Blocked('cannot claim pre-existing dirty path ' + name + ': operation claim requires an exact handoff_paths entry; broad owned_paths coverage is not transfer authority')
@@ -160,6 +166,8 @@ class FocusedGit:
         if not source_state or set(source_state) != set(self.handoff):
             raise Blocked('external recovery needs exact handoff paths; supply the completed file transfer')
         for name, expected in source_state.items():
+            # Completed transfers stay immutable, unlike ordinary iterative edits.
+            self._verify_handoff(name)
             self.claim(name)
             if name not in self.task_edited:
                 raise Blocked('external recovery cannot checkpoint generated artifact ' + name + '; transfer source deliverables only')
@@ -198,14 +206,21 @@ class FocusedGit:
         for attribute in ('checkpoint_parent', 'checkpoint_paths', 'checkpoint_entries'):
             if hasattr(self, attribute):
                 delattr(self, attribute)
-        # Only paths explicitly selected at an edit boundary are candidates.  Do not
-        # discover, adopt, or stage arbitrary command output.
-        owned = sorted(name for name in self.task_edited
-                       if path_has_preexisting_changes(self.project, name))
+        # Exact source transfers are also checkpoint candidates without a fake
+        # edit. Keep unclaimed transfers immutable: do not turn verification into
+        # a claim or resnapshot drift on a failed checkpoint/retry.
+        unclaimed = {name for name in self.handoff if name not in self.task_edited
+                     and not self._matches(name, self.task.get('generated_outputs', []))}
         completed = getattr(self, 'completed_handoff', {})
-        if completed:
-            self.accept_completed_handoff(completed)
-        for name in (set(owned) & set(self.handoff)) - set(completed):
+        def verify_transfers():
+            for name in unclaimed:
+                self._verify_handoff(name)
+            if completed:
+                self.accept_completed_handoff(completed)
+        verify_transfers()
+        owned = sorted(name for name in self.task_edited | unclaimed
+                       if path_has_preexisting_changes(self.project, name))
+        for name in (set(owned) & self.task_edited & set(self.handoff)) - set(completed):
             if editable_path(self.project, name).read_bytes() == self.handoff[name]['bytes']:
                 raise Blocked('cannot checkpoint handoff path ' + name + ': operation checkpoint found no intended edit; make the intended correction or do not claim the transfer')
         before_commit = before_commit or getattr(self, 'before_checkpoint', None)
@@ -252,6 +267,7 @@ class FocusedGit:
             before_commit(intent)
         if git(self.project, 'rev-parse', 'HEAD').decode().strip() != self.checkpoint_parent:
             raise Blocked('checkpoint parent changed before commit; inspect Git effects before continuation')
+        verify_transfers()
         changed_specs = [':(literal)' + name for name in changed]
         git(self.project, 'add', '-A', '--', *changed_specs)
         if self._index_entries(changed, lambda *args: git(self.project, *args)) != entries:
@@ -261,6 +277,7 @@ class FocusedGit:
             attempting()
         if git(self.project, 'rev-parse', 'HEAD').decode().strip() != self.checkpoint_parent:
             raise Blocked('checkpoint parent changed before commit; inspect Git effects before continuation')
+        verify_transfers()
         self.git_commit_started = True
         git(self.project, 'commit', '--only', '-m', 'workflow: ' + self.task['id'], '--', *changed_specs)
         sha = git(self.project, 'rev-parse', 'HEAD').decode().strip()

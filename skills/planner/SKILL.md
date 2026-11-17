@@ -59,11 +59,22 @@ commit permission or defer checkpoints until content approval. Preserve selected
 resume; resolved uncertainty alone does not reroute. Material scope change or explicit owner
 direction may reopen the choice with reasons.
 
-After understanding/brainstorming, use [track-open-issue](../track-open-issue/SKILL.md) to qualify
-and reuse a supplied or matching issue against the declared tracker. Creation needs its
-specific authority, separate from planning preselection. Consume the qualified URL when
-available in artifacts, briefs and handoff. Missing tracker access stops that operation, not
-unrelated safe planning; no duplicate issue or local fallback is required.
+After understanding/brainstorming, use [track-open-issue](../track-open-issue/SKILL.md#establish-planner-issue-association)
+to establish a supplied or matching issue against the declared tracker before planned artifact
+production. Require confirmed creation or qualified exact reuse, not a proposed issue body or
+an unverified URL. Consume the qualified URL in artifacts, briefs and handoff. Creation needs
+specific authority, separate from planning preselection; once the actual target and issue-create
+operation are authorized, proceed without a repeated routine creation question.
+
+For no-issue entry, consume the tracker's complete open/closed overlap discovery, exact issue
+body/identity/state readback and separate body-quality review when creation occurs. Reuse an
+open or closed exact match without duplicate or reopen. Missing/conflicting target, capability,
+authentication or required operation scope stops association and planned artifact production:
+name the affected operation and concrete corrective action, never a local fallback register.
+Read-only understanding, needed owner dialogue and depth assessment may continue; depth selection
+alone does not release artifact production. Created/read-back but review-incomplete is not ready.
+This planner boundary adds no runtime intake requirement: bare runtime tasks and execution
+without a delivery issue remain valid, and an existing qualified issue is not recreated.
 
 <a id="selected-production-and-stage-handoffs"></a>
 
@@ -167,10 +178,22 @@ a prerequisite needs evidence that it blocks the selected change, not repeated h
 
 ## Produce and review the selected artifacts
 
+For both depths, apply [interactive design agreement before detail](references/approval-and-recovery.md#interactive-design-agreement-before-detail).
+Discover the project-owned HTML destination; have the authorized producer create the actual
+self-contained interactive HTML high-level design, then show it and obtain explicit owner
+design agreement before detailed architecture plan production or continuation. Pass shown
+content identity, actual answer/scope and ordering to downstream producers/reviewers. Page
+interaction, silence, denial or cancellation grants nothing. Significant design changes renew
+agreement before affected planning; reuse a settled grant only for its actual shown scope.
+Requirements approval, design agreement and final implementation approval remain distinct.
+Routine mechanics remain autonomous; no new task schema or runtime startup gate is added.
+
 ### TinySpec path
 
 1. Resolve `tinyspec-source`; delegate `tiny-spec` with request, decisions, observed destination
-   and preparation authority. Inspect its source and returned research/risk results. No SpecKit
+   and preparation authority. First receive its what/acceptance and HTML high-level design;
+   obtain the design agreement above before resuming the producer's detailed how. Inspect its
+   source and returned research/risk results. No SpecKit
    prerequisite applies.
 2. Resolve `tinyspec-spec-review`; apply the shared specification-review contract below. Inspect
    source-producer corrections before tasks. Zero or resolved findings go directly to tasks;
@@ -208,7 +231,10 @@ Missing repair capability, principles or verification stops affected work; do no
    owner deferral with consequences and permitted planning bounds; cancellation releases nothing.
    With zero findings, skip questions. After zero or inspected corrections, obtain and durably record
    current-specification approval before `plan_create`, then immediately continue.
-3. **`plan_create`:** resolve `standard-plan-helper` when using `delegating-architectural-planning`,
+3. **`plan_create`:** first arrange the project-owned HTML high-level design under the selected
+   plan-producer assignment and preparation authority, then obtain design agreement before
+   setup-plan or detailed plan production/continuation. Do not dispatch an uninterrupted
+   page-to-detail pass without that actual grant. After agreement, resolve `standard-plan-helper` when using `delegating-architectural-planning`,
    otherwise `standard-plan-direct`. Delegate the entire same-session pass: review/fix the
    specification, create one plan through the observed capability, then review/fix the produced plan.
    Use the helper's [planning contract](../delegating-architectural-planning/SKILL.md#planner-standard-adapter-contract)
@@ -232,7 +258,8 @@ Missing repair capability, principles or verification stops affected work; do no
 Both paths require one fresh independent read-only source review before downstream production.
 The reviewer is separate from the source producer and parent history.
 Use [the canonical review prompt](references/spec-review.md) for fidelity to user intent. Supply
-only its bounded inputs: original request, actual owner clarifications/decisions, relevant
+only its bounded inputs: original request, actual owner clarifications/decisions, the current
+HTML design and actual agreement evidence when available, relevant
 constraints/accepted decisions/memory, exact current source path/content identity and readable
 content. Exclude producer rationale, conclusions and unrelated history. Verify the saved binding,
 fresh read-only async capability, source producer and question capability; dispatch `async: true`.
@@ -256,6 +283,7 @@ automatic rereview loop or additional approval gate.
    or approval trajectory. It checks correctness, completeness, feasibility, traceability, exclusions,
    docs/integration, dependencies, principles, approvals, verification item completeness and requirement alignment.
    Findings name the affected passage, impact and correction; do not manufacture stylistic defects. Apply
+   the [design and task proof review](references/spec-review.md#design-and-task-proof-review),
    task-generation's independently executable outcome and authorization-neutral contracts, the
    research evidence/permission results and early-risk review results above in both paths. Return
    each material execution risk/prerequisite with affected task, concrete need, evidence versus

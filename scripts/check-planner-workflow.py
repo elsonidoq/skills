@@ -27,7 +27,10 @@ PATHS = {
     "plan_prompt": ".pi/prompts/speckit.plan.md",
     "tasks_prompt": ".pi/prompts/speckit.tasks.md",
     "tasks_template": ".specify/templates/tasks-template.md",
+    "plan_template": ".specify/templates/plan-template.md",
     "readme": "README.md",
+    "finish": "skills/finish-session/SKILL.md",
+    "tracker": "skills/track-open-issue/SKILL.md",
 }
 
 
@@ -236,8 +239,14 @@ PLANNER_CARRIERS = (
     ('issue-association', '## Understand the work and choose depth', (
         'After understanding/brainstorming', '[track-open-issue]', 'declared tracker',
         'specific authority, separate from planning preselection', 'qualified URL',
-        'Missing tracker access stops that operation, not unrelated safe planning',
-        'no duplicate issue or local fallback',
+        'before planned artifact production', 'confirmed creation or qualified exact reuse',
+        'complete open/closed overlap discovery', 'exact issue body/identity/state readback',
+        'separate body-quality review when creation occurs',
+        'without a repeated routine creation question',
+        'open or closed exact match without duplicate or reopen',
+        'stops association and planned artifact production', 'concrete corrective action',
+        'never a local fallback register', 'depth selection alone does not release artifact production',
+        'Created/read-back but review-incomplete is not ready', 'bare runtime tasks',
     )),
     ('stage-dispatch', '## Arrange the next authorized stage', (
         'direct asynchronous single-stage dispatch', 'inspect the actual artifact, checks and focused checkpoint',
@@ -464,8 +473,123 @@ def check_planner(text):
     return errors
 
 
+# Check actual stage carriers, not a repository-wide mention of the design gate.
+DESIGN_CARRIERS = (
+    ('planner', '## Produce and review the selected artifacts', (
+        'explicit owner design agreement before detailed architecture plan production or continuation',
+        'Significant design changes renew', 'Requirements approval, design agreement and final implementation approval remain distinct',
+        'reuse a settled grant', 'project-owned HTML destination')),
+    ('tiny', '## Write the what and how', (
+        'self-contained interactive HTML high-level design', 'interfaces, dependencies and material risks',
+        'explicit owner design agreement before producing or continuing the detailed how',
+        'Page creation/interaction, silence, denial or cancellation is not consent',
+        'Significant design changes renew agreement', 'Routine mechanics remain autonomous')),
+    ('helper', '## Produce and inspect the plan', (
+        'Before setup-plan or detailed architecture plan production or continuation',
+        'self-contained interactive HTML high-level design', 'explicit owner design agreement',
+        'shown content identity, actual answer/scope and ordering', 'Significant design changes renew agreement')),
+    ('plan_prompt', '## Design agreement before setup or detail', (
+        'including standalone and resumed entry', 'project-owned page destination',
+        'explicit owner design agreement before setup-plan or detailed architecture plan production or continuation',
+        'Page creation/interaction, silence, denial or cancellation is not consent',
+        'Significant design changes renew agreement', 'reuse a settled grant')),
+    ('brainstorm', '## Apply and return the decisions', (
+        'Readiness is not design consent', 'self-contained interactive HTML high-level design',
+        'explicit owner design agreement before detailed architecture plan production or continuation',
+        'Preselection remains read-only', 'Significant design changes', 'Routine mechanics remain autonomous')),
+    ('approval', '## Interactive design agreement before detail', (
+        'project-owned self-contained interactive HTML high-level design',
+        'before detailed architecture plan production or continuation',
+        'approach, interfaces, dependencies and material risks',
+        'purpose, inputs/outputs, boundaries and significant choices',
+        'Executive bullets below the schematic', 'supported properties, tradeoffs/limits and necessary context',
+        'without unverified capability or performance claims',
+        'workflow approvals from data flow', 'proposed/unimplemented behavior from implemented behavior',
+        'pointer and keyboard activation, readable mobile layout, Close and Escape dismissal and focus return',
+        'Page creation, opening/clicking, silence, no answer, denial or cancellation is not consent',
+        'Significant design changes update the page and renew agreement before affected planning resumes',
+        'requirements approval, design agreement and final implementation approval distinct',
+        'without repeating the same question', 'Routine mechanics remain autonomous',
+        'No renderer, generator or framework is required', 'fresh session', 'NOT RUN')),
+    ('tasks', '## Draft outcomes from the source', (
+        'explicit owner design agreement', 'shown content identity, actual answer/scope and ordering',
+        'Significant design changes renew agreement', 'current launch authority or shared routine permissions')),
+    ('tasks_prompt', '## User Input', (
+        'explicit design agreement before detailed architecture plan production or continuation',
+        'Significant design changes renew agreement', 'reuse a settled grant', 'shared routine permissions')),
+    ('plan_template', '## Design agreement provenance', (
+        'project-owned self-contained interactive HTML high-level design',
+        'explicit design agreement before setup-plan and detailed architecture plan production or continuation',
+        'Page interaction, silence, denial or cancellation is not consent', 'Significant design changes')),
+    ('tasks_template', '## Verification and review', (
+        'explicit owner design agreement before detailed architecture plan production or continuation',
+        'Significant design changes renew agreement', 'meaningful submitted completion evidence',
+        'Preserve whole REQUIRED mappings', 'no startup eligibility')),
+    ('spec_review_prompt', '## Design and task proof review', (
+        'explicit owner design agreement before detailed architecture plan production or continuation',
+        'Page interaction, silence, denial or cancellation is not consent',
+        'significant design changes renew agreement', 'Static inspection is not real-browser proof',
+        'whole REQUIRED mappings', 'actual evidence limits')),
+)
+
+
+def check_design_contracts(texts):
+    errors = []
+    for key, heading, clauses in DESIGN_CARRIERS:
+        body = ' '.join(section(texts[key], heading).split())
+        for clause in clauses:
+            if ' '.join(clause.split()) not in body:
+                errors.append(f'design-{key}: {heading} missing {clause!r}; restore the design gate before affected planning')
+    # The gate must precede mutation-capable planning hooks and setup, not just final handoff.
+    prompt = texts['plan_prompt']
+    gate = prompt.find('## Design agreement before setup or detail')
+    hooks = prompt.find('## Pre-Execution Checks')
+    setup = prompt.find('run `.specify/scripts/bash/setup-plan.sh')
+    if not 0 <= gate < hooks < setup:
+        errors.append('design-order: Standard gate must precede planning hooks and setup-plan; move it before those operations')
+    tiny = section(texts['tiny'], '## Write the what and how')
+    if not 0 <= tiny.find('explicit owner design agreement') < tiny.find('Include only relevant detail'):
+        errors.append('design-order: TinySpec agreement must precede detailed how; restore the page-first return')
+    return errors
+
+
+ISSUE_ASSOCIATION_CARRIERS = (
+    ('tracker', '## Establish planner issue association', (
+        'first understand the request and conduct needed owner brainstorming',
+        'Before planned artifact production', 'complete open/closed overlap procedure',
+        'Compare intent, problem, scope and primary evidence, not just titles',
+        'Independently GET any exact match', 'qualified identity/URL, body and state',
+        'open or closed exact match without duplicate or reopen',
+        'actual target- and issue-create operation-scoped authority',
+        'actually create the requested issue, independently read it back',
+        'complete the separate problem-body quality review',
+        'Do not ask a repeated routine creation question',
+        'incomplete discovery or ambiguous effects cannot authorize another create',
+        'review is unavailable, retain that issue identity', 'resume its review, never create another issue',
+        'blocks association and planned artifact production', 'concrete corrective action',
+        'never invent a fallback register', 'bare runtime tasks')),
+    ('brainstorm', '## Apply and return the decisions', (
+        'Readiness is not issue association or artifact-production authority',
+        'before planned artifact production', 'confirmed creation with body-quality review',
+        'qualified exact open/closed reuse without duplicate/reopen',
+        'Missing prerequisites leave association pending', 'concrete corrective action',
+        'not a fallback register', 'Needed dialogue remains available')),
+)
+
+
+def check_issue_association(texts):
+    errors = []
+    for key, heading, clauses in ISSUE_ASSOCIATION_CARRIERS:
+        body = ' '.join(section(texts[key], heading).split())
+        for clause in clauses:
+            if clause not in body:
+                errors.append(f'issue-{key}: missing {clause!r}; restore association before artifacts')
+    return errors
+
+
 def check_contracts(texts):
-    errors = check_workflow_ownership(texts) + check_planner(texts["planner"])
+    errors = (check_workflow_ownership(texts) + check_planner(texts["planner"])
+              + check_design_contracts(texts) + check_issue_association(texts))
     def require(label, text, *phrases):
         for phrase in phrases:
             if " ".join(phrase.split()) not in " ".join(text.split()):
@@ -753,7 +877,7 @@ def check_contracts(texts):
         require(label, section(texts.get(key, ""), heading), *clauses)
     for label, key, heading, clauses in COMPOSED_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
-    for label, key, heading, clauses in RISK_CARRIERS + BOUNDARY_CARRIERS:
+    for label, key, heading, clauses in RISK_CARRIERS + BOUNDARY_CARRIERS + LINKAGE_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
     for label, key, selector, clauses in ATOMIC_OUTCOME_CARRIERS + RISK_HANDOFF_CARRIERS:
         require(label, operational_carrier(texts.get(key, ""), selector), *clauses)
@@ -883,6 +1007,41 @@ RISK_CARRIERS = (
         'outcome/proof rules above in either route',
         'actual proof consumption',
         'existing producing review and coordinator handoff',
+    )),
+)
+
+
+LINKAGE_CARRIERS = (
+    ('finish-linkage', 'finish', '## Issue-linked delivery', (
+        'PR → qualified delivery issue and issue → qualified PR, regardless of trace host',
+        'A PR-hosted trace also needs issue → every confirmed trace part',
+        'Reuse verified body or comment links',
+        'actual run/target/`link_comment` authority',
+        'incomplete pages, missing authority or uncertain readback mean incomplete linkage, never success',
+        'When a delivery PR is discovered after finish, establish only missing reciprocal links',
+        'refer to the already confirmed trace',
+        'Do not republish the trace, rerun implementation or reopen review',
+        'Late linkage does not change the reviewed revision, owner acceptance or closure authority',
+        'Trace/link comments do not require problem-body quality review',
+        'a substantive problem-body change still does',
+        'Do not create a PR, push, edit issue/PR bodies or change state',
+    )),
+    ('tracker-linkage', 'tracker', '## Confirm delivery issue/PR links', (
+        'Independently GET the issue identity and each PR\'s issue and pull-request identities',
+        'Read the current bodies and all comment pages',
+        'Every delivery PR must link its qualified issue and the issue must discover every delivery PR, regardless of trace host',
+        'issue links to every confirmed trace part',
+        'Read back retained trace parts in full',
+        'Reuse verified body/comment links',
+        '`link_comment` operation-scoped authority for each destination',
+        'reconcile all destination pages and exact candidate bodies/identities',
+        'a collision or incomplete scan stops new comments',
+        'Late PR discovery establishes only missing reciprocal links',
+        'no trace resend, implementation replay or reopened review',
+        'partial effects or failed readback are incomplete linkage, not success',
+        'Link/trace comments need no separate problem-body quality reviewer',
+        'Link confirmation is not owner acceptance or closure authority',
+        'Do not create PRs, push, replace issue/PR bodies, close or reopen',
     )),
 )
 

@@ -285,6 +285,159 @@ print(json.dumps(RECORD), flush=True)
             with self.assertRaisesRegex(Blocked, 'SDK result text must be a string'):
                 prompt({'type': 'result', 'text': None, 'outcome': 'failed'})
 
+    def test_synchronous_fixer_question_trace_uses_current_invocation(self):
+        """Production run_fix binds every real adapter call, including restored review sessions."""
+        import socket
+        import threading
+        from contextlib import nullcontext
+        from coherence_workflow.pi_adapter import parent_question
+        from coherence_workflow.trace_capture import persist_parent_events
+
+        host = self.root / 'fix_question_host.py'
+        host.write_text("""import json, sys
+from pathlib import Path
+request = json.loads(input())
+with Path(LOG).open('a') as log:
+    log.write(json.dumps(request) + '\\n')
+if request['readOnly']:
+    session = {'id': 'saved-reviewer', 'file': 'private-review.jsonl', 'compatibility': {'readOnly': True}}
+else:
+    assert request['savedSession']['id'] == 'saved-reviewer'
+    corrective = 'Actual failed attempt:' in request['prompt']
+    if not corrective:
+        assert request['reviewRepair'] is True
+    tool = 'corrective-tool' if corrective else 'initial-tool'
+    print(json.dumps({'type': 'question', 'request_id': tool, 'tool_call_id': tool, 'question': 'Worker asks ' + tool}), flush=True)
+    answer = sys.stdin.readline()
+    if not answer:
+        sys.exit(0)
+    answer = json.loads(answer)
+    assert answer == {'type': 'reply', 'request_id': tool, 'reply': {'answer': 'coordinator resolution'}}
+    if corrective:
+        Path(MARKER).write_text('corrected')
+    session = {'id': 'saved-reviewer', 'file': 'private-review.jsonl', 'compatibility': {'readOnly': False}}
+print(json.dumps({'type': 'result', 'text': 'real adapter result', 'session': session}), flush=True)
+""".replace('LOG', repr(str(self.root / 'fix-questions.jsonl')))
+           .replace('MARKER', repr(str(self.root / 'corrected'))))
+        log, marker = self.root / 'fix-questions.jsonl', self.root / 'corrected'
+        for cached in (True, False):
+            for mode in ('recorded', 'capture-failure', 'cancel-capture-failure'):
+                with self.subTest(cached=cached, mode=mode):
+                    if marker.exists():
+                        marker.unlink()
+                    log.write_text('')
+                    run = 'fix-question-' + str(cached) + '-' + mode
+                    contract = admit([{'id': 'original', 'description': 'Offline repair', 'owned_paths': [],
+                        'check': [sys.executable, '-B', '-c',
+                                  'from pathlib import Path; assert Path(' + repr(str(marker)) + ').exists()']}])
+                    env = {'COHERENCE_NODE': sys.executable, 'COHERENCE_PARENT_BRIDGE_SOCKET': '',
+                           'COHERENCE_PARENT_BRIDGE_TOKEN': '', 'COHERENCE_PARENT_BRIDGE_SESSION': '',
+                           'COHERENCE_PARENT_BRIDGE_RUN': ''}
+                    with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, env):
+                        with Authority(self.project) as owner:
+                            owner.store.start(run, self.base, contract=contract, executor=EXECUTOR,
+                                              authority={}, review_base=self.base)
+                            worker = PiAdapter(self.project, EXECUTOR['reviewer'])
+                            self.assertEqual(worker.prompt('review', read_only=True), 'real adapter result')
+                            owner.store.review_dispatch(run, 'review', review_base=self.base, review_head=self.base)
+                            owner.store.review_outcome(run, 'review', 'rejected', findings=['fixture defect'],
+                                references={'base': self.base, 'head': self.base, 'saved_session': worker.saved_session})
+                        # Reopen the store; only the cached case retains the actual adapter.
+                        with Authority(self.project) as owner:
+                            cancelled = Blocked('actual question cancelled')
+                            def cancel(_):
+                                raise cancelled
+                            endpoint = str(self.root / 'fix-question.sock')
+                            server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                            server.bind(endpoint)
+                            server.listen(3)
+                            server.settimeout(10)
+                            bridge_errors = []
+                            def respond():
+                                try:
+                                    for call in range(2):
+                                        parent_id = None
+                                        for _ in range(3):
+                                            conn, _ = server.accept()
+                                            with conn, conn.makefile('r') as stream:
+                                                request = json.loads(stream.readline())
+                                                if request['type'] == 'question':
+                                                    parent_id = request['request_id']
+                                                    reply = {'answer': 'coordinator resolution'}
+                                                elif request['type'] == 'trace_drain':
+                                                    reply = {'events': [{'version': 1, 'id': 'owner-' + str(call),
+                                                        'kind': 'owner_result', 'tool_call_id': 'owner-tool-' + str(call),
+                                                        'request_id': parent_id, 'content': 'actual owner answer'}]}
+                                                else:
+                                                    reply = {'acknowledged': True}
+                                                conn.sendall((json.dumps({'request_id': request['request_id'], **reply}) + '\n').encode())
+                                except Exception as exc:
+                                    bridge_errors.append(exc)
+                                finally:
+                                    server.close()
+                            thread = None
+                            if not mode.startswith('cancel'):
+                                thread = threading.Thread(target=respond)
+                                thread.start()
+                            def attached(text):
+                                return parent_question(text, trace_observer=lambda run, events:
+                                    persist_parent_events(owner.store, run, events))
+                            engine = Engine(owner, run, contract, EXECUTOR, question=cancel if mode.startswith('cancel') else attached)
+                            if cached:
+                                worker.question = engine.question
+                                worker.question_trace = lambda *a, **k: self.fail('stale reviewer observer used')
+                                engine._review_workers = {'review': worker}
+                            capture = (nullcontext() if mode == 'recorded' else patch(
+                                'coherence_workflow.trace_capture.record_worker_question', side_effect=RuntimeError('optional capture failed')))
+                            try:
+                                with capture, patch.dict(os.environ, {'COHERENCE_PARENT_BRIDGE_SOCKET': endpoint,
+                                        'COHERENCE_PARENT_BRIDGE_TOKEN': 'token', 'COHERENCE_PARENT_BRIDGE_SESSION': 'parent',
+                                        'COHERENCE_PARENT_BRIDGE_RUN': run}):
+                                    if mode.startswith('cancel'):
+                                        with self.assertRaises(Blocked) as raised:
+                                            engine.run_fix(['fixture defect'], trigger_execution_id='review',
+                                                review_base=self.base, execution_id='fixer')
+                                        self.assertIs(raised.exception, cancelled)
+                                    else:
+                                        result = engine.run_fix(['fixture defect'], trigger_execution_id='review',
+                                            review_base=self.base, execution_id='fixer')
+                                        self.assertEqual(result['summary'], 'real adapter result')
+                                        self.assertTrue(result['checkpoint']['no_change'])
+                            finally:
+                                if thread:
+                                    thread.join(12)
+                                    self.assertFalse(thread.is_alive())
+                                else:
+                                    server.close()
+                                os.unlink(endpoint)
+                            self.assertEqual(bridge_errors, [])
+                            rows = [(r['kind'], r['state'], json.loads(r['details'])) for r in owner.store.db.execute(
+                                'SELECT kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq', (run,))]
+                            invocations = [d['invocation_id'] for k, s, d in rows if k == 'fixer_invocation' and s == 'started']
+                            self.assertEqual(len(invocations), 1 if mode.startswith('cancel') else 2)
+                            self.assertEqual(len(set(invocations)), len(invocations))
+                            traces = [(s, d) for k, s, d in rows if k == 'worker_question_trace']
+                            if mode == 'recorded':
+                                self.assertEqual([s for s, d in traces], ['requested', 'parent_request', 'resolved', 'sent'] * 2)
+                                for index, tool in enumerate(('initial-tool', 'corrective-tool')):
+                                    group = traces[index * 4:(index + 1) * 4]
+                                    for state, facts in group:
+                                        self.assertEqual((facts['run_id'], facts['task_id'], facts['invocation_id']),
+                                                         (run, 'fix-fixer', invocations[index]))
+                                        self.assertEqual(facts['tool_call_id'], tool)
+                                        self.assertEqual(facts['question'], 'Worker asks ' + tool)
+                                    self.assertEqual(group[2][1]['resolution'], 'coordinator resolution')
+                                    event = next(d['event'] for k, s, d in rows if k == 'parent_trace' and d['event']['id'] == 'owner-' + str(index))
+                                    self.assertEqual(event['request_id'], group[1][1]['parent_request_id'])
+                                    self.assertNotEqual(event['tool_call_id'], tool)
+                                    self.assertNotEqual(event['content'], group[2][1]['resolution'])
+                            else:
+                                self.assertEqual(traces, [])
+                    requests = [json.loads(line) for line in log.read_text().splitlines()]
+                    self.assertEqual(len(requests), 2 if mode.startswith('cancel') else 3)
+                    self.assertTrue(requests[0]['readOnly'])
+                    self.assertTrue(all(not r['readOnly'] and r['savedSession']['id'] == 'saved-reviewer' for r in requests[1:]))
+
     def test_actual_adapter_unsuccessful_fixer_stops_before_checkpoint_and_rereview(self):
         """Synthetic host responses traverse the real adapter and repair consumer."""
         host, dispatches = self.root / 'repair_host.py', self.root / 'dispatches.jsonl'

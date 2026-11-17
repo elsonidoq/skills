@@ -99,6 +99,19 @@ Task-generation owns decomposition and task sizing; planning bindings do not sel
 
 ## Produce and inspect the plan
 
+Apply [interactive design agreement before detail](../planner/references/approval-and-recovery.md#interactive-design-agreement-before-detail)
+in managed, standalone and resumed entry. Before setup-plan or detailed architecture plan
+production or continuation, discover the project-owned destination and produce the
+self-contained interactive HTML high-level design covering approach, interfaces, dependencies
+and material risks. Return the actual page to the caller for explicit owner design agreement;
+stop before detail until its shown content identity, actual answer/scope and ordering are
+available. Resume useful producer context after the grant. This page-first return splits the
+same-session pass below, not a second plan-generation pass. Page interaction, silence, denial
+or cancellation is not consent. Significant design changes renew agreement before affected
+detail; reuse settled grants only for their actual shown scope. Requirements approval,
+design agreement and final implementation approval remain distinct. Routine mechanics remain
+autonomous. Allow the discovered page in bounded artifact writes, not arbitrary product edits.
+
 The specification is requirements truth; the plan provides derived architecture and sequencing.
 Do not forward or reread SDD as direct requirements input. Governing instructions, memory and
 actual permission/safety boundaries still apply. In one same-session pass:

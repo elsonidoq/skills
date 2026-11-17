@@ -118,6 +118,13 @@ rules above for reusable skills and commands.
     work. Do not infer the answer from agent, file or action counts.
   - Routing grants no new scope or external effects and waives no required acceptance, review,
     safety or permission gates. Preserve ordinary scoped repair authority and existing local overrides.
+- Pre-approved delivery operations: for owner-approved work in this repository, prepare and
+  push a dedicated branch containing only that work, open its PR in `github.com/elsonidoq/skills`,
+  establish reciprocal issue/PR links, and independently read back those effects without another
+  routine approval question. This is scoped operational authority, not permission to include unrelated
+  work, force-push, merge, close issues/PRs, deploy, change credentials or add paid services.
+  Preserve actual target, authentication, data-safety and final acceptance checks; investigate routine
+  operational errors autonomously rather than asking for the same authority again.
 - Planning (when routed to Coherence): request → `planner` understanding/brainstorming/scope → explicit owner
   TinySpec/Standard choice → reviewed tasks → approved handoff →
   `coordinate-implementation` → `finish-session`. TinySpec uses `tiny-spec`, separate
@@ -157,8 +164,9 @@ rules above for reusable skills and commands.
   Split independently testable concerns rather than bundling milestones into implementation tasks.
   Product bindings remain selected-config driven; the planning model is not an implementation assignment.
   Every workflow launch in this repository, including continuations and corrective runs, uses
-  `.pi/workflow-executor.json`: Terra/medium workers, with `openai-codex/gpt-6.1-sol`
-  at medium effort as the explicit implementation fallback and for every fresh reviewer session.
+  `.pi/workflow-executor.json`, which is authoritative for the current owner selection:
+  direct `openai-codex/gpt-6.1-sol` workers at medium effort, with the same model and effort
+  selected for the explicit implementation fallback and every fresh reviewer session.
   The coordinator may select inspected, cause-specific recovery or escalation without renewed
   operational permission. Prefer useful retained context; an incomplete return alone does not
   prove model incapability. If the Sol implementation escalation fails, stop and notify the owner

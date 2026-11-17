@@ -153,3 +153,77 @@ test('missing SDK and invalid explicit selection have actionable errors', async 
   assert.throws(() => discoverSdk({...options, env: {PI_PACKAGE_DIR: path.join(options.root, 'absent')}}),
     /Cannot resolve the Pi SDK public entry.*correct PI_PACKAGE_DIR/);
 });
+
+async function pathSdk(options) {
+  const directory = await packageAt(path.join(options.root, 'global/node_modules', sdkName), sdkName, 'path');
+  const cli = path.join(directory, 'arbitrary/cli.mjs');
+  await fs.mkdir(path.dirname(cli), {recursive: true});
+  await fs.writeFile(cli, '#!/usr/bin/env node\nthrow new Error("CLI must not execute");');
+  await fs.chmod(cli, 0o755);
+  const bin = path.join(options.root, 'bin');
+  await fs.mkdir(bin);
+  await fs.symlink(cli, path.join(bin, 'pi'));
+  options.env.PATH = bin;
+  return {directory, cli, bin};
+}
+
+test('PATH CLI symlink discovers its owning SDK without executing CLI or package code', async t => {
+  const options = await fixture(t);
+  const {directory} = await pathSdk(options);
+  await fs.writeFile(path.join(directory, 'public/entry.mjs'), 'throw new Error("actual PATH SDK failure");');
+  const discovered = discoverSdk(options);
+  assert.equal(discovered.packageDir, directory);
+  assert.equal(discovered.entryURL, pathToFileURL(path.join(directory, 'public/entry.mjs')).href);
+  await assert.rejects(import(discovered.entryURL), /actual PATH SDK failure/);
+  assert.throws(() => discoverSdk({...options, env: {}}), /Pi SDK unavailable/,
+    'an absent PATH must not use the test host PATH');
+});
+
+test('local, explicit and current-version SDKs precede PATH; invalid explicit selection never falls back', async t => {
+  const options = await fixture(t);
+  await pathSdk(options);
+  const agent = path.join(options.home, '.pi/agent');
+  const release = await packageAt(path.join(agent, 'install/releases/current/node_modules', sdkName), sdkName, 'release');
+  await fs.writeFile(path.join(agent, 'install/current-version'), 'current\n');
+  const explicit = await packageAt(path.join(options.root, 'explicit'), sdkName, 'explicit');
+  options.env.PI_PACKAGE_DIR = explicit;
+  const local = await packageAt(path.join(path.dirname(fileURLToPath(options.hostURL)), 'node_modules', sdkName), sdkName, 'local');
+  assert.equal(discoverSdk(options).packageDir, local);
+  await fs.rm(local, {recursive: true});
+  assert.equal(discoverSdk(options).packageDir, explicit);
+  options.env.PI_PACKAGE_DIR = path.join(options.root, 'absent');
+  assert.throws(() => discoverSdk(options), /Cannot resolve the Pi SDK public entry.*correct PI_PACKAGE_DIR/);
+  delete options.env.PI_PACKAGE_DIR;
+  assert.equal(discoverSdk(options).packageDir, release);
+  await fs.rm(path.join(agent, 'install/current-version'));
+  assert.equal((await import(discoverSdk(options).entryURL)).marker, 'path');
+});
+
+test('PATH skips non-runnable candidates but does not bypass a different runnable pi', async t => {
+  const options = await fixture(t);
+  const {bin} = await pathSdk(options);
+  const first = path.join(options.root, 'first');
+  await fs.mkdir(path.join(first, 'pi'), {recursive: true});
+  options.env.PATH = first + path.delimiter + bin;
+  assert.equal((await import(discoverSdk(options).entryURL)).marker, 'path', 'directories are not CLI files');
+  await fs.rm(path.join(first, 'pi'), {recursive: true});
+  await fs.writeFile(path.join(first, 'pi'), 'not executable');
+  await fs.chmod(path.join(first, 'pi'), 0o644);
+  assert.equal((await import(discoverSdk(options).entryURL)).marker, 'path');
+  await fs.chmod(path.join(first, 'pi'), 0o755);
+  await fs.writeFile(path.join(first, 'package.json'), JSON.stringify({name: 'not-the-sdk'}));
+  assert.throws(() => discoverSdk(options), /Pi SDK unavailable/, 'must use actual PATH selection, not search later installations');
+});
+
+test('broken PATH package metadata and public exports report errors without choosing another installation', async t => {
+  const options = await fixture(t);
+  const {directory, bin} = await pathSdk(options);
+  const other = {...options, root: path.join(options.root, 'other'), env: {}};
+  await pathSdk(other);
+  options.env.PATH = bin + path.delimiter + other.env.PATH;
+  const metadata = path.join(directory, 'package.json');
+  await fs.writeFile(metadata, 'invalid JSON');
+  assert.throws(() => discoverSdk(options), /Cannot discover the Pi SDK.*correct that installation or set PI_PACKAGE_DIR/);
+  await fs.writeFile(metadata, JSON.stringify({name: sdkName, exports: {}}));
+  assert.throws(() => discoverSdk(options), /Cannot resolve the Pi SDK public entry.*correct PI_PACKAGE_DIR/);
+});

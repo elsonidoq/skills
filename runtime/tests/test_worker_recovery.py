@@ -83,6 +83,12 @@ class GraphRecoveryTests(ProjectTest):
             self.assertEqual(len(calls), 4)
             self.assertEqual(calls[2], ('worker', 'strong' if action == 'escalate' else 'worker'))
             self.assertEqual(calls[-1], ('review', 'reviewer'))
+            if action == 'escalate':
+                escalation = [json.loads(row['details']) for row in owner.store.db.execute(
+                    "SELECT details FROM execution_history WHERE run_id='graph-recovery' "
+                    "AND task_id='second' AND kind='implementation_escalation' ORDER BY seq")]
+                self.assertEqual(escalation[0]['invocation_id'], escalation[-1]['producer_invocation_id'])
+                self.assertTrue(escalation[-1]['recovery_id'])
         self.assertEqual((project/'unrelated.txt').read_text(), 'preserve\n')
         self.assertEqual(git(project, 'show', 'HEAD:first.txt'), b'complete\n')
         self.assertEqual(git(project, 'show', 'HEAD:owned.txt'), b'fixed\n')
@@ -404,7 +410,8 @@ class WorkerRecoveryTests(ProjectTest):
             transfer = {'task_id': 'one', 'invocation_id': json.loads(last['details'])['invocation_id'],
                         'head': self.base, 'diagnosis': DIAGNOSIS, 'worker': 'owner-authorized external fixture',
                         'summary': 'External implementation with original acceptance; independent review remains.',
-                        'paths': {'owned.txt': {'sha256': hashlib.sha256(content).hexdigest(), 'mode': 420}}}
+                        'paths': {'owned.txt': {'sha256': hashlib.sha256(content).hexdigest(),
+                                               'mode': self.project.joinpath('owned.txt').stat().st_mode & 0o777}}}
             runner = Engine(owner, 'recovery', contract, EXECUTOR, resume=True)
             if not check_passes:
                 with self.assertRaises(Blocked):
