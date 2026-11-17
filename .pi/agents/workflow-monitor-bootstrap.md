@@ -2,7 +2,7 @@
 name: workflow-monitor-bootstrap
 description: Bounded checkout-local runtime prerequisite implementer or fresh read-only reviewer; never the app scheduler.
 tools: read, grep, find, ls, bash, edit, write, contact_supervisor
-model: openai-codex/gpt-6.1-sol
+model: openai-codex/gpt-6.2-sol
 thinking: medium
 systemPromptMode: append
 inheritProjectContext: true

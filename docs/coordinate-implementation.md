@@ -16,13 +16,13 @@ project's task-owned files:
 Executor JSON uses the actual owner selection, for example:
 
 ```json
-{"provider":"openai-codex","model":"gpt-6.1-sol","effort":"medium"}
+{"provider":"openai-codex","model":"gpt-6.2-sol","effort":"medium"}
 ```
 
 An optional `reviewer` object selects the fresh read-only review executor separately:
 
 ```json
-{"provider":"openai-codex","model":"gpt-6.1-terra","effort":"medium","reviewer":{"provider":"openai-codex","model":"gpt-6.1-sol","effort":"medium"}}
+{"provider":"openai-codex","model":"gpt-6.1-terra","effort":"medium","reviewer":{"provider":"openai-codex","model":"gpt-6.2-sol","effort":"medium"}}
 ```
 
 Without `reviewer`, review retains the selected worker profile for compatibility.
@@ -34,7 +34,7 @@ alone grants no implementation fallback. Availability errors remain actual error
 authenticate or silently substitute another model.
 For **this repository**, every launch (including continuations/corrections) supplies
 `--executor .pi/workflow-executor.json`, or that file's absolute path through the parent
-bridge: Terra/medium workers, Sol 6.1/medium implementation fallback, and Sol 6.1/medium reviewers. Other projects retain their own
+bridge: Terra/medium workers, Sol 6.2/medium implementation fallback, and Sol 6.2/medium reviewers. Other projects retain their own
 configuration. Existing historical reviewer nodes are not changed retroactively.
 
 The canonical project-local configuration is `<project-root>/.pi/workflow-executor.json`.
