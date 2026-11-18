@@ -289,6 +289,27 @@ class IssueAssociationWalkthroughTests(unittest.TestCase):
         self.assertIn('bare runtime tasks and execution without a delivery issue remain valid', planner)
 
 
+class FinishSessionDeploymentInstructionTests(unittest.TestCase):
+    """Static branch coverage; not proof of live closeout behavior."""
+
+    def test_plausible_triage_is_distinct_from_concrete_owner_inspection(self):
+        deployment = ' '.join(checker.section(
+            (ROOT / 'skills/finish-session/SKILL.md').read_text(),
+            '## Deployment, when relevant').split())
+        for pattern in (
+            r'Enter only for plausible deployment implications in attributable work or verified deploy evidence',
+            r'Otherwise report `not examined:.*without inspecting deployment state or its owner',
+            r'bounded triage of attributable changes and available evidence',
+            r'Determine `deployed`, `not deployed` or `unknown` from repository evidence or user-provided context',
+            r'Report unresolved implications as `unknown` with the evidence needed',
+            r'Only inspect or reconcile the existing deployment owner for concrete deployment implications or verified deploy evidence that can change an existing entry',
+            r'do not scan it for speculative work',
+            r'Do not invent hypothetical work or execute deployment procedures',
+        ):
+            with self.subTest(pattern=pattern):
+                self.assertRegex(deployment, pattern)
+
+
 class IssueDeliveryInstructionTests(unittest.TestCase):
     """Local instruction walkthrough only; no tracker or owner actions."""
 
