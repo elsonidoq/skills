@@ -1145,9 +1145,11 @@ class Engine:
         project = self.authority.project
         if not isinstance(head, str) or git(project, 'rev-parse', 'HEAD').decode().strip() != head:
             raise Blocked('review recovery target drifted; inspect the original reviewed head before continuation')
-        # Protect the committed range and task ownership, not unrelated contextual reads.
+        # Protect both reviewed ranges and task ownership, not unrelated contextual reads.
         # Check index and worktree separately: their changes can cancel in a HEAD diff.
         changed = git(project, 'diff', '--no-renames', '--name-only', '-z', review_base + '..' + head)
+        if followup:
+            changed += git(project, 'diff', '--no-renames', '--name-only', '-z', diff_base + '..' + head)
         targets = [os.fsdecode(p).rstrip('/') for p in changed.split(b'\0') if p]
         targets += [p.rstrip('/') for task in self.contract['tasks'] for p in task.get('owned_paths', [])]
         def check_target():
@@ -1224,7 +1226,9 @@ class Engine:
                 raw = raw.split('\n', 1)[1].rsplit('```', 1)[0].strip()
             original = json.loads(raw)
             value = self._review_value(text, require_coverage=True)
-            legacy = re.compile(r'^\S+:\d+(?:-\d+)?\s+-\s+\S')
+            legacy = re.compile(r'^\S+:\d+(?:-\d+)?' +
+                                (r'(?:(?:,\s*|\s+and\s+)\d+(?:-\d+)?)*' if followup else '') +
+                                r'\s+-\s+\S')
             if (original.get('approved') is not False or not value['findings'] or
                     any(original.get(key) != value[key] for key in ('coverage', 'coverage_gaps')) or
                     all(legacy.match(finding.strip()) for finding in value['findings'])):

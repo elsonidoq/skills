@@ -208,7 +208,7 @@ class ReviewFormatRecoveryTests(ProjectTest):
             with self.subTest(location=location), self.assertRaises(_ReviewFormat):
                 Engine._review_value(json.dumps(dict(self.verdict, findings=[location + ' - defect'])), require_coverage=True)
 
-    def start_followup_failed(self):
+    def start_followup_failed(self, restore_base=False):
         self.start_failed()
         fixture = self
         verdict = {'approved': False, 'findings': [
@@ -230,7 +230,7 @@ class ReviewFormatRecoveryTests(ProjectTest):
                     fixture.followup.write_text(''.join(json.dumps(x) + '\n' for x in entries))
                     return json.dumps(verdict)
                 kwargs['claim']('owned.txt')
-                fixture.project.joinpath('owned.txt').write_text('repaired\n')
+                fixture.project.joinpath('owned.txt').write_text('base\n' if restore_base else 'repaired\n')
                 return 'repaired'
         self.followup = self.root / 'followup.jsonl'
         parse = Engine._review_value
@@ -271,6 +271,47 @@ class ReviewFormatRecoveryTests(ProjectTest):
         self.assertEqual(grants, 0)
         self.assertTrue(any(kwargs.get('owner_only') for _, kwargs in asked))
         self.assertEqual([kind for kind, _ in self.calls], ['writer', 'review', 'fixer', 'review'])
+
+    def test_followup_rejects_verdict_already_accepted_by_prior_parser(self):
+        self.start_followup_failed()
+        entries = [json.loads(x) for x in self.followup.read_text().splitlines()]
+        verdict = json.loads(entries[-1]['message']['content'][-1]['text'])
+        verdict['findings'] = ['owned.txt:1 and 3 - previously accepted defect']
+        entries[-1]['message']['content'][-1]['text'] = json.dumps(verdict)
+        self.followup.write_text(''.join(json.dumps(x) + '\n' for x in entries))
+        with Authority(self.project) as owner:
+            owner.store.resume('fixture')
+            chain = owner.store.review_chain('fixture', private=True)
+            with self.assertRaisesRegex(Blocked, 'not an actionable compound-location rejection'):
+                Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
+                       question=lambda _: str(self.followup))._recover_format_rejection(chain, self.base)
+            self.assertTrue(owner.store.review_chain('fixture')['uncertain'])
+
+    def test_followup_blocks_dirty_repair_delta_path_restored_to_original_base(self):
+        self.contract = admit({'tasks': [{'id': 'task', 'description': 'fixture'}]})
+        self.start_followup_failed(restore_base=True)
+        head = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        self.assertEqual(git(self.project, 'diff', '--name-only', self.base + '..' + head), b'')
+        with Authority(self.project) as owner:
+            owner.store.resume('fixture')
+            chain = owner.store.review_chain('fixture', private=True)
+            prior_head = chain['executions'][0]['references']['head']
+            self.assertIn(b'owned.txt', git(self.project, 'diff', '--name-only', prior_head + '..' + head))
+            engine = Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
+                            question=lambda _: str(self.followup))
+            for mode in ('worktree', 'index'):
+                with self.subTest(mode=mode):
+                    self.write('owned.txt', 'drift\n')
+                    if mode == 'index':
+                        git(self.project, 'add', '--', 'owned.txt')
+                        self.write('owned.txt', 'base\n')
+                    with self.assertRaisesRegex(Blocked, 'target has changes in owned.txt'):
+                        engine._recover_format_rejection(chain, self.base)
+                    if mode == 'index':
+                        git(self.project, 'restore', '--staged', '--', 'owned.txt')
+                    self.write('owned.txt', 'base\n')
+            self.assertTrue(owner.store.review_chain('fixture')['uncertain'])
+            self.assertTrue(engine._recover_format_rejection(chain, self.base))
 
     def test_followup_recovery_honors_existing_scoped_routine_authority(self):
         verdict, adapter = self.start_followup_failed()
