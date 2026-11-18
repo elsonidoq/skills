@@ -345,7 +345,10 @@ def check_contracts(texts):
     require("coordinator-review-sequence", final_review,
             "1. Write both bounded reviewer handoff instructions",
             "2. Before launching either reviewer", "independently inspect that snapshot",
-            "Does the current plan induce scope creep or over complexities?",
+            "Does this plan achieve the requested outcome with the least necessary work?",
+            "Justify your conclusion with specific examples from the plan.",
+            "identify the potentially costly choices you examined",
+            "Do not give an unsupported yes/no answer.",
             "Do not defer this judgment to the reviewers",
             "3. Launch both fresh independent read-only reviewers",
             "Keep the coordinator's analysis out of both handoffs",
@@ -933,7 +936,7 @@ RISK_HANDOFF_CARRIERS = (
     )),
     ("risk-coordinator-triage", "coordinator", "## Question triage", (
         "routine early worker or\nreviewer return is a diagnosis event, not completion or owner debugging", "inspect its invocation,\nunfinished scope, actual checks, and retained effects",
-        "supported history/resume or evidence-only reassessment paths", "never blindly retry an\nunchanged expensive failure", "initial-plus-two same-task/session allowance", "compact diagnosis context", "evidence-only review reassessment uses the existing retained evidence", "never a task replay", "Unknown cause or a real permission boundary stops",
+        "supported history/resume or evidence-only reassessment paths", "never blindly retry an\nunchanged expensive failure", "initial-plus-two same-task/session allowance", "compact diagnosis context", "Evidence-only review reassessment uses the existing retained evidence", "never a task replay", "Unknown cause or a real permission boundary stops",
     )),
     ("risk-coordinator-review", "coordinator", "## Review and Acceptance", (
         "routine\nreviewer early return or evidence gap as a diagnosis/recovery event", "not completion or an owner-debugging\nrequest",

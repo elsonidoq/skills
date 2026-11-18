@@ -322,8 +322,14 @@ At the existing final review in both paths, the coordinator must follow this ord
 1. Write both bounded reviewer handoff instructions: correctness and simplicity, using their respective
    input contracts and the same current artifact snapshot.
 2. Before launching either reviewer, independently inspect that snapshot and explicitly answer in the
-   session: **Does the current plan induce scope creep or over complexities?** State concrete findings
-   and their basis, or justify why none were found. Do not defer this judgment to the reviewers.
+   session: **Does this plan achieve the requested outcome with the least necessary work?**
+   Examine added scope, prescribed implementation mechanisms, unnecessary abstractions, duplicate
+   verification, and wording that could encourage these.
+   **Justify your conclusion with specific examples from the plan.** For each concern, state what
+   to remove or simplify and why required outcomes, checks, and safety protections remain satisfied.
+   If you find no concerns, identify the potentially costly choices you examined and explain why
+   each is necessary. Do not give an unsupported yes/no answer.
+   Do not defer this judgment to the reviewers.
 3. Launch both fresh independent read-only reviewers with the prepared handoffs before awaiting either
    report. Keep the coordinator's analysis out of both handoffs to preserve reviewer independence.
 4. After both reports return, assess all three analyses together: the coordinator's own analysis,
@@ -368,7 +374,8 @@ parent checks all three analyses against original requirements, combines support
 appropriate producer under the sequence above, and explains rejected findings with evidence. Agent-added constraints remain challengeable even when labeled REQUIRED; genuine
 requirements, safety and manual/permission gates remain binding. Resolve material findings before approval.
 Before presenting approval, the parent summarizes the planned task specifications in one sentence and
-explicitly answers: “Does the current plan induce scope creep or over complexities?” Assess the tasks
+explicitly answers the least-necessary-work question from step 2 of the shared final task-review
+contract, with the same evidence and justification requirements. Assess the tasks
 and both reports, not just their verdicts: a required outcome does not justify every proposed mechanism.
 Check that simplicity comparisons use a genuinely sufficient smaller alternative, and distinguish supported
 defects from optional improvements or flexibility already present. Resolve concrete review gaps through

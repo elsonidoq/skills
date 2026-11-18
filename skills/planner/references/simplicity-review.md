@@ -2,9 +2,15 @@
 
 Primary goal: find the simplest sufficient implementation of the owner's requirements.
 Summarize the planned task specifications in one sentence, then explicitly answer:
-“Does the current plan induce scope creep or over complexities?”
-Do you see any unnecessary complexity or confusing tasks? Is this the simplest
-way to meet the owner's requirements?
+**Does this plan achieve the requested outcome with the least necessary work?**
+
+Examine added scope, prescribed implementation mechanisms, unnecessary abstractions, duplicate
+verification, and wording that could encourage these.
+
+**Justify your conclusion with specific examples from the plan.** For each concern, state what
+to remove or simplify and why required outcomes, checks, and safety protections remain satisfied.
+If you find no concerns, identify the potentially costly choices you examined and explain why
+each is necessary. Do not give an unsupported yes/no answer.
 
 Start with the owner's intent expressed as a concise executive bullet list supplied by the
 coordinator: what the owner wants, why, and the essential scope boundaries. Assess whether the tasks achieve that intent in the simplest sufficient way, rather

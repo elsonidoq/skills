@@ -2584,7 +2584,10 @@ class IntentSpecificationReviewTests(unittest.TestCase):
         clauses = (
             "1. Write both bounded reviewer handoff instructions",
             "2. Before launching either reviewer", "independently inspect that snapshot",
-            "Does the current plan induce scope creep or over complexities?",
+            "Does this plan achieve the requested outcome with the least necessary work?",
+            "Justify your conclusion with specific examples from the plan.",
+            "identify the potentially costly choices you examined",
+            "Do not give an unsupported yes/no answer.",
             "Do not defer this judgment to the reviewers",
             "3. Launch both fresh independent read-only reviewers",
             "Keep the coordinator's analysis out of both handoffs",
@@ -2612,7 +2615,13 @@ class IntentSpecificationReviewTests(unittest.TestCase):
             changed["planner"] = texts["planner"].replace(contract, replace_clause(contract, clause), 1)
             self.assertTrue(any(e.startswith("simplicity-review:") for e in checker.check_contracts(changed)))
         prompt = (ROOT / "skills/planner/references/simplicity-review.md").read_text()
-        self.assertIn("Is this the simplest", prompt)
+        for clause in (
+            "Does this plan achieve the requested outcome with the least necessary work?",
+            "Justify your conclusion with specific examples from the plan.",
+            "identify the potentially costly choices you examined",
+            "Do not give an unsupported yes/no answer.",
+        ):
+            self.assertIn(clause, prompt)
         self.assertIn("show why it", prompt)
         self.assertIn("Do not invent findings", prompt)
         role = (ROOT / "roles/coherence-reviewer.md").read_text()
