@@ -24,7 +24,7 @@ class ReviewFormatRecoveryTests(ProjectTest):
                         'coverage_gaps': ['consumer untested'], 'suggestions': ['rename later']}
         self.contract = admit({'tasks': [{'id': 'task', 'description': 'fixture', 'owned_paths': ['owned.txt']}]})
 
-    def start_failed(self):
+    def start_failed(self, delete_path=None):
         fixture = self
         class Adapter:
             def __init__(self, *_args, **_kwargs): pass
@@ -35,11 +35,15 @@ class ReviewFormatRecoveryTests(ProjectTest):
                         {'type': 'message', 'id': 'user', 'parentId': None, 'message': {'role': 'user',
                          'content': [{'type': 'text', 'text': prompt}]}},
                         {'type': 'message', 'id': 'answer', 'parentId': 'user', 'message': {'role': 'assistant',
-                         'stopReason': 'stop', 'content': [{'type': 'text', 'text': json.dumps(fixture.verdict)}]}}]
+                         'stopReason': 'stop', 'content': [{'type': 'thinking', 'thinking': 'review reasoning'},
+                                                             {'type': 'text', 'text': json.dumps(fixture.verdict)}]}}]
                     fixture.artifact.write_text(''.join(json.dumps(x) + '\n' for x in entries))
                     return json.dumps(fixture.verdict)
                 kwargs['claim']('owned.txt')
                 fixture.project.joinpath('owned.txt').write_text('task output\n')
+                if delete_path:
+                    kwargs['claim'](delete_path)
+                    fixture.project.joinpath(delete_path).unlink()
                 return 'done'
         parse = Engine._review_value
         def old_parser(text, **kwargs):
@@ -149,6 +153,50 @@ class ReviewFormatRecoveryTests(ProjectTest):
                 Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
                        question=lambda _: str(self.artifact))._recover_format_rejection(chain, self.base)
 
+    def test_deleted_review_target_refuses_parent_file_or_symlink_not_nearby_name(self):
+        parent = self.project / 'protected'
+        parent.mkdir()
+        (parent / 'file').write_text('tracked before deletion\n')
+        git(self.project, 'add', '--', 'protected/file')
+        git(self.project, 'commit', '-qm', 'fixture protected file')
+        self.base = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        self.contract = admit({'tasks': [{'id': 'task', 'description': 'fixture',
+                                          'owned_paths': ['owned.txt', 'protected/file']}]})
+        self.start_failed(delete_path='protected/file')
+        if parent.exists():
+            parent.rmdir()
+        with Authority(self.project) as owner:
+            owner.store.resume('fixture')
+            chain = owner.store.review_chain('fixture', private=True)
+            engine = Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
+                            question=lambda _: '')
+            nearby = self.project / 'protected-nearby'
+            nearby.write_text('unrelated\n')
+            with self.assertRaisesRegex(Blocked, 'needs the exact completed reviewer transcript'):
+                engine._recover_format_rejection(chain, self.base)
+            for mode in ('file', 'symlink'):
+                with self.subTest(mode=mode):
+                    if mode == 'file':
+                        parent.write_text('replacement\n')
+                    else:
+                        parent.symlink_to('protected-nearby')
+                    with self.assertRaisesRegex(Blocked, 'target has changes in protected;'):
+                        engine._recover_format_rejection(chain, self.base)
+                    parent.unlink()
+            self.assertEqual(nearby.read_text(), 'unrelated\n')
+            self.assertTrue(owner.store.review_chain('fixture')['uncertain'])
+
+    def test_single_text_only_transcript_remains_compatible(self):
+        self.start_failed()
+        entries = [json.loads(x) for x in self.artifact.read_text().splitlines()]
+        entries[-1]['message']['content'].pop(0)
+        self.artifact.write_text(''.join(json.dumps(x) + '\n' for x in entries))
+        with Authority(self.project) as owner:
+            owner.store.resume('fixture')
+            chain = owner.store.review_chain('fixture', private=True)
+            self.assertTrue(Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
+                                   question=lambda _: str(self.artifact))._recover_format_rejection(chain, self.base))
+
     def test_parser_accepts_single_comma_and_and_rejects_malformed_locations(self):
         for location in ('owned.txt:1', 'owned.txt:1-2,4-5', 'owned.txt:1-2 and 4-5',
                          'owned.txt:1, 3 and 5-6'):
@@ -162,16 +210,26 @@ class ReviewFormatRecoveryTests(ProjectTest):
     def test_incomplete_and_non_rejection_artifacts_stay_blocked(self):
         self.start_failed()
         original = [json.loads(x) for x in self.artifact.read_text().splitlines()]
-        for mode in ('interrupted', 'approval', 'write_tool'):
+        for mode in ('interrupted', 'approval', 'write_tool', 'earlier_write_tool', 'multiple_text', 'no_text', 'unknown_part'):
             with self.subTest(mode=mode):
                 entries = json.loads(json.dumps(original))
                 if mode == 'interrupted':
                     entries[-1]['message']['stopReason'] = 'aborted'
                 elif mode == 'approval':
                     value = dict(self.verdict, approved=True)
-                    entries[-1]['message']['content'][0]['text'] = json.dumps(value)
-                else:
+                    entries[-1]['message']['content'][-1]['text'] = json.dumps(value)
+                elif mode == 'write_tool':
                     entries[-1]['message']['content'].append({'type': 'toolCall', 'name': 'write'})
+                elif mode == 'earlier_write_tool':
+                    entries.insert(-1, {'type': 'message', 'id': 'unsafe', 'parentId': 'user',
+                                        'message': {'role': 'assistant', 'content': [{'type': 'toolCall', 'name': 'write'}]}})
+                    entries[-1]['parentId'] = 'unsafe'
+                elif mode == 'multiple_text':
+                    entries[-1]['message']['content'].append({'type': 'text', 'text': '{}'})
+                elif mode == 'no_text':
+                    entries[-1]['message']['content'].pop()
+                else:
+                    entries[-1]['message']['content'].append({'type': 'unknown'})
                 self.artifact.write_text(''.join(json.dumps(x) + '\n' for x in entries))
                 with Authority(self.project) as owner:
                     owner.store.resume('fixture')

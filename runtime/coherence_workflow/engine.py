@@ -1129,7 +1129,8 @@ class Engine:
                 ('ls-files', '--others', '--exclude-standard', '-z')))
             for raw in dirty.split(b'\0'):
                 name = os.fsdecode(raw)
-                if name and any(name == target or name.startswith(target + '/') for target in targets):
+                if name and any(name == target or name.startswith(target + '/') or target.startswith(name + '/')
+                                for target in targets):
                     raise Blocked('review recovery target has changes in ' + name +
                                   '; preserve and reconcile the reviewed or task-owned path before continuation')
         check_target()
@@ -1157,9 +1158,13 @@ class Engine:
                 raise ValueError('missing completed reviewer return')
             user_content, final_content = users[0].get('content'), final.get('content')
             if (not isinstance(user_content, list) or len(user_content) != 1 or user_content[0].get('type') != 'text' or
-                    not isinstance(final_content, list) or len(final_content) != 1 or final_content[0].get('type') != 'text'):
+                    not isinstance(final_content, list) or not all(isinstance(part, dict) and
+                        part.get('type') in ('thinking', 'text') for part in final_content)):
                 raise ValueError('ambiguous reviewer prompt or return')
-            prompt, text = user_content[0]['text'], final_content[0]['text']
+            verdicts = [part for part in final_content if part['type'] == 'text']
+            if len(verdicts) != 1:
+                raise ValueError('ambiguous reviewer prompt or return')
+            prompt, text = user_content[0]['text'], verdicts[0]['text']
             if not isinstance(prompt, str) or not isinstance(text, str):
                 raise ValueError('invalid reviewer prompt or return')
             for message in messages:
