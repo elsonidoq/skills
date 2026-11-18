@@ -765,7 +765,7 @@ class Engine:
             raise _ReviewFormat('reviewer result needs boolean approved, findings string list, and optional suggestions string list')
         # Findings are repair dispatch inputs, not a severity vocabulary.  Each must say
         # where the defect is, its concrete impact, and why it violates accepted work.
-        pattern = re.compile(r'^\S+:\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*\s+-\s+\S')
+        pattern = re.compile(r'^\S+:\d+(?:-\d+)?(?:(?:,\s*|\s+and\s+)\d+(?:-\d+)?)*\s+-\s+\S')
         if any(not pattern.match(item.strip()) for item in findings):
             raise _ReviewFormat('review blocker needs a path:line or path:start-end[,start-end] location and concrete defect/impact')
         # Basis is described in ordinary defect prose, not a mandatory suffix.
@@ -1115,8 +1115,24 @@ class Engine:
         project = self.authority.project
         if not isinstance(head, str) or git(project, 'rev-parse', 'HEAD').decode().strip() != head:
             raise Blocked('review recovery target drifted; inspect the original reviewed head before continuation')
-        if git(project, 'status', '--porcelain=v1', '--untracked-files=no'):
-            raise Blocked('review recovery target has tracked changes; preserve and reconcile them before continuation')
+        # Protect the committed range and task ownership, not unrelated contextual reads.
+        # Check index and worktree separately: their changes can cancel in a HEAD diff.
+        changed = git(project, 'diff', '--no-renames', '--name-only', '-z', review_base + '..' + head)
+        targets = [os.fsdecode(p).rstrip('/') for p in changed.split(b'\0') if p]
+        targets += [p.rstrip('/') for task in self.contract['tasks'] for p in task.get('owned_paths', [])]
+        def check_target():
+            if git(project, 'rev-parse', 'HEAD').decode().strip() != head:
+                raise Blocked('review recovery target drifted; inspect the original reviewed head before continuation')
+            dirty = b''.join(git(project, *args) for args in (
+                ('diff', '--no-renames', '--name-only', '-z'),
+                ('diff', '--cached', '--no-renames', '--name-only', '-z'),
+                ('ls-files', '--others', '--exclude-standard', '-z')))
+            for raw in dirty.split(b'\0'):
+                name = os.fsdecode(raw)
+                if name and any(name == target or name.startswith(target + '/') for target in targets):
+                    raise Blocked('review recovery target has changes in ' + name +
+                                  '; preserve and reconcile the reviewed or task-owned path before continuation')
+        check_target()
         path = self.question('A first read-only review has an uncertain failed outcome. If inspection found its exact completed '
             'reviewer transcript with a compound-location format failure, provide its path; otherwise leave empty to stop. '
             'The artifact will be checked against the original task scope, review range and committed diff; this does not '
@@ -1170,8 +1186,7 @@ class Engine:
                 raise ValueError('not an actionable compound-location rejection')
         except (OSError, UnicodeError, ValueError, TypeError, KeyError, IndexError, AttributeError, _ReviewFormat) as exc:
             raise Blocked('review recovery artifact is invalid or incompatible; inspect the exact completed reviewer transcript: ' + str(exc)) from None
-        if git(project, 'rev-parse', 'HEAD').decode().strip() != head or git(project, 'status', '--porcelain=v1', '--untracked-files=no'):
-            raise Blocked('review recovery target drifted during inspection; reconcile before continuation')
+        check_target()
         store.review_outcome(self.run, item['execution_id'], 'rejected', findings=value['findings'],
             suggestions=value['suggestions'], references={'base': review_base, 'head': head,
                 'review_summary': {key: value[key] for key in ('coverage', 'coverage_gaps')},

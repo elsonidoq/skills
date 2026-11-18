@@ -17,8 +17,10 @@ class ReviewFormatRecoveryTests(ProjectTest):
         super().setUp()
         self.calls = []
         self.artifact = self.root / 'review.jsonl'
-        self.verdict = {'approved': False, 'findings': ['owned.txt:1-2,4-5 - invalid data crashes requests',
-                         'owned.txt:7 - missing value corrupts output'], 'coverage': ['producer checked'],
+        self.verdict = {'approved': False, 'findings': ['owned.txt:1-2 and 4-5 - invalid data crashes requests',
+                         'owned.txt:7 - missing value corrupts output'] +
+                         [f'owned.txt:{n} and {n+1}-{n+2} - defect {n} breaks output' for n in range(10, 17)],
+                        'coverage': ['producer checked'],
                         'coverage_gaps': ['consumer untested'], 'suggestions': ['rename later']}
         self.contract = admit({'tasks': [{'id': 'task', 'description': 'fixture', 'owned_paths': ['owned.txt']}]})
 
@@ -42,7 +44,7 @@ class ReviewFormatRecoveryTests(ProjectTest):
         parse = Engine._review_value
         def old_parser(text, **kwargs):
             value = parse(text, **kwargs)
-            if any(',4-5' in finding for finding in value['findings']):
+            if any(' and ' in finding for finding in value['findings']):
                 raise _ReviewFormat('old parser rejected compound location')
             return value
         with Authority(self.project) as owner:
@@ -56,6 +58,10 @@ class ReviewFormatRecoveryTests(ProjectTest):
 
     def test_explicit_recovery_preserves_failure_and_continues_existing_lifecycle(self):
         self.start_failed()
+        self.write('other.txt', 'staged owner bytes\n')
+        git(self.project, 'add', '--', 'other.txt')
+        self.write('other.txt', 'working owner bytes\n')
+        staged = git(self.project, 'show', ':other.txt')
         fixture = self
         class Adapter:
             def __init__(self, *_args, **_kwargs): pass
@@ -76,6 +82,8 @@ class ReviewFormatRecoveryTests(ProjectTest):
                 'select state from execution_review_attempts where run_id=? and execution_id=? order by seq',
                 ('fixture', chain['executions'][0]['execution_id']))]
         self.assertEqual(result['status'], 'complete')
+        self.assertEqual(git(self.project, 'show', ':other.txt'), staged)
+        self.assertEqual(self.project.joinpath('other.txt').read_text(), 'working owner bytes\n')
         self.assertEqual(attempts, ['dispatched', 'failed', 'rejected'])
         first = chain['executions'][0]
         self.assertEqual(first['findings'][-1], self.verdict['findings'])
@@ -84,6 +92,72 @@ class ReviewFormatRecoveryTests(ProjectTest):
         self.assertEqual([kind for kind, _ in self.calls], ['writer', 'review', 'fixer', 'review'])
         self.assertIn('consumer untested', self.calls[-1][1])
         self.assertEqual([x['role'] for x in chain['executions']], ['reviewer', 'fixer', 'reviewer'])
+
+    def test_unrelated_tracked_and_index_bytes_survive_actual_recovery(self):
+        self.start_failed()
+        self.write('other.txt', 'staged owner bytes\n')
+        git(self.project, 'add', '--', 'other.txt')
+        self.write('other.txt', 'working owner bytes\n')
+        before = git(self.project, 'show', ':other.txt')
+        with Authority(self.project) as owner:
+            owner.store.resume('fixture')
+            chain = owner.store.review_chain('fixture', private=True)
+            engine = Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
+                            question=lambda _: str(self.artifact))
+            self.assertTrue(engine._recover_format_rejection(chain, self.base))
+            recovered = owner.store.review_chain('fixture', private=True)['executions'][0]
+        self.assertEqual(recovered['findings'][-1], self.verdict['findings'])
+        self.assertEqual(recovered['references']['review_summary'],
+                         {k: self.verdict[k] for k in ('coverage', 'coverage_gaps')})
+        self.assertEqual(git(self.project, 'show', ':other.txt'), before)
+        self.assertEqual(self.project.joinpath('other.txt').read_text(), 'working owner bytes\n')
+        self.assertEqual([kind for kind, _ in self.calls], ['writer', 'review'])
+
+    def test_reviewed_target_drift_in_worktree_or_index_is_refused(self):
+        self.start_failed()
+        with Authority(self.project) as owner:
+            owner.store.resume('fixture')
+        for mode in ('working', 'index', 'during_question'):
+            with self.subTest(mode=mode):
+                if mode != 'during_question':
+                    self.write('owned.txt', 'drift\n')
+                    if mode == 'index':
+                        git(self.project, 'add', '--', 'owned.txt')
+                        self.write('owned.txt', 'task output\n')
+                def question(_):
+                    if mode == 'during_question':
+                        self.write('owned.txt', 'drift\n')
+                    return str(self.artifact)
+                with Authority(self.project) as owner:
+                    chain = owner.store.review_chain('fixture', private=True)
+                    with self.assertRaisesRegex(Blocked, 'target has changes'):
+                        Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
+                               question=question)._recover_format_rejection(chain, self.base)
+                if mode == 'index':
+                    git(self.project, 'restore', '--staged', '--', 'owned.txt')
+                self.write('owned.txt', 'task output\n')
+
+    def test_unchanged_range_but_dirty_additional_owned_path_is_refused(self):
+        self.contract = admit({'tasks': [{'id': 'task', 'description': 'fixture',
+                                          'owned_paths': ['owned.txt', 'other.txt']}]})
+        self.start_failed()
+        self.write('other.txt', 'owner collision\n')
+        with Authority(self.project) as owner:
+            owner.store.resume('fixture')
+            chain = owner.store.review_chain('fixture', private=True)
+            with self.assertRaisesRegex(Blocked, 'target has changes in other.txt'):
+                Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
+                       question=lambda _: str(self.artifact))._recover_format_rejection(chain, self.base)
+
+    def test_parser_accepts_single_comma_and_and_rejects_malformed_locations(self):
+        for location in ('owned.txt:1', 'owned.txt:1-2,4-5', 'owned.txt:1-2 and 4-5',
+                         'owned.txt:1, 3 and 5-6'):
+            finding = location + ' - concrete defect'
+            value = dict(self.verdict, findings=[finding])
+            self.assertEqual(Engine._review_value(json.dumps(value), require_coverage=True)['findings'], [finding])
+        for location in ('owned.txt:1 and other.txt:2', 'owned.txt:1 and', 'owned.txt:1,,2'):
+            with self.subTest(location=location), self.assertRaises(_ReviewFormat):
+                Engine._review_value(json.dumps(dict(self.verdict, findings=[location + ' - defect'])), require_coverage=True)
 
     def test_incomplete_and_non_rejection_artifacts_stay_blocked(self):
         self.start_failed()
