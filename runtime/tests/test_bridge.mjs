@@ -53,7 +53,7 @@ test('registered parent steering tool reaches the production adapter, host and r
     // prompt, not an implementation workflow or replacement host dispatcher.
     const python = execFileSync(process.env.COHERENCE_PYTHON || 'python3',
       ['-c', 'import sys; print(sys.executable)'], {encoding: 'utf8'}).trim();
-    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'), `#!${python}\nimport sys,os\nsys.path.insert(0, ${JSON.stringify(path.join(repository, 'runtime'))})\nfrom coherence_workflow.pi_adapter import PiAdapter,parent_question\ntarget={'run_id':'offline-steering','task_id':'T010','invocation_id':'exact-call','role':'task_worker'}\nadapter=PiAdapter(os.getcwd(), {'provider':'openai','model':'gpt-4o-mini','effort':'off'}, question=parent_question)\nassert adapter.enable_parent_steering(target)\nassert adapter.prompt('controlled offline prompt',steering=target)=='steering complete'\nassert adapter.steering_states['direction-1']=='consumed'\nassert adapter.steering_states['direction-2']=='consumed'\n`, {mode: 0o700});
+    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'), `#!${python}\nimport sys,os\nsys.path.insert(0, ${JSON.stringify(path.join(repository, 'runtime'))})\nfrom coherence_workflow.pi_adapter import PiAdapter,parent_question\nimport threading\nerrors=[]\ndef work(n):\n try:\n  target={'run_id':'offline-steering','task_id':'T%03d'%n,'invocation_id':'exact-call-%d'%n,'role':'task_worker'}\n  adapter=PiAdapter(os.getcwd(), {'provider':'openai','model':'gpt-4o-mini','effort':'off'}, question=lambda q: parent_question('worker-%d: '%n+q))\n  assert adapter.enable_parent_steering(target)\n  assert adapter.prompt('worker-%d'%n,steering=target)=='steering complete'\n  assert adapter.steering_states['direction-%d'%n]=='consumed'\n except BaseException as e: errors.append(e)\nthreads=[threading.Thread(target=work,args=(n,)) for n in (1,2)]\nfor t in threads: t.start()\nfor t in threads: t.join()\nassert not errors, errors\n`, {mode: 0o700});
     process.env.NODE_OPTIONS = '--import=' + path.join(repository, 'runtime/tests/fixtures/steering_adapter_fixture.mjs');
     process.env.COHERENCE_HOST_PRELOAD = '1';
     process.env.COHERENCE_NODE = process.execPath;
@@ -81,27 +81,27 @@ test('registered parent steering tool reaches the production adapter, host and r
       }
     };
     await call('coordinate_implementation_start', {tasks: 'unused', executor: 'unused', run: 'offline-steering'}, abort.signal);
-    await until(() => messages.some(item => item.customType === 'coordinate_implementation_question') && messages.some(item => item.customType === 'coordinate_implementation_target'));
-    const target = messages.find(item => item.customType === 'coordinate_implementation_target').details;
-    assert.equal(target.task_id, 'T010'); assert.equal(target.invocation_id, 'exact-call');
-    const direction = {request_id: 'direction-1', run: 'offline-steering', task_id: target.task_id, invocation_id: target.invocation_id, instruction: '/inert identical direction'};
-    await assert.rejects(call('coordinate_implementation_steer', {...direction, invocation_id: 'successor'}), /exact active worker target unavailable/);
-    assert.equal((await call('coordinate_implementation_steer', direction)).details.status, 'accepted');
-    await until(() => messages.some(item => item.customType === 'coordinate_implementation_steering_status' && item.details.status === 'queued'));
-    assert.equal((await call('coordinate_implementation_steer', direction)).details.status, 'queued', 'same ID is idempotent');
-    await call('coordinate_implementation_steer', {...direction, request_id: 'direction-2'});
-    await until(() => messages.some(item => item.details?.request_id === 'direction-2' && item.details.status === 'queued'));
-    assert.equal(messages.some(item => item.details?.status === 'consumed'), false, 'steering cannot answer the pending owner question');
-    const question = messages.find(item => item.customType === 'coordinate_implementation_question');
-    await call('coordinate_implementation_reply', {run: 'offline-steering', request_id: question.details.request_id, answer: 'ordinary callback'});
+    await until(() => messages.some(item => item.customType === 'coordinate_implementation_question') && messages.filter(item => item.customType === 'coordinate_implementation_target').length === 2);
+    const directions = [1, 2].map(n => ({request_id: `direction-${n}`, run: 'offline-steering', task_id: `T00${n}`, invocation_id: `exact-call-${n}`, instruction: `worker-${n}`}));
+    await assert.rejects(call('coordinate_implementation_steer', {...directions[0], invocation_id: 'successor'}), /exact active worker target unavailable/);
+    for (const direction of directions) assert.equal((await call('coordinate_implementation_steer', direction)).details.status, 'accepted');
+    await until(() => directions.every(direction => messages.some(item => item.details?.request_id === direction.request_id && item.details.status === 'queued')));
+    assert.equal((await call('coordinate_implementation_steer', directions[0])).details.status, 'queued');
+    assert.equal(messages.some(item => item.details?.status === 'consumed'), false);
+    for (let i = 0; i < 2; i++) {
+      await until(() => messages.filter(item => item.customType === 'coordinate_implementation_question').length > i);
+      const question = messages.filter(item => item.customType === 'coordinate_implementation_question')[i];
+      const worker = question.content.match(/worker-[12]/)[0];
+      await call('coordinate_implementation_reply', {run: 'offline-steering', request_id: question.details.request_id, answer: `answer-${worker}`});
+    }
     await until(() => messages.some(item => item.customType === 'coordinate_implementation_complete'));
     assert.match(messages.find(item => item.customType === 'coordinate_implementation_complete').content, /exit 0/);
-    for (const id of ['direction-1', 'direction-2']) {
-      const states = messages.filter(item => item.customType === 'coordinate_implementation_steering_status' && item.details.request_id === id);
+    for (const direction of directions) {
+      const states = messages.filter(item => item.customType === 'coordinate_implementation_steering_status' && item.details.request_id === direction.request_id);
       assert.equal(states.at(-1).details.status, 'consumed');
-      assert.ok(states.every(item => item.details.task_id === 'T010' && item.details.invocation_id === 'exact-call'));
+      assert.ok(states.every(item => item.details.task_id === direction.task_id && item.details.invocation_id === direction.invocation_id));
     }
-    await assert.rejects(call('coordinate_implementation_steer', direction), /no matching active/);
+    await assert.rejects(call('coordinate_implementation_steer', directions[0]), /no matching active/);
     for (const {message, options} of wakeups) {
       const shouldWake = ['coordinate_implementation_question', 'coordinate_implementation_complete'].includes(message.customType);
       assert.equal(options.triggerTurn, shouldWake, message.customType);
@@ -121,22 +121,70 @@ test('runner output stays off the parent RPC stdout channel', async () => {
   try {
     await fs.mkdir(path.join(root, 'scripts'));
     await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'),
-      '#!/bin/sh\nprintf "RUNNER-STDOUT\\n"\nprintf "RUNNER-STDERR\\n" >&2\n', {mode: 0o700});
+      '#!/bin/sh\nprintf "RUNNER-STDOUT\\n"\nprintf "RUNNER-STDERR %s\\n" "$*" >&2\n', {mode: 0o700});
     const code = `
       import bridge from ${JSON.stringify(bridgeModule)};
+      import assert from 'node:assert/strict';
       const tools = new Map();
       bridge({registerTool: tool => tools.set(tool.name, tool), getActiveTools: () => [...tools.keys()], on() {},
         sendMessage(message) { process.stdout.write(JSON.stringify({type: message.customType}) + '\\n'); }});
+      assert.equal(tools.get('coordinate_implementation_start').parameters.properties.parallel.type, 'boolean');
+      await assert.rejects(tools.get('coordinate_implementation_start').execute('start',
+        {resume: true, parallel: true, run: 'output-probe'}, undefined, undefined, {}), /start-only/);
       await tools.get('coordinate_implementation_start').execute('start',
-        {tasks: 'unused', executor: 'unused', run: 'output-probe'}, undefined, undefined,
+        {tasks: 'unused', executor: 'unused', run: 'output-probe', parallel: true}, undefined, undefined,
         {cwd: ${JSON.stringify(root)}, sessionManager: {getSessionId: () => 'output-parent'}});
     `;
     const {stdout, stderr} = await promisify(execFile)(process.execPath, ['--input-type=module', '-e', code]);
     assert.deepEqual(stdout.trim().split('\n').map(line => JSON.parse(line)),
       [{type: 'coordinate_implementation_complete'}]);
     assert.match(stderr, /RUNNER-STDOUT/);
-    assert.match(stderr, /RUNNER-STDERR/);
+    assert.match(stderr, /RUNNER-STDERR .*--parallel/);
   } finally { await fs.rm(root, {recursive: true, force: true}); }
+});
+
+test('admitted launch scope reaches real CLI argv unchanged; resume cannot replace it', async () => {
+  const {importPiDependency} = await import('../pi-host/sdk.mjs');
+  const {validateToolArguments} = await importPiDependency('@earendil-works/pi-ai');
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coordinate-scope-'));
+  const tools = new Map(), messages = [];
+  const pi = mockPi(messages, tools);
+  try {
+    await fs.mkdir(path.join(root, 'scripts'));
+    await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'),
+      `#!${process.execPath}\nrequire('node:fs').writeFileSync('argv.json', JSON.stringify(process.argv.slice(2)));\n`, {mode: 0o700});
+    const {default: bridge} = await import(bridgeModule);
+    bridge(pi);
+    const tool = tools.get('coordinate_implementation_start');
+    const scope = {target: 'https://github.com/owner/repo/issues/45', authority: {
+      run_id: 'transport', target: 'https://github.com/owner/repo/issues/45',
+      operations: ['trace_comment', 'link_comment'], approval_ref: 'owner message — exact'}, known_linked_prs: []};
+    const params = {tasks: 'bare.json', executor: 'original.json', run: 'transport', delivery_scope: scope};
+    const admitted = validateToolArguments(tool, {name: tool.name, arguments: params});
+    assert.deepEqual(admitted, params);
+    assert.throws(() => validateToolArguments(tool, {name: tool.name, arguments: {
+      ...params, delivery_scope: {...scope, token: 'not-a-carrier-field'}}}), /Validation failed/);
+    const ctx = {cwd: root, sessionManager: {getSessionId: () => 'scope-parent'}};
+    await assert.rejects(tool.execute('resume', {run: 'transport', resume: true, delivery_scope: scope},
+      undefined, undefined, ctx), /start-only/);
+    await tool.execute('start', admitted, undefined, undefined, ctx);
+    while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete'))
+      await new Promise(resolve => setTimeout(resolve, 10));
+    const argv = JSON.parse(await fs.readFile(path.join(root, 'argv.json'), 'utf8'));
+    assert.deepEqual(JSON.parse(argv[argv.indexOf('--delivery-scope') + 1]), scope);
+    assert.deepEqual(argv.slice(0, 9), ['start', '--project', root, '--tasks', 'bare.json', '--executor', 'original.json', '--run', 'transport']);
+    assert.doesNotMatch(JSON.stringify(argv), /COHERENCE_PARENT_BRIDGE|TOKEN|SOCKET/);
+    await pi.shutdown();
+    messages.length = 0;
+    await tool.execute('resume', {run: 'transport', resume: true}, undefined, undefined, ctx);
+    while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete'))
+      await new Promise(resolve => setTimeout(resolve, 10));
+    assert.deepEqual(JSON.parse(await fs.readFile(path.join(root, 'argv.json'), 'utf8')),
+      ['resume', '--project', root, '--run', 'transport']);
+  } finally {
+    await pi.shutdown?.();
+    await fs.rm(root, {recursive: true, force: true});
+  }
 });
 
 function mockPi(messages, tools) {
@@ -171,14 +219,14 @@ async function fixture({hold = false, paidScope = false, paidApis = []} = {}) {
 json = __import__('json')
 request=json.loads(input())
 if request['readOnly']:
- print(json.dumps({'type':'result','text':'{"approved":true,"findings":[]}'}), flush=True)
+ print(json.dumps({'type':'result','text':'{"approved":true,"findings":[],"coverage":["offline fixture"],"coverage_gaps":[]}'}), flush=True)
 else:
  pathlib.Path(${JSON.stringify(marker)}).write_text(str(os.getpid()))
  time.sleep(1000)
 ` : `import json, sys
 request=json.loads(input())
 if request['readOnly']:
- print(json.dumps({'type':'result','text':'{"approved":true,"findings":[]}'}), flush=True)
+ print(json.dumps({'type':'result','text':'{"approved":true,"findings":[],"coverage":["offline fixture"],"coverage_gaps":[]}'}), flush=True)
 else:
  print(json.dumps({'type':'question','question':'Fixture owner question?'}), flush=True)
  assert json.loads(input()) == {'answer':'yes'}
@@ -331,8 +379,13 @@ for (const mode of ['idle', 'busy']) test(`bridge wakes ${mode} parent and retur
     await assert.rejects(() => tools.get('coordinate_implementation_reply').execute('wrong-session', {request_id: requestId, run: `run-${mode}`, answer: 'yes'}, undefined, undefined, {...ctx, sessionManager: {getSessionId: () => 'other'}}), /no matching pending/);
     while (!messages.some(item => item.message.customType === 'coordinate_implementation_complete')) await new Promise(resolve => setTimeout(resolve, 10));
     const database = await fs.readFile(path.join(value.project, '.coherence/workflow/workflow.sqlite'));
-    assert.equal(database.includes(Buffer.from('Fixture owner question?')), false);
-    assert.equal(database.includes(Buffer.from('yes')), false);
+    assert.match(messages.at(-1).message.content, /exit 0/);
+    // Full meaningful Q/A is now retained privately; public status is still metadata-only.
+    assert.equal(database.includes(Buffer.from('Fixture owner question?')), true);
+    const publicStatus = execFileSync(path.join(repository, 'scripts/coordinate-implementation'),
+      ['status', '--project', value.project, '--run', `run-${mode}`], {encoding: 'utf8'});
+    assert.doesNotMatch(publicStatus, /Fixture owner question\?/);
+    assert.equal(database.includes(Buffer.from('COHERENCE_PARENT_BRIDGE_TOKEN')), false);
   } finally {
     if (originalNode === undefined) delete process.env.COHERENCE_NODE; else process.env.COHERENCE_NODE = originalNode;
     await pi.shutdown?.();

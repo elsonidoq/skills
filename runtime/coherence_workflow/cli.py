@@ -9,6 +9,7 @@ import sys
 import uuid
 
 from .engine import Engine, usage_summary
+from .graph import run_graph
 from .intake import load_contract
 from .pi_adapter import PiAdapter, parent_question, terminal_question
 from .store import Authority, Blocked, Store, canonical, execution_schema
@@ -99,6 +100,16 @@ def status(project, run):
                         {'task_id': item['task_id'], 'kind': item['kind'], 'state': item['state'],
                          'details': _safe_history_details(item['details'])}
                         for item in db.execute('SELECT task_id,kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq', (run,))]
+                if row['state'] == 'interrupted' and row['error'] == 'waiting for owner answer':
+                    waiting = db.execute("SELECT task_id,details FROM execution_history WHERE run_id=? AND kind='graph_wait' AND state='waiting' ORDER BY seq DESC LIMIT 1", (run,)).fetchone()
+                    if waiting:
+                        try:
+                            identity = json.loads(waiting['details']).get('invocation_id')
+                        except (TypeError, ValueError):
+                            identity = None
+                        if isinstance(identity, str) and identity:
+                            result['waiting'] = {'task_id': waiting['task_id'], 'question_id': identity,
+                                'action': 'resume interactively or through the attached parent'}
                 result['usage'] = usage_summary(project, run, _metric_invocation_ids(db, run))
                 if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_review_executions'").fetchone():
                     # This is the safe owner result: parsed actionable findings and range/commit
@@ -185,6 +196,33 @@ def status(project, run):
         db.close()
 
 
+def require_graph_run(project, run, arguments):
+    """Reject legacy mutation before opening the writer or contacting the parent."""
+    import shlex
+    database = Path(project).resolve() / '.coherence/workflow/workflow.sqlite'
+    try:
+        db = sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)
+        try:
+            if not execution_schema(db):
+                raise Blocked('unsupported workflow database format; inspect retained storage before mutation')
+            if not db.execute('SELECT 1 FROM execution_runs WHERE run_id=?', (run,)).fetchone():
+                raise Blocked('workflow run not found: ' + run + '; select an existing execution run ID')
+            has_inputs = db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_run_inputs'").fetchone()
+            row = db.execute('SELECT authority FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone() if has_inputs else None
+        finally:
+            db.close()
+    except sqlite3.Error as exc:
+        raise Blocked('cannot inspect retained run backend; inspect the existing workflow database: ' + str(exc)) from exc
+    try:
+        authority = json.loads(row[0]) if row else {}
+    except (TypeError, ValueError) as exc:
+        raise Blocked('run backend authority is unreadable; inspect retained input before mutation') from exc
+    if not isinstance(authority, dict) or authority.get('backend') != 'langgraph-v1':
+        command = 'LEGACY_SUITE/scripts/coordinate-implementation ' + shlex.join(arguments)
+        raise Blocked('Run ' + run + ' is legacy, not a LangGraph thread. Inspect its saved call and use ' + command +
+                      ' from retained pre-cutover revision 4c1725ebded2f89dec6933b8d193bf34997c62ce with compatible dependencies; do not convert or replay it.')
+
+
 def attached_question(run_id):
     if any(os.environ.get('COHERENCE_PARENT_BRIDGE_' + field) for field in ('SOCKET', 'TOKEN', 'SESSION', 'RUN')):
         if os.environ.get('COHERENCE_PARENT_BRIDGE_RUN') != run_id:
@@ -201,7 +239,7 @@ def cancel(signum, frame):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest='command', required=True)
-    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task'):
+    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task', 'recover-publication'):
         sub = subs.add_parser(command)
         if command != 'intake':
             sub.add_argument('--project', required=True)
@@ -210,8 +248,15 @@ def main(argv=None):
         if command == 'start':
             sub.add_argument('--executor', help='JSON file with provider, model and effort; no manifest or binding proof')
             sub.add_argument('--run', default=None)
-        if command in ('resume', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task'):
+            sub.add_argument('--delivery-scope', type=json.loads,
+                             help='optional JSON carrier of already granted target/authority/known_linked_prs; retained for resume, not a grant')
+            sub.add_argument('--parallel', action='store_true', help='explicitly direct disjoint dependency-ready worker waves; default sequential')
+        if command in ('resume', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task', 'recover-publication'):
             sub.add_argument('--run', required=True)
+        if command == 'recover-publication':
+            sub.add_argument('--snapshot', help='exact retained snapshot ID; defaults to latest prepared snapshot, or retained facts if none')
+            sub.add_argument('--delivery-scope', type=json.loads,
+                             help='actual publication grant carrier; must match retained scope when present')
         if command == 'resume':
             sub.add_argument('--recovery-action', choices=('continue', 'fresh', 'escalate'),
                              help='coordinator-selected inspected continuation of the unfinished task')
@@ -229,6 +274,27 @@ def main(argv=None):
         if args.command in ('status', 'history'):
             print(canonical(status(args.project, args.run)))
             return 0
+        if args.command == 'recover-publication':
+            from .trace_publication import recover_publication
+            database = Path(args.project).resolve() / '.coherence/workflow/workflow.sqlite'
+            if not database.is_file():
+                print(canonical({
+                    'implementation': {'state': 'unavailable', 'replayed': False},
+                    'publication': {'state': 'deferred', 'snapshot_id': args.snapshot,
+                                    'urls': [], 'correction': 'Publication recovery needs retained workflow storage; restore the original database, not a coding replay.'}}))
+                return 2
+            with Authority(args.project, wait=True) as authority:
+                result = recover_publication(authority.store, args.run, snapshot_id=args.snapshot,
+                                             delivery_scope=args.delivery_scope)
+                print(canonical(result))
+            return 0 if (result['publication']['state'] == 'confirmed' and
+                         result.get('linkage', {}).get('state') == 'confirmed') else 2
+        if args.command == 'recover-task' and not args.owner_authorized:
+            raise Blocked('external task recovery requires actual owner authorization; obtain it and supply --owner-authorized')
+        if args.command == 'resume' and any(os.environ.get('COHERENCE_PARENT_BRIDGE_' + field) for field in ('SOCKET', 'TOKEN', 'SESSION', 'RUN')) and os.environ.get('COHERENCE_PARENT_BRIDGE_RUN') != args.run:
+            raise Blocked('parent owner bridge run mismatch; launch this run through its parent-session bridge')
+        if args.command in ('resume', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task'):
+            require_graph_run(args.project, args.run, list(argv) if argv is not None else sys.argv[1:])
         if args.command == 'abandon':
             with Authority(args.project, wait=True) as authority:
                 print(canonical(authority.store.abandon(args.run)))
@@ -248,7 +314,7 @@ def main(argv=None):
                 engine = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
                                 paid_scope=saved['authority']['paid_scope'], resume=True,
                                 **({'question': question} if question else {}))
-                result = engine.recover_task(json.loads(Path(args.recovery).read_text()), owner_authorized=True)
+                result = run_graph(engine, action='external', transfer=json.loads(Path(args.recovery).read_text()), owner_authorized=True)
                 print(canonical(result))
             return 0
         if args.command == 'refresh-review-target':
@@ -258,7 +324,7 @@ def main(argv=None):
                     raise Blocked('review target refresh needs retained run input and paid scope')
                 engine = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
                                 paid_scope=saved['authority']['paid_scope'], resume=True)
-                print(canonical(engine.refresh_review_target()))
+                print(canonical(run_graph(engine, action='refresh-review-target')))
             return 0
         contract = load_contract(args.tasks) if args.command in ('start', 'intake') else None
         if args.command == 'intake':
@@ -282,9 +348,9 @@ def main(argv=None):
                 engine = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
                                 paid_scope=paid_scope, resume=True, worker_recovery=recovery,
                                 **({'question': question} if question else {}))
-                recovered = authority.store.resume(args.run)
+                authority.store.resume(args.run)
                 writer_entered = True
-                result = engine.invoke()
+                result = run_graph(engine, action=args.recovery_action, diagnosis=args.diagnosis)
                 print(canonical(result))
             return 0
         if not contract['tasks']:
@@ -308,8 +374,10 @@ def main(argv=None):
                 print('Unsupported workflow database quarantined at ' + str(authority.quarantined_database)
                       + '; created clean execution storage', file=sys.stderr)
             writer_entered = True
-            result = Engine(authority, run_id, contract, executor, adapter=PiAdapter,
-                            paid_scope=paid_scope, **({'question': question} if question else {})).invoke()
+            engine = Engine(authority, run_id, contract, executor, adapter=PiAdapter,
+                            paid_scope=paid_scope, parallel=args.parallel, delivery_scope=args.delivery_scope,
+                            **({'question': question} if question else {}))
+            result = run_graph(engine)
             print(canonical(result))
         return 0
     except (Blocked, OSError, ValueError, sqlite3.Error) as exc:

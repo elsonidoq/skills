@@ -1,6 +1,6 @@
 // Discovery only: never import the SDK or start workflow transport here.
 import {execFileSync} from 'node:child_process';
-import {existsSync, readFileSync} from 'node:fs';
+import {accessSync, constants, existsSync, readFileSync, realpathSync, statSync} from 'node:fs';
 import {findPackageJSON} from 'node:module';
 import {homedir} from 'node:os';
 import path from 'node:path';
@@ -57,6 +57,32 @@ function installedPackage(parentURL) {
   }
 }
 
+// Use only the first runnable pi on PATH, not an arbitrary global installation.
+// Follow its CLI symlink and inspect owning metadata without executing the CLI.
+function pathPackage(env) {
+  if (env.PATH === undefined) return undefined;
+  for (const directory of env.PATH.split(path.delimiter)) {
+    const candidate = path.resolve(directory, 'pi');
+    let cli;
+    try {
+      if (!statSync(candidate).isFile()) continue;
+      accessSync(candidate, constants.X_OK);
+      cli = realpathSync(candidate);
+    } catch (error) {
+      if (['ENOENT', 'ENOTDIR', 'EACCES'].includes(error.code)) continue;
+      throw error;
+    }
+    for (let owner = path.dirname(cli); ; owner = path.dirname(owner)) {
+      const packageFile = path.join(owner, 'package.json');
+      if (existsSync(packageFile)) {
+        const metadata = JSON.parse(readFileSync(packageFile, 'utf8'));
+        return metadata.name === SDK_PACKAGE ? packageFile : undefined;
+      }
+      if (path.dirname(owner) === owner) return undefined;
+    }
+  }
+}
+
 export function discoverSdk({hostURL = import.meta.url, env = process.env, home = homedir()} = {}) {
   let packageFile = installedPackage(hostURL);
   if (!packageFile && env.PI_PACKAGE_DIR) {
@@ -71,6 +97,13 @@ export function discoverSdk({hostURL = import.meta.url, env = process.env, home 
       const releaseURL = pathToFileURL(path.join(agentDir, 'install', 'releases', version, 'package.json'));
       packageFile = installedPackage(releaseURL);
       if (packageFile) break;
+    }
+  }
+  if (!packageFile) {
+    try {
+      packageFile = pathPackage(env);
+    } catch (error) {
+      throw new Error(`Cannot discover the Pi SDK from pi on PATH; correct that installation or set PI_PACKAGE_DIR. ${error.message}`, {cause: error});
     }
   }
   if (!packageFile) {

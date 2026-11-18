@@ -24,7 +24,8 @@ class RunInputHistoryTests(ProjectTest):
         ]})
 
         class CorrectingWorker:
-            def __init__(self, *args, **kwargs): pass
+            def __init__(self, *args, **kwargs):
+                self.saved_session = {'id': 'fixture-worker', 'file': str(project / 'session.jsonl')}
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -77,7 +78,8 @@ class RequiredStorageRecoveryTests(ProjectTest):
         effects, failed_write = [], [False]
 
         class Worker:
-            def __init__(self, *args, **kwargs): pass
+            def __init__(self, *args, **kwargs):
+                self.saved_session = {'id': 'fixture-worker', 'file': str(project / 'session.jsonl')}
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'

@@ -39,7 +39,7 @@ def contract_errors(text):
 class IntakeContractTests(unittest.TestCase):
     def test_current_entry_contract(self):
         self.assertEqual(contract_errors(TEXT), [])
-        self.assertIn('not effect proof or execution eligibility', TEXT)
+        self.assertIn('not automatic acceptance', TEXT)
         self.assertIn('No arbitrary workflow', TEXT)
 
     def test_operative_guards_not_footer_only(self):

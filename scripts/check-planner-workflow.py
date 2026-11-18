@@ -27,18 +27,21 @@ PATHS = {
     "plan_prompt": ".pi/prompts/speckit.plan.md",
     "tasks_prompt": ".pi/prompts/speckit.tasks.md",
     "tasks_template": ".specify/templates/tasks-template.md",
+    "plan_template": ".specify/templates/plan-template.md",
     "readme": "README.md",
+    "finish": "skills/finish-session/SKILL.md",
+    "tracker": "skills/track-open-issue/SKILL.md",
 }
 
 
 # Final unified-memory composition inspects only active carrier files. Historical plans,
 # negative assertions, and inert fixture bytes are deliberately outside this boundary.
 UNIFIED_MEMORY_CARRIERS = (
+    ("planner", "## Understand the work and choose depth", ("verified unified index", "explicit owner guidance and gotchas")),
     ("memory", "# Memory Handling", ("One verified\nproject association and one index", "two distinct evidence kinds")),
-    ("planner", "## Discovery and capability boundary", ("verified unified index", "explicit owner guidance, alongside gotchas")),
-    ("tiny", "## Inputs and preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
-    ("tasks", "## Preconditions and adapters", ("verified unified", "explicit owner guidance, alongside gotchas")),
-    ("helper", "## Preflight", ("verified unified index", "explicit owner guidance, alongside gotchas")),
+    ("tiny", '## Establish the source to write', ("verified unified index", "explicit owner guidance and gotchas")),
+    ("tasks", '## Draft outcomes from the source', ("verified unified index", "explicit owner guidance and gotchas")),
+    ("helper", '## Arrange the bounded planning pass', ("verified unified index", "explicit owner guidance and gotchas")),
     ("coordinator", "# Coordinate Implementation", ("Memory Handling remains the unified owner", "execution-time feedback/routing")),
     ("adoption", "## Adoption", ("One associated index carries verified technical\n  gotchas and explicit future-directed owner guidance", "Do not scaffold a separate coordination or guidelines root")),
 )
@@ -50,24 +53,35 @@ SECOND_STORE_REINTRODUCTION = re.compile(
 
 # A5 adapter carriers: source acceptance must become a task-local gate/check/brief.
 ACCEPTED_ADAPTER_CARRIERS = (
-    ("accepted-tiny-source", "tiny", "## Inputs and preflight", (
-        "[save-adr](../save-adr/SKILL.md)",
-        "direct entry and fresh/resumed", "re-establish relevant accepted authority",
-        "current supersession", "source observable must yield its task dependency or gate",
-        "task-local REQUIRED check and worker brief", "not merely a link",
-        "source/task conflict or uncertain current\nsupersession stops only the affected acceptance mapping",
+    ('accepted-tiny-source', 'tiny', '## Establish the source to write', (
+        '[save-adr](../save-adr/SKILL.md#consult-and-propagate)',
+        'fresh or resumed production',
+        'current accepted outcomes, explicit mechanism constraints and source links',
+        'source observables and acceptance, not just citations',
+        'dependency or gate and check needs',
+        'task-local REQUIRED checks and worker/reviewer briefs',
+        'source/task conflict or uncertain supersession stops only the affected mapping',
     )),
-    ("accepted-task-preflight", "tasks", "## Preconditions and adapters", (
-        "[save-adr](../save-adr/SKILL.md)",
-        "direct entry and fresh/resumed", "re-establish relevant accepted authority",
-        "current supersession", "task's\ndependency or gate, task-local REQUIRED check and worker brief",
-        "not merely a link", "source/task conflict\nor uncertain current supersession stops only the affected task mapping",
+    ('accepted-task-preflight', 'tasks', '## Draft outcomes from the source', (
+        '[save-adr](../save-adr/SKILL.md#consult-and-propagate)',
+        'direct and fresh/resumed entry',
+        'current accepted outcomes, explicit mechanism constraints and source links',
+        'task dependency or gate, task-local REQUIRED check and worker/reviewer briefs',
+        'must affect that mapping',
+        'source/task conflict or uncertain supersession stops only the affected mapping',
     )),
-    ("accepted-speckit-adapter", "tasks", "item:- A SpecKit adapter", (
-        "fresh/resumed", "source observable → dependency or gate → REQUIRED\n  check → brief mapping",
+    ('accepted-speckit-adapter', 'tasks', '## Draft outcomes from the source', (
+        '**SpecKit adapter**',
+        'For both routes',
+        'task dependency or gate, task-local REQUIRED check',
+        'worker/reviewer briefs',
     )),
-    ("accepted-direct-adapter", "tasks", "item:- A direct adapter", (
-        "direct fresh/resumed", "source observable → dependency\n  or gate → REQUIRED check → brief mapping",
+    ('accepted-direct-adapter', 'tasks', '## Draft outcomes from the source', (
+        '**direct adapter**',
+        'For both routes',
+        'direct and fresh/resumed entry',
+        'task dependency or gate, task-local REQUIRED check',
+        'worker/reviewer briefs',
     )),
 )
 
@@ -148,10 +162,8 @@ MANAGED_ENTRY_CARRIERS = (
 
 
 MECHANICAL_CARRIERS = (
-    ("planner", "## Selected production and stage handoffs"),
-    ("planner", "item:4. **Review"),
-    ("planner", "stage:overall_review"),
-    ("helper", "## Planner Standard adapter contract"),
+    ("planner", "## Approve current content and hand off"),
+    ("helper", '## Arrange the bounded planning pass'),
 )
 MECHANICAL_GUARDS = (
     "typos, formatting or broken links only",
@@ -186,8 +198,401 @@ def check_workflow_ownership(texts):
     return errors
 
 
+# Check coordinator operations and consumed owner results, not a duplicate specialist recipe.
+PLANNER_CARRIERS = (
+    ('discovery', '## Understand the work and choose depth', (
+        'request or selected source', 'preserve unrelated work', 'ambiguous source selection',
+        'positive and negative claims', 'UNVERIFIED', 'explicit owner deferral',
+        'Do not invent a beneficiary', 'exclusions and separately scheduled mechanical work',
+        'owner requirements, verified interface limits and agent design choices',
+        'affected consuming interface', 'scope actually presented',
+    )),
+    ('unified-memory-planner', '## Understand the work and choose depth', (
+        '[Memory Handling](../memory-handling/SKILL.md)', 'verified unified index',
+        'explicit owner guidance and gotchas', 'retrieval and authority rules',
+        'missing optional memory or STATE is nonblocking', 'missing required memory',
+        'task-local REQUIRED checks and worker/reviewer briefs',
+    )),
+    ('accepted-decision-consultation', '## Understand the work and choose depth', (
+        '[save-adr](../save-adr/SKILL.md#consult-and-propagate)', 'fresh and resumed work',
+        'accepted outcomes, explicit mechanism constraints and source links',
+        'Re-establish applicability on resume', 'not just links',
+        'Conflicting authority or uncertain supersession returns to the owner',
+    )),
+    ('choice', '## Understand the work and choose depth', (
+        'read-only until explicit depth selection', 'no source edits', 'dependency-document writes',
+        'session history', 'BOTH paths', 'TinySpec → Tasks → Implement',
+        'Standard: Specify → Plan → Tasks → Implement', 'Either choice is valid',
+        'Call `ask_user` and STOP', 'Denial, cancellation, timeout or ambiguity grants no consent',
+        'preparation only', 'resolved uncertainty alone does not reroute',
+    )),
+    ('planning-commit-authority', '## Understand the work and choose depth', (
+        'writing and committing bounded planning artifacts', 'Pass that authority to producers',
+        'do not ask for separate planning commit permission or defer checkpoints until content approval',
+    )),
+    ('shared-invocation', '## Understand the work and choose depth', (
+        'Invoke `planning-brainstorming` directly in the parent in preselection mode',
+        'readiness target “informed scope assessment.”', 'NO_BRAINSTORM_NEEDED',
+        'without a child call', 'BRAINSTORM_NEEDED', 'owner dialogue yourself',
+        'one material item at a time', 'Do not delegate the gate or resolve `brainstorm-assessment`',
+    )),
+    ('issue-association', '## Understand the work and choose depth', (
+        'After understanding/brainstorming', '[track-open-issue]', 'declared tracker',
+        'specific authority, separate from planning preselection', 'qualified URL',
+        'before planned artifact production', 'confirmed creation or qualified exact reuse',
+        'complete open/closed overlap discovery', 'exact issue body/identity/state readback',
+        'separate body-quality review when creation occurs',
+        'without a repeated routine creation question',
+        'open or closed exact match without duplicate or reopen',
+        'stops association and planned artifact production', 'concrete corrective action',
+        'never a local fallback register', 'depth selection alone does not release artifact production',
+        'Created/read-back but review-incomplete is not ready', 'bare runtime tasks',
+    )),
+    ('stage-dispatch', '## Arrange the next authorized stage', (
+        'direct asynchronous single-stage dispatch', 'inspect the actual artifact, checks and focused checkpoint',
+        'before the next authorized stage', 'never prewire dependent source → tasks',
+        'dispatching async work before returning control', 'another need direct delegation cannot serve',
+        'not a single child or convenient stage sequence', 'no parallel implementation authority',
+    )),
+    ('capabilities', '## Arrange the next authorized stage', (
+        '[runtime requirements]', 'at the operation that needs them', 'missing-install report',
+        'concrete correction', 'not installation, simulation or inline substitution',
+        'question: UNAVAILABLE', 'without inferred consent', 'coherence-producer', 'coherence-reviewer',
+        'subagent get', 'user source, effective prompt and tools', 'do not substitute another agent',
+        'separate fresh bounded-context producer', 'never authors fresh artifacts or makes substantive repairs',
+    )),
+    ('saved-assignments', '### Saved planner assignments', (
+        '[model-assignments.json](references/model-assignments.json)', 'saved-assignment contract', 'unchanged in invocation and brief',
+        'permitted and callable at dispatch', 'not availability evidence',
+        'Missing, malformed, unsupported or unavailable', 'focused owner correction question',
+        'no recommendation or substitute', 'owner-launched binding', 'inherits `planner-parent`',
+        'another fresh session', 'do not select implementation models or batches',
+        'Corrections retain the producing operation', 'precise stage-specific resolution',
+        'failed expensive invocation and its call before retry', 'Unknown cause stops',
+        '`brainstorm-application` and the recorded answers',
+    )),
+    ('brief', '### Give producers the inputs their owners require', (
+        'exact source and current content', 'stage and commit authority', 'allowed writes, prohibited operations',
+        'constraints verbatim', 'accepted outcomes and source links', 'prior-stage return',
+        'actual owner answers and pending deferrals/gates', 'Re-present unanswered questions',
+        'Do not forward full transcripts or unrelated history', 'changed paths/content evidence',
+        'checkpoint, decisions, constraints and links, verification mappings and remaining blockers',
+    )),
+    ('research-review', '### Give producers the inputs their owners require', (
+        'Before consequential dependency decisions', '[dependency research contract](references/dependency-research.md)',
+        'reuse/skip/refresh rationale', 'capability evidence, canonical owner/discovery links',
+        'version/provenance and supporting spans → constraints → observable checks',
+        'bounded permission', 'during selected production, in addition to SpecKit artifacts',
+        'Inspect the returned persistence and evidence mappings before readiness, including direct and helper routes',
+        'only explicit bounded owner deferral', 'impact, allowed bounds and outstanding validation',
+        'Never substitute recollection or invent evidence',
+    )),
+    ('source-authority', '### Give producers the inputs their owners require', (
+        'For source creation only', '[SDD reference]', 'complete relevant behavior, approach, constraints and observable acceptance',
+        'TinySpec/specification is requirements truth', 'plan supplies derived sequencing only',
+        'Do not forward or reread SDD as downstream requirements input',
+        'Governing instructions, memory and permission/safety rules still apply',
+    )),
+    ('risk-planner', '### Give producers the inputs their owners require', (
+        '[early risk reduction](references/early-risk-reduction.md)', 'justified proof selection/omission',
+        'actual evidence and limits, necessary dependencies', 'applicability/lifetime',
+        'production acceptance and disproof/renewal results', 'Failed or unrun proof cannot release reliance',
+        'not execution without separate authority',
+    )),
+    ('executor-planner-handoff', '### Give producers the inputs their owners require', (
+        'Before decomposition', 'scripts/resolve-workflow-executor.py --project PROJECT_ROOT',
+        'Verify Python and resolver availability', '`--executor PATH` only for explicit override',
+        'exact absolute stdout path unchanged', 'both direct TinySpec and Standard task-producer briefs',
+        'coordinator handoff', 'Do not search, create/copy or substitute configuration',
+        'producer\'s actual JSON read', 'invalid/missing worker model/effort correction',
+        'independently finishable outcomes sized for that executor', 'not the planner profile',
+        'outcome/proof and authorization-neutral task contracts', 'production and final review',
+        'whole REQUIRED check mappings', 'actual manual/permission gates through both adapters and legacy renewal',
+        'Do not add execution-intent or compatibility metadata',
+    )),
+    ('job-first', '### Give producers the inputs their owners require', (
+        'Keep facts once in their authoritative artifacts', 'No administrative ledgers, progress records, evidence manifests',
+        'STATE maintenance, inferred lessons or routine memory writes', 'runtime state stays runtime-owned',
+        'Carry this boundary in briefs', 'Reuse settled evidence until changed scope',
+        'smallest meaningful check and report limits', 'static/fixture checks do not prove model obedience',
+        'Preserve required runtime, integration, application, security and permission checks',
+        'genuinely required live acceptance', 'No mandatory prior/candidate run',
+        'Optional hardening is not an acceptance blocker', 'changing required acceptance needs owner authority',
+        'changed observable', 'integration when mocks cannot detect the failure',
+        'migration, authorization and persistence checks', 'Avoid automatic exhaustive matrices or new test infrastructure',
+        'Separate unrelated recovery repairs', 'evidence that it blocks the selected change', 'not repeated historical intake',
+    )),
+    ('tiny-flow', '### TinySpec path', (
+        '`tinyspec-source`; delegate `tiny-spec`', 'observed destination and preparation authority',
+        'Inspect its source and returned research/risk results', 'No SpecKit prerequisite',
+        '`tinyspec-spec-review`; apply the shared specification-review contract',
+        'Inspect source-producer corrections before tasks', 'Zero or resolved findings go directly to tasks',
+        'no separate TinySpec source approval', '`tinyspec-tasks`', '`task-generation` direct adapter',
+        'selected executor path', 'separate human/executable tasks', 'documentation work from inspected effects',
+        'shared final task-review contract', '`planner-parent` for correctness and simplicity on the same source/tasks',
+        'combined current source/task/implementation-scope approval', 'continue to handoff',
+        'Denial returns to correction, not execution',
+    )),
+    ('standard-preflight', '### Standard path', (
+        'After Standard selection', 'installed SpecKit commands, instructions and templates',
+        'AVAILABLE/UNAVAILABLE with evidence', 'Do not install, simulate slash commands or substitute ordinary Markdown',
+        'template-only constitution principles', 'owner-derived answers', 'verified repaired output',
+        'Missing repair capability, principles or verification stops', 'do not reopen valid principles',
+    )),
+    ('spec', 'stage:spec_create', (
+        '`standard-spec-create`', 'delegate a fresh specification producer', 'observed specification instructions',
+        'source-creation guidance above', 'Clarify only when requested or required',
+        'ordinary clarification and parent inspection', 'before review—not approval or planning',
+    )),
+    ('spec-review', 'stage:spec_review', (
+        '`standard-spec-review`', 'shared specification-review contract', 'Report total findings and meaningful areas',
+        'five most important (all if fewer)', 'offer all findings or a grouped overview',
+        'not a discovery or resolution cap', 'Retain all findings', 'continue through all material ones',
+        'Ask one material owner question at a time', 'scenario, alternatives and consequences',
+        'discard queued questions resolved by an answer', 'Send actual answers to the originating specification producer',
+        'under its saved assignment', 'requirements/scenarios/acceptance', '`Q: … → A: …`',
+        'remove contradictions, validate and checkpoint', 'Inspect corrections',
+        'Do not rerun ordinary clarification taxonomy', 'Every material decision needs an answer or explicit owner deferral',
+        'consequences and permitted planning bounds', 'cancellation releases nothing', 'With zero findings, skip questions',
+        'current-specification approval before `plan_create`, then immediately continue',
+    )),
+    ('plan', 'stage:plan_create', (
+        '`standard-plan-helper`', '`standard-plan-direct`', 'Delegate the entire same-session pass',
+        'review/fix the specification, create one plan', 'review/fix the produced plan',
+        '[planning contract]', 'either route\'s architecture, evidence, write bounds and return',
+        'inspect its return; do not create the plan again', 'parent never performs this pass',
+        'renewed specification approval with a new executive brief before leaving this stage',
+        'proven equivalence under the mechanical contract',
+    )),
+    ('task-stage', 'stage:tasks_create', (
+        '`standard-tasks-create`', 'delegate a fresh producer', 'observed SpecKit tasks and `task-generation`',
+        'source, plan and selected executor path', 'create-only preparation',
+        'drafting, revision, shortening and mechanical validation of unsubmitted output need no supervisor permission',
+        'cannot change approved requirements or replace review', 'checked human/executable tasks and their mappings/risks',
+        'submitted defects go to final review',
+    )),
+    ('review', 'stage:overall_review', (
+        '`standard-overall-review`', '`standard-overall-rereview`', 'observed analysis capability',
+        'shared final task-review contract', 'simplicity in parallel', 'renew affected upstream approvals',
+    )),
+    ('intent-review', '### Shared specification-review contract', (
+        'one fresh independent read-only source review before downstream production',
+        'separate from the source producer and parent history', '[the canonical review prompt]',
+        'original request, actual owner clarifications/decisions', 'exact current source path/content identity and readable content',
+        'Exclude producer rationale, conclusions and unrelated history', 'Verify the saved binding',
+        'fresh read-only async capability, source producer and question capability', '`async: true`',
+        'Bind the report to that invocation', 'compare source content before and after review',
+        'not edits, approval, implementation, external actions or delegation',
+        'coverage, downstream clarity and simplicity', 'including limits', 'targeted completion',
+        'existing reviewer context', 'not an automatic second review', 'fidelity defects to the source producer',
+        'material decisions to the owner', 'inspect corrections against intent and findings',
+        'Unresolved material intent gaps stop downstream production', 'cannot release reliance on the gap',
+        'No new tracker, automatic rereview loop or additional approval gate',
+    )),
+    ('final-task-review', '### Shared final task-review contract', (
+        'two bounded handoffs against the same current artifact snapshot', 'original request, actual owner decisions',
+        'final human/executable tasks', 'not producer conclusions, assurances or approval trajectory',
+        'correctness, completeness, feasibility, traceability', 'verification item completeness',
+        'independently executable outcome and authorization-neutral contracts',
+        'research evidence/permission results and early-risk review results', 'in both paths',
+        'each material execution risk/prerequisite with affected task', 'evidence versus unknowns',
+        'next investigation, mitigation or permission', 'before worker reliance',
+        'Do not ask correctness for a simplicity verdict',
+    )),
+    ('coordinator-review-sequence', '### Shared final task-review contract', (
+        '1. Prepare two bounded handoffs', '2. Before launching either reviewer',
+        'independently inspect that snapshot', 'Does this plan achieve the requested outcome with the least necessary work?',
+        'Justify your conclusion with specific examples from the plan.',
+        'identify the potentially costly choices you examined', 'Do not give an unsupported yes/no answer.',
+        'Keep this parent analysis out of both handoffs', '3. Launch both fresh independent read-only reviewers before awaiting either report',
+        'Never fork or resume parent, producer or the other review', 'selected final-review binding unchanged for both',
+        'Do not send findings between reviewers or begin corrections until both reports return',
+        'Missing review evidence stops approval, not the other independent review',
+        '4. Assess all three analyses together', 'explain rejected findings with evidence',
+        'one bounded brief for the appropriate producer', 'resume useful originating context',
+        'fresh correction producer', 'No fixer is needed without supported corrections',
+        'Resolve material findings before approval', 'recheck affected changes and interactions',
+        'not an automatic full-review loop',
+    )),
+    ('simplicity-review', '### Shared simplicity-review contract', (
+        '[the simplicity prompt](references/simplicity-review.md)', 'not the correctness or broad production checklist',
+        'executive bullets of what the owner wants, why and essential scope boundaries',
+        'original request and actual answers', 'summary adds no requirements',
+        'human/executable tasks (plus Standard plan)', 'accepted decisions, memory and relevant code access',
+        'Exclude producer rationale, prior verdicts, parent criticism and full transcripts',
+        'per-task findings and cross-task check, including evidence limits', 'simplest sufficient delivery',
+        'not fewer tasks or weaker required acceptance', 'summarize planned task specifications in one sentence',
+        'least-necessary-work question from step 2 above', 'same evidence and justification requirements',
+        'tasks and both reports, not just verdicts',
+        'Agent-added constraints remain challengeable', 'manual and permission gates remain binding',
+    )),
+    ('approval-handoff', '## Approve current content and hand off', (
+        '[approval/recovery contract]', 'At every approval or renewal', 'executive bullet brief in conversation BEFORE `ask_user`',
+        'every actual ordered plan stage and task ID/outcome', 'not invented TinySpec plan stages',
+        'exact approved current content and next authority', 'final approval starts coordinator preflight',
+        'Older preparation-only approval never implies execution authority',
+        'Denied, cancelled, timed-out or ambiguous answers stop affected continuation',
+        'independent reviewer never becomes the producer', '[bounded mechanical correction contract]',
+        'diff/equivalence and current-content evidence', 'no inline fallback',
+        'transition and legacy mapping', 'pending answers and child/correction state',
+        'Read linked external decisions/approvals', 'reconcile active or unknown children before replacement',
+        'Preserve valid approvals and task-embedded sources', 'earliest invalid gate',
+        'Ambiguous origin needs owner resolution', 'Inadequate REQUIRED contracts return to producing review/approval',
+        'source/task consistency, ordering, reviews/approvals, proof applicability',
+        'without a new state/handoff file', 'approved current content/revision evidence', 'explicit approved implementation scope/authority',
+        'automatically invoke `coordinate-implementation` in the same session',
+        'explicitly requested planning-only or separate-session handoff', 'precise blocker and preserved handoff',
+        'executable runner alone implements', '[task-commit contract]', 'after verification, before later task writes or handoff',
+        'Git, policy, verification or ownership conflicts stop', 'Read-only work creates no empty commit',
+    )),
+)
+
+
+def check_planner(text):
+    errors = []
+    for label, selector, clauses in PLANNER_CARRIERS:
+        body = ' '.join(operational_carrier(text, selector).split())
+        for clause in clauses:
+            if clause not in body:
+                errors.append(f'{label}: missing {clause!r}')
+    for label, selector, markers in (
+        ('standard-order', '### Standard path', ('**`spec_create`', '**`spec_review`', '**`plan_create`', '**`tasks_create`', '**`overall_review`', '6. Obtain overall approval')),
+        ('tiny-review-order', '### TinySpec path', ('`tinyspec-source`', '`tinyspec-spec-review`', '`tinyspec-tasks`', '4. Run the shared final task-review', '5. Obtain combined')),
+        ('coordinator-review-order', '### Shared final task-review contract', ('1. Prepare', '2. Before', '3. Launch', '4. Assess')),
+        ('spec-review-order', 'stage:spec_review', ('Ask one material', 'Send actual answers', 'Inspect corrections', 'With zero findings', 'current-specification approval')),
+    ):
+        body = operational_carrier(text, selector)
+        positions = [body.find(marker) for marker in markers]
+        if -1 in positions or positions != sorted(positions):
+            errors.append(label + ': missing/reordered operations')
+    pre = section(text, '## Understand the work and choose depth')
+    if 'persist dependency docs before selection' in pre.lower():
+        errors.append('research-preselection: unauthorized write before depth choice')
+    dispatch = section(text, '## Arrange the next authorized stage')
+    for unsafe in ('Default to a single-child workflow wrapper', 'Prewire source→tasks without parent inspection',
+                   'Sequential convenience justifies workflows'):
+        if unsafe in dispatch:
+            errors.append('stage-dispatch: contradictory ' + unsafe)
+    return errors
+
+
+# Check actual stage carriers, not a repository-wide mention of the design gate.
+DESIGN_CARRIERS = (
+    ('planner', '## Produce and review the selected artifacts', (
+        'explicit owner design agreement before detailed architecture plan production or continuation',
+        'Significant design changes renew', 'Requirements approval, design agreement and final implementation approval remain distinct',
+        'reuse a settled grant', 'project-owned HTML destination')),
+    ('tiny', '## Write the what and how', (
+        'self-contained interactive HTML high-level design', 'interfaces, dependencies and material risks',
+        'explicit owner design agreement before producing or continuing the detailed how',
+        'Page creation/interaction, silence, denial or cancellation is not consent',
+        'Significant design changes renew agreement', 'Routine mechanics remain autonomous')),
+    ('helper', '## Produce and inspect the plan', (
+        'Before setup-plan or detailed architecture plan production or continuation',
+        'self-contained interactive HTML high-level design', 'explicit owner design agreement',
+        'shown content identity, actual answer/scope and ordering', 'Significant design changes renew agreement')),
+    ('plan_prompt', '## Design agreement before setup or detail', (
+        'including standalone and resumed entry', 'project-owned page destination',
+        'explicit owner design agreement before setup-plan or detailed architecture plan production or continuation',
+        'Page creation/interaction, silence, denial or cancellation is not consent',
+        'Significant design changes renew agreement', 'reuse a settled grant')),
+    ('brainstorm', '## Apply and return the decisions', (
+        'Readiness is not design consent', 'self-contained interactive HTML high-level design',
+        'explicit owner design agreement before detailed architecture plan production or continuation',
+        'Preselection remains read-only', 'Significant design changes', 'Routine mechanics remain autonomous')),
+    ('approval', '## Interactive design agreement before detail', (
+        'project-owned self-contained interactive HTML high-level design',
+        'before detailed architecture plan production or continuation',
+        'approach, interfaces, dependencies and material risks',
+        'purpose, inputs/outputs, boundaries and significant choices',
+        'Executive bullets below the schematic', 'supported properties, tradeoffs/limits and necessary context',
+        'without unverified capability or performance claims',
+        'workflow approvals from data flow', 'proposed/unimplemented behavior from implemented behavior',
+        'pointer and keyboard activation, readable mobile layout, Close and Escape dismissal and focus return',
+        'Page creation, opening/clicking, silence, no answer, denial or cancellation is not consent',
+        'Significant design changes update the page and renew agreement before affected planning resumes',
+        'requirements approval, design agreement and final implementation approval distinct',
+        'without repeating the same question', 'Routine mechanics remain autonomous',
+        'No renderer, generator or framework is required', 'fresh session', 'NOT RUN')),
+    ('tasks', '## Draft outcomes from the source', (
+        'explicit owner design agreement', 'shown content identity, actual answer/scope and ordering',
+        'Significant design changes renew agreement', 'current launch authority or shared routine permissions')),
+    ('tasks_prompt', '## User Input', (
+        'explicit design agreement before detailed architecture plan production or continuation',
+        'Significant design changes renew agreement', 'reuse a settled grant', 'shared routine permissions')),
+    ('plan_template', '## Design agreement provenance', (
+        'project-owned self-contained interactive HTML high-level design',
+        'explicit design agreement before setup-plan and detailed architecture plan production or continuation',
+        'Page interaction, silence, denial or cancellation is not consent', 'Significant design changes')),
+    ('tasks_template', '## Verification and review', (
+        'explicit owner design agreement before detailed architecture plan production or continuation',
+        'Significant design changes renew agreement', 'meaningful submitted completion evidence',
+        'Preserve whole REQUIRED mappings', 'no startup eligibility')),
+    ('spec_review_prompt', '## Design and task proof review', (
+        'explicit owner design agreement before detailed architecture plan production or continuation',
+        'Page interaction, silence, denial or cancellation is not consent',
+        'significant design changes renew agreement', 'Static inspection is not real-browser proof',
+        'whole REQUIRED mappings', 'actual evidence limits')),
+)
+
+
+def check_design_contracts(texts):
+    errors = []
+    for key, heading, clauses in DESIGN_CARRIERS:
+        body = ' '.join(section(texts[key], heading).split())
+        for clause in clauses:
+            if ' '.join(clause.split()) not in body:
+                errors.append(f'design-{key}: {heading} missing {clause!r}; restore the design gate before affected planning')
+    # The gate must precede mutation-capable planning hooks and setup, not just final handoff.
+    prompt = texts['plan_prompt']
+    gate = prompt.find('## Design agreement before setup or detail')
+    hooks = prompt.find('## Pre-Execution Checks')
+    setup = prompt.find('run `.specify/scripts/bash/setup-plan.sh')
+    if not 0 <= gate < hooks < setup:
+        errors.append('design-order: Standard gate must precede planning hooks and setup-plan; move it before those operations')
+    tiny = section(texts['tiny'], '## Write the what and how')
+    if not 0 <= tiny.find('explicit owner design agreement') < tiny.find('Include only relevant detail'):
+        errors.append('design-order: TinySpec agreement must precede detailed how; restore the page-first return')
+    return errors
+
+
+ISSUE_ASSOCIATION_CARRIERS = (
+    ('tracker', '## Establish planner issue association', (
+        'first understand the request and conduct needed owner brainstorming',
+        'Before planned artifact production', 'complete open/closed overlap procedure',
+        'Compare intent, problem, scope and primary evidence, not just titles',
+        'Independently GET any exact match', 'qualified identity/URL, body and state',
+        'open or closed exact match without duplicate or reopen',
+        'actual target- and issue-create operation-scoped authority',
+        'actually create the requested issue, independently read it back',
+        'complete the separate problem-body quality review',
+        'Do not ask a repeated routine creation question',
+        'incomplete discovery or ambiguous effects cannot authorize another create',
+        'review is unavailable, retain that issue identity', 'resume its review, never create another issue',
+        'blocks association and planned artifact production', 'concrete corrective action',
+        'never invent a fallback register', 'bare runtime tasks')),
+    ('brainstorm', '## Apply and return the decisions', (
+        'Readiness is not issue association or artifact-production authority',
+        'before planned artifact production', 'confirmed creation with body-quality review',
+        'qualified exact open/closed reuse without duplicate/reopen',
+        'Missing prerequisites leave association pending', 'concrete corrective action',
+        'not a fallback register', 'Needed dialogue remains available')),
+)
+
+
+def check_issue_association(texts):
+    errors = []
+    for key, heading, clauses in ISSUE_ASSOCIATION_CARRIERS:
+        body = ' '.join(section(texts[key], heading).split())
+        for clause in clauses:
+            if clause not in body:
+                errors.append(f'issue-{key}: missing {clause!r}; restore association before artifacts')
+    return errors
+
+
 def check_contracts(texts):
-    errors = check_workflow_ownership(texts)
+    errors = (check_workflow_ownership(texts) + check_planner(texts["planner"])
+              + check_design_contracts(texts) + check_issue_association(texts))
     def require(label, text, *phrases):
         for phrase in phrases:
             if " ".join(phrase.split()) not in " ".join(text.split()):
@@ -216,63 +621,30 @@ def check_contracts(texts):
             "serious exposed security/data-loss risk", "smaller/paginated read",
             "target drift stops affected continuation", "existing gates",
             "not application startup")
-    for key, heading in (("planner", "## Before selection"),
-                         ("tiny", "## Compact source contract"),
-                         ("brainstorm", "## 1. Gate assessment"),
-                         ("helper", "## Preflight"),
-                         ("helper", "## Planner Standard adapter contract"),
-                         ("tasks", "## Preconditions and adapters")):
+    for key, heading in (("planner", "## Understand the work and choose depth"),
+                         ("tiny", '## Write the what and how'),
+                         ("brainstorm", "## Judge readiness"),
+                         ("helper", '## Resolve architectural choices from evidence'),
+                         ("tasks", '## Give each task sufficient proof')):
         require("parsimony-consumer", section(texts[key], heading), "parsimony.md")
 
     p = texts["planner"]
-    job_first = section(p, "## Job first; no coordinator bookkeeping")
-    require("job-first", job_first,
-            "no coordinator bookkeeping",
-            "Do not maintain administrative ledgers, progress records, evidence manifests",
-            "Runtime-owned operational state stays runtime-owned",
-            "Once required prerequisites are satisfied, advance the next authorized stage",
-            "Reuse applicable settled evidence and decisions",
-            "State each required fact once",
-            "No repeated record polishing, duplicate evidence",
-            "concrete invalidating evidence",
-            "Carry this rule into every stage brief",
-            "Never waive required approvals, safety checks, permissions, reviews or commits",
-            "exact blocker and smallest required resolution")
-    discovery = section(p, "## Discovery and capability boundary")
-    require("constraint-scope", discovery,
-            "exact affected operation", "actual enforced limit at the consuming interface",
-            "Do not generalize a tool-operation limit",
-            "owner-requested behavior, verified runtime restrictions and agent-selected design choices",
-            "An agent inference is not an owner requirement",
-            "interpret owner agreement within the explanation and scope actually presented",
-            "Correct a mistaken premise")
-    require("accepted-decision-consultation", discovery,
-            "[save-adr](../save-adr/SKILL.md)",
-            "whole discovered decision index", "relevant accepted records in full",
-            "needed supersession links", "fresh/resumed contexts re-establish applicability",
-            "rather than claiming a prior read", "proposed/superseded records are not\ncurrent policy",
-            "contradictory accepted authority or uncertain applicability stops only the\naffected continuation",
-            "owner decision")
     require("task-concision", texts["tasks"],
-            "State shared constraints once", "concise presentation, not a prose",
-            "Keep task-specific work and useful checks clear",
-            "verify the exact affected operation", "A worker file-tool bound is not a task-contract loader bound",
-            "An inference or agreement to a narrowly explained remedy")
-    executor_intake = section(texts["tasks"], "## Executor guidance")
+            "State shared constraints once", "outcome-specific work and checks",
+            "verify the affected operation's enforced limit at its consumer",
+            "do not generalize a tool limit", "narrow remedy into a broader owner requirement")
+    executor_intake = section(texts["tasks"], "## Make each outcome independently finishable")
     require("executor-producer-intake", executor_intake,
-            "Before either adapter decomposes work", "producer itself must read",
-            "exact path supplied in its brief", "valid worker model and effort",
-            "planner/parent/producer profile, remembered\ndefault", "present valid JSON needs no executor-selection\nquestion",
-            "path is missing, ambiguous or unreadable", "worker model/effort is missing or invalid",
-            "affected role, path and problem", "concrete\ninterfaces, owned paths, earlier dependencies, local checks and real permission/manual gates")
-    require("executor-planner-handoff", section(p, "## Intended executor before decomposition"),
-            "resolve the current project's selected executor JSON path once", "both direct TinySpec and Standard task-producer briefs",
-            "scripts/resolve-workflow-executor.py --project PROJECT_ROOT", "exact absolute stdout path unchanged",
-            "producer itself\nmust read the actual JSON before decomposing work", "planner/parent/producer profile, remembered\ndefault",
-            "missing, ambiguous or unreadable", "worker model/effort is absent\nor invalid", "affected producer", "role, path and\nproblem")
-    require("executor-tiny-handoff", section(texts["tiny"], "## Intended executor before decomposition"),
-            "selected executor JSON path from the planner", "direct task-producer\nbrief", "task producer itself reads that JSON before decomposition",
-            "does not select or copy runtime bindings", "affected task production")
+            "Before decomposing work in either route", "read the selected executor JSON yourself",
+            "exact absolute path supplied", "valid worker model and effort",
+            "not the planner, parent or producer profile or a remembered default",
+            "valid selection needs no new owner question", "path is missing, ambiguous or unreadable",
+            "worker model/effort is invalid or missing", "role, path and problem",
+            "do not infer or substitute a binding", "owned paths, scope/exclusions, consumed interfaces, earlier producers")
+    require("executor-tiny-handoff", section(texts["tiny"], '## Return for review and separate tasks'),
+            "planner's selected executor JSON path unchanged to the task producer",
+            "Task-generation owns reading it", "missing-path/assignment correction",
+            "does not select or copy runtime bindings")
     reject("retired-routing-leftover", "\n".join((p, texts["tasks"], texts["tiny"])),
            "qualified seed rubric", "residual_reasoning", "owner-selected batch routing")
     for label, key, selector, clauses in ACCEPTED_ADAPTER_CARRIERS:
@@ -280,121 +652,6 @@ def check_contracts(texts):
     require("draft-editing", section(texts["approval"], "## Bounded mechanical corrections"),
             "Ordinary drafting is not submitted-artifact correction",
             "without a supervisor decision", "Once submitted, defects follow")
-    pre = section(p, "## Before selection:")
-    require("choice", pre, "read-only until", "no source edits", "Session history",
-            "BOTH options", "TinySpec → Tasks → Implement", "Specify → Plan → Tasks",
-            "call `ask_user` and STOP", "Either choice is valid", "preparation only",
-            "resolved uncertainty alone does not reroute")
-    require("planning-commit-authority", pre,
-            "writing and committing the selected path's bounded planning artifacts",
-            "Do not ask for separate\nplanning-commit authorization",
-            "or defer these checkpoints until artifact approval",
-            "Artifact approvals govern content and downstream progression",
-            "Pass this commit authority unchanged to\nplanning delegates",
-            "Genuine Git, policy, verification or ownership conflicts stop")
-    continuation = section(p, "## Approval-driven continuation")
-    require("continuation", continuation, "immediately start the next authorized phase",
-            "Do not end the turn merely to report approval", "dispatch it",
-            "explicitly requested planning-only", "older preparation-only approval")
-    handoff = section(p, "## Handoff, not execution")
-    require("accepted-decision-handoff", handoff,
-            "applicable accepted outcome constraints and source links")
-    require("final-continuation", handoff,
-            "automatically invoke `coordinate-implementation`",
-            "in the same session", "explicitly requested planning-only",
-            "Do not stop at a readiness summary", "precise blocker")
-    reject("final-continuation", handoff, "If execution was requested")
-    require("shared-invocation", pre,
-            "Invoke `planning-brainstorming` in preselection mode",
-            "readiness target “informed scope assessment.”",
-            "conduct required owner dialogue yourself", "one material item at a time",
-            "directly in the parent session", "Do not delegate the gate or resolve a saved",
-            "With `NO_BRAINSTORM_NEEDED`, proceed directly", "without a child call")
-    production = section(p, "## Selected production and stage handoffs")
-    require("shared-application", production,
-            "shared rules apply to EVERY stage in both paths",
-            "Apply recorded decisions through the shared mechanism inside selected bounds only.")
-    require("accepted-decision-stage-brief", production,
-            "Before every other direct or delegated TinySpec/Standard stage",
-            "each applicable accepted outcome constraint\nand source link",
-            "updated handoff carrying those\napplicable accepted constraints and links",
-            "fresh delegate's brief")
-    require("discovery", p, "positive and negative claims", "already satisfied", "no task needed",
-            "UNVERIFIED", "explicit owner deferral", "Do not invent a beneficiary",
-            "separately scheduled mechanical work", "missing required memory stops".capitalize(),
-            "missing-install report", "question: UNAVAILABLE", "inspect failures before",
-            "Standard-only SpecKit/constitution checks happen after Standard")
-    require("handoff", p, "constraints **verbatim**", "prior-stage handoff", "Resume originating",
-            "Re-present unanswered questions", "selected depth", "current content/revision evidence",
-            "Explicit approved implementation scope", "executable runner alone")
-    tiny = section(p, "### TinySpec path")
-    require("tiny-flow", tiny, "**Source creation — saved assignment", "**Tasks — saved assignment",
-            "**Review — fresh independent reviewer with planner-parent binding",
-            "invoke `tiny-spec`", "invoke `task-generation` direct adapter",
-            "Create separate tasks", "shared final task-review", "**Combined approval:**",
-            "BEFORE `ask_user`", "Denial returns to review", "No SpecKit prerequisite",
-            "standalone\n   TinySpec approval", "Record\n   fixes",
-            "brief bullet-list executive summary", "immediately proceed to handoff")
-    final_review = section(p, "### Shared final task-review contract")
-    require("final-task-review", final_review,
-            "fresh read-only delegation", "independent reviewer in a new context",
-            "separate from both task producer and parent history", "never fork",
-            "resume either conversation", "Parent evaluates the actual report",
-            "corrections to producers", "resolves material findings before approval",
-            "This is the correctness review", "Do not request a simplicity verdict")
-    require("coordinator-review-sequence", final_review,
-            "1. Write both bounded reviewer handoff instructions",
-            "2. Before launching either reviewer", "independently inspect that snapshot",
-            "Does this plan achieve the requested outcome with the least necessary work?",
-            "Justify your conclusion with specific examples from the plan.",
-            "identify the potentially costly choices you examined",
-            "Do not give an unsupported yes/no answer.",
-            "Do not defer this judgment to the reviewers",
-            "3. Launch both fresh independent read-only reviewers",
-            "Keep the coordinator's analysis out of both handoffs",
-            "4. After both reports return, assess all three analyses together",
-            "resume its existing context when useful", "launch a fresh correction",
-            "Do not launch a fixer when there are no supported corrections")
-    simplicity = section(p, "### Shared simplicity-review contract")
-    require("simplicity-review", simplicity, "In parallel with final correctness review", "same artifact snapshot",
-            "before final owner approval", "references/simplicity-review.md", "subagent get",
-            "Do not forward", "prior verdicts", "Never fork or resume", "No automatic full-review loop",
-            "If corrections invalidate correctness coverage", "recheck only the affected changes")
-    shared = section(p, "### Shared specification-review contract")
-    require("intent-review", shared,
-            "Both paths require one fresh independent read-only specification review",
-            "fidelity to user intent", "[the canonical review prompt](references/spec-review.md)",
-            "original\nuser request, actual owner clarifications/decisions",
-            "exact current specification path/content identity with readable content",
-            "Do not supply producer rationale, conclusions, or full unrelated transcripts",
-            "saved exact binding is permitted and callable", "async: true",
-            "compare source content before\nand after review", "No writes, implementation, external action, or delegation", "neither\nedits nor approves",
-            "Parent evaluates", "source producer under its saved producing assignment",
-            "Material decisions go to the owner", "Parent inspects producer corrections",
-            "Neither path may progress beyond specification review\nwith unresolved material intent gaps",
-            "cannot release reliance", "not a new tracker", "No automatic rereview loop",
-            "additional approval gate")
-    require("review-evaluation", shared,
-            "coverage, downstream clarity and simplicity", "Inspect reported evidence limitations",
-            "targeted completion", "not an automatic second review or new gate")
-    require("simplest-review", section(p, "## Proportionate validation"),
-            "simplest sufficient specification and delivery", "achieves the user's goals",
-            "supporting means, not independent products", "TinySpec source and tasks",
-            "Standard specification, plan and tasks", "task fragmentation",
-            "removal or simplification", "do not weaken required acceptance")
-    require("tiny-simplest-review", tiny,
-            "**Simplicity review:** dispatch alongside stage 4 using the shared simplicity-review contract")
-    tiny_review = re.search(r"\*\*Specification review .*?(?=\n\d+\. \*\*Tasks)", tiny, re.S)
-    require("tiny-spec-review", tiny_review.group() if tiny_review else "",
-            "independent saved reviewer assignment", "tinyspec-spec-review",
-            "shared specification-review contract", "fresh reviewer independent",
-            "necessary producer corrections before task generation", "same saved assignment",
-            "Explicit zero findings", "not a separate TinySpec approval",
-            "Unresolved material intent gaps stop task generation")
-    tiny_order = [tiny.find(marker) for marker in (
-        "**Source creation", "**Specification review", "**Tasks", "**Review", "**Simplicity review", "**Combined approval")]
-    if -1 in tiny_order or tiny_order != sorted(tiny_order):
-        errors.append("tiny-review-order: source → spec review → tasks → fresh task review → approval required")
     prompt = texts["spec_review_prompt"]
     require("intent-review-prompt", prompt,
             "TinySpec\nor Standard", "primary focus is fidelity",
@@ -411,96 +668,32 @@ def check_contracts(texts):
             "retrieve the missing relevant content with smaller reads", "not complete intake",
             "state what is unreviewed", "evidence supporting coverage, downstream clarity and simplicity",
             "without a separate matrix", "preserve justified zero findings")
-    std = section(p, "### Standard path")
-    require("standard-simplest-review", stage(std, "simplicity_review"),
-            "dispatch alongside stage 5 using the shared simplicity-review contract")
-    positions = [std.find(f"**`{s}`") for s in ("spec_create", "spec_review", "plan_create", "tasks_create", "overall_review", "simplicity_review")]
-    if -1 in positions or positions != sorted(positions):
-        errors.append("standard-order: missing/reordered operational stages")
-    require("standard-preflight", std, "constitution", "template-only", "owner-derived",
-            "verify repaired output", "Missing repair capability", "Do not reopen",
-            "never install, simulate slash commands", "Required absent\ncapability stops")
-    spec = stage(std, "spec_create")
-    require("spec", spec, "— saved assignment",  "Clarify only when requested or required",
-            "ordinary clarification and parent inspection", "do not approve or plan here")
-    spec_review = stage(std, "spec_review")
-    require("spec-review", spec_review,
-            "independent saved reviewer assignment", "standard-spec-review",
-            "exact saved provider/model:effort", "actually permitted and callable",
-            "installed async delegation interface", "fresh context", "read-only tool/profile",
-            "source-producer and `ask_user` capabilities", "Package/profile names alone are insufficient",
-            "stops only this review", "do not substitute, route to another reviewer, or fall back",
-            "Dispatch exactly that saved binding unchanged", "async: true",
-            "bind its report to the runtime invocation", "shared specification-review contract above",
-            "Apply the shared reviewer inputs, no-write and source-comparison rules",
-            "Reviewer and parent never substantively repair", "one concrete `ask_user` question at\n   a time",
-            "scenario, alternatives, and consequences", "discard queued", "unanswered or cancelled material",
-            "no discovery cap", "reports the total findings and meaningful areas",
-            "five most\n   important findings initially", "show all findings or a grouped\n   overview",
-            "Retain the complete returned findings", "not a new\n   persistent tracker",
-            "Five is a presentation batch, not a discovery or resolution limit",
-            "surface the next\n   highest-impact remaining findings", "do not stop merely because five were answered",
-            "every remaining material decision must be answered or explicitly\n   deferred by the owner",
-            "consequences and permitted planning bounds recorded",
-            "no inferred default", "originating `standard-spec-create` producer", "same producing assignment",
-            "requirements/scenarios/acceptance", "Q: … → A: …", "removes contradictions, validates and checkpoints",
-            "Do not rerun ordinary clarification taxonomy", "automatically rereview", "unresolved impact",
-            "never release a material dependency automatically", "explicit zero findings", "skip question interaction",
-            "existing current-specification executive brief and `ask_user`\n   approval gate",
-            "Durably record that approval before `plan_create`", "immediately continue to `plan_create`",
-            "without a second continuation or review approval")
-    plan = stage(std, "plan_create")
-    require("plan", plan, "— saved assignment",  "same-session pass", "review/fix the specification",
-            "create one plan", "review/fix the produced plan", "entire pass",
-            "do not create the plan again", "Only when no adapter is invoked delegate",
-            "renewed specification approval", "new executive brief", "do not reorder".capitalize())
-    tasks = stage(std, "tasks_create")
-    require("task-stage", tasks, "— saved assignment",  "authorization to prepare tasks",
-            "create-only", "producers may draft, revise, shorten and mechanically",
-            "without supervisor", "not independent review", "After submission",
-            "independent review and final approval remain required", "`overall_review`")
-    review = stage(std, "overall_review")
-    require("review", review, "independent saved reviewer assignment", "standard-overall-review", "shared final task-review contract", "observed analysis",
-            "never apply unresolved material defaults", "renew affected approvals",
-            "Missing independent reviewer", "Join both review reports")
-    require("standard-final-approval", std[std.find("7. **Overall approval:"):],
-            "BEFORE `ask_user`", "plan-phase implications", "bullet-list executive",
-            "immediately proceed to handoff")
     b = texts["brainstorm"]
     require("brainstorm", b, "NO_BRAINSTORM_NEEDED", "BRAINSTORM_NEEDED", "no more than three items",
-            "one material item", "recorded owner decisions", "preselection", "read-only",
-            "session history", "Only in selected-production", "owner's rationale")
-    require("brainstorm-parent-gate", section(b, "## Capability preflight"),
-            "Gate assessment runs directly in the parent session", "owner-launched model and effort",
-            "Do not delegate the gate or resolve a saved `brainstorm-assessment` binding",
-            "missing delegation capability or a saved brainstorming assignment does not\nblock parent assessment or owner dialogue")
-    require("brainstorm-parent-gate", section(b, "## 1. Gate assessment"),
-            "The parent assesses readiness without a subagent call")
-    require("brainstorm-assignment", section(b, "## Capability preflight"),
-            "Only for authorized delegated decision application, resolve `brainstorm-application`",
-            "[shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)",
-            "shared saved `brainstorming` assignment", "exact binding\nunchanged in the bounded brief and dispatch",
-            "permitted and callable only\nat dispatch",
-            "focused owner-correction question and no\ncandidate recommendation, inference, substitution, or fallback",
-            "The parent still\nconducts owner dialogue")
-    require("brainstorm-assignment", section(b, "## 3. Apply decisions"),
-            "Only in selected-production or legacy-repair mode")
+            "one agenda item at a time", "exactly the recorded decisions", "Preselection", "read-only",
+            "session history", "Only with selected-production", "owner's rationale")
+    require("brainstorm-parent-gate", b.split("## Judge readiness", 1)[0],
+            "parent conducts assessment and dialogue", "owner-launched model and effort",
+            "neither requires a child call or a saved assignment")
+    require("brainstorm-parent-gate", section(b, "## Resolve the material questions with the owner"),
+            "missing delegation alone does not block parent dialogue")
+    require("brainstorm-assignment", section(b, "## Apply and return the decisions"),
+            "Only with selected-production or legacy-repair write authority",
+            "Resolve `brainstorm-application`", "[saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)",
+            "shared `brainstorming` assignment", "exact binding unchanged in the brief and dispatch",
+            "permitted and callable at dispatch", "stops only application", "focused correction question",
+            "no recommendation, inferred substitute or fallback binding", "Do not resolve `brainstorm-assessment` for the parent")
     reject("brainstorm-retired-routing", b, "qualified seed rubric", "six applicable factors",
            "family/effort", "Family and Effort rationales", "shared readiness conjunction",
            "owner-selected profile")
-    assignments = section(p, "## Saved planner assignments")
-    require("saved-assignments", assignments, "model-assignments.json", "TinySpec source/tasks",
-            "Standard spec/tasks", "direct/helper plan pass", "overall review/rereview",
-            "unchanged in the invocation and bounded brief", "owner-launched parent binding",
-            "missing, malformed, unsupported, or unavailable", "focused owner correction question",
-            "do not recommend, infer, substitute", "A correction retains its producing operation's saved assignment",
-            "precise stage-specific resolution", "Inspect a failed expensive invocation")
     for key in ("planner", "brainstorm", "helper"):
         reject("obsolete-planning-class", texts[key], "sonnet-class", "opus-class")
     require("tiny-source", texts["tiny"], "explicit TinySpec selection/preparation authorization",
-            "Context/outcome", "Scope", "Decisions/constraints", "Approach", "Acceptance/validation",
-            "Risks/dependencies/notes", "Do not embed an implementation task checklist",
-            "separate task file is mandatory", "No SpecKit prerequisite", "one combined approval")
+            "Outcome and scope", "Decisions and constraints", "Approach", "Acceptance", "Risks and deferrals",
+            "do not embed an implementation checklist", "separate task file is mandatory",
+            "TinySpec needs no SpecKit", "one combined source/task approval",
+            "fresh independent read-only specification review", "On standalone entry, return to planner",
+            "No separate pre-task TinySpec source approval is required")
     a = texts["approval"]
     require("approval", a, "EVERY artifact-approval", "before calling `ask_user`",
             "only in tool arguments", "Intended outcome", "Exclusions", "Important settled decisions",
@@ -521,50 +714,31 @@ def check_contracts(texts):
     require("legacy", a, "inside tasks", "approved spec awaiting plan", "earliest affected Standard",
             "Other documented producer", "Ambiguous/conflicting origin", "retired skills",
             "Missing runtime capabilities")
-    require("batch-handoff", production, "stable task-local REQUIRED", "canonical research", "not implementation-task assignments")
-    require("batch-tiny", tiny, "verification item completeness")
-    require("batch-standard", review, "verification item completeness")
     require("batch-legacy", a, "inadequate REQUIRED contracts", "producing review/approval gate", "renewed affected approval")
     require("batch-helper", texts["helper"], "applicable guidelines")
-    require("batch-source", texts["tiny"], "stable task-local REQUIRED")
-    require("batch-brainstorm", texts["brainstorm"], "not implementation-task assignments")
+    require("batch-source", texts["tiny"], "task-local REQUIRED checks and worker/reviewer")
+    require("batch-brainstorm", texts["brainstorm"], "does not select runtime bindings")
     t = texts["tasks"]
     require("task-contract", t, "SpecKit adapter", "direct adapter", "separate source and tasks file",
             "nonempty string `id`", "Optional `depends`", "IDs must be unique",
-            "references must exist", "not cycle", "File order", "Do not regenerate old tasks")
-    helper_adapter = section(texts["helper"], "## Planner Standard adapter contract")
-    require("adapter", helper_adapter, "Planner Standard adapter", "`planner`", "same-session pass",
-            "do not direct it to create the plan again")
+            "references must exist", "not cycle", "File order", "do not regenerate old tasks")
+    helper_adapter = section(texts["helper"], '## Arrange the bounded planning pass')
+    helper_pass = section(texts["helper"], '## Produce and inspect the plan')
+    require("adapter", helper_adapter, "planner-managed Standard `plan_create`", "approved specification and approval evidence",
+            "SpecKit planning: UNAVAILABLE", "do not write a generic plan", "usable in the delegated context")
+    require("adapter", helper_pass, "one same-session pass", "Do not direct the caller to create the plan again")
     require("helper-assignment", helper_adapter,
             "`standard-plan-helper` saved assignment", "exact binding unchanged",
-            "ambient settings or\nobserved profile never replace it", "permitted and callable at dispatch",
-            "unsupported or unavailable", "resolver's exact\nfocused owner-correction question",
-            "do not substitute or run a local pass", "review/fix the approved specification",
-            "once to create the plan", "review/fix the produced plan")
+            "permitted and callable at dispatch", "invalid or unavailable", "focused owner-correction question",
+            "do not substitute or run a local pass", "observed binding/effort separately; unknown stays unknown")
+    require("helper-assignment", helper_pass, "Review/fix the approved specification", "once to create the plan", "Review/fix the produced plan")
     reject("helper-retired-routing", helper_adapter, "Sol/medium", "Sol family",
            "standalone local fallback", "separate-review policies", "fallback may bypass")
     c = texts["coordinator"]
     require("intake", section(c, "## Load and Verify"), "exactly six linter checks",
             "An empty", "Optional context stays intact")
-    validation = section(p, "## Proportionate validation")
-    require("validation-focused", validation,
-            "actual changed seam", "concrete failure", "lowest validation layer",
-            "smallest sufficient check", "selected result or argument reaches the intended consumer",
-            "Do not automatically add\nexhaustive matrices, fault injection, new test infrastructure or broad suites",
-            "necessary integration layer", "expected verification effort qualitatively",
-            "No universal deadlines", "not a new task schema")
-    require("validation-risk", validation,
-            "Genuine schema, security or durability", "migration, authorization or persistence",
-            "small diffs alone never justify weakening safety evidence")
-    require("validation-authority", validation,
-            "Optional checks are not acceptance blockers", "gate\nis not a waiver",
-            "Never drop an owner-required check or approved\nsafety criterion without explicit authority",
-            "mandated independent reviews", "owner's selected planning depth")
-    require("validation-reuse", validation,
-            "Reuse valid unchanged evidence", "scope, revisions and environment",
-            "Avoid repeated historical intake", "small causal\nsteps", "actually blocks")
-    require("validation-tasks", section(t, "## Task contract"), "smallest relevant project check",
-            "optional task context", "not mandatory universal acceptance items", "real outcome")
+    require("validation-tasks", section(t, '## Give each task sufficient proof'), "smallest relevant project check",
+            "optional task context", "not universal acceptance boilerplate", "real outcome")
     require("validation-execution", section(c, "## Execute and Integrate"), "Project check commands are optional",
             "no universal collection-count/receipt", "preserve pre-existing/unknown bytes; never adopt them")
     require("validation-timeout", section(c, "## Recover Context"),
@@ -602,56 +776,37 @@ def check_contracts(texts):
     reject("silent-routing", p, "automatically choose TinySpec", "automatically choose Standard")
 
     # Research obligations must occur in their operational carriers, not summaries.
-    require("research-planner-link", section(p, "## Discovery and capability boundary"),
-            "[dependency research contract](references/dependency-research.md)",
-            "inspect repository\nguidance and dependency/version evidence first")
-    require("research-preselection", pre, "no dependency docs,\nsource, plan or decisions may be persisted",
-            "Carry findings in session until selection")
-    reject("research-preselection", pre, "Persist dependency docs before selection")
-    require("research-review", production, "persist reusable guidance during authorized production before readiness",
-            "both direct/standalone consumers", "version/provenance", "proportional reuse/targeted refresh",
-            "supporting spans → constraints → observable checks", "capability/permission gaps",
-            "stop affected design rather than default to model recollection", "never automatically\ndefer or fabricate evidence",
-            "Supply the shared research contract before consequential source/plan", "bounded canonical-owner/discovery writes",
-            "carry evidence-backed constraints/checks, not invented dependency rules")
-    require("research-tiny-handoff", tiny, "Apply the shared stage rules, including research before consequential approach\n   decisions",
-            "Apply the dependency evidence/permission review above before combined approval")
-    require("research-spec", spec, "Apply the shared stage rules, including research before consequential dependency constraints")
-    require("research-plan", plan, "Before consequential plan decisions, complete required shared-contract research",
-            "For helper invocation or the direct Standard pass", "canonical research-document and necessary discovery-link destinations",
-            "observed allowed changes and prohibited operations, with explicit bounded permission\n   in addition to detected SpecKit artifacts",
-            "Do not grant arbitrary documentation edits\n   or code writes", "missing required evidence/authority stops")
-    require("research-standard-review", review, "direct Standard\n   pass and helper-managed/standalone contract coverage")
-    t_research = section(texts["tiny"], "## Dependency evidence before approach decisions")
+    t_research = section(texts["tiny"], '## Resolve the approach from evidence')
     require("research-tiny", t_research, "[dependency research contract](../planner/references/dependency-research.md)",
-            "before consequential dependency approach decisions", "Verify the reference is readable",
-            "reuse adequate applicable guidance", "Refresh only version-sensitive/stale/conflicting/missing portions",
-            "Direct/standalone entry verifies equivalent TinySpec selection/preparation authority",
-            "bounded canonical technical-owner/discovery-link writes", "during authorized production before readiness",
-            "required insufficient evidence cannot default to recollection", "return exact gaps, affected decisions",
-            "impact, allowed bounds and outstanding validation, never automatic deferral")
-    source_contract = section(texts["tiny"], "## Compact source contract")
-    require("research-tiny-traceability", source_contract, "Classify documented\n  recommendations, repository-derived decisions/rationale and assumptions",
-            "Trace source recommendation/local evidence → compact implementation\n  constraint → observable acceptance/check")
-    research_pos = texts["tiny"].find("## Dependency evidence before approach decisions")
-    approach_pos = texts["tiny"].find("## Compact source contract")
+            "Before consequential dependency choices", "references are readable",
+            "reuse/skip/refresh decision", "actual dependency/version evidence", "recollection cannot replace required evidence",
+            "persist reusable guidance in the discovered technical owner and necessary discovery link before claiming readiness",
+            "within verified write bounds", "Standalone entry verifies those bounds itself",
+            "stop affected design", "impact, allowed bounds and outstanding validation", "do not defer automatically")
+    source_contract = section(texts["tiny"], '## Write the what and how')
+    require("research-tiny-traceability", source_contract,
+            "Distinguish documented recommendations, repository-derived decisions and assumptions",
+            "Trace evidence to the implementation constraint and check", "assumptions defined validation")
+    research_pos = texts["tiny"].find('## Resolve the approach from evidence')
+    approach_pos = texts["tiny"].find('## Write the what and how')
     if research_pos < 0 or approach_pos < 0 or research_pos > approach_pos:
         errors.append("research-order: TinySpec research must precede compact approach production")
-    h_pre = section(texts["helper"], "## Preflight")
+    h_pre = section(texts["helper"], '## Resolve architectural choices from evidence')
     require("research-helper", h_pre, "[dependency research contract](../planner/references/dependency-research.md)",
-            "before consequential architecture/plan decisions", "verify it is readable",
-            "Standalone entry verifies equivalent Standard planning/preparation authority",
-            "bounded\ncanonical-owner/discovery writes", "No recollection-based completion or automatic deferral",
-            "returns exact missing evidence, affected decisions and needed authority",
-            "Standalone entry cannot bypass required research",
-            "Research-driven approved-specification changes require renewed approval")
-    require("research-helper-adapter", section(texts["helper"], "## Planner Standard adapter contract"),
-            "explicit bounded documentation permission", "absence is not implied authority")
-    h_boundary = section(texts["helper"], "## Planner Boundary")
-    require("research-boundary", h_boundary, "only explicit bounded\npermission permits canonical research-document and necessary discovery-link writes",
-            "observed destinations with specified allowed changes and prohibited operations",
-            "No arbitrary documentation edits or product code writes", "missing required authority stops",
-            "supporting source spans → implementation constraints → observable checks")
+            "Before consequential architecture/plan decisions", "references are readable",
+            "within the write bounds above", "standalone production too",
+            "No recollection-based completion or automatic deferral", "return exact gaps, affected decisions and needed authority",
+            "Do not assume the caller already applied them on standalone entry")
+    require("research-helper-adapter", helper_adapter, "Required write authority cannot be inferred from tooling")
+    require("research-helper-adapter", helper_pass, "Changes to approved specification content, including research-driven changes",
+            "renewed specification approval gate", "standalone entry uses its owner gate")
+    h_boundary = helper_adapter
+    require("research-boundary", h_boundary,
+            "Canonical research-document and necessary discovery-link writes need additional explicit bounded permission",
+            "observed destinations, allowed changes and prohibited operations",
+            "no arbitrary documentation or product-code edits", "Required write authority cannot be inferred from tooling",
+            "Standalone entry must verify equivalent Standard planning/preparation authority")
+    require("research-boundary", h_pre, "Translate evidence into plan constraints and observable verification")
     reject("research-boundary", h_boundary, "Arbitrary documentation edits are permitted")
     r = texts.get("research", "")
     if not r:
@@ -690,52 +845,42 @@ def check_contracts(texts):
             "not fabricate evidence or waive unrelated gates")
     reject("research-failure", failure, "Use model recollection when required research is unavailable")
     # Unified-memory obligations belong at actual entry boundaries, not a footer.
-    entries = (("planner", "## Discovery and capability boundary", "unified-memory-planner"),
-               ("tiny", "## Inputs and preflight", "unified-memory-tiny"),
-               ("tasks", "## Preconditions and adapters", "unified-memory-tasks"),
-               ("helper", "## Preflight", "unified-memory-helper"))
+    entries = (("tiny", '## Establish the source to write', "unified-memory-tiny"),
+               ("tasks", '## Draft outcomes from the source', "unified-memory-tasks"),
+               ("helper", '## Arrange the bounded planning pass', "unified-memory-helper"))
     for key, heading, label in entries:
         body = section(texts[key], heading)
-        require(label, body, "Memory Handling", "unified index", "nonblocking",
-                "alongside gotchas, through source observables", "task-local REQUIRED checks", "worker/reviewer briefs",
-                "default history intake", "execution-time feedback routing")
+        if key in ("tasks", "tiny", "helper"):
+            require(label, body, "Memory Handling", "verified unified index", "nonblocking",
+                    "explicit owner guidance and gotchas", "task-local REQUIRED check",
+                    "worker/reviewer briefs")
+            require(label, body, "retrieval and authority rules" if key == "tasks" else "retrieval and write safeguards" if key == "tiny" else "retrieval, write and concurrency safeguards")
     require("unified-memory-owner", texts["memory"],
             "One verified", "two distinct evidence kinds", "Owner guidance",
             "Read the whole associated index first", "clear, explicit, future-directed user feedback",
             "Explanation-only questions, ordinary implementation approval", "no feedback write nothing",
             "No routine bookkeeping")
-    require("unified-memory-handoff", production, "both TinySpec and Standard stage briefs",
-            "source observables/acceptance", "task dependencies, checkpoints, verification and coordinator handoff",
-            "Memory cannot override source requirements or owner authority")
     require("unified-memory-routing", section(c, "## Execute and Integrate"),
             "No arbitrary workflow", "Do not autonomously loop expensive failed runs")
     require("unified-memory-intake", section(c, "## Load and Verify"),
             "Missing memory or STATE is nonblocking", "no automatic summaries/indexes",
             "execution-time feedback/routing")
     require("runtime-authority", section(c, "# Coordinate Implementation"),
-            "SQLite stores ordinary", "not effect proof or execution eligibility")
-    dispatch = section(p, "## Selected production and stage handoffs")
-    require("stage-dispatch", dispatch, "direct asynchronous single-stage dispatch",
-            "resolved saved assignment unchanged", "Inspect the returned artifact/checkpoint",
-            "before the next authorized stage", "Never prewire dependent source→tasks",
-            "concrete branching, parallel independent work or another earned orchestration",
-            "direct delegation cannot adequately serve", "single child, convenience wrapper",
-            "stage sequence alone is insufficient", "parent inspection, stage authority, approvals and reviewer independence",
-            "do not authorize parallel implementation batches")
+            "one LangGraph controller", "SQLite graph checkpoints hold", "not automatic acceptance",
+            "sequential by", "explicitly owner-directed path-disjoint workers",
+            "sibling mutations quiescent", "never silent", "conversion or replay")
     for key in ("planner", "tiny", "tasks", "helper", "memory", "coordinator", "adoption"):
         reject("unified-memory-unsafe-" + key, texts.get(key, ""),
                "Automatically initialize coordination memory", "Write a run SUMMARY on completion",
                "Refresh the coordination index after every task", "Reflect at blocked pause",
                "Commit evidence separately before the next task", "Infer lessons from failed runs",
                "Automatically create STATE.md", "Update STATE after child-ID return", "Remove finished STATE items")
-    reject("stage-dispatch", dispatch, "Default to a single-child workflow wrapper",
-           "Prewire source→tasks without parent inspection", "Sequential convenience justifies workflows")
     # Bounded checks of changed instruction carriers, not a production audit/router.
     for label, key, heading, clauses in AUTHORED_COMMAND_CARRIERS + VERIFICATION_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
     for label, key, heading, clauses in COMPOSED_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
-    for label, key, heading, clauses in RISK_CARRIERS + BOUNDARY_CARRIERS:
+    for label, key, heading, clauses in RISK_CARRIERS + BOUNDARY_CARRIERS + LINKAGE_CARRIERS:
         require(label, section(texts.get(key, ""), heading), *clauses)
     for label, key, selector, clauses in ATOMIC_OUTCOME_CARRIERS + RISK_HANDOFF_CARRIERS:
         require(label, operational_carrier(texts.get(key, ""), selector), *clauses)
@@ -753,26 +898,16 @@ def check_contracts(texts):
 
 
 COMPOSED_CARRIERS = (
-    ('composed-planner', 'planner', '## Proportionate validation', (
-        'separate green components cannot establish a genuine risky boundary',
-        'smallest composed check that observes the final observable, order or custody',
-        'Reuse an existing focused check that already observes the boundary',
-        'Use a separate proof prerequisite only when the consequential unknown and costly downstream reliance justify it',
-        'block reliance only on insufficient or invalidated evidence, not on unrelated seams',
+    ('composed-tasks', 'tasks', '## Give each task sufficient proof', (
+        'separate green components cannot establish a risky boundary',
+        'smallest composed check of the final observable, order or custody',
+        'Reuse a focused check that already observes it',
+        'first boundary with the necessary prerequisites',
+        'only for an independently necessary prerequisite',
     )),
-    ('composed-tasks', 'tasks', '## Task contract', (
-        'separate green components cannot establish a genuine risky boundary',
-        'smallest composed check that observes the final observable, order or custody',
-        'Reuse an existing focused check that already observes the boundary',
-        'Only an independently necessary prerequisite becomes an earlier task',
-        'otherwise verify before reliance inside the same task',
-    )),
-    ('composed-handoff', 'planner', '## Selected production and stage handoffs', (
-        'only genuinely necessary producer/consumer dependencies', 'original permission/manual gates',
-        'accessible proof/pass conditions',
-    )),
-    ('composed-adapters', 'tasks', '## Review and handoff', (
-        'Carry work-specific checks', 'permission boundaries', 'worker brief',
+    ('composed-adapters', 'tasks', '## Return a checked task artifact', (
+        'Worker briefs carry work-specific checks, exclusions and material permission boundaries',
+        'mappings established above',
     )),
 )
 
@@ -817,117 +952,146 @@ RISK_CARRIERS = (
       "Keep a prototype informational", "separate only an independently necessary prerequisite",
       "normal tests, evidence and teardown inside coherent work", "Direct\ntasking and standalone/helper-managed planning",
       "not real-library or model-obedience proof")),
-    ("risk-planner", "planner", "## Proportionate validation",
-     ("[early risk reduction](references/early-risk-reduction.md)", "missing-install report",
-      "known bounded behavior\nuses permanent actual-helper tests", "non-isolatable risks use real-system validation",
-      "not execution without\nseparate authority", "shared risk owner defines proof applicability and lifetime",
-      "challenge proposed task boundaries", "workflow or phase noun is not a reason to split",
-      "Reject duplicate proof/report chains and disproportionate checks")),
-    ("risk-stage-handoff", "planner", "## Selected production and stage handoffs",
-     ("shared early-risk and task-boundary contracts", "selection/omission rationale",
-      "only genuinely necessary producer/consumer dependencies", "proof lifetime",
-      "NOT\nVERIFIED blockers", "Keep ordinary acceptance, evidence and\nteardown inside coherent delivery",
-      "do not prescribe a prototype/consumer/cleanup task chain")),
-    ("risk-tiny-review", "planner", "### TinySpec path",
-     ("Review risk selection/omission", "actual evidence and gates", "necessary producer/consumer\ndependencies",
-      "reuse/retention", "production acceptance", "task boundaries", "Source carries needs")),
-    ("risk-standard-review", "planner", "### Standard path",
-     ("Review risk selection/omission", "actual evidence and gates", "necessary producer/consumer\ndependencies",
-      "reuse/retention", "production acceptance", "task boundaries", "direct Standard and managed/helper plans")),
-    ("risk-final-handoff", "planner", "## Handoff, not execution",
-     ("risk rationale", "current applicability", "consumers\nuse applicable evidence", "permanent production tests",
-      "retain proof\nthrough all consumers/validation", "routine cleanup does not become a separate task")),
-    ("risk-tiny", "tiny", "## Compact source contract",
-     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "verify it is readable or stop with a missing-install report",
-      "direct/standalone", "justify proof selection/omission", "permanent actual-helper\ntests",
-      "real-system validation", "genuine consequential unknown", "informational findings\nand tested limits",
-      "shared risk contract owns proof scope", "task generation decides", "not a task chain")),
-    ("risk-tiny-return", "tiny", "## Boundary and return",
-     ("risk rationale", "genuinely necessary producer/consumer dependency", "proof\napplicability and lifetime",
-      "execution gates", "failed/unrun\nreliance blockers", "affected approval renewal", "direct entry",
-      "imply separate consumer/cleanup tasks")),
-    ("risk-helper-preflight", "helper", "## Preflight",
-     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "verify it is readable or stop with a missing-install report.",
-      "Standalone entry applies", "Planning schedules proofs", "separate authority")),
-    ("risk-helper-adapter", "helper", "## Planner Standard adapter contract",
-     ("Apply the shared early-risk contract", "task-generation boundaries", "genuinely necessary\nproducer/consumer sequencing",
-      "not imply each proof is a separate task", "execute scheduled proofs")),
-    ("risk-helper-plan", "helper", "## Planner Boundary",
-     ("early risk reduction", "consequential unknown", "known bounded behavior uses actual-helper acceptance tests",
-      "non-isolatable risks use real-system validation with actual\ngates", "necessary prototype prerequisites",
-      "ordinary\ntests, evidence and teardown stay within coherent delivery", "shared risk contract owns",
-      "not an embedded\ntask chain")),
-    ("risk-helper-return", "helper", "## Completion",
-     ("risk rationale", "genuinely necessary\ndependencies", "proof reuse/lifetime",
-      "preserved production behavior", "disproof/NOT VERIFIED", "Failed/unrun proofs\ncannot release assumed reliance",
-      "Routine cleanup stays with the task")),
-    ("risk-tasks", "tasks", "## Task contract",
-     ("[early risk reduction](../planner/references/early-risk-reduction.md)", "missing-install report",
-      "Both adapters and direct entry", "Planning schedules proofs", "separate authority",
-      "Known bounded behavior normally uses permanent actual-helper\ntests",
-      "ONE consequential question", "script code and actual\nobserved execution evidence",
-      "Both the direct and SpecKit adapters", "mark the task title **[PROTOTYPE]**",
-      "Only an independently necessary\nprerequisite becomes an earlier task", "Failed or unrun evidence cannot release assumed reliance")),
-    ("risk-task-review", "tasks", "## Review and handoff",
-     ("Review selection/omission", "applicable dependencies", "proof lifetime",
-      "Challenge redundant task splits, duplicate proofs/report chains and disproportionate checks",
-      "only necessary producer/consumer\ndependencies", "For a [PROTOTYPE] task", "marker and bounded informational\nscope",
-      "Reuse unchanged applicable proof once with all mappings", "routine teardown inside its task",
-      "actual independently consequential resource or outcome")),
+    ('risk-tiny', 'tiny', '## Resolve the approach from evidence', (
+        '[early risk reduction](../planner/references/early-risk-reduction.md)',
+        'reason to select or omit a proof',
+        'necessary dependencies',
+        'expected findings and tested limits',
+        'production acceptance and actual execution gates',
+        'actual-helper tests',
+        'consequential unknown',
+        'applicability/lifetime and disproof/renewal rules',
+        'Task-generation decides proof placement',
+        'not a task chain',
+        'does not authorize execution',
+        'references are readable',
+        'direct/standalone entry',
+    )),
+    ('risk-tiny-return', 'tiny', '## Return for review and separate tasks', (
+        'research and risk results above',
+        'limits, permission gaps and affected approval renewals',
+        'verification needs and unresolved blockers',
+    )),
+    ('risk-helper-preflight', 'helper', '## Resolve architectural choices from evidence', (
+        '[early risk reduction](../planner/references/early-risk-reduction.md)',
+        'references are readable',
+        'missing-install report',
+        'standalone entry',
+        'Planning schedules proof, not its execution',
+    )),
+    ('risk-helper-adapter', 'helper', '## Resolve architectural choices from evidence', (
+        'justified proof selection/omission',
+        'necessary dependencies',
+        'Task-generation owns decomposition and task sizing',
+    )),
+    ('risk-helper-plan', 'helper', '## Produce and inspect the plan', (
+        'sequencing, dependencies',
+        'verification',
+        'evidence-to-constraint-to-check mappings',
+        'evidence rules above',
+    )),
+    ('risk-helper-return', 'helper', '## Return the checked outputs', (
+        'research/risk results above',
+        'verification needs and remaining capability/permission gaps',
+        'not an embedded task chain',
+    )),
+    ('risk-tasks', 'tasks', '## Give each task sufficient proof', (
+        '[early risk reduction](../planner/references/early-risk-reduction.md)',
+        'both routes, including direct entry',
+        'missing-install report',
+        'selection and proof-lifetime rules',
+        'ordinary actual-helper tests',
+        '**[PROTOTYPE]**',
+        'one consequential question',
+        'script code and actual observed execution evidence',
+        'Planning schedules proof, not execution without authority',
+    )),
+    ('risk-task-review', 'tasks', '## Return a checked task artifact', (
+        'outcome/proof rules above in either route',
+        'actual proof consumption',
+        'existing producing review and coordinator handoff',
+    )),
+)
+
+
+LINKAGE_CARRIERS = (
+    ('finish-linkage', 'finish', '## Issue-linked delivery', (
+        'PR → qualified delivery issue and issue → qualified PR, regardless of trace host',
+        'A PR-hosted trace also needs issue → every confirmed trace part',
+        'Reuse verified body or comment links',
+        'actual run/target/`link_comment` authority',
+        'incomplete pages, missing authority or uncertain readback mean incomplete linkage, never success',
+        'When a delivery PR is discovered after finish, establish only missing reciprocal links',
+        'refer to the already confirmed trace',
+        'Do not republish the trace, rerun implementation or reopen review',
+        'Late linkage does not change the reviewed revision, owner acceptance or closure authority',
+        'Trace/link comments do not require problem-body quality review',
+        'a substantive problem-body change still does',
+        'Do not create a PR, push, edit issue/PR bodies or change state',
+    )),
+    ('tracker-linkage', 'tracker', '## Confirm delivery issue/PR links', (
+        'Independently GET the issue identity and each PR\'s issue and pull-request identities',
+        'Read the current bodies and all comment pages',
+        'Every delivery PR must link its qualified issue and the issue must discover every delivery PR, regardless of trace host',
+        'issue links to every confirmed trace part',
+        'Read back retained trace parts in full',
+        'Reuse verified body/comment links',
+        '`link_comment` operation-scoped authority for each destination',
+        'reconcile all destination pages and exact candidate bodies/identities',
+        'a collision or incomplete scan stops new comments',
+        'Late PR discovery establishes only missing reciprocal links',
+        'no trace resend, implementation replay or reopened review',
+        'partial effects or failed readback are incomplete linkage, not success',
+        'Link/trace comments need no separate problem-body quality reviewer',
+        'Link confirmation is not owner acceptance or closure authority',
+        'Do not create PRs, push, replace issue/PR bodies, close or reopen',
+    )),
 )
 
 
 BOUNDARY_CARRIERS = (
-    ("task-boundaries", "tasks", "## Task contract",
-     ("A task delivers an independently verifiable outcome, not a phase label",
-      "Separate tasks only for a concrete independently necessary deliverable, prerequisite, gate, resource boundary or material context incompatibility",
-      "Test writing/running, evidence, verification, review preparation and routine teardown normally stay inside that outcome",
-      "Do not split by a workflow noun or task-count quota")),
-    ("planner-boundaries", "planner", "## Proportionate validation",
-     ("During production and the simplicity review", "workflow or phase noun is not a reason to split",
-      "task-generation outcome rule", "Reject duplicate proof/report chains and disproportionate checks")),
-    ("task-review-boundaries", "tasks", "## Review and handoff",
-     ("Challenge redundant task splits", "without weakening acceptance or original gates",
-      "For a [PROTOTYPE] task, preserve the marker and bounded informational\nscope in the handoff and worker brief")),
+    ('task-boundaries', 'tasks', '## Make each outcome independently finishable', (
+        'one bounded behavior or interface per task',
+        'ordinary tests, evidence, relevant documentation, review preparation and routine teardown with the outcome',
+        'independently necessary deliverable, prerequisite, gate, resource boundary or material context incompatibility—not a phase name',
+    )),
+    ('task-review-boundaries', 'tasks', '## Return a checked task artifact', (
+        'outcome/proof rules above',
+        'task granularity, necessary support',
+        'does not replace independent review or permit upstream requirement changes',
+    )),
 )
 
 
 # Contract carriers only: they preserve the six intake-linter rules and do not score tasks.
 ATOMIC_OUTCOME_CARRIERS = (
-    ("atomic-creator", "tasks", "### Executor-sized outcomes",
-     ("one bounded behavior or interface whose meaningful acceptance\n   passes using completed prerequisites and its own result, without unfinished downstream\n   implementation",
-      "Challenge a milestone bundle that leaves several independently testable\n   interfaces unfinished together", "ordinary cross-system wiring outcome may remain one task",
-      "focused wiring test, relevant documentation and ordinary support work establish the final\nobservable")),
-    ("atomic-direct-review", "tasks", "## Review and handoff",
-     ("either adapter and direct tasking", "reject a multi-interface milestone whose interfaces must all\nremain unfinished for acceptance", "accept independently verifiable slices with completed\nprerequisites", "ordinary established cross-system wiring with its focused tests/docs")),
-    ("atomic-planner", "planner", "## Proportionate validation",
-     ("Each task must deliver one bounded behavior or interface whose meaningful acceptance passes using\ncompleted prerequisites and its own result, without unfinished downstream implementation",
-      "milestones that leave several independently testable interfaces unfinished together",
-      "Accept independently verifiable slices and ordinary established\ncross-system wiring when its focused tests/docs establish the final observable")),
-    ("atomic-tiny-review", "planner", "item:4. **Review",
-     ("Check independently executable outcomes and the shared execution-risk requirements above",  "temporary phase/approval status belongs in the approval record")),
-    ("atomic-standard-review", "planner", "stage:overall_review",
-     ("Check independently executable outcomes and the shared execution-risk requirements above",  "temporary phase/approval status belongs in the approval record")),
+    ('atomic-creator', 'tasks', '## Make each outcome independently finishable', (
+        'acceptance that can pass using completed prerequisites',
+        'without unfinished downstream implementation',
+        'Split a milestone at independently testable seams',
+        'Established cross-system wiring may also stay one task',
+        'focused test and support work establish the final observable',
+    )),
+    ('atomic-direct-review', 'tasks', '## Return a checked task artifact', (
+        'outcome/proof rules above in either route, including direct tasking',
+        'task granularity, necessary support',
+    )),
 )
 
 
 # Material risk handoff uses existing review/brief carriers, not a new schema or admission gate.
 RISK_HANDOFF_CARRIERS = (
-    ("risk-task-handoff", "tasks", "## Review and handoff", (
-        "task-specific material execution risks or prerequisites", "affected\ntask", "observed evidence versus unknowns", "next investigation, mitigation, or necessary permission",
-        "coordinator must consume these findings before\naffected worker reliance", "later discoveries use the same handoff", "Do not create a risk schema",
-        "unavailable capability,\naccess, paid, data, or external boundary", "affected operation and corrective action", "unrelated safe work continues",
-    )),
-    ("risk-shared-review-handoff", "planner", "## Proportionate validation", (
-        "At both TinySpec review and Standard overall review", "material task-specific execution\nrisk or prerequisite", "affected task",
-        "observed evidence versus unknowns", "coordinator preparation before affected worker reliance", "not\na risk schema",
-        "unavailable\ncapability/access/paid/data/external operation", "corrective action", "block only affected work",
-    )),
-    ("risk-tiny-review-handoff", "planner", "item:4. **Review", (
-        "shared execution-risk requirements above", "risk selection/omission",
-    )),
-    ("risk-standard-review-handoff", "planner", "stage:overall_review", (
-        "shared execution-risk requirements above", "risk selection/omission",
+    ('risk-task-handoff', 'tasks', '## Return a checked task artifact', (
+        'task-specific material execution risks or prerequisites',
+        'affected task',
+        'observed evidence versus unknowns',
+        'next investigation, mitigation or necessary permission',
+        'coordinator must consume these findings before affected worker reliance',
+        'later discoveries use the same handoff',
+        'No new risk schema',
+        'capability, access, paid, data or external authority',
+        'affected operation and corrective action',
+        'unrelated safe work continues',
     )),
     ("risk-coordinator-prepare", "coordinator", "## Prepare Approved Execution", (
         "Before affected worker reliance", "consume final-review/handoff material risk findings", "investigate or\nprepare routine prerequisites within authority",
@@ -936,7 +1100,7 @@ RISK_HANDOFF_CARRIERS = (
     )),
     ("risk-coordinator-triage", "coordinator", "## Question triage", (
         "routine early worker or\nreviewer return is a diagnosis event, not completion or owner debugging", "inspect its invocation,\nunfinished scope, actual checks, and retained effects",
-        "supported history/resume or evidence-only reassessment paths", "never blindly retry an\nunchanged expensive failure", "initial-plus-two same-task/session allowance", "compact diagnosis context", "Evidence-only review reassessment uses the existing retained evidence", "never a task replay", "Unknown cause or a real permission boundary stops",
+        "supported history/resume or evidence-only reassessment paths", "never blindly retry an\nunchanged expensive failure", "initial-plus-two same-task/session allowance", "compact diagnosis context", "evidence-only review reassessment uses the existing retained evidence", "never a task replay", "Unknown cause or a real permission boundary stops",
     )),
     ("risk-coordinator-review", "coordinator", "## Review and Acceptance", (
         "routine\nreviewer early return or evidence gap as a diagnosis/recovery event", "not completion or an owner-debugging\nrequest",
@@ -947,42 +1111,63 @@ RISK_HANDOFF_CARRIERS = (
 
 # Actual producer/consumer inputs, not incidental summary keywords.
 DELEGATION_CARRIERS = (
-    ("delegate-source", "planner", "item:1. **Source creation", ("delegate `tiny-spec`", "separate\n   fresh", "bounded-context source producer", "Apply the shared stage rules")),
-    ("delegate-tiny-tasks", "planner", "item:3. **Tasks", ("delegate a separate fresh bounded-context task", "Apply the shared stage rules")),
-    ("delegate-tiny-correction", "planner", "item:4. **Review", ("Apply the shared stage rules for substantive", "corrections")),
-    ("delegate-spec", "planner", "stage:spec_create", ("delegate a separate fresh bounded-context", "specification producer", "Apply the shared stage rules", "mechanical gaps are resolved by the delegate")),
-    ("delegate-spec-review", "planner", "stage:spec_review", ("independent saved reviewer assignment", "standard-spec-review", "Dispatch exactly that saved binding unchanged", "async: true", "fresh independent reviewer", "Apply the shared reviewer inputs, no-write and source-comparison rules", "Reviewer and parent never substantively repair", "originating `standard-spec-create` producer", "same producing assignment", "no inferred default")),
-    ("delegate-plan", "planner", "stage:plan_create", ("Delegate a separate fresh bounded-context plan producer", "Apply the shared stage rules", "Only when no adapter is invoked delegate", "Never perform it in the parent")),
-    ("delegate-standard-tasks", "planner", "stage:tasks_create", ("delegate a separate fresh bounded-context", "task producer", "Apply the shared stage rules")),
-    ("delegate-overall-correction", "planner", "stage:overall_review", ("Apply the shared stage rules for corrections", "independent reviewer", "does not become the producer")),
     ("delegate-recovery", "approval", "## Transition and invalidation table", ("Delegate uncertain or substantive artifact corrections", "originating producer context", "fresh bounded correction delegate", "No parent artifact authoring", "substantive task-level or upstream repair, including legacy recovery", "unauthorized delegation stops", "fallback or full transcript handoff")),
-    ("delegate-helper", "helper", "## Planner Standard adapter contract", ("separate fresh bounded context", "manager never authors fresh artifacts or makes substantive repairs", "Delegate uncertain or substantive corrections", "originating", "fresh bounded correction delegate", "unauthorized", "delegation stops", "`standard-plan-helper` saved assignment", "do not substitute or run a local pass")),
-    ("delegate-handoff", "planner", "## Selected production and stage handoffs", ("separate fresh bounded-context producer for each artifact", "Loading", "a skill in the parent\nis not delegation", "never fresh artifact authoring or substantive repair", "Do not forward full", "transcripts or unrelated history", "unauthorized delegation stops", "no inline/local fallback", "Delegate uncertain or substantive artifact corrections", "including task-level and upstream changes", "suitable originating context or a fresh bounded correction", "the independent reviewer never becomes the producer")),
+    ('delegate-helper', 'helper', '## Arrange the bounded planning pass', (
+        'separate fresh bounded context',
+        'coordinating caller does not author fresh artifacts or make substantive repairs',
+        'uncertain or substantive corrections return to suitable originating producer context or a fresh bounded correction delegate',
+        'unauthorized delegation stops',
+        '`standard-plan-helper` saved assignment',
+        'do not substitute or run a local pass',
+    )),
 )
 
 AUTHORITY_CARRIERS = (
-    ("quality-discovery", "planner", "## Discovery and capability boundary", ("for specification creation only, including TinySpec", "Use the SDD quality guidance to prepare source-producer briefs", "not downstream requirements", "complete relevant behavior, approach, constraints and observable", "unresolved material gaps return through existing gates")),
-    ("quality-tiny-stage", "planner", "item:1. **Source creation", ("Apply the shared stage rules", "SDD quality guidance for specification creation only")),
-    ("quality-spec-stage", "planner", "stage:spec_create", ("SDD reference for specification creation only", "Apply the shared stage rules", "complete\n   relevant behavior, approach, constraints and observable acceptance")),
-    ("quality-tiny-producer", "tiny", "## Compact source contract", ("Read and apply the [SDD quality guidance]", "for specification creation only, including TinySpec", "missing guidance stops", "Retain complete relevant behavior, approach, constraints", "observable acceptance in this source", "gaps return through existing gates", "governing instructions/contracts, memory and permission/safety", "separate tasks remain mandatory")),
-    ("truth-shared", "planner", "## Selected production and stage handoffs", ("TinySpec/specification is requirements truth", "approved plan is derived\nsequencing only", "No SDD forwarding/rereading as direct requirements input downstream", "governing instructions/contracts, memory and permission/safety still apply")),
-    ("truth-plan", "planner", "stage:plan_create", ("Apply the shared stage rules and source/task authority",)),
-    ("truth-helper", "helper", "## Planner Standard adapter contract", ("specification is requirements", "truth; approved plan is derived sequencing only", "No SDD forwarding/rereading as direct", "requirements input", "Governing instructions/contracts, memory and permission/safety still apply")),
-    ("truth-tiny-task-stage", "planner", "item:3. **Tasks", ("Apply the shared stage rules and source/task authority",)),
-    ("truth-standard-task-stage", "planner", "stage:tasks_create", ("Apply the shared stage rules and source/task\n   authority",)),
-    ("truth-speckit-adapter", "tasks", "item:- A SpecKit adapter", ("Specification is requirements truth", "approved plan is derived", "sequencing only", "No SDD forwarding/rereading as direct requirements input", "Trace source", "criteria into task checks", "Governing instructions/contracts, memory and permission/safety", "create-only")),
-    ("truth-direct-adapter", "tasks", "item:- A direct adapter", ("legacy source is requirements truth", "No SDD forwarding/rereading as direct requirements", "input", "Trace source criteria into task checks", "Governing instructions/contracts, memory", "permission/safety still apply")),
+    ('quality-tiny-producer', 'tiny', '## Write the what and how', (
+        'At source creation, read and apply the',
+        '[SDD quality guidance]',
+        'if unreadable, stop',
+        'complete relevant behavior, approach, constraints and observable acceptance in this source',
+        'Later tasks consume this source, not SDD as requirements input',
+        'governing instructions, memory and actual permission/safety boundaries still apply',
+    )),
+    ('truth-helper', 'helper', '## Produce and inspect the plan', (
+        'specification is requirements truth',
+        'plan provides derived architecture and sequencing',
+        'Do not forward or reread SDD as direct requirements input',
+        'Governing instructions, memory and actual permission/safety boundaries still apply',
+    )),
+    ('truth-speckit-adapter', 'tasks', '## Draft outcomes from the source', (
+        '**SpecKit adapter**',
+        'specification as requirements truth',
+        'approved plan for derived sequencing only',
+        'create-only',
+        "Both routes use the source's criteria, not SDD",
+        'repository instructions, governing principles',
+    )),
+    ('truth-direct-adapter', 'tasks', '## Draft outcomes from the source', (
+        '**direct adapter**',
+        'owner-authorized durable TinySpec or legacy requirement',
+        "Both routes use the source's criteria, not SDD",
+        'repository instructions, governing principles',
+    )),
     ("brief-coverage", "approval", "## Executive brief before approval", ("concrete included scope", "Every actual ordered plan stage separately", "meaningful outcome", "Every actual task ID separately", "execution order", "Never truncate beyond six, merge IDs/stages", "catch-alls or empty headings", "TinySpec has no plan; specification-only approval", "This adds no plan approval gate", "Renewals regenerate the complete brief from current artifacts", "before calling `ask_user`")),
 )
 
 
 AUTHORED_COMMAND_CARRIERS = (
-    ("authored-command-shared", "tasks", "## Structured executable handoff (both adapters)", (
-        "When authoring a deterministic required command", "existing `checks`, `check`, or `required[].check` field",
-        "keep semantic criteria as prose", "never compile prose into shell", "leave absent optional checks absent",
+    ('authored-command-shared', 'tasks', '## Encode the tasks for their consumer', (
+        'authored deterministic required command once',
+        '`checks`, `check`, or `required[].check` field',
+        'Keep semantic criteria as prose',
+        'never compile prose into shell',
+        'leave absent optional checks absent',
     )),
-    ("authored-command-tiny", "tiny", "## Intended executor before decomposition", (
-        "deterministic required command", "existing executable check\nfield once", "semantic criteria as prose", "optional absent checks absent",
+    ('authored-command-tiny', 'tiny', '## Return for review and separate tasks', (
+        '[task-generation direct adapter](../task-generation/SKILL.md)',
+        'Task-generation owns',
+        'executable check fields',
+        'Pass authored source checks and semantic criteria to that owner for executable handoff',
     )),
     ("authored-command-standard", "tasks_prompt", "## Task Generation Rules", (
         "authored deterministic", "existing executable fields once", "semantic criteria stay prose", "optional absent checks stay absent",
@@ -994,14 +1179,17 @@ AUTHORED_COMMAND_CARRIERS = (
 
 
 VERIFICATION_CARRIERS = (
-    ("verification-practical", "tasks", "## Task contract",
-     ("Use practical observables", "Both adapters", "item mappings", "no special manual gate")),
-    ("verification-legacy", "tasks", "## Structured executable handoff (both adapters)",
-     ("No required order", "Do not regenerate old tasks", "Useful existing `required` check mappings")),
-    ("verification-planner", "planner", "## Proportionate validation",
-     ("practical observables", "generic green suite", "STOP and explicit user approval")),
-    ("verification-handoff", "planner", "## Selected production and stage handoffs",
-     ("item mappings unchanged", "whole task contract before", "legacy producing review/renewal")),
+    ('verification-practical', 'tasks', '## Give each task sufficient proof', (
+        'observes the changed behavior, not generic green output',
+        'captures the selected ID at the consumer unchanged',
+        'mappings through both routes unchanged',
+        'not on ordinary coding tasks',
+    )),
+    ('verification-legacy', 'tasks', '## Encode the tasks for their consumer', (
+        'File order and ID numbering do not determine execution order',
+        'do not regenerate old tasks',
+        'Existing `required` check mappings remain consumed',
+    )),
     ("verification-graph", "coordinator", "## Execute and Integrate",
      ("one focused verified owned-path", "before subsequent mutation or handoff")),
     ("verification-audit", "coordinator", "## Execute and Integrate",

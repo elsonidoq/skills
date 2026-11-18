@@ -67,13 +67,16 @@ class PaidScopeTests(ProjectTest):
         executor = {**EXECUTOR, 'reviewer': {**{key: value for key, value in EXECUTOR.items() if key != 'reviewer'},
                                               'provider': 'other'}}
         with patch('coherence_workflow.cli.Engine') as engine, \
+             patch('coherence_workflow.cli.run_graph', return_value={'status': 'completed'}) as run_graph, \
+             patch.dict(os.environ, {key: '' for key in ('COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
+                                                          'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}), \
              patch('coherence_workflow.cli.terminal_question', side_effect=lambda text: self.fail(text)):
-            engine.return_value.invoke.return_value = {'status': 'completed'}
             tasks, config = self.root/'tasks.json', self.root/'executor.json'
             tasks.write_text('{"tasks":[{"id":"dummy","description":"Synthetic fixture"}]}')
             config.write_text(json.dumps(executor))
             self.assertEqual(main(['start', '--project', str(self.project), '--tasks', str(tasks),
                                    '--executor', str(config), '--run', 'ordinary']), 0)
+            run_graph.assert_called_once_with(engine.return_value)
             self.assertEqual(engine.call_args.kwargs['paid_scope'],
                              {'agent_providers': ['fixture', 'other'], 'apis': []})
 

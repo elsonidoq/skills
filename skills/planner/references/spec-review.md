@@ -74,12 +74,36 @@ Include definition-of-done gaps in the same ranked findings, not an extra questi
 If existing criteria already establish observable completion aligned with user intent,
 do not manufacture a question.
 
+## Design and task proof review
+
+For both TinySpec and Standard, inspect the current project-owned self-contained interactive
+HTML high-level design and any actual design agreement evidence supplied. At Standard
+requirements review before page production, check the obligations, not nonexistent agreement
+evidence; final review checks the actual page and ordering. Apply the
+[interactive design contract](approval-and-recovery.md#interactive-design-agreement-before-detail):
+approach, interfaces, dependencies, material risks, clickable component popup executive bullets
+(purpose, inputs/outputs, boundaries, significant choices), below-schematic goal, supported
+properties, tradeoffs/limits and context without unverified claims. Check keyboard/mobile
+readability and Close/Escape/focus-return obligations, workflow approvals versus data flow,
+and proposed versus implemented labels. Static inspection is not real-browser proof.
+
+Check explicit owner design agreement before detailed architecture plan production or
+continuation, shown content identity, actual answer/scope and ordering. Page interaction,
+silence, denial or cancellation is not consent; significant design changes renew agreement
+before affected planning. Requirements approval, design agreement and final implementation
+approval are distinct; reuse settled grants for their actual shown scope. Do not demand
+repeat routine consent, invent historical answers or override current launch authority.
+For final task review, every task needs observable acceptance, meaningful completion evidence,
+validation and real manual/permission gates through whole REQUIRED mappings, not a new schema
+or startup gate. Worker return alone is not accepted completion. Report actual evidence limits.
+
 ## Fresh-context input boundary
 
 Give the fresh reviewer only:
 
 - the original user request and actual owner clarifications/decisions;
 - the exact current specification path and content identity, with readable current content;
+- the current HTML design and actual agreement evidence when available (required at final review);
 - relevant context, constraints, accepted decisions, and memory; and
 - this review contract and its runtime assignment.
 

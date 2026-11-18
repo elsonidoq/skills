@@ -8,7 +8,7 @@ import subprocess
 import sys
 from unittest.mock import patch
 
-from coherence_workflow import cli, engine
+from coherence_workflow import cli, engine, graph
 from coherence_workflow.engine import Engine
 from coherence_workflow.intake import admit
 from coherence_workflow.pi_adapter import PiAdapter, effective_saved_session
@@ -23,6 +23,16 @@ EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
 _DETACHED_BRIDGE = {name: '' for name in (
     'COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
     'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}
+
+
+def seed_review_graph(owner, run, contract):
+    """Build a disposable graph fixture at the review boundary, not a legacy conversion."""
+    runner = Engine(owner, run, contract, EXECUTOR, resume=True)
+    with graph.graph_saver(owner) as saver:
+        graph.task_graph(runner, saver, review=True).update_state(
+            {'configurable': {'thread_id': run}},
+            {'checkpoints': owner.store.completed_checkpoints(run), 'next_node': 'review_route'},
+            as_node='ready')
 
 
 class WorkerDispatchRegressionTests(ProjectTest):
@@ -43,7 +53,7 @@ class WorkerDispatchRegressionTests(ProjectTest):
             owner.store.db.execute("DELETE FROM execution_history WHERE run_id='missing-dispatch' AND kind='worker_dispatch'")
         with Authority(self.project) as owner:
             owner.store.resume('missing-dispatch')
-            with self.assertRaisesRegex(Blocked, 'dispatch history is missing'):
+            with self.assertRaisesRegex(Blocked, 'uncertain or unsuccessful'):
                 Engine(owner, 'missing-dispatch', contract, EXECUTOR, adapter=Adapter, resume=True,
                        question=lambda _prompt: 'inspected local failure; targeted transport correction').invoke()
             retained = [tuple(row) for row in owner.store.db.execute(
@@ -109,7 +119,7 @@ class WorkerDispatchRegressionTests(ProjectTest):
             runner = Engine(owner, 'explicit-dispatch', {'tasks': [{'id': 'task', 'description': 'identity fixture'}]},
                             EXECUTOR, adapter=Adapter)
             runner.session_candidates = [{'id': explicit['id'], 'saved_session': explicit}]
-            with patch.object(engine, 'select_session', return_value={
+            with patch.object(graph, 'select_session', return_value={
                     'session_id': explicit['id'], 'reason': 'fixture selection', 'rejected': []}):
                 self.assertEqual(runner.invoke()['status'], 'complete')
             reserved = json.loads(owner.store.db.execute(
@@ -234,7 +244,8 @@ class SameRunResumeTests(ProjectTest):
                     return 'checkpoint the already intended handoff edit'
 
             result = Engine(owner, 'handoff-resume', contract, EXECUTOR, adapter=Continued,
-                            paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=True).invoke()
+                            paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=True,
+                            worker_recovery={'action': 'continue', 'diagnosis': 'Inspected settled interruption and preserved handoff bytes; checkpoint without a second edit'}).invoke()
         self.assertEqual(Continued.calls, 1)
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(result['checkpoints'][0]['paths'], ['recovery.txt'])
@@ -465,7 +476,7 @@ else:
                 contract = {'tasks': []}
                 store = owner.store
                 store.start(run, reviewed, contract=contract, executor=EXECUTOR,
-                            authority={}, review_base=self.base)
+                            authority={'backend': 'langgraph-v1'}, review_base=self.base)
                 store.review_dispatch(run, 'r1', review_base=self.base, review_head=reviewed)
                 store.review_outcome(run, 'r1', 'approved' if ordinal == 1 else 'rejected',
                     findings=[] if ordinal == 1 else ['work.txt:1 - defect'],
@@ -479,6 +490,7 @@ else:
                         trigger_execution_id='fix', predecessor_execution_id='fix',
                         review_base=self.base, review_head=reviewed)
                     store.review_outcome(run, 'r2', 'approved', findings=[], references={'head': reviewed})
+                seed_review_graph(owner, run, contract)
                 store.finish(run, 'interrupted', reviewed, 'after review outcome')
                 (self.project/'incoming.txt').write_text(str(ordinal))
                 git(self.project, 'add', '--', 'incoming.txt')
@@ -486,10 +498,10 @@ else:
                 store.resume(run)
                 def forbidden(*args, **kwargs):
                     self.fail('persisted approval must not launch another session')
-                result = Engine(owner, run, contract, EXECUTOR, resume=True, adapter=forbidden).invoke()
-                self.assertEqual(result['sha'], reviewed)
-                self.assertNotEqual(result['sha'], git(self.project, 'rev-parse', 'HEAD').decode().strip())
-                self.assertEqual(store.db.execute('SELECT result FROM execution_runs WHERE run_id=?', (run,)).fetchone()[0], reviewed)
+                with self.assertRaisesRegex(Blocked, 'approved review target drifted'):
+                    Engine(owner, run, contract, EXECUTOR, resume=True, adapter=forbidden).invoke()
+                self.assertNotEqual(reviewed, git(self.project, 'rev-parse', 'HEAD').decode().strip())
+                self.assertEqual(store.db.execute('SELECT state FROM execution_runs WHERE run_id=?', (run,)).fetchone()[0], 'failed')
 
     def test_cli_resume_skips_recovered_checkpoint_and_retains_original_range(self):
         project, initial_calls, resumed_calls = self.project, [], []
@@ -534,7 +546,8 @@ else:
 
         output = io.StringIO()
         with patch.dict(os.environ, _DETACHED_BRIDGE), patch.object(cli, 'PiAdapter', Resumed), contextlib.redirect_stdout(output):
-            self.assertEqual(cli.main(['resume', '--project', str(project), '--run', 'resume-run']), 0)
+            self.assertEqual(cli.main(['resume', '--project', str(project), '--run', 'resume-run',
+                                      '--recovery-action', 'continue', '--diagnosis', 'Inspected settled interruption of second task; continue its saved session only']), 0)
         result = json.loads(output.getvalue())
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(initial_calls, ['worker', 'worker'])
@@ -554,7 +567,7 @@ else:
         with Authority(self.project) as owner:
             store = owner.store
             store.start('evidence-resume', self.base, contract=contract, executor=EXECUTOR,
-                        authority={'paid_scope': {'agent_providers': ['fixture'], 'apis': []},
+                        authority={'backend': 'langgraph-v1', 'paid_scope': {'agent_providers': ['fixture'], 'apis': []},
                                    'review_policy': 'owner-pair-v1'}, review_base=self.base)
             store.task('evidence-resume', 'done', 'complete', self.base, self.base)
             store.history('evidence-resume', 'done', 'checkpoint', 'passed',
@@ -564,6 +577,7 @@ else:
                 'base': self.base, 'head': self.base,
                 'review_summary': {'coverage': ['source inspected'], 'coverage_gaps': ['required check evidence needs review']},
                 'check_evidence_digest': 'old-evidence'})
+            seed_review_graph(owner, 'evidence-resume', contract)
             store.finish('evidence-resume', 'failed', self.base, 'coverage evidence pending')
         self.assertEqual(cli.status(self.project, 'evidence-resume')['review_authorization']['next_stage'],
                          'coordinator_evidence_reassessment')
@@ -601,7 +615,7 @@ else:
         with Authority(self.project) as owner:
             store = owner.store
             store.start('review-resume', self.base, contract=contract, executor=EXECUTOR,
-                        authority={'paid_scope': {'agent_providers': ['fixture'], 'apis': []}}, review_base=self.base)
+                        authority={'backend': 'langgraph-v1', 'paid_scope': {'agent_providers': ['fixture'], 'apis': []}}, review_base=self.base)
             store.task('review-resume', 'done', 'complete', self.base, self.base)
             store.history('review-resume', 'done', 'checkpoint', 'passed',
                           {'sha': self.base, 'paths': [], 'artifacts': [], 'no_change': True})
@@ -613,6 +627,7 @@ else:
                                   review_base=self.base, review_head=self.base)
             store.review_outcome('review-resume', 'fix-1', 'approved', findings=[],
                                  references={'base': self.base, 'head': self.base})
+            seed_review_graph(owner, 'review-resume', contract)
             store.finish('review-resume', 'failed', self.base, 'interrupted after fixer')
 
         class Reviewer:
@@ -647,8 +662,8 @@ class UnfinishedTaskResumeTests(ProjectTest):
             def __init__(self, *args, **kwargs): self.saved_session = identity
             def prompt(self, prompt, **kwargs): raise Blocked('terminal unknown transport cause')
         with Authority(project) as owner:
-            with patch.object(engine, '_IMPLEMENTATION_AUTHORITY',
-                              engine._IMPLEMENTATION_AUTHORITY + prior_prompt_sentinel):
+            with patch.object(graph, '_IMPLEMENTATION_AUTHORITY',
+                              graph._IMPLEMENTATION_AUTHORITY + prior_prompt_sentinel):
                 with self.assertRaisesRegex(Blocked, 'terminal unknown'):
                     Engine(owner, 'terminal', contract, EXECUTOR, adapter=Failed).invoke()
             retained_details = owner.store.db.execute(
@@ -664,38 +679,27 @@ class UnfinishedTaskResumeTests(ProjectTest):
                     if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                     self_test.assertIn('terminal unknown transport cause', prompt)
                     self_test.assertIn('diagnosed fixture disconnected pipe; repaired fixture transport', prompt)
-                    self_test.assertIn('Retained history reference:', prompt)
+                    self_test.assertIn('Retained failure and diagnosis:', prompt)
                     self_test.assertNotIn(prior_prompt_sentinel, prompt)
                     self_test.assertEqual(kwargs['saved_session'], identity)
                     return 'continued targeted work'
             self_test = self
-            with self.assertRaisesRegex(Blocked, 'remains unknown'):
+            with self.assertRaisesRegex(Blocked, 'uncertain or unsuccessful'):
                 Engine(owner, 'terminal', contract, EXECUTOR, adapter=Continued, resume=True,
                        question=lambda text: 'unknown').invoke()
             self.assertEqual(calls, [])
             owner.store.resume('terminal')
-            inspected = []
-            def inspect(text):
-                inspected.append(text)
-                return 'diagnosed fixture disconnected pipe; repaired fixture transport'
             result = Engine(owner, 'terminal', contract, EXECUTOR, adapter=Continued, resume=True,
-                            question=inspect).invoke()
+                            worker_recovery={'action': 'continue', 'diagnosis':
+                                'diagnosed fixture disconnected pipe; repaired fixture transport'}).invoke()
             self.assertEqual(result['status'], 'complete')
-            self.assertEqual(len(inspected), 1)
-            self.assertIn('private-session', inspected[0])
-            self.assertIn('tiny', inspected[0])
-            self.assertIn('Preserve its existing requirements, authority, and acceptance constraints', inspected[0])
-            self.assertIn('As coordinating agent, inspect', inspected[0])
-            self.assertIn('do not ask the owner to debug routine technical failures', inspected[0])
-            self.assertIn('leave empty if unknown', inspected[0])
-            self.assertNotIn(prior_prompt_sentinel, inspected[0])
             self.assertEqual(owner.store.db.execute(
                 "SELECT details FROM execution_history WHERE run_id='terminal' AND task_id='tiny' "
                 "AND kind='worker_invocation' AND state='failed'").fetchone()['details'], retained_details)
             self.assertEqual(len(calls), 2)
 
 
-    def test_inspected_external_repair_checkpoint_precedes_retained_continuation_without_replay(self):
+    def test_external_repair_target_drift_stops_before_retained_continuation(self):
         """Mechanical fixture only; coordinator/delegation autonomy remains a separate V3 exercise."""
         from coherence_workflow.store import Blocked
         project, calls = self.project, []
@@ -747,16 +751,16 @@ class UnfinishedTaskResumeTests(ProjectTest):
         self_test = self
         with Authority(project) as owner:
             owner.store.resume('scoped-repair')
-            result = Engine(owner, 'scoped-repair', contract, EXECUTOR, adapter=Continued, resume=True,
-                            paid_scope={'agent_providers': ['fixture'], 'apis': []},
-                            question=lambda prompt: (self.assertIn('Retained history reference:', prompt) or
-                                                     'repair.txt diff/check/checkpoint inspected')).invoke()
-        self.assertEqual(result['status'], 'complete')
-        self.assertEqual(calls, ['predecessor', 'unfinished', 'continued'])
-        self.assertEqual(predecessor_sha, result['checkpoints'][0]['sha'])
+            with self.assertRaisesRegex(Blocked, 'effects drifted'):
+                Engine(owner, 'scoped-repair', contract, EXECUTOR, adapter=Continued, resume=True,
+                       paid_scope={'agent_providers': ['fixture'], 'apis': []},
+                       worker_recovery={'action': 'continue', 'diagnosis':
+                           'repair.txt diff/check/checkpoint inspected; continue only if retained effects match'}).invoke()
+            self.assertEqual(owner.store.completed_checkpoints('scoped-repair')['predecessor']['sha'], predecessor_sha)
+        self.assertEqual(calls, ['predecessor', 'unfinished'])
         self.assertEqual(repair_sha, git(project, 'rev-parse', repair_sha).decode().strip())
 
-    def test_resume_refuses_fourth_same_session_dispatch_without_adopting_unrelated_work(self):
+    def test_resume_stops_unchanged_check_without_adopting_unrelated_work(self):
         project = self.project
         contract = admit({'paid_scope': {'approved': True, 'agent_providers': ['fixture'], 'apis': []}, 'tasks': [
             {'id': 'completed', 'description': 'first synthetic task', 'owned_paths': ['one.txt']},
@@ -815,7 +819,8 @@ class UnfinishedTaskResumeTests(ProjectTest):
 
         output = io.StringIO()
         with patch.dict(os.environ, _DETACHED_BRIDGE), patch.object(cli, 'PiAdapter', Resumed), contextlib.redirect_stdout(output):
-            self.assertEqual(cli.main(['resume', '--project', str(project), '--run', 'partial-resume']), 2)
+            self.assertEqual(cli.main(['resume', '--project', str(project), '--run', 'partial-resume',
+                                      '--recovery-action', 'continue', '--diagnosis', 'Inspected settled correction cancellation; continue exact saved task session']), 2)
         self.assertEqual(project.joinpath('two.txt').read_text(), 'continued\n')
         self.assertFalse((project/'web/dist/known.js').exists())
         self.assertEqual(git(project, 'show', ':other.txt'), staged)
@@ -835,11 +840,11 @@ class UnfinishedTaskResumeTests(ProjectTest):
                 "SELECT details FROM execution_history WHERE run_id='partial-resume' AND task_id='partial' "
                 "AND kind='worker_dispatch' AND state='reserved' ORDER BY seq")]
         self.assertEqual(first, first_sha)
-        # Initial work, interrupted correction, and resumed work consume the allowance;
-        # the fourth correction is refused before the adapter is invoked.
+        # Initial work, interrupted correction, and inspected continuation settle.
+        # The unchanged failed check stops before a fourth adapter call.
         self.assertEqual(terminal_calls, ['returned', 'interrupted', 'returned'])
         self.assertEqual([facts['session']['id'] for facts in partial_dispatches], [identity['id']] * 3)
-        self.assertIn('allowance exhausted for task partial session partial-resume-session', task_error)
+        self.assertIn('required check failed and remains unchanged after scoped correction', task_error)
         self.assertTrue(any(kind == 'check' and state == 'failed' and details['exit_code'] == 1
                             for kind, state, details in history))
         self.assertTrue(any(kind == 'mutation' and state == 'claimed' and details['artifacts'] == ['web/dist/known.js']
@@ -898,7 +903,8 @@ class CancelledPartialResumeTests(ProjectTest):
                     return 'continued after owned cancellation'
 
             result = Engine(owner, 'cancelled-partial', saved['contract'], saved['executor'], adapter=Continued,
-                            paid_scope=saved['authority']['paid_scope'], resume=True).invoke()
+                            paid_scope=saved['authority']['paid_scope'], resume=True,
+                            worker_recovery={'action': 'continue', 'diagnosis': 'Inspected test-owned child termination and settled cancellation; continue preserved partial bytes'}).invoke()
             chain = owner.store.review_chain('cancelled-partial', private=True)
             terminal_calls = [row['state'] for row in owner.store.db.execute(
                 "SELECT state FROM execution_history WHERE run_id='cancelled-partial' AND task_id='cancelled-partial' "

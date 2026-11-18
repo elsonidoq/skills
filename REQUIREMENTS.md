@@ -63,8 +63,11 @@ staging/target proposal still needs explicit approval; unresolved selections/rec
 
 ## Executable implementation runtime
 
-Coordinate Implementation uses the existing Python CLI, PyYAML6.0.3, standard-library
-SQLite/Git process handling and the installed Pi SDK. Python >=3.10,
+Coordinate Implementation uses the existing Python CLI, PyYAML 6.0.3, LangGraph 1.2.21,
+SQLite saver 3.1.3, standard OpenTelemetry 1.45.2 packages, standard-library
+SQLite/Git process handling and the installed Pi SDK. The hashed lock targets Python 3.12
+Linux x86_64; the declared Python minimum remains 3.10. Phoenix runs separately in its
+official container, not as a Python workflow dependency. Python >=3.10,
 local Git and a usable Node/SDK installation are actual dependencies. Node must support
 `node:module.findPackageJSON` and parent-aware ESM resolution (the currently installed Pi
 requires Node >=22.19). The SDK lock is install metadata, not an exact runtime
@@ -72,8 +75,7 @@ version/provenance admission gate. The shared loader honors public package expor
 Node dependency lookup rather than a fixed `dist/` or nested `node_modules` layout;
 [offline compatibility checks](docs/coordinate-implementation.md#setup-and-verification)
 exercise the installed SDK without provider calls. Pi/Paseo updates do not require an SDK
-version pin, but breaking public API changes can still require an integration correction. No LangGraph,
-SQLite saver, cgroup delegation, closed host manifest, resource hashes or catalogue is needed.
+version pin, but breaking public API changes can still require an integration correction. The standard file-backed graph saver and graph execution controller are available. Optional local Phoenix tracing uses the same standard OpenTelemetry dependencies and the explicit [local monitoring settings](docs/coordinate-implementation.md#local-phoenix-configuration); it is disabled by default and its failures do not block execution. A final-wire privacy pass is required before real metadata export; actual server/browser behavior and incremental UI visibility remain separate verification. No cgroup delegation, closed host manifest, resource hashes or catalogue is needed.
 Optional explicit isolated setup never runs on ordinary entry; missing dependencies/auth/model
 report their actual operation errors, not administrative readiness failures.
 
@@ -84,7 +86,7 @@ Preserve the actual owner-selected model/effort without silent substitution or p
 assessment. Ordinary selected-model tokens need no financial receipt; obtain narrow permission
 for unrequested chargeable/irreversible external actions.
 
-Tasks run sequentially with normal SDK read/search/edit/write/command tools. The runner owns
+Tasks run sequentially by default with normal SDK read/search/edit/write/command tools. After cutover, explicit owner direction may authorize path-disjoint workers within one controller; sibling mutation is quiescent during shared checks and focused Git commits. The runner owns
 actual project check execution and explicit-owned-path focused commits; workers never stage
 or commit. Checks and path limits are optional context, not universally required metadata.
 Actual check failures cannot be reported passed. Normal Git hooks/signing and unrelated
@@ -95,8 +97,8 @@ coverage while revisiting invalidated conclusions. Findings and coverage gaps re
 prevent acceptance, not accepted through a SQL disposition or evidence hash.
 
 SQLite stores useful ordinary progress/history. Old tables/rows remain readable in place;
-new work never replays or settles old intent records. Optional history errors cannot veto coding.
-An ordinary exclusive worktree writer lock prevents cooperating overlap. Current recorded live
+new work never replays or settles old intent records. Historical non-graph runs remain readable and use an explicitly selected compatible runtime for inspected continuation, without automatic conversion or replay. Optional history errors cannot veto coding.
+One inherited worktree lock excludes competing controllers, not explicitly authorized disjoint workers within one controller. Current recorded live
 writers cannot be replaced/killed; explicit historical abandon inspects identities/scopes,
 releases only the old reservation and preserves incomplete effects/partial work. No cgroup
 provisioning for normal tasks. SDK compaction and output continuation are normal behavior;

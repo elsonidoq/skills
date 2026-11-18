@@ -8,7 +8,19 @@ than inventing constraints to fill fields. Assumptions remain revisitable.
 
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
+<!-- Carry the qualified delivery issue URL from the specification when present. -->
+
 **Note**: This template is filled in by the `/speckit.plan` command; its definition describes the execution workflow.
+
+## Design agreement provenance
+
+[Link the discovered project-owned self-contained interactive HTML high-level design.
+Record shown content identity, actual owner answer/scope and ordering: explicit design
+agreement before setup-plan and detailed architecture plan production or continuation.
+Requirements approval, design agreement and final implementation approval are distinct;
+reuse a settled grant only for its actual shown scope. Page interaction, silence, denial
+or cancellation is not consent. Significant design changes update the page and renew
+agreement before affected detail. Do not invent answers or claim unobserved page behavior.]
 
 ## Summary
 
@@ -106,6 +118,14 @@ ios/ or android/
 
 **Structure Decision**: [Document the selected structure and reference the real
 directories captured above]
+
+## Verification and task proof
+
+[Map source acceptance to observable checks and meaningful submitted completion evidence,
+including actual manual/permission gates, for downstream task-local proof. Preserve whole
+REQUIRED mappings. A worker return alone is not accepted completion; unrun is not passed.
+Routine mechanics remain autonomous; current launch authority and shared routine permissions
+remain valid. This section adds no task schema or runtime startup eligibility.]
 
 ## Complexity Tracking
 

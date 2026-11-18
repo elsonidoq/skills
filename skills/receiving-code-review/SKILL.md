@@ -46,7 +46,7 @@ No schema dispositions, receipt chain or numerical repair budget is required.
 
 - Reproduce a reported defect when feasible before changing code.
 - Change one independently verifiable item at a time.
-- Run the narrow relevant check, then the broader affected checks.
+- Run the smallest meaningful checks for the change, including applicable runtime, integration, application, security and permission checks; report their limits. Static/carrier/trace sensitivity is not model-obedience proof. No mandatory prior/candidate comparison, live RPC scenario or full historical replay is required; retain specified live application acceptance and its authority.
 - Re-read the original comment after verification to confirm the requested outcome is met.
 - If a fix changes architecture, public behavior, or agreed scope, obtain the required decision before continuing.
 

@@ -1,5 +1,8 @@
 """Action-scoped Git checkpoints that preserve unrelated work."""
 from pathlib import Path
+import os
+import subprocess
+import tempfile
 
 from .store import Blocked, git, safe_path
 
@@ -69,7 +72,7 @@ class MetricArtifactFinalizer:
 
 def path_has_preexisting_changes(project, name):
     """Check only a requested mutation target, never the worktree as admission."""
-    return bool(git(project, 'status', '--porcelain=v1', '-z', '--', name))
+    return bool(git(project, 'status', '--porcelain=v1', '-z', '--', ':(literal)' + name))
 
 
 def editable_path(project, name):
@@ -102,6 +105,10 @@ class FocusedGit:
                 path = editable_path(self.project, name)
             except Blocked as exc:
                 raise Blocked('cannot transfer handoff path ' + name + ': operation transfer requires an exact safe regular file; correct handoff_paths') from exc
+            limits = self.task.get('owned_paths')
+            if (limits is not None and not self._matches(name, limits) and
+                    not self._matches(name, self.task.get('generated_outputs', []))):
+                raise Blocked('path outside optional owned_paths: ' + name)
             if not path.is_file() or not path_has_preexisting_changes(self.project, name):
                 raise Blocked('cannot transfer ' + name + ' for handoff: operation transfer requires an explicitly named pre-existing regular dirty file')
             info = path.stat(follow_symlinks=False)
@@ -138,8 +145,10 @@ class FocusedGit:
         # bytes that were already modified when the task selected this path.
         limits = self.task.get('owned_paths')
         artifact = self._matches(name, self.task.get('generated_outputs', []))
-        known = name in (self.known_artifacts if artifact else self.resumed_paths)
-        if handoff:
+        known = name in (self.known_artifacts if artifact else self.task_edited)
+        # Verify transfer bytes only before the first successful claim. Later writes
+        # belong to this task, but still pass the safe-path and scope checks above/below.
+        if handoff and not known:
             self._verify_handoff(name)
         if path_has_preexisting_changes(self.project, name) and not (known or handoff):
             raise Blocked('cannot claim pre-existing dirty path ' + name + ': operation claim requires an exact handoff_paths entry; broad owned_paths coverage is not transfer authority')
@@ -157,6 +166,8 @@ class FocusedGit:
         if not source_state or set(source_state) != set(self.handoff):
             raise Blocked('external recovery needs exact handoff paths; supply the completed file transfer')
         for name, expected in source_state.items():
+            # Completed transfers stay immutable, unlike ordinary iterative edits.
+            self._verify_handoff(name)
             self.claim(name)
             if name not in self.task_edited:
                 raise Blocked('external recovery cannot checkpoint generated artifact ' + name + '; transfer source deliverables only')
@@ -184,33 +195,150 @@ class FocusedGit:
     def _checkpoint_result(self, sha, parent, owned):
         if git(self.project, 'rev-list', '--parents', '-n', '1', sha).decode().split() != [sha, parent]:
             raise Blocked('unexpected checkpoint parent; inspect actual commit')
-        actual = set(filter(None, git(self.project, 'diff-tree', '--no-commit-id', '--name-only', '-r', '-z', sha).decode().split('\0')))
+        actual = set(filter(None, git(self.project, 'diff-tree', '--no-commit-id', '--no-renames', '--name-only', '-r', '-z', sha).decode().split('\0')))
         if not actual or not actual <= set(owned):
             raise Blocked('commit changed unexpected paths; inspect actual commit')
         return {'baseline': self.base, 'sha': sha, 'paths': owned,
                 'artifacts': sorted(self.known_artifacts), 'no_change': False}
 
-    def checkpoint(self):
-        # Only paths explicitly selected at an edit boundary are candidates.  Do not
-        # discover, adopt, or stage arbitrary command output.
-        owned = sorted(name for name in self.task_edited
-                       if path_has_preexisting_changes(self.project, name))
+    def checkpoint(self, before_commit=None):
+        self.git_commit_started = False
+        for attribute in ('checkpoint_parent', 'checkpoint_paths', 'checkpoint_entries'):
+            if hasattr(self, attribute):
+                delattr(self, attribute)
+        # Exact source transfers are also checkpoint candidates without a fake
+        # edit. Keep unclaimed transfers immutable: do not turn verification into
+        # a claim or resnapshot drift on a failed checkpoint/retry.
+        unclaimed = {name for name in self.handoff if name not in self.task_edited
+                     and not self._matches(name, self.task.get('generated_outputs', []))}
         completed = getattr(self, 'completed_handoff', {})
-        if completed:
-            self.accept_completed_handoff(completed)
-        for name in (set(owned) & set(self.handoff)) - set(completed):
+        def verify_transfers():
+            for name in unclaimed:
+                self._verify_handoff(name)
+            if completed:
+                self.accept_completed_handoff(completed)
+        verify_transfers()
+        owned = sorted(name for name in self.task_edited | unclaimed
+                       if path_has_preexisting_changes(self.project, name))
+        for name in (set(owned) & self.task_edited & set(self.handoff)) - set(completed):
             if editable_path(self.project, name).read_bytes() == self.handoff[name]['bytes']:
                 raise Blocked('cannot checkpoint handoff path ' + name + ': operation checkpoint found no intended edit; make the intended correction or do not claim the transfer')
+        before_commit = before_commit or getattr(self, 'before_checkpoint', None)
         if not owned:
-            return {'baseline': self.base, 'sha': self.base, 'paths': [],
+            head = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+            intent = {'baseline': self.base, 'parent': head, 'paths': [],
+                      'artifacts': sorted(self.known_artifacts), 'entries': {}, 'no_change': True}
+            if before_commit:
+                before_commit(intent)
+            return {'baseline': self.base, 'sha': head, 'paths': [],
                     'artifacts': sorted(self.known_artifacts), 'no_change': True}
         self.checkpoint_parent = git(self.project, 'rev-parse', 'HEAD').decode().strip()
         self.checkpoint_paths = owned
-        git(self.project, 'diff', '--check', '--', *owned)
-        git(self.project, 'add', '-A', '--', *owned)
-        git(self.project, 'commit', '--only', '-m', 'workflow: ' + self.task['id'], '--', *owned)
+        specs = [':(literal)' + name for name in owned]
+        git(self.project, 'diff', '--check', '--', *specs)
+        # Preview only these paths in a private temporary index.  The real index is
+        # untouched until the durable intent has been written.
+        with tempfile.TemporaryDirectory(prefix='coherence-git-preview-') as directory:
+            env = os.environ.copy()
+            env['GIT_INDEX_FILE'] = str(Path(directory) / 'index')
+            def preview(*args):
+                result = subprocess.run(['git', '--no-optional-locks', '-C', str(self.project), *args],
+                                        env=env, capture_output=True)
+                if result.returncode:
+                    raise Blocked('Git checkpoint preview failed: ' + result.stderr.decode(errors='replace'))
+                return result.stdout
+            preview('read-tree', self.checkpoint_parent)
+            preview('add', '-A', '--', *specs)
+            changed = sorted(filter(None, preview('diff', '--cached', '--no-renames', '--name-only', '-z',
+                                                  self.checkpoint_parent, '--', *specs).decode().split('\0')))
+            entries = self._index_entries(changed, preview)
+        if not changed:
+            intent = {'baseline': self.base, 'parent': self.checkpoint_parent, 'paths': [],
+                      'artifacts': sorted(self.known_artifacts), 'entries': {}, 'no_change': True}
+            if before_commit:
+                before_commit(intent)
+            return {'baseline': self.base, 'sha': self.checkpoint_parent, 'paths': [],
+                    'artifacts': sorted(self.known_artifacts), 'no_change': True}
+        self.checkpoint_paths = changed
+        self.checkpoint_entries = entries
+        intent = {'baseline': self.base, 'parent': self.checkpoint_parent, 'paths': changed,
+                  'artifacts': sorted(self.known_artifacts), 'entries': entries}
+        if before_commit:
+            before_commit(intent)
+        if git(self.project, 'rev-parse', 'HEAD').decode().strip() != self.checkpoint_parent:
+            raise Blocked('checkpoint parent changed before commit; inspect Git effects before continuation')
+        verify_transfers()
+        changed_specs = [':(literal)' + name for name in changed]
+        git(self.project, 'add', '-A', '--', *changed_specs)
+        if self._index_entries(changed, lambda *args: git(self.project, *args)) != entries:
+            raise Blocked('checkpoint selected content changed before commit; preserve work and inspect it')
+        attempting = getattr(self, 'before_git_commit', None)
+        if attempting:
+            attempting()
+        if git(self.project, 'rev-parse', 'HEAD').decode().strip() != self.checkpoint_parent:
+            raise Blocked('checkpoint parent changed before commit; inspect Git effects before continuation')
+        verify_transfers()
+        self.git_commit_started = True
+        git(self.project, 'commit', '--only', '-m', 'workflow: ' + self.task['id'], '--', *changed_specs)
         sha = git(self.project, 'rev-parse', 'HEAD').decode().strip()
-        return self._checkpoint_result(sha, self.checkpoint_parent, owned)
+        return self._checkpoint_result_exact(sha, intent)
+
+    @staticmethod
+    def _index_entries(paths, run):
+        entries = {}
+        for name in paths:
+            raw = run('ls-files', '--stage', '-z', '--', ':(literal)' + name)
+            records = [row for row in raw.split(b'\0') if row]
+            if not records:
+                entries[name] = None
+            elif len(records) == 1:
+                header, actual = records[0].split(b'\t', 1)
+                mode, oid, stage = header.decode('ascii').split()
+                if actual.decode() != name or stage != '0':
+                    raise Blocked('checkpoint index is uncertain for ' + name + '; inspect selected entries')
+                entries[name] = [mode, oid]
+            else:
+                raise Blocked('checkpoint index is unmerged for ' + name + '; resolve it before checkpoint')
+        return entries
+
+    def _checkpoint_result_exact(self, sha, intent):
+        result = self._checkpoint_result(sha, intent['parent'], intent['paths'])
+        actual_paths = sorted(filter(None, git(self.project, 'diff-tree', '--no-commit-id', '--no-renames',
+            '--name-only', '-r', '-z', sha).decode().split('\0')))
+        if actual_paths != intent['paths'] or set(intent['entries']) != set(actual_paths):
+            raise Blocked('checkpoint paths differ from retained intent; inspect Git effects before continuation')
+        for name, expected in intent['entries'].items():
+            raw = git(self.project, 'ls-tree', '-z', sha, '--', ':(literal)' + name)
+            records = [row for row in raw.split(b'\0') if row]
+            actual = None
+            if records:
+                if len(records) != 1:
+                    raise Blocked('checkpoint tree is uncertain for ' + name + '; inspect Git effects')
+                header, path = records[0].split(b'\t', 1)
+                mode, _kind, oid = header.decode('ascii').split()
+                if path.decode() != name:
+                    raise Blocked('checkpoint tree path mismatch for ' + name + '; inspect Git effects')
+                actual = [mode, oid]
+            if actual != expected:
+                raise Blocked('checkpoint content or mode differs for ' + name + '; preserve work and inspect Git effects')
+        return {**result, 'baseline': intent['baseline'], 'paths': intent['paths'],
+                'artifacts': intent['artifacts'], 'parent': intent['parent']}
+
+    def reconcile_intent(self, intent):
+        """Find the unique direct child on current ancestry, or stop on uncertainty."""
+        parent = intent['parent']
+        head = git(self.project, 'rev-parse', 'HEAD').decode().strip()
+        if head == parent:
+            return None
+        try:
+            git(self.project, 'merge-base', '--is-ancestor', parent, head)
+        except Blocked as exc:
+            raise Blocked('checkpoint parent is not an ancestor of HEAD; preserve work and inspect Git effects') from exc
+        lines = git(self.project, 'rev-list', '--parents', parent + '..' + head).decode().splitlines()
+        children = [parts[0] for line in lines if (parts := line.split()) and parts[1:] == [parent]]
+        if len(children) != 1:
+            raise Blocked('checkpoint direct child is missing or ambiguous; preserve work and inspect Git effects')
+        return self._checkpoint_result_exact(children[0], intent)
 
     def reconcile_checkpoint(self):
         """Return only this operation's completed commit after a reported failure."""
@@ -218,6 +346,11 @@ class FocusedGit:
         owned = getattr(self, 'checkpoint_paths', None)
         if not parent or not owned:
             return None
+        if hasattr(self, 'checkpoint_entries'):
+            if not getattr(self, 'git_commit_started', False):
+                return None
+            return self.reconcile_intent({'baseline': self.base, 'parent': parent, 'paths': owned,
+                'artifacts': sorted(self.known_artifacts), 'entries': self.checkpoint_entries})
         sha = git(self.project, 'rev-parse', 'HEAD').decode().strip()
         if sha == parent:
             return None

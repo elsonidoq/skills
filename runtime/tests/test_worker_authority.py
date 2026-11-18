@@ -1,13 +1,16 @@
 """Offline prompt wiring checks; not proof that a provider follows instructions."""
 from unittest.mock import patch
 
-from coherence_workflow import engine
+from coherence_workflow import graph
 from coherence_workflow.engine import Engine
+from coherence_workflow.graph import graph_saver, task_graph
 from coherence_workflow.pi_adapter import effective_saved_session
 from coherence_workflow.intake import admit
 from coherence_workflow.store import Authority, Blocked
 from fixtures.support import ProjectTest
 
+
+ISSUE = 'https://github.com/elsonidoq/skills/issues/44'
 
 EXECUTOR = {'provider': 'fixture', 'model': 'offline', 'effort': 'medium',
             'reviewer': {'provider': 'fixture', 'model': 'offline-reviewer', 'effort': 'medium'}}
@@ -55,6 +58,36 @@ class WorkerAuthorityTests(ProjectTest):
         self.assert_precedence_authority(prompt)
         self.assertLess(prompt.index('this current scoped authority takes precedence'), prompt.index(scenario))
 
+    def test_graph_corrective_prompt_carries_original_authority_and_local_test_scope(self):
+        project, prompts = self.project, []
+        identity = {'id': 'graph-authority', 'file': '/fixture/graph-authority'}
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): self.saved_session = identity
+            def prompt(self, prompt, **kwargs):
+                prompts.append(prompt)
+                if len(prompts) == 2:
+                    kwargs['claim']('owned.txt')
+                    (project/'owned.txt').write_text('ready\n')
+                return 'fixture done'
+        scenario = 'Earlier draft asks for renewed fixture consent.'
+        task = {'id': 'one', 'description': scenario, 'owned_paths': ['owned.txt'],
+                'checks': [['python3', '-B', '-c', "import sqlite3; assert sqlite3.connect(':memory:').execute('select 1').fetchone()==(1,); assert open('owned.txt').read()=='ready\\n'"]]}
+        contract = admit({'delivery_issue': ISSUE, 'tasks': [task]})
+        with Authority(project) as owner:
+            owner.store.start('graph-authority', self.base, contract=contract, executor=EXECUTOR)
+            engine = Engine(owner, 'graph-authority', contract, EXECUTOR, adapter=Adapter,
+                            question=lambda *_a, **_k: self.fail('routine check must not ask'))
+            with graph_saver(owner) as saver:
+                task_graph(engine, saver).invoke({}, {'configurable': {'thread_id': 'graph-authority'}}, durability='sync')
+        self.assertEqual(len(prompts), 2)
+        for prompt in prompts:
+            self.assert_authority(prompt)
+            self.assert_test_permission(prompt)
+            self.assert_completion_ownership(prompt)
+            self.assert_precedence_scenario(prompt, scenario)
+            self.assertIn(ISSUE, prompt)
+        self.assertIn('Actual failure:', prompts[1])
+
     def test_saved_session_selection_matches_adapter_explicit_precedence(self):
         held = {'id': 'held-session', 'file': '/private/held.jsonl'}
         explicit = {'id': 'explicit-session', 'file': '/private/explicit.jsonl'}
@@ -62,11 +95,11 @@ class WorkerAuthorityTests(ProjectTest):
         self.assertIs(effective_saved_session(explicit, held), explicit)
 
     def test_every_task_gets_authority_without_rewriting_historical_task_text(self):
-        prompts = []
+        prompts, reviews = [], []
         historical = 'Planning draft only: implementation requires separate approval.'
         scenario = ('LABELLED SCENARIO ONLY: an earlier agent-authored recovery instruction requires renewed consent '
                     'for an exact 1 GiB fixture and rerunning its check.')
-        contract = admit({'tasks': [
+        contract = admit({'delivery_issue': ISSUE, 'tasks': [
             {'id': 'one', 'description': 'First task. ' + historical + ' ' + scenario},
             {'id': 'two', 'description': 'Second task. ' + historical + ' ' + scenario, 'depends': ['one']},
         ]})
@@ -75,6 +108,7 @@ class WorkerAuthorityTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
+                    reviews.append(prompt)
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 prompts.append(prompt)
                 return 'Verified no-change offline fixture'
@@ -91,6 +125,9 @@ class WorkerAuthorityTests(ProjectTest):
             self.assertIn(historical, prompt)
             self.assert_precedence_scenario(prompt, scenario)
         self.assertEqual(result['sha'], self.base)  # No empty commits or completion redesign.
+        for prompt in prompts + reviews:
+            self.assertIn(ISSUE, prompt)
+        self.assertTrue(reviews)
 
     def test_same_task_correction_keeps_current_authority_and_isolated_database_permission(self):
         project, prompts = self.project, []
@@ -115,13 +152,14 @@ class WorkerAuthorityTests(ProjectTest):
                  "assert db.execute('select 1').fetchone() == (1,); db.close(); "
                  "assert open('owned.txt').read() == 'ready\\n'"]
         with Authority(project) as owner:
-            result = Engine(owner, 'correction', admit([{
+            result = Engine(owner, 'correction', admit({'delivery_issue': ISSUE, 'tasks': [{
                 'id': 'fix', 'description': 'Scoped fixture. ' + scenario, 'checks': [check],
-            }]), EXECUTOR, adapter=Offline).invoke()
+            }]}), EXECUTOR, adapter=Offline).invoke()
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(len(prompts), 2)
         self.assertIn('Actual failed attempt:', prompts[1])
         for ordinal, prompt in enumerate(prompts):
+            self.assertIn(ISSUE, prompt)
             self.assert_authority(prompt)
             self.assert_completion_ownership(prompt)
             self.assert_test_permission(prompt)
@@ -145,12 +183,12 @@ class WorkerAuthorityTests(ProjectTest):
                 raise Blocked('labelled authority fixture interruption')
 
         with Authority(self.project) as owner:
-            with patch.object(engine, '_IMPLEMENTATION_AUTHORITY',
-                              engine._IMPLEMENTATION_AUTHORITY + prior_prompt_sentinel):
+            with patch.object(graph, '_IMPLEMENTATION_AUTHORITY',
+                              graph._IMPLEMENTATION_AUTHORITY + prior_prompt_sentinel):
                 with self.assertRaisesRegex(Blocked, 'labelled authority fixture interruption'):
-                    Engine(owner, 'authority-resume', admit([{
+                    Engine(owner, 'authority-resume', admit({'delivery_issue': ISSUE, 'tasks': [{
                         'id': 'resume', 'description': 'Scoped fixture. ' + scenario,
-                    }]), EXECUTOR, adapter=Interrupted).invoke()
+                    }]}), EXECUTOR, adapter=Interrupted).invoke()
             retained_details = owner.store.db.execute(
                 "SELECT details FROM execution_history WHERE run_id='authority-resume' AND task_id='resume' "
                 "AND kind='worker_invocation' AND state='failed'").fetchone()['details']
@@ -158,7 +196,8 @@ class WorkerAuthorityTests(ProjectTest):
             owner.store.resume('authority-resume')
 
             class Continued:
-                def __init__(self, *args, **kwargs): pass
+                def __init__(self, *args, **kwargs):
+                    self.saved_session = self.opened_session = identity
                 def prompt(self, prompt, **kwargs):
                     if kwargs.get('read_only'):
                         return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
@@ -171,18 +210,19 @@ class WorkerAuthorityTests(ProjectTest):
             def diagnose(question):
                 questions.append(question)
                 return 'diagnosed fixture interruption'
-            result = Engine(owner, 'authority-resume', admit([{
+            result = Engine(owner, 'authority-resume', admit({'delivery_issue': ISSUE, 'tasks': [{
                 'id': 'resume', 'description': 'Scoped fixture. ' + scenario,
-            }]), EXECUTOR, adapter=Continued, resume=True, question=diagnose).invoke()
+            }]}), EXECUTOR, adapter=Continued, resume=True, question=diagnose,
+                          worker_recovery={'action': 'continue', 'diagnosis': 'diagnosed fixture interruption'}).invoke()
             self.assertEqual(owner.store.db.execute(
                 "SELECT details FROM execution_history WHERE run_id='authority-resume' AND task_id='resume' "
                 "AND kind='worker_invocation' AND state='failed'").fetchone()['details'], retained_details)
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(len(prompts), 1)
+        self.assertIn(ISSUE, prompts[0])
         self.assertIn('Continue only the unfinished same-task work.', prompts[0])
         self.assertIn('diagnosed fixture interruption', prompts[0])
         self.assertNotIn(prior_prompt_sentinel, prompts[0])
-        self.assertEqual(len(questions), 1)
-        self.assertNotIn(prior_prompt_sentinel, questions[0])
+        self.assertEqual(questions, [])
         self.assert_completion_ownership(prompts[0])
         self.assert_precedence_scenario(prompts[0], scenario)

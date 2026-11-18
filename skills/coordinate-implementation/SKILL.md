@@ -5,10 +5,17 @@ description: Use when executing requested implementation tasks through the exist
 
 # Coordinate Implementation
 
-The existing CLI runs sequential tasks with the installed Pi SDK, actual project commands,
-focused Git commits and one fresh read-only independent final review. SQLite stores ordinary
-progress, not effect proof or execution eligibility. No graph, manifest, catalogue, cgroup,
-resource hashes, original-session receipts or parent-transcript protocol is required.
+The approved target uses one LangGraph controller with the installed Pi SDK, actual project commands,
+focused Git commits and one fresh read-only independent final review. Execution is sequential by
+default; explicitly owner-directed path-disjoint workers may overlap within one controller. LangGraph
+owns transitions, synchronized dependency waves and interrupt/resume; SQLite graph checkpoints hold
+control state. Existing private operation history and actual Git/SDK observations support effect
+reconciliation, not automatic acceptance. One cooperating controller retains the inherited worktree
+lock; checks and focused commits run with sibling mutations quiescent. Historical non-graph runs remain
+readable and use a retained compatible runtime for explicit inspected continuation, never silent
+conversion or replay. No manifest, catalogue, cgroup, resource hashes, original-session receipts or
+parent-transcript protocol is required. This target is not yet implemented; use the operating guide
+for current behavior until cutover.
 
 ## Load and Verify
 
@@ -74,7 +81,7 @@ that work. Do not add a risk schema, scoring, admission checklist, or parent ack
 ## Interface Actions
 
 - `intake --tasks FILE`: six checks only; task metadata is not an approval prerequisite.
-- `start --project ROOT --tasks FILE --executor CONFIG [--run ID]`: execute sequential work.
+- `start --project ROOT --tasks FILE --executor CONFIG [--run ID]`: execute dependency-ordered work; sequential by default, or path-disjoint waves only with explicit owner direction after cutover.
 - `status` / `history --project ROOT --run ID`: read progress or historical records without
   launching an agent or repairing old intent records.
 - `resume --project ROOT --run ID`: explicitly continue a retained failed/interrupted run after inspecting
@@ -119,7 +126,7 @@ stop and notify the owner with the diagnosis, preserved work and unmet checks. D
 or escalate it again without owner direction; ordinary resume remains stopped. Preserve established
 source ownership and reconcile uncertain effects before editing or checkpointing. No justified safe
 next action means a concrete blocker, not an unchanged retry.
-Evidence-only review reassessment uses the existing retained evidence and only
+evidence-only review reassessment uses the existing retained evidence and only
 its supported eligibility, never a task replay. Unknown cause or a real permission boundary stops the
 affected operation with its exact capability/access/paid/data/external operation and corrective action.
 
@@ -153,7 +160,7 @@ Historical graph/SDK/Git intents remain untouched, not converted to successful c
 ## Execute and Integrate
 
 The runner retains initial history for reporting but never uses HEAD, index, dirty paths or filesystem changes as continuation admission. It never adopts or commits unknown work.
-One writer runs dependency-ready tasks in sequence using ordinary SDK read/search/edit/write/command tools.
+Dependency-ready tasks run sequentially by default using ordinary SDK read/search/edit/write/command tools. Explicit owner direction may authorize path-disjoint workers in one checkout; coordinate overlapping or uncertain ownership, and quiesce sibling mutations during shared checks and focused Git checkpoints.
 Its task brief carries applicable accepted outcomes, explicit mechanism constraints and source links;
 those complement rather than replace task requirements or existing execution authority. Harmless
 read/argument/edit errors can be corrected in the same conversation. SDK automatic compaction

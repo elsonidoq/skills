@@ -1,5 +1,45 @@
 # Approval and Recovery Contract
 
+## Interactive design agreement before detail
+
+In TinySpec and Standard, including direct, standalone and resumed entry, produce a
+project-owned self-contained interactive HTML high-level design and obtain explicit owner
+design agreement before detailed architecture plan production or continuation. Discover the
+page destination from the adopting project's routing and existing feature artifacts; use
+an existing design page when present. No renderer, generator or framework is required.
+Preparation authority permits the page, not agreement or implementation.
+
+The page covers approach, interfaces, dependencies and material risks. Each clickable
+component box opens popup executive bullets for purpose, inputs/outputs, boundaries and
+significant choices. Executive bullets below the schematic explain the goal, relevant
+supported properties, tradeoffs/limits and necessary context without unverified capability
+or performance claims. Distinguish workflow approvals from data flow and proposed/unimplemented
+behavior from implemented behavior. Require pointer and keyboard activation, readable mobile
+layout, Close and Escape dismissal and focus return to the opener. Page controls never
+simulate authorization.
+
+Present the actual current page and its executive explanation to the owner before asking
+for design agreement. Retain the shown page/content identity, actual answer, scope and ordering
+in existing approval conventions. Page creation, opening/clicking, silence, no answer, denial
+or cancellation is not consent: stop affected detailed planning. Significant design changes
+update the page and renew agreement before affected planning resumes. Routine mechanics remain
+autonomous; material unresolved choices need actual answers or explicit bounded deferral.
+
+Keep requirements approval, design agreement and final implementation approval distinct.
+One explicit settled grant can cover several outcomes only when it actually covers that
+shown current content and scope; record each outcome without repeating the same question.
+TinySpec needs no new standalone requirements-approval gate: draft its what/acceptance and
+high-level page first, return for design agreement, then resume its detailed how. Standard
+retains specification approval, then page/agreement before setup-plan or detailed artifacts.
+Legacy/resumed planning preserves valid grants and stops only affected continuation at the
+earliest invalid boundary; historical missing evidence is not invented or a new runtime
+startup rule. Current authorized implementation and shared routine permissions remain valid.
+
+Static/carrier and DOM tests are supplemental, not actual owner/model or real-browser proof.
+Retain actual observations and NOT RUN limits in existing returns/evidence; changed global
+carriers require a fresh session to verify checkout, revision, current approval and loaded
+capabilities before relying on live examples. No automatic reload/restart.
+
 ## Executive brief before approval
 
 At EVERY artifact-approval gate, including corrections/renewals and applicable
@@ -46,6 +86,8 @@ not unrelated implementation.
 | Event | Consequence |
 | --- | --- |
 | Owner chooses depth | Preparation authorization only; persist then immediately start selected source production |
+| HTML high-level design ready | Show current page and obtain explicit design agreement before detailed how/plan production or continuation; no page interaction is consent |
+| Significant design change | Update page and renew affected design agreement before affected detailed planning |
 | TinySpec ready | Run fresh independent read-only specification review for user-intent fidelity before separate tasks; no intermediate approval gate |
 | TinySpec specification review complete | Parent evaluates findings, owner resolves material decisions, source producer corrects and parent inspects; zero/resolved findings proceed to tasks, unresolved material intent gaps stop task generation |
 | TinySpec/tasks reviewed | Bullet brief then combined source/task/scope approval; immediately start coordinator unless explicitly planning-only |

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Issue 45 · Interactive design review</title>
+<style>
+:root { color-scheme: dark; --bg:#101a29; --panel:#1b2b40; --ink:#eff6ff; --muted:#c3d5e8; --line:#73d4ed; --gate:#ffd480; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:1rem/1.6 system-ui,sans-serif; }
+main { max-width:76rem; margin:auto; padding:clamp(1rem,4vw,3rem); }
+h1,h2,h3 { line-height:1.25; } h1 { font-size:clamp(1.7rem,4vw,2.6rem); }
+a { color:#9fe5ff; } .status { border:2px solid var(--gate); padding:1rem; color:var(--gate); font-weight:700; }
+.legend { color:var(--muted); } .flow { display:grid; gap:.7rem; margin:1.5rem 0; }
+.box { width:100%; min-width:0; border:3px solid var(--line); border-radius:0; box-shadow:5px 5px 0 #050b13; background:var(--panel); color:var(--ink); padding:1rem; text-align:left; font:inherit; cursor:pointer; overflow-wrap:anywhere; }
+.box strong { display:block; font-family:ui-monospace,monospace; font-size:1.05rem; }
+.box small { color:var(--muted); } .gate { border-color:var(--gate); } .gate strong { color:var(--gate); }
+.box:hover { background:#29415c; } button:focus-visible,a:focus-visible { outline:3px solid #fff; outline-offset:4px; }
+.arrow { text-align:center; color:var(--gate); font-weight:700; margin:.2rem; }
+.data .arrow { color:var(--line); } .pair { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:1rem; }
+.notes { background:var(--panel); padding:1rem 1.5rem; border-left:4px solid var(--line); }
+li { margin:.5rem 0; } dialog { color:var(--ink); background:var(--panel); border:3px solid var(--line); width:min(42rem,calc(100% - 2rem)); max-height:85vh; overflow:auto; padding:1.5rem; }
+dialog::backdrop { background:#000b; } #close { padding:.6rem 1rem; font:inherit; cursor:pointer; }
+.sources { display:flex; flex-wrap:wrap; gap:.6rem 1.2rem; } footer { color:var(--muted); margin-top:2rem; }
+@media (max-width:38rem) { .pair { grid-template-columns:1fr; } .pair .arrow { margin:0; } dialog { padding:1rem; } }
+</style>
+</head>
+<body><main>
+<header><p>COHERENCE / ISSUE 45 / DESIGN REVIEW</p><h1>Deliver the feature. Retain the facts.</h1>
+<p class="status">Owner approved the shown design and local implementation scope; final feature acceptance pending</p>
+<p>This is the approved <strong>PROPOSED DESIGN BASELINE</strong>, not an implementation inventory. Local implementation and offline proof may proceed; required live/manual and fresh-session acceptance remain pending. Existing tools and history are reuse points, not proof of complete capture or delivery.</p>
+<p>Open any box for its executive brief. Use Tab then Enter or Space; close the popup with Close or Escape.</p>
+<p>Source approval, design agreement and final implementation approval are separate. This document cannot grant any of them.</p></header>
+<section aria-labelledby="workflow-title"><h2 id="workflow-title">1 · Workflow and approval gates</h2>
+<p class="legend">↓ Amber arrows = required workflow order, not evidence movement. Amber boxes = owner gates, not approval controls.</p>
+<div class="flow">
+<button type="button" class="box workflow" data-brief="planning" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>Planning + issue association</strong><small>Open executive brief</small></button>
+<p class="arrow">↓ Workflow</p>
+<button type="button" class="box workflow" data-brief="design" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>HTML design review</strong><small>Open executive brief</small></button>
+<p class="arrow">↓ Workflow</p>
+<button type="button" class="box gate" data-brief="design-gate" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>OWNER DESIGN APPROVAL</strong><small>Open executive brief</small></button>
+<p class="arrow">↓ Only after explicit owner agreement</p>
+<button type="button" class="box workflow" data-brief="details" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>Detailed plan + tasks</strong><small>Open executive brief</small></button>
+<p class="arrow">↓ Workflow</p>
+<button type="button" class="box gate" data-brief="final-gate" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>FINAL IMPLEMENTATION APPROVAL</strong><small>Open executive brief</small></button>
+<p class="arrow">↓ Only after explicit owner agreement</p>
+<button type="button" class="box workflow" data-brief="execution" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>Execution tools + workers</strong><small>Open executive brief</small></button>
+</div></section>
+<section aria-labelledby="data-title" class="data"><h2 id="data-title">2 · Proposed factual data flow after execution is authorized</h2>
+<p class="legend">↓ Cyan arrows = evidence flow from the execution tools above. ↔ = reciprocal discovery links; not duplicate trace storage.</p><div class="flow">
+<p class="arrow">↓ Automatic facts from tools + worker handoffs</p>
+<button type="button" class="box data" data-brief="history" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>Existing history — same SQLite DB</strong><small>Open executive brief</small></button>
+<p class="arrow">↓ Drain available facts; snapshot at finish / practical error</p>
+<button type="button" class="box data" data-brief="publication" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>Finish / practical error publication</strong><small>Open executive brief</small></button>
+<p class="arrow">↓ Actual scoped writes + independent readback</p><div class="pair">
+<button type="button" class="box data" data-brief="issue" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>GitHub issue</strong><small>Open executive brief</small></button>
+<p class="arrow" aria-label="Reciprocal issue and PR links">↔</p><button type="button" class="box data" data-brief="pr" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>Linked PR</strong><small>Open executive brief</small></button>
+</div>
+<p class="arrow">↓ Explicit issue OR PR selection, after execution</p><button type="button" class="box data" data-brief="assessment" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>Owner-triggered assessment</strong><small>Open executive brief</small></button>
+</div>
+<aside><h3>Recovery branch — only if delivery needs it</h3><p>Retained history + inspected remote effects → publication-only recovery → the same issue / linked PR. This is not a new execution loop.</p><button type="button" class="box data" data-brief="recovery" aria-haspopup="dialog" aria-controls="brief-dialog"><strong>One publication-only recovery CLI</strong><small>Open executive brief</small></button>
+</aside></section>
+<section class="notes" aria-labelledby="brief-title"><h2 id="brief-title">Overall executive brief</h2><ul>
+<li><strong>Goal:</strong> reduce avoidable questions and rework through better planning, then retain meaningful execution facts for later improvement after the worktree is gone.</li>
+<li><strong>Design gate:</strong> review this schematic, each component brief and these bullets; obtain explicit owner agreement before detailed plan production or continuation. Page creation, interaction, silence, no answer, cancellation or denial leaves the gate closed. Significant changes require renewed agreement.</li>
+<li><strong>Low overhead by design, not a speed claim:</strong> deterministic capture reuses existing tools, handoffs and the same workflow database. No manual coordinator logging, extra execution-time agent, new DB or service. Latency and runtime behavior are not measured here.</li>
+<li><strong>Durability:</strong> actual Q/A, worker resolutions, submitted proof, rejection reasons, validation outcomes and available code/commit/PR references go into GitHub, not just counts, hashes or disposable local paths.</li>
+<li><strong>Tradeoff:</strong> full meaningful content can require multiple comments and readback. Missing permission or uncertain delivery is reported separately from implementation outcome; inspect effects before retrying. Abrupt death can leave capture gaps.</li>
+<li><strong>Safety:</strong> retain actual credential protection and scoped external authority without routine Q/A publication approval. Keep the separate local metadata-only Phoenix exporter unchanged. No universal free-text secret-detection promise.</li>
+<li><strong>Assessment:</strong> owner-triggered, after completion, starting from an issue or PR; inspect supported later fixes and propose small changes, never autonomous skill edits or execution-time RCA.</li>
+<li><strong>Current approval:</strong> the owner's actual “ok I approve the plan. Start implementing” instruction approves the shown source/design/plan scope and local implementation after bounded alignment and parent inspection. Previous cancelled gates granted no consent. The later grant permits factual trace comments and independent readback on existing issue #45 only; no PR creation, push, new issue or closure is authorized. Required proof is not acceptance by approval. See the checklist for exact approved snapshot identities and scope.</li>
+<li><strong>Proof still needed later:</strong> real paired capture, complete durable readback, practical failure/recovery and assessment without the execution checkout. Static tests do not prove model obedience or live delivery.</li>
+</ul></section>
+<nav aria-label="Design sources"><h2>Sources and approval provenance</h2><p>Requirements are authoritative. The plan/contracts/tasks carry the agreed early HTML design gate; the checklist records actual owner approval, historical cancellations and remaining proof/effect boundaries.</p><div class="sources">
+<a href="spec.md">Current specification</a><a href="plan.md">Aligned plan</a><a href="contracts/README.md">Aligned contracts</a><a href="data-model.md">Data model</a><a href="research.md">Supporting research</a><a href="tasks.md">Aligned tasks</a><a href="checklists/requirements.md">Checklist / current approval</a>
+</div></nav>
+<noscript><p>JavaScript is off. All component executive briefs are listed below; interactive popups need JavaScript.</p></noscript>
+<section aria-labelledby="all-briefs"><h2 id="all-briefs">Component brief reference</h2>
+<details id="reference-planning"><summary>Planning + issue association</summary><div id="content-planning"><ul><li>Purpose: understand the request; brainstorm with the owner only when needed.</li><li>Input → output: request and declared tracker → qualified issue and bounded scope.</li><li>Choice: reuse an exact overlap or create/read back the requested issue with actual scoped authority; no duplicate or automatic reopen.</li><li>Boundary: missing tracker capability, target or permission is an honest blocker, not a runtime fallback issue.</li></ul></div></details>
+<details id="reference-design"><summary>HTML design review</summary><div id="content-design"><ul><li>Purpose: make the high-level architecture understandable before detailed planning.</li><li>Input → output: current requirements and proposed boundaries → this clickable schematic, component briefs and overall executive bullets.</li><li>Choice: a small self-contained document, not a visualization service or framework.</li><li>Boundary: showing the page is not owner agreement; actual current source/design approval is recorded separately in the checklist.</li></ul></div></details>
+<details id="reference-design-gate"><summary>OWNER DESIGN APPROVAL</summary><div id="content-design-gate"><ul><li>Purpose: let the owner agree to the actual schematic and executive explanation before detailed plan production or continuation.</li><li>Input → output: reviewed current design → explicit owner agreement or a closed gate.</li><li>Boundary: cancellation, denial, silence or page interaction grants no consent. Significant design changes renew agreement.</li><li>Choice: this is distinct from requirements approval and final plan/tasks/implementation approval; no approval action is performed on this page.</li></ul></div></details>
+<details id="reference-details"><summary>Detailed plan + tasks</summary><div id="content-details"><ul><li>Purpose: derive interfaces, sequence and independently verifiable worker tasks after design agreement.</li><li>Input → output: approved source and high-level design → detailed plan and tasks with acceptance, completion evidence and real gates.</li><li>Boundary: the aligned plan/tasks carry this agreed gate; current approval covers the presented scope, not unverified implementation behavior or ungranted external effects.</li><li>Choice: reuse Standard/TinySpec processes and executor-sized contracts; ordinary technical choices remain autonomous.</li></ul></div></details>
+<details id="reference-final-gate"><summary>FINAL IMPLEMENTATION APPROVAL</summary><div id="content-final-gate"><ul><li>Purpose: authorize only the reviewed current plan/tasks and explicit implementation scope.</li><li>Input → output: current artifacts, review findings and proof limits → actual owner grant, or no launch.</li><li>Boundary: source/design agreement alone grants neither execution nor live GitHub effects. Previous cancelled questions were not consent.</li><li>Choice: external factual/link publication needs named target/operation scope; field presence or credentials do not create authority.</li></ul></div></details>
+<details id="reference-execution"><summary>Execution tools + workers</summary><div id="content-execution"><ul><li>Purpose: deliver approved tasks using the existing controller, SDK tools and worker handoffs.</li><li>Input → output: scoped task contracts → submissions, actual checks, checkpoints and independent review.</li><li>Proposed capture: automatically observe owner Q/A, worker resolutions, rejected completions, failures, inspected retries/escalations and meaningful proof.</li><li>Boundary: no manual coordinator log, extra execution-time RCA agent or blind retry; worker return is not acceptance.</li></ul></div></details>
+<details id="reference-history"><summary>Existing history — same SQLite DB</summary><div id="content-history"><ul><li>Purpose: retain ordered facts at the current execution boundaries, not add a new database.</li><li>Input → output: tool/handoff/check/review facts → attributable history with available run/task/worker/attempt identities and explicit gaps.</li><li>Choice: reuse history and review rows; distinguish actual owner answers from coordinator resolutions and pair by known identity.</li><li>Boundary: this design does not certify capture completeness; local implementation proof and final live acceptance are separate. Optional capture loss is reported; existing operational safety history stays required.</li></ul></div></details>
+<details id="reference-publication"><summary>Finish / practical error publication</summary><div id="content-publication"><ul><li>Purpose: move assessment-relevant facts out of the disposable worktree into GitHub.</li><li>Input → output: drained retained facts and scoped authority → compact structured full-meaning trace, counts, references and independently confirmed parts/links.</li><li>Choice: publish actual Q/A, meaningful submitted proof, rejection reasons and validation; no full transcript dump or metadata-only substitute.</li><li>Boundary: capture coverage and delivery status are separate from implementation outcome. Missing permissions, uncertain readback and abrupt-death gaps remain honest.</li></ul></div></details>
+<details id="reference-issue"><summary>GitHub issue</summary><div id="content-issue"><ul><li>Purpose: durable delivery entry and issue-led evidence discovery after worktree deletion.</li><li>Input → output: confirmed trace/link comments → actual factual evidence and discovery of every delivery PR.</li><li>Choice: default trace destination is the qualified issue; an explicitly selected linked PR can host it instead.</li><li>Boundary: no automatic closure, body overwrite or fallback issue. No remote write is authorized by this design page.</li></ul></div></details>
+<details id="reference-pr"><summary>Linked PR</summary><div id="content-pr"><ul><li>Purpose: provide PR-led access to the same associated delivery evidence and code references.</li><li>Input → output: known delivery PR → confirmed link to its qualified issue; the issue also discovers this PR.</li><li>Choice: every delivery PR links its issue even if trace content stays in the issue; reuse existing verified links.</li><li>Boundary: no PR creation or push. Late PR discovery establishes missing scoped links without blindly republishing the trace.</li></ul></div></details>
+<details id="reference-assessment"><summary>Owner-triggered assessment</summary><div id="content-assessment"><ul><li>Purpose: analyze failures and post-completion fixes afterward, not during execution.</li><li>Input → output: explicit issue OR PR URL, linked traces and supported code/commits/fixes → cited targeted improvement proposals.</li><li>Choice: distinguish reusable process weakness from issue-specific omitted requirements; separate supported causes, hypotheses and missing evidence.</li><li>Boundary: no old checkout identity/access needed; no autonomous investigations, skill edits, tracker changes or statistical evaluation.</li></ul></div></details>
+<details id="reference-recovery"><summary>One publication-only recovery CLI</summary><div id="content-recovery"><ul><li>Purpose: recover missing or uncertain trace delivery when retained facts and actual matching authority are available.</li><li>Input → output: retained snapshot/intent plus inspected remote effects → confirmed missing parts/links or actionable uncertainty.</li><li>Choice: one narrow CLI usable through normal shell; no separate service or attached recovery tool.</li><li>Boundary: never rerun workers, providers, checks, Git commits or graph execution to recover a log; lost facts cannot be reconstructed as success.</li></ul></div></details>
+</section>
+<footer>Project-owned design artifact · no external scripts, fonts, network calls or approval submission.</footer>
+<dialog id="brief-dialog" aria-labelledby="popup-title"><h2 id="popup-title"></h2><div id="popup-content"></div><button type="button" id="close" autofocus>Close</button></dialog>
+</main>
+<script>
+'use strict';
+const dialog = document.getElementById('brief-dialog');
+const title = document.getElementById('popup-title');
+const content = document.getElementById('popup-content');
+const closeButton = document.getElementById('close');
+let opener = null;
+for (const button of document.querySelectorAll('[data-brief]')) {
+  button.addEventListener('click', () => {
+    opener = button;
+    title.textContent = button.querySelector('strong').textContent;
+    content.replaceChildren(document.getElementById('content-' + button.dataset.brief).cloneNode(true));
+    // The copied content has no IDs: avoid duplicate document identities.
+    content.firstElementChild.removeAttribute('id');
+    dialog.showModal();
+    closeButton.focus();
+  });
+}
+closeButton.addEventListener('click', () => dialog.close());
+dialog.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  dialog.close();
+});
+dialog.addEventListener('close', () => { if (opener) opener.focus(); });
+</script>
+</body></html>

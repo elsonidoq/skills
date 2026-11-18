@@ -1,5 +1,12 @@
 # Planner Regression Guide
 
+**Current validation:** Follow the [README](../../README.md#validation-and-documentation).
+Historical behavioral acceptance, comparison and resumption directions in this guide are
+superseded by issue #44; they are not current mandates. Historical observations and NOT RUN
+results remain as recorded, not passes. The retained trace-tool description remains useful;
+static and trace checks do not prove model obedience. Preserve specified live application
+acceptance and its permission gates.
+
 ## Issue #37 — simplest-sufficient review effectiveness (2026-10-30)
 
 Owner approved bounded direct correction and fresh-process validation after the root-cause
@@ -556,7 +563,10 @@ quotes supporting spans and marks accurate/materially incomplete/contradictory. 
 agent checklist is not acceptance evidence. Renewals need new briefs. A brief only inside
 `ask_user.context` or after its tool-call block fails the approved ordering requirement.
 
-## Opt-in read-only RPC smoke recorder
+## Historical opt-in read-only RPC smoke recorder
+
+**Superseded:** The recorder and its driver-only tests were retired under issue #44. The
+following describes historical machinery, not a current command or validation mandate.
 
 `scripts/planner-rpc-smoke.py` implements documented Pi 0.87.1 LF-framed RPC, correlated
 extension UI dialogs and `agent_settled`. It has offline fake-process coverage. No live run
@@ -587,7 +597,11 @@ settled. Evaluate actual traces/briefs separately. Never loop until a safety fai
 No credentials are written by the runner; externally prepared runtime configuration remains
 private. Treat tool evidence as potentially sensitive and do not publish logs automatically.
 
-## Full behavioral scenarios (separately authorized, NOT RUN)
+## Historical full behavioral scenarios (NOT RUN)
+
+**Superseded:** These scenarios and their acceptance/resumption directions are not mandatory.
+Use the [maintained validation guidance](../../README.md#validation-and-documentation); preserve actual required
+application acceptance and permission gates. The following observations remain historical.
 
 For artifact-production tests, use an externally isolated disposable repository/runtime
 with filesystem/network/process controls and a trusted mutation/evidence collector. A mere
@@ -640,7 +654,7 @@ deterministic test success does not imply deployment checks.
   item-level proof/checkpoints in [run evidence](https://github.com/elsonidoq/skills/blob/5088b25877467887dd41c9547197c6da43b3c165/memory/coordination/evidence/planner-delegation-approval/SUMMARY.md).
   Fresh independent final review: READY, no findings; all ten required items satisfied within
   offline/manual bounds. This is contract sensitivity evidence, not live model-obedience proof.
-- RPC driver against synthetic process: covered by offline tests.
+- RPC driver against synthetic process: historically covered by offline tests; driver and tests retired.
 - Real-agent behavior, baseline/candidate differential runs and real installed SpecKit: NOT RUN.
 - Owner-authorized global installation from feature worktree: PASS; all 23 suite links
   verified and retired links absent. Discovery-only RPC `get_commands`: PASS without

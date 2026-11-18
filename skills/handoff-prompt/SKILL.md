@@ -75,16 +75,25 @@ runtime findings and conversation-only rationale that files do not preserve.
 
 ## Executable continuation
 
-Carry the actual run ID, effective config/input/schema/environment/host/resource identities,
-source/task/approval provenance, exact selected versus observed profiles, executor intent and
-authorization envelope/action limits. Cite authoritative SQLite/status and baseline/result
-commits/evidence, not a new narrative ledger. Pending questions carry original session/role/
-branch pin, gate/input/nonce and accepted-versus-delivered state. Interactive mode carries
-verified actual launching-parent/transport/question-tool generation; never replay historical
-recipients or invent tool receipts. Low/unknown/unsafe original or live/unknown writers block;
-no automatic fresh replacement or legacy restart. Next action is an authorized CLI status/
-input/resume operation, never LLM work/model/session selection. Host exit means stopped, not
-background progress. Preserve STATE/custom/history/unrelated work and original gates.
+For an interrupted executable run, carry its observed run ID, runtime/status, unfinished work,
+actual scope/authority and pending owner decisions. Cite authoritative status/history and observed
+Git checkpoints/check results; distinguish verified effects from uncertain calls, partial writes
+and agent reports. Include only identities and configuration needed by the next supported operation,
+with their evidence; never invent template facts, consent, completion or background progress after
+host exit. Preserve STATE, custom/history content, partial and unrelated work and original gates.
+
+Use [coordinate-implementation recovery](../coordinate-implementation/SKILL.md#recover-context)
+to reconcile active/unknown writers, failed calls and uncertain effects before selecting the next
+authorized supported action. Carry its diagnosis, unresolved safety/authority limits and next action
+into the prompt, not a new recovery ledger or admission protocol. Do not blindly restart, replay
+uncertain effects or replace an unfinished run. If the recovery owner or required capability is
+unavailable, report the gap and the next inspection needed rather than invent a command.
+
+For historical runs, use the [operating guide's compatible-continuation procedure](../../docs/coordinate-implementation.md#legacy-run-retention-and-compatible-continuation):
+name the explicitly selected compatible runtime and original supported action/arguments when
+verified. Historical status remains readable; continuation needs inspected effects and actual
+authority. Do not silently convert history, select a replacement model/session or automatically
+check out, install, authenticate or restart an old runtime.
 
 ## Delegation Capability
 

@@ -27,6 +27,18 @@ substitute or store secrets, completed-work inventories or fabricated knowledge.
 - **Action:** Do not repeatedly ask for the same routine authorization. Use the supported run-and-scope-bound authority mechanism; preserve actual material scope, manual, paid, security, data and external-action gates. A conflicting runtime consent rule needs a scoped correction, not fabricated owner replies or silent bypass.
 - **Provenance:** Explicit owner feedback during #30 implementation: “Why do you keep asking for these authorizations? Yes I authorize them all” and “Stop asking me for authorization for routine things like that.” The owner then approved the proposed scoped policy correction and retained continuation with “Go ahead.” This records the conversational preference, not blanket permission for unrelated runs or actions.
 
+### Routine approved-work publication
+
+- **Trigger:** Preparing a delivery branch, publishing approved work, opening its PR or linking its issue in this repository.
+- **Action:** Treat a dedicated branch push, PR creation, reciprocal issue/PR links and effect readback as pre-approved for the approved work in `github.com/elsonidoq/skills`. Do not ask again for these routine delivery operations. Exclude unrelated work; preserve target/authentication/data-safety and final acceptance checks. Force-push, merge, closure, deployment, credential changes and additional paid services are not granted by this direction.
+- **Provenance:** During issue #45 delivery, the agent asked permission to publish only the issue's change set on a dedicated branch and open/link its PR. The owner answered: “you shouldn't ask me for these things. These operational stuff must be pre-approved”. The specific operations presented in that question bound this guidance.
+
+### Direct implementation executor
+
+- **Trigger:** Selecting executors for future implementation tasks in this repository.
+- **Action:** Use the current `.pi/workflow-executor.json` selection: Sol/medium directly, not Terra with Sol reserved only for fallback. Preserve historical runs and review records; do not reinterpret their actual assignments.
+- **Provenance:** Explicit owner direction during issue #45: “use Sol/medium for future tasks directly”. Configuration was changed in commit `80090951`.
+
 ### Installed agent capability versions
 
 - **Trigger:** Specifying, installing, checking, or using required installed agent capabilities.

@@ -1,4 +1,4 @@
-"""Sequential task/check/Git execution, with one fresh read-only final reviewer."""
+"""Execution primitives and compatibility facade for the single graph controller."""
 import hashlib
 import inspect
 import json
@@ -10,15 +10,13 @@ import stat
 import tempfile
 import uuid
 
-from .git_effects import FocusedGit, MetricArtifactFinalizer, _commit_result, path_has_preexisting_changes
+from .git_effects import FocusedGit, MetricArtifactFinalizer
 from .metric_artifacts import (MetricArtifactError, artifact_relative, create_artifact,
                                read_artifact, summarize_artifact)
 from .metrics import interval_record
-from .monitoring import Recorder, descriptor
-from .pi_adapter import PiAdapter, TaskOutcome, effective_saved_session, terminal_question
-from .processes import process_identity
-from .sessions import select_session
+from .pi_adapter import PiAdapter, TaskOutcome, terminal_question
 from .store import Blocked, canonical, git, safe_path
+from .trace_capture import capture_questions, question_scope
 from .verification import CheckFailure, commands, manual_gates, run_checks
 
 
@@ -33,14 +31,17 @@ def _failure(exc):
 
 def _safe_error(exc):
     """Use the existing public error carrier without projecting host-returned text."""
-    return getattr(exc, 'safe_error', str(exc))
+    import os
+    from .trace_capture import _public
+    token = os.environ.get('COHERENCE_PARENT_BRIDGE_TOKEN')
+    return _public(getattr(exc, 'safe_error', str(exc)), [], [token] if token else [])
 
 
 class _UnsuccessfulOutcome(Blocked):
     """Private host diagnostic paired with a safe existing error summary."""
     def __init__(self, status, explanation):
         self.safe_error = 'worker explicitly ' + status + '; partial work retained'
-        self.diagnostic = 'worker explicitly ' + status + '; ' + explanation + '; partial work retained'
+        self.diagnostic = 'worker explicitly ' + status + '; ' + _safe_error(explanation) + '; partial work retained'
         super().__init__(self.diagnostic)
 
 
@@ -130,7 +131,9 @@ _ROUTINE_AUTHORITY = (
 
 
 class Engine:
-    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False, worker_recovery=None):
+    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False, worker_recovery=None, parallel=False, delivery_scope=None):
+        self.delivery_scope = delivery_scope
+        self.parallel = parallel
         self.worker_recovery = worker_recovery
         if worker_recovery is not None:
             if (not resume or not isinstance(worker_recovery, dict)
@@ -152,12 +155,16 @@ class Engine:
             for key in ('provider', 'model', 'effort')
         ):
             raise Blocked('reviewer needs provider, model and effort strings; correct the reviewer profile in --executor JSON')
-        self.adapter, self.question, self.paid_scope = adapter, question, paid_scope
+        self.adapter, self.paid_scope = adapter, paid_scope
+        self.question = capture_questions(question, authority.store, run)
         # Private, run-local facts only. A failed or unfinished worker is never added.
         self.session_candidates = []
         self.session_settlement_sequence = 0
         self.metric_artifact = None
         self.metric_invocation_ids = []
+        # Only bookkeeping is serialized. Never hold this across SDK calls/waits.
+        import threading
+        self.metric_lock = threading.Lock()
 
     @staticmethod
     def _snapshot(observation):
@@ -187,7 +194,11 @@ class Engine:
             return 'continued_same_task', selection.get('reason')
         return ('reused_from_earlier_task' if selection.get('session_id') else 'fresh', selection.get('reason'))
 
-    def _append_metric(self, worker, *, invocation_id, task_id, role, outcome, selection, continued=False,
+    def _append_metric(self, worker, **kwargs):
+        with self.metric_lock:
+            return self._append_metric_locked(worker, **kwargs)
+
+    def _append_metric_locked(self, worker, *, invocation_id, task_id, role, outcome, selection, continued=False,
                        expected_session_id=None, fixing_round=None, review_ordinal=None):
         """Best-effort terminal-call JSONL; never changes the execution result."""
         self.metric_invocation_ids.append(invocation_id)
@@ -199,6 +210,12 @@ class Engine:
         if not isinstance(before, dict) and not isinstance(after, dict):
             # Offline adapters may provide the already-derived closed interval only.
             interval = getattr(worker, 'last_interval', None) or interval
+        try:
+            from .tracing import record_interval
+            record_interval(interval, role, outcome)
+        except Exception:
+            # Optional tracing must not prevent metrics, checks, or Git.
+            pass
         opened = getattr(worker, 'opened_session', None)
         actual_id = opened.get('id') if isinstance(opened, dict) and isinstance(opened.get('id'), str) else None
         expected = expected_session_id if continued else selection.get('session_id')
@@ -270,15 +287,92 @@ class Engine:
         return request, canonical({key: request[key] for key in (
             'role', 'worktree', 'executor', 'resources', 'instructions', 'settings', 'authority')})
 
+    def publish_delivery_trace(self, **kwargs):
+        """Transport retained launch scope to the publisher; never infer a grant.
+
+        Called at terminal run boundaries, never at individual task completion.
+        Scope absence/drift defers delivery only, not implementation or intake.
+        """
+        from .trace_publication import publish_trace
+        saved = self.authority.store.input(self.run)
+        retained = saved['authority'].get('delivery_scope') if saved else None
+        if self.delivery_scope != retained:
+            return {'state': 'deferred', 'snapshot_id': None, 'urls': [],
+                    'correction': 'Delivery scope differs from retained launch; restore the original run scope before publication.'}
+        carrier = self.delivery_scope
+        if carrier is None:
+            carrier = {}
+        if (not isinstance(carrier, dict) or set(carrier) - {'target', 'authority', 'known_linked_prs'}
+                or ('known_linked_prs' in carrier and
+                    (not isinstance(carrier['known_linked_prs'], list) or
+                     any(not isinstance(url, str) for url in carrier['known_linked_prs'])))):
+            return {'state': 'deferred', 'snapshot_id': None, 'urls': [],
+                    'correction': 'Delivery scope carrier invalid; supply target, authority and optional known_linked_prs in launch JSON.'}
+        return publish_trace(self.authority.store, self.run, **carrier, **kwargs)
+
+    def finish_delivery_trace(self, *, waiting=False, error=None):
+        """Best-effort capture/export, separate from implementation return or exception."""
+        from .trace_capture import finish_parent_capture, optional_record, persist_parent_events
+        from .trace_projection import project_trace
+        from .trace_publication import confirm_delivery_links
+        report = {'capture': {'state': 'unavailable', 'gaps': []},
+                  'publication': {'state': 'deferred', 'urls': [],
+                                  'correction': 'Run is waiting; resume execution before terminal publication.'}}
+        try:
+            report['capture'] = finish_parent_capture(self.authority.store, self.run, final=not waiting)
+            if error is not None:
+                optional_record(persist_parent_events, self.authority.store, self.run, [{
+                    'version': 1, 'id': uuid.uuid4().hex, 'kind': 'gap',
+                    'reason': 'Terminal execution raised ' + type(error).__name__ +
+                              '; retained run/task failure records contain available error facts.'}])
+            if not waiting:
+                snapshot = project_trace(self.authority.store, self.run)
+                report['capture']['coverage'] = snapshot['coverage']
+                report['capture']['gaps'] = sorted(set(report['capture']['gaps'] + snapshot['gaps']))
+                # Even if optional gap persistence failed, include the observed
+                # terminal coverage in the prepared, reproducible public snapshot.
+                snapshot['gaps'] = report['capture']['gaps'][:]
+                from .trace_publication import digest
+                snapshot['snapshot_id'] = digest(canonical({key: value for key, value in snapshot.items()
+                                                          if key != 'snapshot_id'}))
+                report['publication'] = self.publish_delivery_trace(snapshot=snapshot)
+                carrier = self.delivery_scope or {}
+                if report['publication']['state'] == 'confirmed':
+                    try:
+                        report['linkage'] = confirm_delivery_links(
+                            self.authority.store, self.run, issue=snapshot['delivery_issue'],
+                            known_prs=carrier.get('known_linked_prs', []), snapshot_id=snapshot['snapshot_id'],
+                            authorities=[carrier.get('authority')])
+                    except BaseException as exc:
+                        report['linkage'] = {'state': 'incomplete', 'associations': [],
+                            'correction': 'Link confirmation failed (' + type(exc).__name__ +
+                                          '); inspect retained links and restore read access before recovery.'}
+        except BaseException as exc:
+            # Never leak arbitrary exception text (transport paths/credentials), or
+            # replace an implementation exception, including cancellation.
+            report['capture']['gaps'].append('Terminal capture/export did not finish; retained coverage may be incomplete.')
+            report['publication'] = {'state': 'uncertain', 'urls': report['publication'].get('urls', []),
+                'correction': 'Trace finish failed (' + type(exc).__name__ +
+                              '); inspect retained capture/publication history before recovery.'}
+        self.trace_finish = report
+        return report
+
+    def _delivery_issue_context(self):
+        issue = self.contract.get('delivery_issue')
+        return 'Delivery issue context: ' + canonical(issue) + '\n' if issue is not None else ''
+
     @staticmethod
     def _prompt_worker(worker, prompt, **kwargs):
         """Keep older offline adapters usable while the real adapter gets reuse facts."""
+        submission = kwargs.pop('submission', None)
         parameters = inspect.signature(worker.prompt).parameters.values()
         accepts_keywords = any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in parameters)
         if not accepts_keywords:
             names = {parameter.name for parameter in parameters}
             kwargs = {key: value for key, value in kwargs.items() if key in names}
         result = worker.prompt(prompt, **kwargs)
+        from .trace_capture import optional_record
+        optional_record(submission, result)
         # Task and repair consumers share this boundary: transport resolution is
         # not acceptance. Ordinary text remains the compatible completion path.
         if isinstance(result, TaskOutcome):
@@ -360,7 +454,7 @@ class Engine:
             result[name] = entries
         return result
 
-    def run_fix(self, findings, *, trigger_execution_id, review_base, recorder, execution_id,
+    def run_fix(self, findings, *, trigger_execution_id, review_base, execution_id,
                 review_ordinal=1, fixing_round=1, predecessor_execution_id=None, terminal_stop=None,
                 recovered=None):
         """Run one already-authorized repair assignment without selecting another round.
@@ -409,7 +503,8 @@ class Engine:
                 focused.claim(name)
                 claimed_paths.add(name)
         def gate_question(text):
-            return self.question(text)
+            with question_scope(task_id=fix_task['id'], purpose='manual_gate'):
+                return self.question(text)
         try:
             if not recovered or not recovered.get('returned'):
                 manual_gates(fix_task, gate_question)
@@ -441,24 +536,29 @@ class Engine:
                 'semantic/manual acceptance or the reviewer verdict. Finish worker-owned semantic/manual acceptance, never stage '
                 'or commit, bypass checks/hooks/signing, or adopt unrelated/pre-existing bytes.\n'
                 + _DECISION_CONSTRAINTS + self.paid_authority() + '\nOriginal task contracts: '
-                + canonical(original_tasks) + '\n')
-            def prompt_fix(prompt, **kwargs):
+                + canonical(original_tasks) + '\n' + self._delivery_issue_context())
+            correction_ref = [None]
+            def prompt_fix_impl(prompt, **kwargs):
                 prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + repair_context + prompt
                 invocation_id = uuid.uuid4().hex
                 predecessor = last_fixer_invocation[0]
+                from .trace_capture import optional_record, record_worker_question
+                def question_trace(state, **facts):
+                    optional_record(record_worker_question, store, self.run, fix_task['id'],
+                                    invocation_id, state, **facts)
+                worker.question_trace = question_trace
                 chain = [*fixer_chain, invocation_id]
-                occurrence = recorder.occurrence()
-                public = {
-                    'role': 'fixing_worker', 'execution_id': execution_id, 'invocation_id': invocation_id,
-                    'invocation_kind': 'corrective_worker' if predecessor else 'task_worker',
-                    'selected_input_checkpoints': [], 'correction_chain': chain, 'fixing_round': fixing_round,
-                    'trigger_execution_id': trigger_execution_id, 'predecessor_execution_id': predecessor_execution_id,
-                }
-                if predecessor:
-                    public['predecessor_invocation_id'] = predecessor
                 store.history(self.run, fix_task['id'], 'fixer_invocation', 'started',
-                              {'invocation_id': invocation_id, 'execution_id': execution_id})
-                recorder.emit(occurrence, 'worker', 'started', task_id=fix_task['id'], facts=public)
+                              {'invocation_id': invocation_id, 'execution_id': execution_id,
+                               'predecessor_invocation_id': predecessor,
+                               'trigger_execution_id': trigger_execution_id,
+                               'decision_ref': correction_ref[0]})
+                submitted = {'submission': {'version': 1, 'report': None, 'evidence': [],
+                                            'gaps': ['submission report unavailable or capture failed']}}
+                def retain_submission(result):
+                    from .trace_capture import submission_facts
+                    submitted.update(submission_facts(project, fix_task, result,
+                                                      claimed_paths=focused.task_edited | focused.known_artifacts))
                 outcome = 'settled'
                 expected_session_id = (getattr(worker, 'saved_session', {}) or {}).get('id')
                 # Do not attribute the previous prompt's observations to a failed call.
@@ -474,13 +574,14 @@ class Engine:
                 if session and session.get('compatibility', {}).get('readOnly') is True:
                     kwargs['review_repair'] = True
                 try:
-                    result = self._prompt_worker(worker, prompt, **kwargs)
+                    result = self._prompt_worker(worker, prompt, submission=retain_submission, **kwargs)
                 except BaseException as exc:
                     outcome = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
                     if terminal_stop is not None:
                         terminal_stop[0] = invocation_id
                     details = {'invocation_id': invocation_id, 'execution_id': execution_id,
-                               'error': _safe_error(exc) or type(exc).__name__}
+                               'error': _safe_error(exc) or type(exc).__name__,
+                               'predecessor_invocation_id': predecessor, **submitted}
                     if isinstance(exc, _UnsuccessfulOutcome):
                         details.update({'diagnostic': exc.diagnostic, 'baseline': focused.base,
                                         'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
@@ -488,17 +589,16 @@ class Engine:
                                         'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts),
                                         'index_state': self._repair_index_state(project, focused.task_edited | focused.known_artifacts)})
                     store.history(self.run, fix_task['id'], 'fixer_invocation', outcome, details)
-                    recorder.emit(occurrence, 'worker', outcome, task_id=fix_task['id'], facts={
-                        **public, 'stopped_by_invocation_id': invocation_id, 'error_category': _failure(exc)})
                     raise
                 else:
                     store.history(self.run, fix_task['id'], 'fixer_invocation', 'returned',
                                   {'invocation_id': invocation_id, 'execution_id': execution_id,
+                                   'predecessor_invocation_id': predecessor,
+                                   'summary': submitted.get('submission', {}).get('report') or result, **submitted,
                                    'baseline': focused.base, 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
                                    **focused.facts(), 'blobs': self._repair_blobs(project, focused.task_edited),
                                    'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts),
                                    'index_state': self._repair_index_state(project, focused.task_edited | focused.known_artifacts)})
-                    recorder.emit(occurrence, 'worker', 'returned', task_id=fix_task['id'], facts=public)
                     fixer_chain[:] = chain
                     last_fixer_invocation[0] = invocation_id
                     return result
@@ -507,31 +607,38 @@ class Engine:
                                         role='fixing_worker', outcome=outcome, selection=selection,
                                         continued=predecessor is not None, expected_session_id=expected_session_id,
                                         fixing_round=fixing_round)
+            def prompt_fix(prompt, **kwargs):
+                from contextlib import nullcontext
+                monitoring = getattr(self, '_local_tracing', None)
+                boundary = (monitoring.boundary('repair', task_id=fix_task['id'], invocation=True,
+                            model=self.reviewer_executor.get('model'), role='fixing_worker')
+                            if monitoring else nullcontext())
+                with boundary:
+                    return prompt_fix_impl(prompt, **kwargs)
             prompt = ('Continue the rejecting review in this assigned repair round. Keep the configured reviewer '
                       'executor and its scoped writer transition.\nActionable findings: ' + canonical(findings))
             if recovered and recovered.get('diagnosis'):
                 prompt += '\nInspected prior settled unsuccessful fixer diagnosis and targeted correction: ' + recovered['diagnosis']
-            text = '' if recovered and recovered.get('returned') else prompt_fix(
+            text = recovered.get('summary', '') if recovered and recovered.get('returned') else prompt_fix(
                 prompt, claim=claim, command=focused.command, cleanup=focused.cleanup_artifact,
                 saved_session=saved, reuse_key=reuse_key)
-            check_occurrences = {}
-            def observe(kind, ordinal, code):
-                occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
-                facts = {'ordinal': ordinal, 'execution_id': execution_id}
-                if code is not None:
-                    facts['exit_code'] = code
-                recorder.emit(occurrence, 'check', kind, task_id=fix_task['id'], facts=facts)
+            def latest_history(kind):
+                row = store.db.execute("SELECT seq FROM execution_history WHERE run_id=? AND kind=? "
+                    "AND json_extract(details, '$.execution_id')=? ORDER BY seq DESC LIMIT 1",
+                    (self.run, kind, execution_id)).fetchone()
+                return row['seq'] if row else None
             def correct_checks():
                 nonlocal text
                 previous = None
                 while True:
                     try:
-                        store.history(self.run, None, 'fixer_checks', 'started', {'execution_id': execution_id})
-                        results = run_checks(project, fix_task, lock_fd=self.authority.lock.fileno(), observe=observe,
+                        store.history(self.run, None, 'fixer_checks', 'started', {
+                            'execution_id': execution_id, 'producer_invocation_id': last_fixer_invocation[0]})
+                        results = run_checks(project, fix_task, lock_fd=self.authority.lock.fileno(),
                             completed=lambda state, attempt: store.history(self.run, None, 'fixer_check', state,
-                                {'execution_id': execution_id, **attempt}))
+                                {'execution_id': execution_id, 'producer_invocation_id': last_fixer_invocation[0], **attempt}))
                         store.history(self.run, None, 'fixer_checks', 'passed', {
-                            'execution_id': execution_id, 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
+                            'execution_id': execution_id, 'producer_invocation_id': last_fixer_invocation[0], 'head': git(project, 'rev-parse', 'HEAD').decode().strip(),
                             'blobs': self._repair_blobs(project, focused.task_edited),
                             'source_state': self._repair_source_state(project, focused.task_edited | focused.known_artifacts),
                             'index_state': self._repair_index_state(project, focused.task_edited | focused.known_artifacts)})
@@ -540,6 +647,7 @@ class Engine:
                         if failure.attempt == previous:
                             raise Blocked('fixing required check remains unchanged after scoped correction: ' + canonical(failure.attempt))
                         previous = failure.attempt
+                        correction_ref[0] = latest_history('fixer_check')
                         text = prompt_fix(
                             'A runner-owned REQUIRED check in this assigned fixing round failed. Make a reasoned, '
                             'authorized scoped correction, then return; the runner will rerun the affected command '
@@ -549,28 +657,31 @@ class Engine:
             check_results = correct_checks()
             checkpoint_error = None
             while True:
-                checkpoint_occurrence = recorder.occurrence()
-                recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=fix_task['id'], facts={
-                    'baseline': focused.base, 'execution_id': execution_id})
-                try:
-                    selected = sorted(name for name in focused.task_edited if path_has_preexisting_changes(project, name))
-                    blobs = self._repair_blobs(project, selected)
+                def retain_fix_intent(intent):
+                    check_ref = store.db.execute("SELECT seq FROM execution_history WHERE run_id=? AND task_id IS NULL AND kind='fixer_checks' AND state='passed' ORDER BY seq DESC LIMIT 1", (self.run,)).fetchone()
+                    if not check_ref:
+                        raise Blocked('repair checkpoint lacks its passing check reference; rerun required checks')
                     store.history(self.run, None, 'fixer_checkpoint', 'started', {
-                        'execution_id': execution_id, 'baseline': focused.base,
-                        'parent': git(project, 'rev-parse', 'HEAD').decode().strip(),
-                        'paths': selected, 'artifacts': sorted(focused.known_artifacts), 'blobs': blobs})
+                        **intent, 'execution_id': execution_id, 'check_ref': check_ref['seq'],
+                        'producer_invocation_id': last_fixer_invocation[0], 'correction_chain': fixer_chain,
+                        'checks': check_results})
+                focused.before_checkpoint = retain_fix_intent
+                focused.before_git_commit = lambda: store.history(self.run, None, 'fixer_checkpoint', 'attempting',
+                                                                   {'execution_id': execution_id})
+                try:
                     checkpoint = focused.checkpoint()
                 except BaseException as exc:
-                    store.history(self.run, None, 'fixer_checkpoint', 'failed',
-                                  {'execution_id': execution_id, 'error': str(exc)})
-                    recorder.emit(checkpoint_occurrence, 'checkpoint', 'failed', task_id=fix_task['id'], facts={
-                        'baseline': focused.base, 'execution_id': execution_id, 'error_category': _failure(exc)})
                     checkpoint = focused.reconcile_checkpoint()
+                    no_effect = (checkpoint is None and not (isinstance(exc, (KeyboardInterrupt, SystemExit))
+                                 and getattr(focused, 'git_commit_started', False)))
+                    store.history(self.run, None, 'fixer_checkpoint', 'failed',
+                                  {'execution_id': execution_id, 'error': str(exc), 'no_effect': no_effect})
                     if checkpoint is not None:
                         break
                     if isinstance(exc, (KeyboardInterrupt, SystemExit)) or str(exc) == checkpoint_error:
                         raise
                     checkpoint_error = str(exc)
+                    correction_ref[0] = latest_history('fixer_checkpoint')
                     text = prompt_fix(
                         'A runner-owned focused repair checkpoint failed. Make a reasoned authorized scoped correction; '
                         'do not bypass hooks/signing or adopt unrelated work. The runner will rerun affected required '
@@ -581,13 +692,9 @@ class Engine:
                 break
             checkpoint['parent'] = (None if checkpoint['no_change'] else
                                     git(project, 'rev-parse', checkpoint['sha'] + '^').decode().strip())
-            store.history(self.run, None, 'fixer_checkpoint', 'passed', {'execution_id': execution_id, **checkpoint})
-            checkpoint_facts = {'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change'],
-                                'execution_id': execution_id}
-            if last_fixer_invocation[0] is not None:
-                checkpoint_facts.update({'producer_invocation_id': last_fixer_invocation[0],
-                                         'correction_chain': list(fixer_chain)})
-            recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=fix_task['id'], facts=checkpoint_facts)
+            store.history(self.run, None, 'fixer_checkpoint', 'passed', {
+                'execution_id': execution_id, 'producer_invocation_id': last_fixer_invocation[0],
+                'correction_chain': fixer_chain, **checkpoint})
             head = git(project, 'rev-parse', 'HEAD').decode().strip()
             store.review_outcome(self.run, execution_id, 'approved', findings=[],
                                  references={'base': review_base, 'head': head, 'commit': checkpoint['sha']})
@@ -670,7 +777,9 @@ class Engine:
                    for name in returned['paths']):
                 raise Blocked('retained repair paths exceed original scope; inspect ownership before continuation')
         recovered = {'returned': True, 'baseline': returned['baseline'], 'invocations': list(calls),
+                     'summary': returned.get('summary', ''),
                      'facts': {'paths': returned['paths'], 'artifacts': returned['artifacts']}}
+        checkpoint_links = {'producer_invocation_id': returned['invocation_id'], 'correction_chain': list(calls)}
         # Earlier local failures remain history, not stages of this returned
         # correction. Only reconcile checks/checkpoints begun after its return;
         # every call above still participates in the uncertain-call guard.
@@ -691,6 +800,53 @@ class Engine:
                 raise Blocked('returned repair index entries drifted; preserve staged and working bytes and inspect ownership before continuation')
         if checkpoints:
             state, checkpoint = checkpoints[-1]
+            latest_intent = next((facts for event_state, facts in reversed(checkpoints)
+                                  if event_state == 'started' and 'entries' in facts), None)
+            if latest_intent and state != 'passed' and not checkpoint.get('no_effect'):
+                ref = store.db.execute("SELECT details FROM execution_history WHERE seq=? AND run_id=? AND kind='fixer_checks' AND state='passed'", (latest_intent.get('check_ref'), self.run)).fetchone()
+                if not ref or json.loads(ref['details']).get('execution_id') != execution_id or not checks or checks[-1] != 'passed':
+                    raise Blocked('repair checkpoint lacks its passing check reference; inspect retained history')
+                focused = FocusedGit(project, {})
+                if latest_intent.get('no_change') is True and not latest_intent.get('paths'):
+                    checkpoint = {'baseline': latest_intent['baseline'], 'sha': latest_intent['parent'],
+                                  'parent': None, 'paths': [], 'artifacts': latest_intent['artifacts'], 'no_change': True}
+                else:
+                    start_index = max(index for index, (event_state, _) in enumerate(checkpoints)
+                                      if event_state == 'started')
+                    attempted = any(event_state == 'attempting' for event_state, _ in checkpoints[start_index + 1:])
+                    try:
+                        if not attempted and head != latest_intent['parent']:
+                            raise Blocked('repair checkpoint parent changed before Git attempt; preserve work and inspect Git effects')
+                        checkpoint = focused.reconcile_intent(latest_intent)
+                    except (KeyError, TypeError, ValueError) as exc:
+                        raise Blocked('repair checkpoint intent is invalid; inspect retained history') from exc
+                    if checkpoint is None:
+                        if attempted:
+                            raise Blocked('repair checkpoint outcome is uncertain at its attempted parent; inspect Git effects before continuation')
+                        # No commit is visible. Restore the returned repair only when its
+                        # full checked working state and the staged selection still match.
+                        effects = check_events[-1][1]
+                        selected = set(returned['paths']) | set(returned['artifacts'])
+                        if self._repair_source_state(project, selected) != effects.get('source_state'):
+                            raise Blocked('returned repair source bytes drifted; preserve them and inspect ownership before continuation')
+                        unselected = selected - set(latest_intent['paths'])
+                        expected_index = effects.get('index_state', {})
+                        if self._repair_index_state(project, unselected) != {name: expected_index.get(name) for name in unselected}:
+                            raise Blocked('returned repair index entries drifted; preserve them and inspect ownership before continuation')
+                        actual_index = self._repair_index_state(project, latest_intent['paths'])
+                        staged = {name: ([] if entry is None else [' '.join(entry) + ' 0'])
+                                  for name, entry in latest_intent['entries'].items()}
+                        checked = {name: expected_index.get(name) for name in latest_intent['paths']}
+                        if actual_index != staged and actual_index != checked:
+                            raise Blocked('repair checkpoint index entries drifted; preserve them and inspect ownership before continuation')
+                        return recovered
+                store.history(self.run, None, 'fixer_checkpoint', 'passed',
+                              {'execution_id': execution_id, **checkpoint_links, **checkpoint})
+                if item['review_ordinal'] > 1 and head != checkpoint['sha']:
+                    raise Blocked('repair commit effects are missing or uncertain for the granted review target after HEAD advanced; recovered checkpoint retained, inspect target before continuation')
+                store.review_outcome(self.run, execution_id, 'approved', findings=[],
+                                     references={'base': review_base, 'head': head, 'commit': checkpoint['sha']})
+                return None
             if state not in ('passed', 'started') or not checks or checks[-1] != 'passed':
                 raise Blocked('repair checks/checkpoint are incomplete or failed; inspect actual effects before targeted continuation')
             if state == 'passed':
@@ -731,7 +887,8 @@ class Engine:
                 if 'blobs' not in checkpoint:
                     raise Blocked('repair checkpoint lacks exact content facts; inspect effects without recommitting')
                 checkpoint = {**matched, 'parent': checkpoint['parent']}
-                store.history(self.run, None, 'fixer_checkpoint', 'passed', {'execution_id': execution_id, **checkpoint})
+                store.history(self.run, None, 'fixer_checkpoint', 'passed',
+                              {'execution_id': execution_id, **checkpoint_links, **checkpoint})
             store.review_outcome(self.run, execution_id, 'approved', findings=[],
                                  references={'base': review_base, 'head': head, 'commit': checkpoint['sha']})
             return None
@@ -951,9 +1108,22 @@ class Engine:
                 '\nIntervening unrelated or unattributed integration context:\n' + ('\n'.join(context) or '- none.') +
                 '\nMissing or ambiguous attribution:\n' + ('\n'.join(gaps) if gaps else '- none beyond the explicitly unknown intervening context above.'))
 
-    def _review(self, *, recorder, review_base, head, ordinal, fixing_round=0,
+    def _review(self, *, review_base, head, ordinal, fixing_round=0,
                 trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None,
                 execution_id=None, refresh_target=False, retry_limit=None):
+        from contextlib import nullcontext
+        monitoring = getattr(self, '_local_tracing', None)
+        boundary = (monitoring.boundary('review', invocation=True,
+                    model=self.reviewer_executor.get('model'), role='reviewer') if monitoring else nullcontext())
+        with boundary:
+            return self._review_impl(review_base=review_base, head=head, ordinal=ordinal,
+                fixing_round=fixing_round, trigger_execution_id=trigger_execution_id,
+                predecessor_execution_id=predecessor_execution_id, input_checkpoints=input_checkpoints,
+                execution_id=execution_id, refresh_target=refresh_target, retry_limit=retry_limit)
+
+    def _review_impl(self, *, review_base, head, ordinal, fixing_round=0,
+                     trigger_execution_id=None, predecessor_execution_id=None, input_checkpoints=None,
+                     execution_id=None, refresh_target=False, retry_limit=None):
         """Dispatch exactly one fresh read-only reviewer and retain its actual outcome."""
         store = self.authority.store
         execution_id = execution_id or uuid.uuid4().hex
@@ -968,16 +1138,6 @@ class Engine:
                                   predecessor_execution_id=predecessor_execution_id,
                                   input_checkpoints=input_checkpoints,
                                   review_base=review_base, review_head=head)
-        review_facts = {
-            'role': 'reviewer', 'execution_id': execution_id, 'review_ordinal': ordinal,
-            'review_base': review_base, 'review_head': head,
-        }
-        if trigger_execution_id is not None:
-            review_facts['trigger_execution_id'] = trigger_execution_id
-            review_facts['predecessor_execution_id'] = predecessor_execution_id
-        if input_checkpoints is not None:
-            review_facts['selected_input_checkpoints'] = input_checkpoints
-        recorder.emit(execution_id, 'review', 'started', facts=review_facts)
         reviewer = self.adapter(self.authority.project, self.reviewer_executor, question=self.question)
         reviewer.lock_fd = self.authority.lock.fileno()
         # Retain the original base for authority/attribution, but review the repair
@@ -1033,7 +1193,7 @@ class Engine:
                 + review_context +
                 'Attribution below is integration context: do not reject unrelated context solely for task-path scope, and do not certify it as task delivery. Causal integration defects affecting the requested result remain blockers and must cite the interaction/accepted basis. Report independently unrelated defects with their ownership/repair limit; do not expand fixer authority.\n'
                 'Evaluate retained check evidence semantically: distinguish actual passing execution, failed or missing required execution, and an inability to rerun because you are read-only. Do not invent a live check; a read-only inability to rerun does not negate a valid retained pass.\n'
-                'Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
+                + self._delivery_issue_context() + 'Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
                 '\nReview delta: ' + diff_base + '..' + head + '\nDiff:\n' + diff + '\n' + self._review_attribution(review_base, head) +
                 '\nFull check outputs are in the private files referenced below; read relevant files with the read tool and continue long reads with offsets. '
                 + self._review_check_evidence(output_dir=evidence_dir) + '\n' + self._review_worker_evidence()[0])
@@ -1051,12 +1211,8 @@ class Engine:
             store.review_outcome(self.run, execution_id, state, findings=[], suggestions=[],
                                  uncertainty=state != 'failed' or isinstance(exc, _ReviewFormat),
                                  references={'base': review_base, 'head': head,
-                                             'failure_category': 'malformed' if isinstance(exc, _ReviewFormat) else _failure(exc)})
-            recorder.emit(execution_id, 'review', state, facts={
-                'role': 'reviewer', 'execution_id': execution_id, 'review_ordinal': ordinal,
-                'review_base': review_base, 'review_head': head, 'outcome': state,
-                'error_category': 'malformed' if isinstance(exc, _ReviewFormat) else _failure(exc),
-            })
+                                             'failure_category': 'malformed' if isinstance(exc, _ReviewFormat) else _failure(exc),
+                                             'error': _safe_error(exc)})
             self._append_metric(reviewer, invocation_id=execution_id, task_id=None, role='reviewer',
                                 outcome=state, selection={'session_id': None, 'reason': 'reviewer_fresh'},
                                 review_ordinal=ordinal)
@@ -1075,9 +1231,6 @@ class Engine:
                                          'check_evidence_digest': self._review_evidence_digest(),
                                          'diff_base': diff_base,
                                          'prior_review': previous['execution_id'] if previous else None})
-        review_facts.update({'approved': value['approved'], 'outcome': state,
-                             'finding_count': len(value['findings'])})
-        recorder.emit(execution_id, 'review', 'passed' if state == 'approved' else 'failed', facts=review_facts)
         return execution_id, value, state
 
     def _recover_format_rejection(self, chain, review_base):
@@ -1166,10 +1319,11 @@ class Engine:
                     raise Blocked('review recovery target has changes in ' + name +
                                   '; preserve and reconcile the reviewed or task-owned path before continuation')
         check_target()
-        path = self.question('A read-only review has an uncertain failed outcome. If inspection found its exact completed '
-            'reviewer transcript with a compound-location format failure, provide its path; otherwise leave empty to stop. '
-            'The artifact will be checked against the original task scope, review range and committed diff; this does not '
-            'assert a historically retained session link. Execution: ' + item['execution_id'])
+        with question_scope(execution_id=item['execution_id'], purpose='review_recovery'):
+            path = self.question('A read-only review has an uncertain failed outcome. If inspection found its exact completed '
+                'reviewer transcript with a compound-location format failure, provide its path; otherwise leave empty to stop. '
+                'The artifact will be checked against the original task scope, review range and committed diff; this does not '
+                'assert a historically retained session link. Execution: ' + item['execution_id'])
         if not isinstance(path, str) or not path.strip():
             raise Blocked('review recovery needs the exact completed reviewer transcript; inspect the failed invocation')
         try:
@@ -1244,217 +1398,6 @@ class Engine:
                             ' review artifact; original session linkage not retained'})
         return True
 
-    def _finish_reviews(self, *, recorder, terminal, checkpoints, base, review_base, terminal_stop=None):
-        """Select the last eligible persisted stage; owner grants add one pair only."""
-        store = self.authority.store
-        policy = store.review_policy(self.run)
-        scope = hashlib.sha256(canonical(self.contract['tasks']).encode()).hexdigest()
-
-        def value(item):
-            return {'approved': item['state'] == 'approved',
-                    'findings': item['findings'][-1] if item.get('findings') else [],
-                    'suggestions': item['suggestions'][-1] if item.get('suggestions') else [],
-                    **item['references'].get('review_summary', {})}
-
-        def complete(item, review):
-            head = item['references'].get('head')
-            if not isinstance(head, str) or not head:
-                raise Blocked('approved review is missing its actually reviewed head; inspect retained review history')
-            store.finish(self.run, 'complete', head)
-            recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
-            return {'status': 'complete', 'run_id': self.run, 'baseline': base, 'sha': head,
-                    'checkpoints': checkpoints, 'review': review, 'usage': self.usage_summary()}
-
-        while True:
-            chain = store.review_chain(self.run, private=True)
-            if chain['uncertain']:
-                if self._recover_format_rejection(chain, review_base):
-                    continue
-                raise Blocked('review invocation outcome is uncertain; inspect it before any replay')
-            executions = chain['executions']
-            if not executions:
-                head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
-                self._review(recorder=recorder, review_base=review_base, head=head, ordinal=1,
-                             input_checkpoints=self._review_inputs(checkpoints))
-                continue
-            last = executions[-1]
-            if (last['role'] == 'fixer' and last['state'] in ('dispatched', 'failed', 'interrupted') and
-                    (last['fixing_round'] == 1 or policy == 'owner-pair-v1')):
-                recovered = self._recover_assigned_fix(last, review_base)
-                if recovered is not None:
-                    rejection = next(item for item in executions if item['execution_id'] == last['trigger_execution_id'])
-                    self.run_fix(value(rejection)['findings'], trigger_execution_id=rejection['execution_id'],
-                        review_base=review_base, recorder=recorder, execution_id=last['execution_id'],
-                        review_ordinal=last['review_ordinal'], fixing_round=last['fixing_round'],
-                        predecessor_execution_id=last['predecessor_execution_id'], terminal_stop=terminal_stop,
-                        recovered=recovered)
-                continue
-            review = value(last)
-            if (self.resume and last['role'] == 'reviewer' and last['state'] == 'failed' and
-                    not last['uncertain'] and last['attempt_count'] == 2 and
-                    last['references'].get('failure_category') == 'transport'):
-                head = last['references'].get('head')
-                attempts = store.db.execute('SELECT state,uncertainty,recorded_at FROM execution_review_attempts WHERE run_id=? AND execution_id=? ORDER BY seq', (self.run, last['execution_id'])).fetchall()
-                # The first invocation boundary after this review attempt is its
-                # outcome; later resume failures must not replace its cause.
-                failure = store.db.execute("SELECT state,details,recorded_at FROM execution_history WHERE run_id=? AND kind='invocation' AND recorded_at>=? ORDER BY seq LIMIT 1", (self.run, attempts[-1]['recorded_at'])).fetchone() if attempts else None
-                try:
-                    details = json.loads(failure['details']) if failure and failure['state'] == 'failed' else {}
-                except (TypeError, ValueError):
-                    details = {}
-                match = re.fullmatch(r"SDK operation failed: Codex error: Invalid response\.create payload: Invalid 'input\[0\]\.content\[0\]\.text': string too long\. Expected a string with maximum length (\d+), but got a string with length (\d+) instead\.", details.get('error', ''))
-                dispatch = store.db.execute('SELECT review_base,review_head FROM execution_review_executions WHERE run_id=? AND execution_id=?', (self.run, last['execution_id'])).fetchone()
-                saved = store.input(self.run)
-                predecessor = executions[-2] if len(executions) > 1 else None
-                causal = ((predecessor is None and last['review_ordinal'] == 1 and last['fixing_round'] == 0 and last['trigger_execution_id'] is None and last['predecessor_execution_id'] is None) or
-                          (predecessor is not None and predecessor['role'] == 'fixer' and predecessor['state'] == 'approved' and
-                           last['trigger_execution_id'] == predecessor['execution_id'] and last['predecessor_execution_id'] == predecessor['execution_id'] and
-                           last['review_ordinal'] == predecessor['review_ordinal'] + 1 and last['fixing_round'] == predecessor['fixing_round'] and
-                           predecessor['references'].get('head') == head))
-                if (match and int(match.group(2)) > int(match.group(1)) and
-                        [tuple(row)[:2] for row in attempts] == [('dispatched', 0), ('failed', 0)] and
-                        dispatch is not None and tuple(dispatch) == (review_base, head) and failure['recorded_at'] >= attempts[-1]['recorded_at'] and
-                        details.get('result') == head and last['references'].get('base') == review_base and
-                        saved and saved['contract'] == self.contract and saved['review_base'] == review_base and causal):
-                    if git(self.authority.project, 'rev-parse', 'HEAD').decode().strip() != head or git(self.authority.project, 'status', '--porcelain=v1', '--untracked-files=no'):
-                        raise Blocked('review delivery target drifted; inspect the reviewed target before continuation')
-                    self._review(recorder=recorder, review_base=review_base, head=head, ordinal=last['review_ordinal'],
-                                 fixing_round=last['fixing_round'], trigger_execution_id=last['trigger_execution_id'],
-                                 predecessor_execution_id=last['predecessor_execution_id'], input_checkpoints=last.get('input_checkpoints'),
-                                 execution_id=last['execution_id'], retry_limit=int(match.group(1)))
-                    continue
-            if last['role'] == 'reviewer':
-                if last['state'] == 'approved':
-                    return complete(last, review)
-                if last['state'] != 'rejected' or review['approved']:
-                    raise Blocked('independent review was not an actionable rejection (commits retained); inspect findings and examine remaining coverage gaps before a new review: ' + canonical(review))
-                if not review['findings']:
-                    if policy != 'owner-pair-v1' or not review.get('coverage_gaps') or not self.resume:
-                        raise Blocked('independent review was not an actionable rejection (commits retained); inspect findings and examine remaining coverage gaps before a new review: ' + canonical(review))
-                    head = last['references'].get('head')
-                    current = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
-                    if not isinstance(head, str) or not head:
-                        raise Blocked('evidence-only review target drifted: missing reviewed head; inspect retained review before reassessment')
-                    if current != head:
-                        # A resume with no new artifact reports not_created, not a
-                        # new finalization attempt. It cannot erase earlier commit
-                        # facts. Any other outcome still takes precedence, including
-                        # failed, malformed or conflicting not_created records.
-                        for row in store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND kind='metric_artifact' ORDER BY seq DESC", (self.run,)):
-                            try:
-                                facts = json.loads(row['details'])
-                            except (TypeError, ValueError):
-                                facts = None
-                            if row['state'] == 'not_created' and facts == {'status': 'not_created'}:
-                                continue
-                            break
-                        else:
-                            row, facts = None, None
-                        path = artifact_relative(self.run)
-                        mismatch = None
-                        if not isinstance(facts, dict):
-                            mismatch = 'missing or invalid finalizer facts'
-                        elif row['state'] not in ('committed', 'committed_after_reported_error') or facts.get('status') != row['state']:
-                            mismatch = 'finalizer status'
-                        else:
-                            for key, expected in (('no_change', False), ('sha', current), ('parent', head), ('path', path)):
-                                if (facts.get(key) is not False if key == 'no_change' else facts.get(key) != expected):
-                                    mismatch = key
-                                    break
-                        if mismatch:
-                            raise Blocked('evidence-only review target drifted: retained same-run metrics ' + mismatch + ' mismatch; inspect finalizer history and reconcile the reviewed target before reassessment')
-                        try:
-                            _commit_result(self.authority.project, current, head, path)
-                        except Blocked as exc:
-                            raise Blocked('evidence-only review target drifted: actual metrics commit facts mismatch; inspect the commit and reconcile the reviewed target before reassessment: ' + str(exc)) from exc
-                    evidence_digest = self._review_evidence_digest()
-                    retained = store.evidence_reassessment_for_rejection(
-                        self.run, last['execution_id'], review_base=review_base, review_head=head)
-                    if retained is None:
-                        try:
-                            diagnosis = self.question(
-                                'As coordinator, inspect the settled evidence/coverage-only review rejection, retained worker returns and check evidence. '
-                                'Diagnose routine technical gaps autonomously and use supported explicit continuation; do not ask the owner to debug or for renewed consent solely because files changed. Preserve material scope, paid/external, security/data, manual and uncertain-authority gates. '
-                                'Supply a substantive targeted diagnosis for the outstanding gaps, or leave empty only when newly applicable retained evidence changed. '
-                                'Do not request a fixer, replay task work, or invent approval. Retained review: ' + canonical({
-                                    'execution_id': last['execution_id'], 'coverage_gaps': review['coverage_gaps'],
-                                    'check_evidence_digest': last['references'].get('check_evidence_digest')}))
-                        except BaseException as exc:
-                            raise Blocked('coordinator evidence reassessment diagnosis unavailable; no reviewer dispatched: ' + str(exc)) from exc
-                        retained = store.authorize_evidence_reassessment(
-                            self.run, uuid.uuid4().hex, rejecting_execution_id=last['execution_id'], review_base=review_base,
-                            review_head=head, diagnosis=diagnosis if isinstance(diagnosis, str) else '', evidence_digest=evidence_digest)
-                    _, reassessed, state = self._review(recorder=recorder, review_base=review_base, head=head,
-                                 ordinal=last['review_ordinal'] + 1, fixing_round=last['fixing_round'],
-                                 trigger_execution_id=last['execution_id'], predecessor_execution_id=last['execution_id'],
-                                 execution_id=retained['execution_id'])
-                    if state == 'rejected' and not reassessed['findings']:
-                        raise Blocked('evidence reassessment retains coverage gaps; investigate them before another explicit resume: ' +
-                                      canonical(reassessed['coverage_gaps']))
-                    continue
-                ordinal, round_ = last['review_ordinal'], last['fixing_round'] + 1
-                if policy == 'historical-two-review-one-fixer' and ordinal != 1:
-                    raise Blocked('independent final review findings (commits retained): ' + canonical(review))
-                fixer_id = uuid.uuid4().hex
-                grant = None
-                if policy == 'owner-pair-v1' and ordinal > 1:
-                    head = last['references'].get('head')
-                    grant = store.owner_pair_for_rejection(self.run, rejecting_execution_id=last['execution_id'],
-                                                           review_base=review_base, review_head=head, original_scope=scope)
-                    if grant is None and store.routine_review_authority(self.run, scope):
-                        grant = store.authorize_owner_pair(self.run, uuid.uuid4().hex,
-                            rejecting_execution_id=last['execution_id'], review_base=review_base, review_head=head,
-                            original_scope=scope, fixer_execution_id=fixer_id, reviewer_execution_id=uuid.uuid4().hex)
-                    if grant is None:
-                        context = {'rejecting_execution': last['execution_id'], 'review_base': review_base,
-                                   'review_head': head, 'scope': scope,
-                                   'effect': 'Authorize exactly one scoped repair and one fresh cumulative repair review; no repeat grant.'}
-                        question = ('Independent review rejected execution ' + last['execution_id'] + ' for original range ' +
-                                    review_base + '..' + head + ', original task scope ' + scope +
-                                    '. Authorize exactly one scoped repair plus fresh cumulative repair review with the configured models, '
-                                    'not a repeat grant? [yes/no]')
-                        try:
-                            answer = self.question(question, owner_only=True, decision_context=context)
-                        except BaseException as exc:
-                            store.history(self.run, None, 'review_pair_decision', 'unavailable', context)
-                            raise Blocked('owner authorization unavailable; no repair/review pair dispatched: ' + str(exc)) from exc
-                        if not isinstance(answer, str) or answer.strip().lower() not in ('yes', 'y'):
-                            store.history(self.run, None, 'review_pair_decision', 'denied', context)
-                            raise Blocked('owner did not authorize an additional repair/review pair; blockers retained')
-                        grant = store.authorize_owner_pair(self.run, uuid.uuid4().hex,
-                            rejecting_execution_id=last['execution_id'], review_base=review_base, review_head=head,
-                            original_scope=scope, fixer_execution_id=fixer_id, reviewer_execution_id=uuid.uuid4().hex)
-                    fixer_id = grant['fixer_execution_id']
-                    current = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
-                    if current != grant['review_head']:
-                        raise Blocked('review target drifted after owner authorization; inspect and renew affected authority before dispatch')
-                    store.reserve_owner_pair_fixer(self.run, grant['grant_id'], rejecting_execution_id=last['execution_id'],
-                                                   review_base=review_base, review_head=grant['review_head'], original_scope=scope)
-                self.run_fix(review['findings'], trigger_execution_id=last['execution_id'], review_base=review_base,
-                             recorder=recorder, execution_id=fixer_id, review_ordinal=ordinal,
-                             fixing_round=round_, predecessor_execution_id=last['execution_id'], terminal_stop=terminal_stop)
-                continue
-            # A successful fixer alone never accepts delivery: reserve/dispatch its exact fresh reviewer.
-            if last['state'] != 'approved':
-                raise Blocked('fixing round remains incomplete or failed; commits retained')
-            ordinal, round_ = last['review_ordinal'] + 1, last['fixing_round']
-            reviewer_id = None
-            if policy == 'owner-pair-v1' and last['review_ordinal'] > 1:
-                grant = next((item for item in reversed(executions) if item['role'] == 'reviewer' and
-                              item['execution_id'] == last['trigger_execution_id']), None)
-                if grant is None:
-                    raise Blocked('assigned fixer has no retained rejecting review')
-                facts = store.owner_pair_for_rejection(self.run, rejecting_execution_id=grant['execution_id'],
-                    review_base=review_base, review_head=grant['references'].get('head'), original_scope=scope)
-                if facts is None:
-                    raise Blocked('assigned fixer has no retained owner pair grant')
-                reviewer_id = store.reserve_owner_pair_reviewer(self.run, facts['grant_id'], fixer_execution_id=last['execution_id'])['reviewer_execution_id']
-            head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
-            repaired_head = last['references'].get('head')
-            if not isinstance(repaired_head, str) or head != repaired_head:
-                raise Blocked('review target drifted after repair; inspect affected continuation before dispatch')
-            self._review(recorder=recorder, review_base=review_base, head=head, ordinal=ordinal, fixing_round=round_,
-                         trigger_execution_id=last['execution_id'], predecessor_execution_id=last['execution_id'], execution_id=reviewer_id)
 
     def recover_task(self, recovery, *, owner_authorized=False):
         """Verify/checkpoint an explicit external same-task completion; never replay its SDK call."""
@@ -1490,9 +1433,10 @@ class Engine:
             if any(state == 'authorized' and facts.get('recovery_id') == recovery_id for state, facts in prior) and completed[task_id].get('external_recovery_id') == recovery_id:
                 return completed[task_id]
             raise Blocked('external recovery cannot replace a completed task; retain its checkpoint')
-        first = next((item['id'] for item in saved['contract']['tasks'] if item['id'] not in completed), None)
-        if first != task_id or any(dep not in completed for dep in task.get('depends', [])):
-            raise Blocked('external recovery must checkpoint the next unfinished task after its dependencies; inspect retained progress')
+        first = next((item['id'] for item in saved['contract']['tasks']
+                      if item['id'] not in completed and all(dep in completed for dep in item.get('depends', []))), None)
+        if first != task_id:
+            raise Blocked('external recovery must checkpoint the next dependency-ready unfinished task; inspect retained progress')
         calls = {}
         for row in store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker_invocation' ORDER BY seq", (self.run, task_id)):
             facts = json.loads(row['details'])
@@ -1525,7 +1469,8 @@ class Engine:
             index = self._repair_index_state(project, paths)
             store.history(self.run, task_id, 'external_recovery', 'authorized', {
                 'recovery_id': recovery_id, 'decision': 'affirmative_actual_owner', 'transfer': recovery})
-            manual_gates(task, self.question)
+            with question_scope(task_id=task_id, recovery_id=recovery_id, purpose='manual_gate'):
+                manual_gates(task, self.question)
             checks = run_checks(project, task, lock_fd=self.authority.lock.fileno(),
                 completed=lambda state, attempt: store.history(self.run, task_id, 'check', state, attempt))
             focused.accept_completed_handoff(paths)
@@ -1559,454 +1504,12 @@ class Engine:
         return checkpoint
 
     def refresh_review_target(self):
-        """Freshly review current HEAD after a stopped, unreserved stale pair grant drifted."""
-        store = self.authority.store
-        saved = store.input(self.run)
-        review_base = saved['review_base']
-        head = git(self.authority.project, 'rev-parse', 'HEAD').decode().strip()
-        recorder = Recorder(store, self.run)
-        recorder.resume()
-        terminal = recorder.occurrence()
-        recorder.emit(terminal, 'terminal', 'started', facts={'baseline': review_base})
-        execution_id, review, state = self._review(recorder=recorder, review_base=review_base, head=head,
-                                                    ordinal=0, refresh_target=True)
-        if state == 'approved':
-            store.finish(self.run, 'complete', head)
-            recorder.emit(terminal, 'terminal', 'passed', facts={'head': head})
-            return {'status': 'complete', 'run_id': self.run, 'baseline': review_base, 'sha': head, 'review': review}
-        store.finish(self.run, 'failed', head, 'fresh current-target review rejected; retained routine authority may govern a new exact pair')
-        recorder.emit(terminal, 'terminal', 'failed', facts={'head': head})
-        return {'status': 'rejected', 'run_id': self.run, 'baseline': review_base, 'sha': head, 'review': review}
+        """Compatibility facade; target refresh uses the same graph transitions."""
+        from .graph import run_graph
+        return run_graph(self, action='refresh-review-target')
 
     def invoke(self):
-        project, store = self.authority.project, self.authority.store
-        if self.resume:
-            failures = store.db.execute(
-                "SELECT seq,task_id FROM execution_history WHERE run_id=? AND kind='implementation_escalation' "
-                "AND state='failed' ORDER BY seq DESC", (self.run,)).fetchall()
-            for failed_escalation in failures:
-                subsequent = [(row['kind'], row['state'], json.loads(row['details'])) for row in store.db.execute(
-                    "SELECT kind,state,details FROM execution_history WHERE run_id=? AND task_id=? AND seq>? "
-                    "AND kind IN ('external_recovery','checkpoint') ORDER BY seq",
-                    (self.run, failed_escalation['task_id'], failed_escalation['seq']))]
-                # recover_task emits completed only after actual owner authority, original
-                # checks and its exact external checkpoint. Mere authorization is insufficient.
-                completions = [facts for kind, state, facts in subsequent
-                               if kind == 'external_recovery' and state == 'completed']
-                if any(checkpoint.get('external_recovery_id') == completion.get('recovery_id')
-                       and isinstance(completion.get('recovery_id'), str)
-                       and checkpoint.get('sha') == completion.get('sha')
-                       for kind, state, checkpoint in subsequent if kind == 'checkpoint' and state == 'passed'
-                       for completion in completions):
-                    continue
-                # A passed ordinary checkpoint can survive a failed completion write. Enforce
-                # the owner stop before recovery can skip that task or dispatch review.
-                reason = ('implementation escalation failed for task ' + failed_escalation['task_id'] +
-                          '; stop and notify the owner with the retained failure and partial work; owner direction required')
-                store.finish(self.run, 'failed', git(project, 'rev-parse', 'HEAD').decode().strip(), reason)
-                raise Blocked(reason)
-        recovered = store.completed_checkpoints(self.run) if self.resume else {}
-        base = store.db.execute('SELECT baseline FROM execution_runs WHERE run_id=?', (self.run,)).fetchone()['baseline'] if self.resume else git(project, 'rev-parse', 'HEAD').decode().strip()
-        requested_review_base = store.input(self.run)['review_base'] if self.resume else self.contract.get('review_base', base)
-        if not isinstance(requested_review_base, str) or not requested_review_base:
-            raise Blocked('review_base must be a Git commit')
-        try:
-            review_base = git(project, 'rev-parse', '--verify', requested_review_base + '^{commit}').decode().strip()
-            git(project, 'merge-base', '--is-ancestor', review_base, base)
-        except Blocked:
-            raise Blocked('review_base must resolve to an ancestor of the run baseline') from None
-        if not self.resume:
-            store.start(self.run, base, contract=self.contract, executor=self.input_executor,
-                        authority={'paid_scope': self.paid_scope, 'routine_authority': True,
-                                   'review_policy': 'owner-pair-v1'}, review_base=review_base)
-        recorder = Recorder(store, self.run)
-        try:
-            identity = process_identity(os.getpid(), self.run)
-        except Exception:
-            identity = None
-        if not self.resume:
-            recorder.register(descriptor(self.contract, self.executor, base), identity)
-        else:
-            recorder.resume()
-        checkpoints = list(recovered.values())
-        terminal = recorder.occurrence()
-        terminal_stop = [None]
-        recorder.emit(terminal, 'terminal', 'started', facts={'baseline': base})
-        try:
-            for task in self.contract['tasks']:
-                if task['id'] in recovered:
-                    continue
-                preparation = recorder.occurrence()
-                recorder.emit(preparation, 'prepare', 'started', task_id=task['id'])
-                focused = None
-                escalated = False
-                try:
-                    if self.resume and store.db.execute(
-                            "SELECT 1 FROM execution_history WHERE run_id=? AND task_id=? "
-                            "AND kind='implementation_escalation' LIMIT 1", (self.run, task['id'])).fetchone():
-                        raise Blocked('implementation escalation did not complete task ' + task['id'] +
-                                      '; stop and notify the owner with the retained failure and partial work; owner direction required')
-                    focused = FocusedGit(project, task, store.task_facts(self.run, task['id']) if self.resume else None)
-                    store.task(self.run, task['id'], 'running', focused.base)
-                    recorder.emit(preparation, 'prepare', 'passed', task_id=task['id'])
-                    gate_number = [0]
-                    def gate_question(text):
-                        gate_number[0] += 1
-                        gate_occurrence, question_occurrence = recorder.occurrence(), recorder.occurrence()
-                        facts = {'ordinal': gate_number[0]}
-                        recorder.emit(gate_occurrence, 'gate', 'started', task_id=task['id'], facts=facts)
-                        recorder.emit(question_occurrence, 'gate', 'question_requested', task_id=task['id'], facts={**facts, 'parent_occurrence_id': gate_occurrence})
-                        try:
-                            answer = self.question(text)
-                        except BaseException as exc:
-                            recorder.emit(question_occurrence, 'gate', 'delivery_failed', task_id=task['id'], facts={**facts, 'parent_occurrence_id': gate_occurrence, 'error_category': 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'blocked'})
-                            recorder.emit(gate_occurrence, 'gate', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={**facts, 'error_category': 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'blocked'})
-                            raise
-                        recorder.emit(question_occurrence, 'gate', 'answer_returned', task_id=task['id'], facts={**facts, 'parent_occurrence_id': gate_occurrence})
-                        recorder.emit(gate_occurrence, 'gate', 'passed' if answer.strip().lower() in ('yes', 'y') else 'failed', task_id=task['id'], facts=facts)
-                        return answer
-                    manual_gates(task, gate_question)
-                    role = 'fixing_worker' if isinstance(self.contract.get('monitor'), dict) and self.contract['monitor'].get('correction_of') else 'worker'
-                    active_occurrence, invocation_chain, last_invocation = [None], [], [None]
-                    question_occurrence = [None]
-                    def worker_question(state):
-                        mapping = {'requested': 'question_requested', 'returned': 'answer_returned', 'sent': 'answer_sent', 'delivery_failed': 'delivery_failed'}
-                        if active_occurrence[0] is not None:
-                            if state == 'requested' or question_occurrence[0] is None:
-                                question_occurrence[0] = recorder.occurrence()
-                            recorder.emit(question_occurrence[0], 'worker', mapping[state], task_id=task['id'],
-                                          facts={'parent_occurrence_id': active_occurrence[0]})
-                            if state in {'sent', 'delivery_failed'}:
-                                question_occurrence[0] = None
-                    session_request, reuse_key = self._session_request(task, role)
-                    selection = select_session(session_request, self.session_candidates)
-                    selected = next((candidate for candidate in self.session_candidates
-                                     if candidate['id'] == selection['session_id']), None)
-                    store.history(self.run, task['id'], 'session', 'selected', {
-                        'session_id': selection['session_id'], 'reason': selection['reason'],
-                        'rejected': selection['rejected'],
-                    })
-                    worker = self.adapter(project, self.executor, question=self.question, observe_question=worker_question)
-                    worker.lock_fd = self.authority.lock.fileno()
-                    continuation = None
-                    if self.resume:
-                        row = store.db.execute(
-                            "SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? "
-                            "AND kind='worker_invocation' ORDER BY seq DESC LIMIT 1", (self.run, task['id'])).fetchone()
-                        if row:
-                            continuation = {'state': row['state'], **json.loads(row['details'])}
-                            if row['state'] == 'started':
-                                raise Blocked('unfinished worker invocation has no terminal outcome; inspect its saved call before continuation')
-                            if row['state'] == 'failed':
-                                if not continuation.get('saved_session') and self.worker_recovery is None:
-                                    raise Blocked('terminal worker failure has no saved session; inspect the failed invocation/cause before any relaunch: '
-                                                  + str(continuation.get('invocation_id', 'unknown')))
-                                correction = self.worker_recovery['diagnosis'] if self.worker_recovery else self.question(
-                                    'As coordinating agent, inspect this terminal worker failure and its saved session before continuing. '
-                                    'Provide the inspected diagnosis and a targeted correction justifying safe continuation '
-                                    '(not an unchanged retry); do not ask the owner to debug routine technical failures; leave empty if unknown. '
-                                    'Unfinished task: ' + task['id'] + '. Preserve its existing requirements, authority, and acceptance constraints. '
-                                    'Retained history reference: ' + canonical({
-                                        'invocation_id': continuation.get('invocation_id'),
-                                        'role': continuation.get('role'),
-                                        'error': continuation.get('error'),
-                                        'diagnostic': continuation.get('diagnostic'),
-                                        'saved_session_id': (continuation.get('saved_session') or {}).get('id'),
-                                    }))
-                                if not correction.strip() or correction.strip().lower() in ('unknown', 'retry', 'yes'):
-                                    raise Blocked('terminal worker cause/targeted correction remains unknown; no worker relaunched')
-                                continuation['targeted_correction'] = correction
-                            if continuation.get('saved_session'):
-                                if continuation.get('reuse_key') != reuse_key:
-                                    raise Blocked('saved unfinished worker authority/resources are incompatible; inspect before continuation')
-                                worker.saved_session = continuation['saved_session']
-                            # Retain only the recorded terminal invocation sequence for this
-                            # same task. It is the evidence for a resumed correction's direct
-                            # predecessor; malformed or incomplete optional history stays unknown.
-                            retained = []
-                            for prior in store.db.execute(
-                                "SELECT details FROM execution_history WHERE run_id=? AND task_id=? "
-                                "AND kind='worker_invocation' AND state IN ('returned','failed','interrupted') ORDER BY seq",
-                                (self.run, task['id'])):
-                                try:
-                                    invocation_id = json.loads(prior['details']).get('invocation_id')
-                                except (TypeError, ValueError):
-                                    retained = []
-                                    break
-                                if not isinstance(invocation_id, str) or not invocation_id or invocation_id in retained:
-                                    retained = []
-                                    break
-                                retained.append(invocation_id)
-                            if retained and retained[-1] == continuation.get('invocation_id'):
-                                invocation_chain[:] = retained
-                                last_invocation[0] = retained[-1]
-                        else:
-                            prior = store.db.execute(
-                                "SELECT 1 FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker' LIMIT 1",
-                                (self.run, task['id'])).fetchone()
-                            if prior:
-                                raise Blocked('unfinished worker lacks retained invocation/cause; inspect legacy history before any relaunch')
-                    dispatch_recovery = None
-                    if self.worker_recovery is not None:
-                        recovery, self.worker_recovery = self.worker_recovery, None
-                        if continuation is None:
-                            raise Blocked('worker recovery needs a retained terminal invocation for the unfinished task')
-                        continuation['targeted_correction'] = recovery['diagnosis']
-                        store.history(self.run, task['id'], 'worker_recovery', 'selected', recovery)
-                        if recovery['action'] in ('fresh', 'escalate'):
-                            profile = self.executor
-                            if recovery['action'] == 'escalate':
-                                if self.implementation_fallback is None:
-                                    raise Blocked('implementation escalation has no permitted fallback; configure it at launch before using a stronger worker')
-                                profile = self.implementation_fallback
-                                escalated = True
-                            dispatch_recovery = {**recovery, 'predecessor': continuation['invocation_id']}
-                            worker = self.adapter(project, profile, question=self.question, observe_question=worker_question)
-                            worker.lock_fd = self.authority.lock.fileno()
-                            worker.saved_session = None
-                            continuation.pop('saved_session', None)
-                            selected = None
-                            if escalated:
-                                store.history(self.run, task['id'], 'implementation_escalation', 'started',
-                                              {**dispatch_recovery, 'executor': profile})
-                    def selected_inputs():
-                        # Only checkpoints the sequential runner selected from declared prerequisites
-                        # are relations; absent recording remains absent rather than guessed.
-                        return [{'checkpoint_occurrence_id': item['checkpoint_occurrence_id'], 'task_id': item['task_id'],
-                                 'producer_invocation_id': item['producer_invocation_id'],
-                                 'correction_chain': item['correction_chain']}
-                                for item in checkpoints if item.get('task_id') in task.get('depends', [])
-                                and isinstance(item.get('checkpoint_occurrence_id'), str)
-                                and isinstance(item.get('producer_invocation_id'), str)]
-
-                    def invoke_worker(prompt, **kwargs):
-                        nonlocal continuation, dispatch_recovery
-                        prompt = _IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n' + prompt
-                        if continuation is not None:
-                            prompt = ('Continue only the unfinished same-task work. Inspect the retained failure/diagnosis below; '
-                                      'do not replay completed effects. Apply only the justified targeted correction; '
-                                      'unknown terminal causes are not retry permission.\nRetained history reference: '
-                                      + canonical({
-                                          'invocation_id': continuation.get('invocation_id'),
-                                          'role': continuation.get('role'),
-                                          'error': continuation.get('error'),
-                                          'diagnostic': continuation.get('diagnostic'),
-                                          'targeted_correction': continuation.get('targeted_correction'),
-                                          'saved_session_id': (continuation.get('saved_session') or {}).get('id'),
-                                      }) + '\n' + prompt)
-                            continuation = None
-                        invocation_id = uuid.uuid4().hex
-                        predecessor = last_invocation[0]
-                        chain = [*invocation_chain, invocation_id]
-                        invocation_kind = 'corrective_worker' if predecessor else 'task_worker'
-                        occurrence = recorder.occurrence()
-                        active_occurrence[0] = occurrence
-                        public = {'role': role, 'invocation_id': invocation_id, 'invocation_kind': invocation_kind,
-                                  'selected_input_checkpoints': selected_inputs(), 'correction_chain': chain}
-                        if predecessor:
-                            public['predecessor_invocation_id'] = predecessor
-                        explicit_session = kwargs.get('saved_session')
-                        effective_session = effective_saved_session(explicit_session, getattr(worker, 'saved_session', None))
-                        facts = {'invocation_id': invocation_id, 'role': role, 'prompt': prompt, 'reuse_key': reuse_key,
-                                 'saved_session': effective_session,
-                                 'executor': self.implementation_fallback if escalated else self.executor}
-                        # Reserve before the adapter/provider boundary. PiAdapter uses the same
-                        # explicit-over-held identity precedence for its savedSession request.
-                        store.reserve_worker_dispatch(self.run, task['id'], invocation_id, effective_session,
-                                                      recovery=dispatch_recovery)
-                        dispatch_recovery = None
-                        store.history(self.run, task['id'], 'worker_invocation', 'started', facts)
-                        recorder.emit(occurrence, 'worker', 'started', task_id=task['id'], facts=public)
-                        steering = {'run_id': self.run, 'task_id': task['id'], 'invocation_id': invocation_id,
-                                    'role': invocation_kind}
-                        if getattr(worker, 'parent_steering_available', lambda: False)():
-                            worker.enable_parent_steering(steering)
-                            kwargs['steering'] = steering
-                        expected_session_id = (getattr(worker, 'saved_session', {}) or {}).get('id')
-                        # Clear every optional observation before this actual call.
-                        worker.last_interval = None
-                        worker.last_observation = None
-                        worker.opened_session = None
-                        try:
-                            result = self._prompt_worker(worker, prompt, **kwargs)
-                        except BaseException as exc:
-                            actual_session = (getattr(worker, 'opened_session', None) or
-                                              getattr(worker, 'saved_session', None))
-                            if actual_session is not None:
-                                store.bind_worker_dispatch(self.run, task['id'], invocation_id, actual_session)
-                            state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                            details = {**facts, 'error': _safe_error(exc) or type(exc).__name__,
-                                       'saved_session': getattr(worker, 'saved_session', None)}
-                            if isinstance(exc, _UnsuccessfulOutcome):
-                                details['diagnostic'] = exc.diagnostic
-                            store.history(self.run, task['id'], 'worker_invocation', state, details)
-                            terminal_stop[0] = invocation_id
-                            recorder.emit(occurrence, 'worker', state, task_id=task['id'],
-                                          facts={**public, 'stopped_by_invocation_id': invocation_id,
-                                                 'error_category': _failure(exc)})
-                            self._append_metric(worker, invocation_id=invocation_id, task_id=task['id'],
-                                                role=(role if role == 'fixing_worker' else 'corrective_worker' if predecessor else 'worker'), outcome=state,
-                                                selection=selection, continued=predecessor is not None,
-                                                expected_session_id=expected_session_id)
-                            raise
-                        actual_session = (getattr(worker, 'opened_session', None) or
-                                          getattr(worker, 'saved_session', None))
-                        if actual_session is not None:
-                            store.bind_worker_dispatch(self.run, task['id'], invocation_id, actual_session)
-                        store.history(self.run, task['id'], 'worker_invocation', 'returned',
-                                      {**facts, 'saved_session': getattr(worker, 'saved_session', None)})
-                        recorder.emit(occurrence, 'worker', 'returned', task_id=task['id'], facts=public)
-                        self._append_metric(worker, invocation_id=invocation_id, task_id=task['id'],
-                                            role=(role if role == 'fixing_worker' else 'corrective_worker' if predecessor else 'worker'), outcome='settled',
-                                            selection=selection, continued=predecessor is not None,
-                                            expected_session_id=expected_session_id)
-                        invocation_chain[:] = chain
-                        last_invocation[0] = invocation_id
-                        return result
-                    claimed_paths = set()
-                    def claim(name):
-                        if name not in claimed_paths:
-                            focused.claim(name)
-                            store.history(self.run, task['id'], 'mutation', 'claimed', focused.facts())
-                            claimed_paths.add(name)
-                    def command(phase, call):
-                        focused.command(phase, call)
-                        store.history(self.run, task['id'], 'tool_command',
-                                      'started' if phase == 'start' else 'returned',
-                                      {'call': call})
-                    try:
-                        text = invoke_worker(
-                            'Execute this one requested task in the current project. Read the relevant files, '
-                            'make the smallest correct edits, run relevant actual project checks and fix ordinary '
-                            'tool/read/argument/check errors in this conversation. Never stage or commit: the runner '
-                            'will inspect and create the focused commit. Do not install globally, refresh credentials, '
-                            'change global settings, delegate, or perform unrequested external operations. '
-                            'Preserve all unrelated and pre-existing dirty work. Ask the owner for material scope '
-                            'or permission questions. No new planning/evidence artifacts. '
-                            'Return an honest concise summary and check outcomes.\n'
-                            + _DECISION_CONSTRAINTS + self.paid_authority() + '\n'
-                            'Select source edit and commit paths explicitly; preserve unknown and pre-existing bytes. '
-                            'Generated outputs are cleanup guidance, never a registration or command prerequisite.\n'
-                            'Task: ' + canonical(task), claim=claim, command=command,
-                            cleanup=focused.cleanup_artifact, saved_session=(continuation.get('saved_session') if continuation else
-                                selected['saved_session'] if selected else None), reuse_key=reuse_key)
-                    except BaseException as exc:
-                        state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                        store.history(self.run, task['id'], 'worker', state, {'role': role, 'error': _safe_error(exc)})
-                        raise
-                    store.history(self.run, task['id'], 'worker', 'returned', {'role': role})
-                    check_occurrences = {}
-                    def check_observe(kind, ordinal, code):
-                        occurrence = check_occurrences.setdefault(ordinal, recorder.occurrence())
-                        facts = {'ordinal': ordinal}
-                        if code is not None: facts['exit_code'] = code
-                        recorder.emit(occurrence, 'check', kind, task_id=task['id'], facts=facts)
-                    def run_required_checks():
-                        return run_checks(project, task, lock_fd=self.authority.lock.fileno(), observe=check_observe,
-                            completed=lambda state, attempt: store.history(self.run, task['id'], 'check', state, attempt))
-                    def correct_required_checks():
-                        nonlocal text
-                        previous_failed_attempt = None
-                        while True:
-                            try:
-                                checks = run_required_checks()
-                                return checks
-                            except CheckFailure as failure:
-                                if escalated:
-                                    raise Blocked('implementation escalation required check failed; stop and notify the owner: '
-                                                  + canonical(failure.attempt)) from failure
-                                if failure.attempt == previous_failed_attempt:
-                                    raise Blocked('required check failed and remains unchanged after same-task correction: ' + canonical(failure.attempt))
-                                previous_failed_attempt = failure.attempt
-                                try:
-                                    text = invoke_worker(
-                                        'A runner-owned REQUIRED check for this same task failed. Make a reasoned, '
-                                        'authorized scoped source or local-setup correction if one is safe, then return. '
-                                        'Do not claim success, skip the command, or ask merely because files changed. '
-                                        'If no safe correction remains or a material decision is needed, state that blocker. '
-                                        'The runner will rerun the affected required command before checkpointing.\n'
-                                        'Actual failed attempt: ' + canonical(failure.attempt),
-                                        claim=claim, command=command, cleanup=focused.cleanup_artifact, reuse_key=reuse_key)
-                                except BaseException as exc:
-                                    state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                                    store.history(self.run, task['id'], 'worker', state, {'role': role, 'correction': True, 'error': _safe_error(exc)})
-                                    raise
-                                store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
-
-                    checks = correct_required_checks()
-                    previous_checkpoint_error = None
-                    while True:
-                        checkpoint_occurrence = recorder.occurrence()
-                        recorder.emit(checkpoint_occurrence, 'checkpoint', 'started', task_id=task['id'], facts={'baseline': focused.base})
-                        try:
-                            checkpoint = focused.checkpoint()
-                        except BaseException as exc:
-                            state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                            recorder.emit(checkpoint_occurrence, 'checkpoint', state, task_id=task['id'], facts={'baseline': focused.base, 'error_category': _failure(exc)})
-                            store.history(self.run, task['id'], 'checkpoint', state, {'error': str(exc)})
-                            checkpoint = focused.reconcile_checkpoint()
-                            if checkpoint is not None:
-                                break
-                            if isinstance(exc, (KeyboardInterrupt, SystemExit)):
-                                raise
-                            if escalated:
-                                raise Blocked('implementation escalation checkpoint failed; stop and notify the owner: ' + str(exc)) from exc
-                            if str(exc) == previous_checkpoint_error:
-                                raise Blocked('checkpoint failed and remains unchanged after same-task correction: ' + str(exc))
-                            previous_checkpoint_error = str(exc)
-                            try:
-                                text = invoke_worker(
-                                    'A runner-owned checkpoint for this same task failed. Make a reasoned, authorized '
-                                    'scoped correction if one is safe. Do not bypass hooks or signing, reset, rebase, '
-                                    'or adopt unrelated work. The runner will rerun affected REQUIRED checks and the '
-                                    'checkpoint with normal Git configuration intact.\nActual checkpoint error: ' + str(exc),
-                                    claim=claim, command=command, cleanup=focused.cleanup_artifact, reuse_key=reuse_key)
-                            except BaseException as correction_error:
-                                correction_state = 'interrupted' if isinstance(correction_error, (KeyboardInterrupt, SystemExit)) else 'failed'
-                                store.history(self.run, task['id'], 'worker', correction_state, {'role': role, 'correction': True, 'error': str(correction_error)})
-                                raise
-                            store.history(self.run, task['id'], 'worker', 'returned', {'role': role, 'correction': True})
-                            checks = correct_required_checks()
-                            continue
-                        break
-                    checkpoint['parent'] = (None if checkpoint['no_change'] else
-                                            git(project, 'rev-parse', checkpoint['sha'] + '^').decode().strip())
-                    checkpoint.update({'task_id': task['id'], 'checkpoint_occurrence_id': checkpoint_occurrence,
-                                       'producer_invocation_id': last_invocation[0],
-                                       'correction_chain': list(invocation_chain)})
-                    checkpoint_facts = {'baseline': focused.base, 'head': checkpoint['sha'], 'no_change': checkpoint['no_change']}
-                    if last_invocation[0] is not None:
-                        checkpoint_facts.update({'producer_invocation_id': last_invocation[0],
-                                                 'correction_chain': list(invocation_chain)})
-                    recorder.emit(checkpoint_occurrence, 'checkpoint', 'passed', task_id=task['id'], facts=checkpoint_facts)
-                    store.history(self.run, task['id'], 'checkpoint', 'passed', checkpoint)
-                    checkpoints.append(checkpoint)
-                    if not escalated:
-                        self._settle_session(task, worker, session_request, reuse_key, checkpoint)
-                    store.task(self.run, task['id'], 'complete', focused.base, checkpoint['sha'],
-                               {'summary': text, 'checks': checks, 'paths': checkpoint['paths'],
-                                'generated_artifacts': checkpoint['artifacts']})
-                except BaseException as exc:
-                    if escalated:
-                        store.history(self.run, task['id'], 'implementation_escalation', 'failed',
-                                      {'error': _safe_error(exc), 'action': 'stop and notify owner; no further dispatch without owner direction'})
-                    recorder.emit(preparation, 'prepare', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', task_id=task['id'], facts={'error_category': _failure(exc)})
-                    state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-                    store.task(self.run, task['id'], state, focused.base if focused else base, details={'error': _safe_error(exc)})
-                    if escalated and not isinstance(exc, (KeyboardInterrupt, SystemExit)):
-                        raise Blocked('implementation escalation failed for task ' + task['id'] +
-                                      '; stop and notify the owner; partial work retained, owner direction required: '
-                                      + _safe_error(exc)) from exc
-                    raise
-            result = self._finish_reviews(recorder=recorder, terminal=terminal, checkpoints=checkpoints,
-                                          base=base, review_base=review_base, terminal_stop=terminal_stop)
-            return self._finalize_metric_artifact(result)
-        except BaseException as exc:
-            head = git(project, 'rev-parse', 'HEAD').decode().strip()
-            store.finish(self.run, 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', head, _safe_error(exc))
-            terminal_facts = {'head': head, 'error_category': _failure(exc)}
-            if terminal_stop[0] is not None:
-                terminal_facts['stopped_by_invocation_id'] = terminal_stop[0]
-            recorder.emit(terminal, 'terminal', 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed', facts=terminal_facts)
-            self._finalize_metric_artifact()
-            raise
+        """Compatibility facade for the single graph controller; never replay legacy runs."""
+        from .graph import run_graph
+        recovery = self.worker_recovery or {}
+        return run_graph(self, action=recovery.get("action"), diagnosis=recovery.get("diagnosis"))

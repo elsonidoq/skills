@@ -1,8 +1,26 @@
-# Workflow monitor
+# Workflow monitor: cutover and history
 
-`workflow_monitor` is a local, read-only presentation of recording-contract version 1
-workflow snapshots. It imports no workflow writer, never creates or migrates a store,
-and has no execution or control routes.
+The standalone monitor application, its launchers, and its optional recording writer are
+retired. The active replacement is opt-in [local Phoenix tracing](../docs/coordinate-implementation.md#local-phoenix-configuration).
+Existing monitor tables and data remain intact; runtime status can still read historical
+recordings, and workflow history and metric readers remain available. New runs do not add
+monitor recordings. No service shutdown, database migration, history preservation, or data
+cleanup is performed by this cutover.
+
+T020 observed two successive actual local Phoenix views before root completion at revision
+`5cebd693738f17acdee0ec16caf6187939d60542`: seven then thirteen completed spans with
+nested tasks and invocations. This used a deterministic fixture, not live model judgment;
+manual filter clearing and reload were needed, absent usage/cost remains unknown, and startup
+network traffic was not observed. [#2](https://github.com/elsonidoq/skills/issues/2),
+[#10](https://github.com/elsonidoq/skills/issues/10), and
+[#13](https://github.com/elsonidoq/skills/issues/13) retain their historical usability and
+observation limits; this cutover does not resolve or close them.
+
+**The remaining text is historical**, not current installation, launch, preservation, UI
+change, or operational guidance. Commands and source paths below require a separately
+retained compatible historical revision and environment; this checkout no longer provides
+those packages. Preserve existing data and obtain applicable authority before any migration,
+service operation, or deletion.
 
 ## Visual reference and UI change rule
 

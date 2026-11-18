@@ -1,5 +1,6 @@
 """Line-framed transport to the installed Pi SDK, not an execution proof gateway."""
 import json
+from contextvars import ContextVar
 import os
 import queue
 from pathlib import Path
@@ -14,9 +15,19 @@ from .metrics import interval_record
 from .store import Blocked, canonical
 
 
+question_context = ContextVar('worker_question_trace', default=None)
+
+
 def effective_saved_session(explicit, held):
     """Match the transport's explicit saved-session precedence without mutation."""
     return explicit if explicit is not None else held
+
+
+class WaitingQuestion:
+    """A settled SDK question, not an answer or task completion."""
+    def __init__(self, question, session):
+        self.question = question
+        self.session = session
 
 
 class TaskOutcome:
@@ -31,7 +42,44 @@ def host_path():
     return source if source.exists() else Path(sys.prefix) / 'share/coherence-workflow/pi-host/host.mjs'
 
 
-def parent_question(question, *, ready=False, owner_only=False, decision_context=None):
+def drain_parent_trace(observer, *, final=False):
+    """Persist a buffered batch before acknowledging it; return False on capture loss.
+
+    The observer receives (run_id, events). It must commit the complete batch or raise.
+    This optional channel never changes a question's real transport outcome.
+    """
+    endpoint = os.environ.get('COHERENCE_PARENT_BRIDGE_SOCKET')
+    token = os.environ.get('COHERENCE_PARENT_BRIDGE_TOKEN')
+    session = os.environ.get('COHERENCE_PARENT_BRIDGE_SESSION')
+    run = os.environ.get('COHERENCE_PARENT_BRIDGE_RUN')
+    if observer is None or not all((endpoint, token, session, run)):
+        return False
+
+    def exchange(kind, **fields):
+        request_id = uuid.uuid4().hex
+        request = {'type': kind, 'request_id': request_id, 'run_id': run,
+                   'session_id': session, 'token': token, **fields}
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.connect(endpoint)
+            client.sendall((canonical(request) + '\n').encode())
+            with client.makefile('r', encoding='utf-8') as stream:
+                response = json.loads(stream.readline())
+        if not isinstance(response, dict) or response.get('request_id') != request_id or response.get('error'):
+            raise ValueError('uncorrelated or failed parent trace response')
+        return response
+
+    try:
+        events = exchange('trace_drain', final=final).get('events')
+        if not isinstance(events, list):
+            raise ValueError('invalid parent trace batch')
+        observer(run, events)
+        result = exchange('trace_ack', event_ids=[event['id'] for event in events])
+        return result.get('acknowledged') is True
+    except Exception:
+        return False
+
+
+def parent_question(question, *, ready=False, owner_only=False, decision_context=None, trace_observer=None):
     """Use the existing parent socket for readiness, routine, or owner-only questions."""
     if ready and (owner_only or decision_context is not None):
         raise Blocked('parent bridge readiness cannot carry an owner decision')
@@ -49,6 +97,9 @@ def parent_question(question, *, ready=False, owner_only=False, decision_context
     if not all((endpoint, token, session, run)):
         raise Blocked('parent owner bridge unavailable; launch through the parent-session bridge')
     request_id = uuid.uuid4().hex
+    if not ready:
+        from .trace_capture import optional_record
+        optional_record(question_context.get(), 'parent_request', parent_request_id=request_id)
     operation = 'parent readiness' if ready else 'parent question'
     lost_channel = (operation + ' operation blocked: parent channel was lost; reconnect through the '
                     'parent-session bridge, then explicitly inspect and resume the pending operation')
@@ -77,6 +128,11 @@ def parent_question(question, *, ready=False, owner_only=False, decision_context
         raise Blocked('parent owner bridge returned an uncorrelated response')
     if isinstance(response.get('error'), str):
         raise Blocked('parent owner bridge unavailable: ' + response['error'])
+    if not ready and trace_observer is not None and not drain_parent_trace(trace_observer):
+        try:
+            print('parent trace capture gap: drain, persistence or acknowledgement failed', file=sys.stderr, flush=True)
+        except OSError:
+            pass
     if ready:
         if response.get('ready') is not True:
             raise Blocked('parent owner bridge not ready; start from a session with the reply tool enabled')
@@ -167,12 +223,15 @@ class _ParentSteering:
 
 class PiAdapter:
     def __init__(self, project, executor, *, question=None, observe=None, observe_question=None,
-                 steering_status=None):
+                 steering_status=None, question_trace=None):
         self.project, self.executor = Path(project), executor
         self.lock_fd = None
         self.question = question or terminal_question
         self.observe = observe or (lambda value: print(canonical(value), file=sys.stderr, flush=True))
         self.observe_question = observe_question or (lambda state: None)
+        # The calling coordinator binds this optional observer to run/task/invocation.
+        # An absent observer remains valid for older callers.
+        self.question_trace = question_trace
         self.steering_status = steering_status or (lambda value: None)
         self.saved_session = None
         self.last_observation = None
@@ -186,6 +245,7 @@ class PiAdapter:
         self._send_control = None
         self._control_lock = threading.Lock()
         self._parent_steering = None
+        self._parent_steering_target = None
 
     def parent_steering_available(self):
         """Whether this attached parent can receive active-target updates."""
@@ -200,7 +260,8 @@ class PiAdapter:
         if not isinstance(target, dict) or any(not isinstance(target.get(key), str) or not target[key]
                                                for key in ('run_id', 'task_id', 'invocation_id', 'role')):
             raise Blocked('parent steering needs an exact runner-created target')
-        self._parent_steering = _ParentSteering(self, target)
+        self._parent_steering_target = dict(target)
+        self._parent_steering = _ParentSteering(self, self._parent_steering_target)
         return True
 
     def steer(self, request_id, instruction, *, target=None):
@@ -227,19 +288,23 @@ class PiAdapter:
             raise Blocked('steering target is unavailable: ' + str(exc)) from None
 
     def prompt(self, prompt, *, claim=None, command=None, cleanup=None, read_only=False, saved_session=None,
-               reuse_key=None, steering=None, review_repair=False):
+               reuse_key=None, steering=None, review_repair=False, pause_questions=False):
         """Run one prompt, optionally reopening only a runner-provided private session."""
         self.last_interval = None
         self.last_observation = None
         self.opened_session = None
         if steering is not None and not isinstance(steering, dict):
             raise Blocked('steering target must be runner-provided')
+        if steering is not None and self._parent_steering is None and self._parent_steering_target is not None:
+            self._parent_steering = _ParentSteering(self, self._parent_steering_target)
         request = {'project': str(self.project), 'executor': self.executor,
                    'prompt': prompt, 'readOnly': read_only,
                    # A standalone session record is a newer host extension.
                    # Explicit opt-in keeps an updated host compatible with
                    # controllers that predate this transport record.
                    'sessionObservations': True}
+        if pause_questions:
+            request['pauseQuestions'] = True
         if review_repair:
             request['reviewRepair'] = True
         if steering is not None:
@@ -311,19 +376,35 @@ class PiAdapter:
                                 self.observe_question(state)
                             except Exception:
                                 pass  # Recording is never transport control flow.
+                        from .trace_capture import consuming_question_context, optional_record
+                        facts = {'tool_call_id': record.get('tool_call_id'), 'question': record['question'],
+                                 'route': 'synchronous'}
+                        def trace(state, **extra):
+                            optional_record(self.question_trace, state, **facts, **extra)
                         observe_question('requested')
+                        trace('requested')
+                        token = question_context.set(trace)
+                        context_token = consuming_question_context.set({
+                            **(steering or {}), **facts, 'callback_request_id': record.get('request_id')})
                         try:
                             answer = self.question(record['question'])
-                        except BaseException:
+                        except BaseException as exc:
                             observe_question('delivery_failed')
+                            trace('unanswered', error_type=type(exc).__name__)
                             raise
+                        finally:
+                            consuming_question_context.reset(context_token)
+                            question_context.reset(token)
                         observe_question('returned')
+                        trace('resolved', resolution=answer)
                         try:
                             response(record, {'answer': answer})
-                        except BaseException:
+                        except BaseException as exc:
                             observe_question('delivery_failed')
+                            trace('delivery_failed', error_type=type(exc).__name__)
                             raise
                         observe_question('sent')
+                        trace('sent')
                 except (Blocked, ValueError, KeyError, OSError) as exc:
                     # A failed owner question has no safe synthetic answer. Close
                     # the host input so its pending callback rejects rather than
@@ -389,24 +470,36 @@ class PiAdapter:
                             if not isinstance(value.get('text'), str):
                                 raise Blocked('SDK result text must be a string')
                             outcome = value.get('outcome')
-                            if outcome is not None and outcome not in ('completed', 'blocked', 'failed', 'incomplete'):
-                                raise Blocked('SDK result outcome must be completed, blocked, failed, or incomplete')
+                            if outcome is not None and outcome not in ('completed', 'blocked', 'failed', 'incomplete', 'waiting'):
+                                raise Blocked('SDK result has an invalid outcome')
+                            if outcome == 'waiting':
+                                question = value.get('question')
+                                if (not pause_questions or not isinstance(question, dict)
+                                        or not isinstance(question.get('tool_call_id'), str)
+                                        or not question['tool_call_id'] or not isinstance(question.get('question'), str)):
+                                    raise Blocked('SDK waiting result lacks a valid opted-in question; inspect the saved session')
                             session = value.get('session')
                             if session is not None:
                                 if not (isinstance(session, dict) and isinstance(session.get('id'), str)
                                         and isinstance(session.get('file'), str)):
                                     raise Blocked('SDK result has an invalid saved session identity')
                                 self.saved_session = session
+                            if outcome == 'waiting' and session is None:
+                                raise Blocked('SDK waiting result lacks saved session identity; inspect the operation')
                             observations = {'before': value.get('before'), 'after': value.get('after')}
                             self.last_observation = observations if all(isinstance(item, dict) for item in observations.values()) else None
                             self.last_interval = (interval_record(**observations)
                                                   if self.last_observation is not None else None)
-                            result.append(TaskOutcome(outcome, value['text']) if outcome in ('blocked', 'failed', 'incomplete') else value['text'])
+                            result.append(WaitingQuestion(question, session) if outcome == 'waiting' else
+                                          TaskOutcome(outcome, value['text']) if outcome in ('blocked', 'failed', 'incomplete') else value['text'])
                             # Multiplexed host input intentionally remains open
                             # for controls; the result is its terminal boundary.
                             close_input()
                         elif kind == 'error':
-                            raise Blocked('SDK operation failed: ' + str(value.get('message')))
+                            detail = 'SDK operation failed: ' + str(value.get('message'))
+                            if pause_questions:
+                                detail += '; settlement and effects are uncertain; inspect the saved session and operation before continuation, do not redispatch'
+                            raise Blocked(detail)
                         else:
                             raise Blocked('unknown SDK transport record: ' + str(kind))
                 except BaseException as exc:
@@ -444,7 +537,10 @@ class PiAdapter:
                 code = proc.wait()
                 if code or not result:
                     errors.seek(0)
-                    raise Blocked('SDK host exited without a result (exit ' + str(code) + '): ' + errors.read())
+                    detail = 'SDK host exited without a result (exit ' + str(code) + '): ' + errors.read()
+                    if pause_questions:
+                        detail += '; question settlement and effects are uncertain; inspect the saved session and operation before continuation, do not redispatch'
+                    raise Blocked(detail)
                 return result[0]
             finally:
                 # An active target is valid only for this host invocation.
