@@ -10,30 +10,27 @@ owners and explain the delivery to the owner. Do not reopen implementation, audi
 rerun implementation checks, launch a fresh review or adjudicate acceptance. Existing workflow
 acceptance requirements remain in force; closeout neither adds nor waives them.
 
-## Step 0: Documentation Initialization Gate
+## Step 0: Resolve documentation ownership
 
-Before applying the closeout workflow, read repository instructions and existing
-documentation indexes only far enough to identify the project's required
-documentation owners and directories. Confirm that each required owner exists
-and every discovered documentation directory has the index mechanism required
-by local convention. Locate the project's documentation-routing guide: the
-documented rules that identify which kinds of changes require which
-documentation owners. If no such guide exists, report documentation ownership
-as unavailable. If the project has a persistent database, also confirm
-that an authoritative database-schema document or documented set of schema
-documents exists. An existing authoritative schema document satisfies this
-requirement even when no convention names it. If no local convention or
-existing documentation identifies the required owners or directory-index
-mechanism, report documentation ownership as unavailable. For a database-backed
-project, also report ownership as unavailable when neither identifies its
-database-schema owner.
+Read repository instructions and existing documentation/indexes only far enough to identify
+owners for attributable work. Apply the project's documentation-routing guide when present.
+When neither a routing guide nor an index convention is declared, use an unambiguous existing
+owner identified by the approved scope or current documentation, such as the README for usage
+instructions.
+Absence of a documentation framework alone does not make ownership unavailable or require
+project initialization.
 
-This is an existence check only: do not audit documentation accuracy, create
-missing files, or modify any target in this step. If documentation ownership is
-unavailable or any required owner or directory index is missing, report the
-missing paths or owners, instruct the user to use the `initialize-coherence`
-skill, and stop. Continue with the remaining steps only after all required
-documentation owners and indexes exist.
+Preserve declared documentation-owner, directory-index and closeout-gate requirements; do not
+invent indexes where no convention requires them. For persistent application schemas affected by the work,
+identify the authoritative schema document or documented set of schema documents. An existing
+authoritative schema document suffices even when no convention names it.
+
+This is discovery only: do not audit accuracy, create files or initialize the project here.
+If an affected documentation obligation lacks a clear owner, or a required owner/index is
+missing, report the gap, affected operation and corrective action through `initialize-coherence`.
+Stop only the affected documentation write; continue unrelated closeout and authorized delivery
+reporting, naming the unresolved obligation. Do not claim documentation completion or waive a
+required owner/index merely because the rest of closeout can proceed.
 
 ## Establish attributable findings before writing
 
@@ -42,8 +39,8 @@ Start with `git status --short`, `git diff --name-status` and
 untracked contents only for attributable paths; diff summaries do not include untracked contents.
 Report pre-existing or uncertain attribution rather than adopting it.
 
-Use repository instructions, relevant indexes and the documentation-routing guide to identify
-existing owners. Do not initialize fallback artifacts or migrate records. Preserve existing
+Use repository instructions, relevant indexes and any documentation-routing guide to identify
+existing owners, following the ownership resolution above. Do not initialize fallback artifacts or migrate records. Preserve existing
 runbooks and authoritative documents. For a verified finding without an owner, report the gap
 and ask for its location/format; a missing documentation owner routes to `initialize-coherence`.
 Preserve the existing declared local register until approved cutover. For active GitHub routing,
@@ -72,7 +69,7 @@ records, changelogs, file inventories or plan/task completion bookkeeping; Git o
 
 ## Route findings to their owners
 
-Apply the project's routing guide first, including categories beyond these examples. Use one
+Apply the project's routing guide first when present, including categories beyond these examples. Use one
 canonical owner per fact; a secondary pointer is useful only for a distinct warning or dependency,
 not a duplicate narrative.
 
@@ -96,11 +93,15 @@ tests or generated application assets, do not run it; report the command as a ve
 
 ## Deployment, when relevant
 
-Enter only for concrete deployment implications in attributable work or verified deploy evidence
+Enter only for plausible deployment implications in attributable work or verified deploy evidence
 that can change an existing entry. Otherwise report `not examined: no deployment-relevant evidence
 in attributable work` without inspecting deployment state or its owner.
 
+Use bounded triage of attributable changes and available evidence to assess the implications.
 Determine `deployed`, `not deployed` or `unknown` from repository evidence or user-provided context.
+Report unresolved implications as `unknown` with the evidence needed to resolve them.
+Only inspect or reconcile the existing deployment owner for concrete deployment implications or
+verified deploy evidence that can change an existing entry; do not scan it for speculative work.
 Record verified prerequisites such as migrations, configuration/service setup, cache invalidation,
 regeneration or release ordering even for `not deployed` or `unknown`; state how that affects the
 entry lifecycle. Do not invent hypothetical work or execute deployment procedures. Close/archive

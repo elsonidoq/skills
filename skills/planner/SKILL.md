@@ -14,7 +14,8 @@ authoring or implementation. Ordinary direct coding needs no new planning artifa
 Read the request or selected source, repository instructions/principles, relevant artifacts
 and affected code, tests and interfaces. Inspect workspace changes and preserve unrelated
 work. Ask the owner to resolve ambiguous source selection; do not assume paths or attach a
-likely source. Stop discovery when the scope is supported, and state remaining uncertainty.
+likely source. Discover artifact destinations after depth selection. Stop discovery when the
+scope is supported, and state remaining uncertainty.
 
 For fresh and resumed work, use [Memory Handling](../memory-handling/SKILL.md) to retrieve
 explicit owner guidance and gotchas from the verified unified index. Apply its retrieval and
