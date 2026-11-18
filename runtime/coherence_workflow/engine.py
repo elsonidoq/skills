@@ -765,7 +765,8 @@ class Engine:
             raise _ReviewFormat('reviewer result needs boolean approved, findings string list, and optional suggestions string list')
         # Findings are repair dispatch inputs, not a severity vocabulary.  Each must say
         # where the defect is, its concrete impact, and why it violates accepted work.
-        pattern = re.compile(r'^\S+:\d+(?:-\d+)?(?:(?:,\s*|\s+and\s+)\d+(?:-\d+)?)*\s+-\s+\S')
+        location = r'\S+:\d+(?:-\d+)?(?:(?:,\s*|\s+and\s+)\d+(?:-\d+)?)*'
+        pattern = re.compile(r'^' + location + r'(?:,\s+interacting with\s+' + location + r')?\s+-\s+\S')
         if any(not pattern.match(item.strip()) for item in findings):
             raise _ReviewFormat('review blocker needs a path:line or path:start-end[,start-end] location and concrete defect/impact')
         # Basis is described in ordinary defect prose, not a mandatory suffix.
@@ -1080,23 +1081,52 @@ class Engine:
         return execution_id, value, state
 
     def _recover_format_rejection(self, chain, review_base):
-        """Recover only an explicitly supplied compatible completed initial review artifact."""
+        """Recover a supplied completed initial or first repair-review rejection."""
         items = chain['executions']
-        if not self.resume or len(items) != 1:
+        if not self.resume or len(items) not in (1, 3):
             return False
-        item = items[0]
-        if (item['role'] != 'reviewer' or item['review_ordinal'] != 1 or item['fixing_round'] != 0 or
-                item['state'] != 'failed' or not item['uncertain'] or item['attempt_count'] != 2 or
+        item = items[-1]
+        followup = len(items) == 3
+        if (item['role'] != 'reviewer' or item['review_ordinal'] != (2 if followup else 1) or
+                item['fixing_round'] != (1 if followup else 0) or item['state'] != 'failed' or
+                not item['uncertain'] or item['attempt_count'] != 2 or
                 item['references'].get('base') != review_base):
             return False
         head = item['references'].get('head')
         store = self.authority.store
+        prior = items[0] if followup else None
+        predecessor = items[1] if followup else None
+        if followup:
+            saved = store.input(self.run)
+            if (not saved or saved.get('contract') != self.contract or saved.get('review_base') != review_base or
+                    prior['role'] != 'reviewer' or prior['state'] != 'rejected' or prior['uncertain'] or
+                    prior['review_ordinal'] != 1 or prior['fixing_round'] != 0 or
+                    prior['references'].get('base') != review_base or
+                    predecessor['role'] != 'fixer' or predecessor['state'] != 'approved' or predecessor['uncertain'] or
+                    predecessor['review_ordinal'] != 1 or predecessor['fixing_round'] != 1 or
+                    predecessor['trigger_execution_id'] != prior['execution_id'] or
+                    predecessor['predecessor_execution_id'] != prior['execution_id'] or
+                    predecessor['references'].get('base') != review_base or predecessor['references'].get('head') != head or
+                    item['trigger_execution_id'] != predecessor['execution_id'] or
+                    item['predecessor_execution_id'] != predecessor['execution_id']):
+                raise Blocked('review recovery predecessor or original scope mismatch; inspect retained review history')
+        diff_base = prior['references'].get('head') if followup else review_base
+        if not isinstance(head, str) or not head:
+            raise Blocked('review recovery target head missing; inspect retained review history')
+        if not isinstance(diff_base, str) or not diff_base:
+            raise Blocked('review recovery prior reviewed head missing; inspect retained review history')
+        if followup:
+            try:
+                git(self.authority.project, 'merge-base', '--is-ancestor', diff_base, head)
+            except Blocked:
+                raise Blocked('review recovery prior reviewed head is not an ancestor; inspect target drift') from None
         dispatch = store.db.execute('SELECT review_base,review_head,trigger_execution_id,predecessor_execution_id '
             'FROM execution_review_executions WHERE run_id=? AND execution_id=?',
             (self.run, item['execution_id'])).fetchone()
         attempts = store.db.execute('SELECT state,uncertainty FROM execution_review_attempts '
             'WHERE run_id=? AND execution_id=? ORDER BY seq', (self.run, item['execution_id'])).fetchall()
-        if (dispatch is None or tuple(dispatch) != (review_base, head, None, None) or
+        predecessor_id = predecessor['execution_id'] if followup else None
+        if (dispatch is None or tuple(dispatch) != (review_base, head, predecessor_id, predecessor_id) or
                 [tuple(row) for row in attempts] != [('dispatched', 0), ('failed', 1)]):
             raise Blocked('review recovery dispatch or failed attempt mismatch; inspect retained review history')
         # A retained failure category establishes the cause, not session identity.
@@ -1134,7 +1164,7 @@ class Engine:
                     raise Blocked('review recovery target has changes in ' + name +
                                   '; preserve and reconcile the reviewed or task-owned path before continuation')
         check_target()
-        path = self.question('A first read-only review has an uncertain failed outcome. If inspection found its exact completed '
+        path = self.question('A read-only review has an uncertain failed outcome. If inspection found its exact completed '
             'reviewer transcript with a compound-location format failure, provide its path; otherwise leave empty to stop. '
             'The artifact will be checked against the original task scope, review range and committed diff; this does not '
             'assert a historically retained session link. Execution: ' + item['execution_id'])
@@ -1172,13 +1202,23 @@ class Engine:
                     for part in message.get('content', []):
                         if part.get('type') == 'toolCall' and part.get('name') not in ('read', 'grep', 'find', 'ls'):
                             raise ValueError('review used a non-read-only tool')
-            diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', review_base + '..' + head).decode(errors='replace')
+            diff = git(project, 'diff', '--no-ext-diff', '--no-textconv', diff_base + '..' + head).decode(errors='replace')
             scope = ('Tasks: ' + canonical(self.contract['tasks']) + '\nOriginal range: ' + review_base + '..' + head +
-                     '\nReview delta: ' + review_base + '..' + head + '\nDiff:\n' + diff + '\n')
+                     '\nReview delta: ' + diff_base + '..' + head + '\nDiff:\n' + diff + '\n')
+            if followup:
+                prior_summary = prior['references'].get('review_summary')
+                prior_context = 'Prior review: ' + canonical({'execution_id': prior['execution_id'], 'head': diff_base,
+                    'findings': prior['findings'][-1] if prior['findings'] else [],
+                    'summary': prior_summary if prior_summary is not None else {
+                        'coverage': [], 'coverage_gaps': ['Historical review has no explicit coverage; establish original coverage before approval.']}}) + '\n'
+                context_ok = ('Repair review: independently examine the actual changes since the prior reviewed head' in prompt
+                              and prompt.count(prior_context) == 1)
+            else:
+                context_ok = 'Initial review: examine the complete requested change' in prompt
             if (not prompt.startswith('Independently review the actual committed range below against the requested tasks.') or
                     'You are read-only and are NOT the implementation conversation.' not in prompt or
-                    'Initial review: examine the complete requested change' not in prompt or prompt.count(scope) != 1):
-                raise ValueError('initial review scope, range, or diff mismatch')
+                    not context_ok or prompt.count(scope) != 1):
+                raise ValueError('review scope, prior context, range, or diff mismatch')
             raw = text.strip()
             if raw.startswith('```') and raw.endswith('```'):
                 raw = raw.split('\n', 1)[1].rsplit('```', 1)[0].strip()
@@ -1195,8 +1235,9 @@ class Engine:
         store.review_outcome(self.run, item['execution_id'], 'rejected', findings=value['findings'],
             suggestions=value['suggestions'], references={'base': review_base, 'head': head,
                 'review_summary': {key: value[key] for key in ('coverage', 'coverage_gaps')},
-                'diff_base': review_base, 'prior_review': None,
-                'recovery': 'coordinator supplied compatible completed initial review artifact; original session linkage not retained'})
+                'diff_base': diff_base, 'prior_review': prior['execution_id'] if followup else None,
+                'recovery': 'coordinator supplied compatible completed ' + ('follow-up' if followup else 'initial') +
+                            ' review artifact; original session linkage not retained'})
         return True
 
     def _finish_reviews(self, *, recorder, terminal, checkpoints, base, review_base, terminal_stop=None):
@@ -1356,7 +1397,9 @@ class Engine:
                     head = last['references'].get('head')
                     grant = store.owner_pair_for_rejection(self.run, rejecting_execution_id=last['execution_id'],
                                                            review_base=review_base, review_head=head, original_scope=scope)
-                    if grant is None and store.routine_review_authority(self.run, scope):
+                    if (grant is None and not last['references'].get('recovery', '').startswith(
+                            'coordinator supplied compatible completed follow-up review artifact;') and
+                            store.routine_review_authority(self.run, scope)):
                         grant = store.authorize_owner_pair(self.run, uuid.uuid4().hex,
                             rejecting_execution_id=last['execution_id'], review_base=review_base, review_head=head,
                             original_scope=scope, fixer_execution_id=fixer_id, reviewer_execution_id=uuid.uuid4().hex)

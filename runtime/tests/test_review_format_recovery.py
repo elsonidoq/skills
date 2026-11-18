@@ -199,13 +199,108 @@ class ReviewFormatRecoveryTests(ProjectTest):
 
     def test_parser_accepts_single_comma_and_and_rejects_malformed_locations(self):
         for location in ('owned.txt:1', 'owned.txt:1-2,4-5', 'owned.txt:1-2 and 4-5',
-                         'owned.txt:1, 3 and 5-6'):
+                         'owned.txt:1, 3 and 5-6', 'owned.txt:1-2 and 4-5, interacting with other.txt:7-9'):
             finding = location + ' - concrete defect'
             value = dict(self.verdict, findings=[finding])
             self.assertEqual(Engine._review_value(json.dumps(value), require_coverage=True)['findings'], [finding])
-        for location in ('owned.txt:1 and other.txt:2', 'owned.txt:1 and', 'owned.txt:1,,2'):
+        for location in ('owned.txt:1 and other.txt:2', 'owned.txt:1 and', 'owned.txt:1,,2',
+                         'owned.txt:1, interacting with other.txt', 'owned.txt:1, arbitrary words other.txt:2'):
             with self.subTest(location=location), self.assertRaises(_ReviewFormat):
                 Engine._review_value(json.dumps(dict(self.verdict, findings=[location + ' - defect'])), require_coverage=True)
+
+    def start_followup_failed(self):
+        self.start_failed()
+        fixture = self
+        verdict = {'approved': False, 'findings': [
+            'owned.txt:1-2 and 4-5, interacting with other.txt:1-2 - defect breaks output',
+            'owned.txt:7 - another defect', 'owned.txt:8 - third defect', 'owned.txt:9 - fourth defect'],
+            'coverage': ['passing prior work', 'repair examined', 'source checked', 'tests checked', 'scope checked'],
+            'coverage_gaps': ['unverified consumer', 'integration gap'], 'suggestions': ['later']}
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, prompt, **kwargs):
+                fixture.calls.append(('review' if kwargs.get('read_only') else 'fixer', prompt))
+                if kwargs.get('read_only'):
+                    entries = [{'type': 'session', 'id': 'followup', 'cwd': str(fixture.project)},
+                        {'type': 'message', 'id': 'user', 'parentId': None, 'message': {'role': 'user',
+                         'content': [{'type': 'text', 'text': prompt}]}},
+                        {'type': 'message', 'id': 'answer', 'parentId': 'user', 'message': {'role': 'assistant',
+                         'stopReason': 'stop', 'content': [{'type': 'thinking', 'thinking': 'reasoning'},
+                                                           {'type': 'text', 'text': json.dumps(verdict)}]}}]
+                    fixture.followup.write_text(''.join(json.dumps(x) + '\n' for x in entries))
+                    return json.dumps(verdict)
+                kwargs['claim']('owned.txt')
+                fixture.project.joinpath('owned.txt').write_text('repaired\n')
+                return 'repaired'
+        self.followup = self.root / 'followup.jsonl'
+        parse = Engine._review_value
+        def old_parser(text, **kwargs):
+            if 'interacting with' in text:
+                raise _ReviewFormat('old parser rejected interaction')
+            return parse(text, **kwargs)
+        with Authority(self.project) as owner:
+            owner.store.resume('fixture')
+            with patch.object(Engine, '_review_value', side_effect=old_parser):
+                with self.assertRaises(_ReviewFormat):
+                    Engine(owner, 'fixture', self.contract, EXECUTOR, adapter=Adapter, resume=True,
+                           question=lambda _: str(self.artifact)).invoke()
+        return verdict, Adapter
+
+    def test_followup_recovery_preserves_history_and_requires_actual_owner_pair(self):
+        verdict, adapter = self.start_followup_failed()
+        asked = []
+        def question(prompt, **kwargs):
+            asked.append((prompt, kwargs))
+            return 'no' if kwargs.get('owner_only') else str(self.followup)
+        with Authority(self.project) as owner:
+            original = owner.store.review_chain('fixture', private=True)
+            owner.store.authorize_routine_review_continuation('fixture', owner.store.review_scope('fixture'))
+            owner.store.resume('fixture')
+            with self.assertRaisesRegex(Blocked, 'owner did not authorize'):
+                Engine(owner, 'fixture', self.contract, EXECUTOR, adapter=adapter, resume=True,
+                       question=question).invoke()
+            chain = owner.store.review_chain('fixture', private=True)
+            attempts = [r['state'] for r in owner.store.db.execute(
+                'select state from execution_review_attempts where run_id=? and execution_id=? order by seq',
+                ('fixture', chain['executions'][-1]['execution_id']))]
+            grants = owner.store.db.execute("select count(*) from execution_history where run_id='fixture' and kind='review_pair_grant'").fetchone()[0]
+        self.assertEqual(original['executions'][:2], chain['executions'][:2])
+        self.assertEqual(attempts, ['dispatched', 'failed', 'rejected'])
+        self.assertEqual(chain['executions'][-1]['findings'][-1], verdict['findings'])
+        self.assertEqual(chain['executions'][-1]['references']['review_summary'],
+                         {key: verdict[key] for key in ('coverage', 'coverage_gaps')})
+        self.assertEqual(grants, 0)
+        self.assertTrue(any(kwargs.get('owner_only') for _, kwargs in asked))
+        self.assertEqual([kind for kind, _ in self.calls], ['writer', 'review', 'fixer', 'review'])
+
+    def test_followup_context_and_predecessor_mismatch_stay_blocked(self):
+        self.start_followup_failed()
+        original = [json.loads(x) for x in self.followup.read_text().splitlines()]
+        with Authority(self.project) as owner:
+            owner.store.resume('fixture')
+            engine = Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
+                            question=lambda _: str(self.followup))
+            chain = owner.store.review_chain('fixture', private=True)
+            for mode in ('delta', 'prior', 'incomplete', 'unsafe', 'predecessor', 'head'):
+                with self.subTest(mode=mode):
+                    entries = json.loads(json.dumps(original))
+                    candidate = json.loads(json.dumps(chain))
+                    if mode == 'delta':
+                        entries[1]['message']['content'][0]['text'] = entries[1]['message']['content'][0]['text'].replace('Review delta:', 'Wrong delta:')
+                    elif mode == 'prior':
+                        entries[1]['message']['content'][0]['text'] = entries[1]['message']['content'][0]['text'].replace('Prior review:', 'Wrong review:')
+                    elif mode == 'incomplete':
+                        entries[-1]['message']['stopReason'] = 'aborted'
+                    elif mode == 'unsafe':
+                        entries[-1]['message']['content'].append({'type': 'toolCall', 'name': 'write'})
+                    elif mode == 'predecessor':
+                        candidate['executions'][-1]['predecessor_execution_id'] = 'wrong'
+                    else:
+                        candidate['executions'][1]['references']['head'] = 'wrong'
+                    self.followup.write_text(''.join(json.dumps(x) + '\n' for x in entries))
+                    with self.assertRaises(Blocked):
+                        engine._recover_format_rejection(candidate, self.base)
+            self.assertTrue(owner.store.review_chain('fixture')['uncertain'])
 
     def test_incomplete_and_non_rejection_artifacts_stay_blocked(self):
         self.start_failed()
