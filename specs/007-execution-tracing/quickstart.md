@@ -1,8 +1,8 @@
-# Validation guide — future implementation
+# Validation guide — implementation completion
 
-This guide schedules validation. The feature is not implemented or accepted by this plan.
-Use [contracts](contracts/README.md), [data model](data-model.md) and [acceptance mapping](plan.md#observable-acceptance-mappings).
-No provider call, GitHub write, installation, branch creation or worktree deletion was run here.
+Follow the [current owner-directed completion scope](checklists/requirements.md#current-implementation-completion-scope--demonstrations-excluded): finish the implementation with focused tests and independent review, without additional demonstrations. Functional requirements and actual credential/permission protections remain intact. Use [tasks](tasks.md), [contracts](contracts/README.md), [data model](data-model.md) and [acceptance mapping](plan.md#observable-acceptance-mappings).
+
+The completed fresh Sol run's [automatically published trace](https://github.com/elsonidoq/skills/issues/45#issuecomment-6977567062) retains real owner/worker questions, controlled rejection/correction, checks, checkpoint and review. Earlier multipart publication-only recovery and reciprocal PR #47 links were also confirmed. Preserve these observations; do not replay them.
 
 ## Prerequisites
 
@@ -65,7 +65,9 @@ For each changed observable, demonstrate the smallest fail-then-pass regression 
 production helper. Mocks establish branch behavior only; they do not establish human participation,
 SDK live behavior, permission or durable GitHub delivery.
 
-## Genuine live acceptance (NOT RUN; separate scope required)
+## Historical live exercise recipe — not a completion requirement
+
+The recipe below records the earlier evidence plan. The owner's latest direction excludes additional demonstrations for this delivery; do not launch this recipe to finish #45. Existing live evidence remains valid only for its observed coverage. Any future owner-requested exercise needs its actual scope.
 
 Use one representative authorized execution with actual owner and worker/coordinator questions,
 a rejected completion, failed attempt, inspected retry/escalation and eventual completion. Observe
@@ -104,7 +106,9 @@ and PR-hosted association behavior at focused fixtures; live evidence must demon
 navigation and durability for the selected scenario. Inaccessible code or missing content is a gap,
 not inferred availability. Do not copy secrets into output.
 
-## Planning and assessment acceptance
+## Historical planning and assessment exercises — not completion requirements
+
+These earlier demonstration recipes are retained as context, not current instructions to perform them. Check the actual HTML and operational skill carriers with the focused tests in tasks.json instead. Do not create test issues, ask new example approvals or run unsolicited assessments to complete this implementation.
 
 - Inspect bounded actual TinySpec and Standard examples: project-owned HTML design and explicit owner agreement precede detailed architecture plan production or continuation. Every clickable box opens component executive bullets (purpose, inputs/outputs, boundaries, choices); bullets below explain goal, supported properties, tradeoffs/limits and necessary context. Inspect the delivered [page](design-review.html) in a real browser: desktop/mobile readability, every box by pointer and keyboard, Close/Escape and return focus, truthful proposed labels and workflow/data-flow distinction. JS/DOM-stub success is supplemental; browser visuals remain NOT RUN until observed.
 - Verify cancellation/denial/no agreement blocks affected details; opening/clicking grants no consent and significant changes renew agreement. Keep source, design and final implementation approval outcomes distinct, without repeated consent for the same settled shown scope. Significant choices need actual agreement, routine mechanics stay autonomous and every task retains evidence/gates.
@@ -121,7 +125,8 @@ not inferred availability. Do not copy secrets into output.
 ## Completion evidence and limits
 
 Retain actual command/results, attributable task/repair SHAs, exact reviewed revision, independent
-review findings and live readback URLs/content in the existing task/delivery evidence. Keep implementation,
-trace delivery, coverage and owner acceptance distinct. No new ledger or startup check. A passing fixture
-or returned worker cannot release a source-required live/manual/permission gate. Unavailable live scope
-leaves those criteria NOT RUN; final feature acceptance stays pending.
+review findings and existing live readback URLs/content in the existing task/delivery evidence. Keep implementation,
+trace delivery, coverage and owner acceptance distinct. No new ledger or startup check. Additional demonstrations
+are excluded, not passed. Source/DOM checks do not claim real-browser layout, native dialog or live model-obedience
+proof. Preserve actual operational owner gates and scoped-effect protections; resolve genuine implementation
+defects before completion.

@@ -158,3 +158,45 @@ The owner's latest explicit direct implementation selection is Sol/medium. The s
 commit `80090951`); reviewer Sol/medium is unchanged. Older Terra labels are historical,
 not current worker assignments. No routine new approval is needed for this faithful
 sequencing correction or continued scoped local implementation.
+
+## Current implementation completion scope — demonstrations excluded
+
+The owner subsequently instructed: **“make sure you finish correctly this implementation,
+demonstration is out of scope”**, then explicitly approved autonomous continuation and
+said **“continue”**. This is an actual requirement change, not an agent waiver of the older
+final-live-gate decision. It supersedes the earlier demonstration-only delivery checklist;
+the historical approvals and unperformed exercises above remain historical, not passes.
+
+Finish the approved functional implementation with focused tests, semantic inspection,
+verified checkpoints and independent review. Do not stage additional TinySpec/Standard
+planning examples, browser demonstrations, test issue lifecycles or issue/PR assessment
+exercises. Preserve operational design-agreement gates, HTML accessibility behavior,
+issue association, durable assessment navigation, credential protection and actual
+external-action authority. Missing raw generic SDK tool arguments/results alone is not
+a defect: the approved source requires assessment-relevant facts, not full transcripts.
+The task Markdown and executable list now reflect this completion scope.
+
+Existing live evidence is retained, not replayed: the fresh Sol/medium run
+`issue45-live-fresh-01` completed with the real owner answer **verified**, a distinct worker
+question/coordinator resolution, deliberate first-check rejection, corrective invocation,
+passing recheck, focused fixture commit and fresh read-only review. Its automatically
+published [52,021-character trace](https://github.com/elsonidoq/skills/issues/45#issuecomment-6977567062)
+was independently read back. The rejection was controlled fault injection, not a natural
+model mistake. Earlier multipart publication-only recovery was also independently confirmed.
+
+[Draft PR #47](https://github.com/elsonidoq/skills/pull/47) now exists on
+`issue-45-execution-tracing`, based on dependency branch `plan-issue-44`. Reciprocal issue/PR
+links were confirmed. The owner pre-approved routine approved-work branch publication,
+PR creation and link/readback operations; older statements that no PR exists or publication
+is unauthorized are superseded for this scope. Merge, closure, deployment, force-push,
+credential changes, unrelated effects and additional paid services remain ungranted.
+SQLite/sessions and unrelated working-tree artifacts remain preserved.
+
+Completion-scope verification: all original deterministic REQUIRED commands remain in
+tasks.json; all 13 task IDs, dependencies, ownership and implementation descriptions are
+unchanged. Markdown/JSON shared context and remaining criteria agree. Fresh focused
+checks passed: 241 Python runtime tests (22 unique required selectors), 39 Node SDK/bridge
+tests, planner lint and 186 planner tests, 12 tracker tests and 6 assessment-carrier tests.
+These are implementation checks, not new live demonstrations or a claim of model obedience.
+The scope correction changes no runtime, global skill, credentials or installed assets;
+independent final review of this correction remains separate.
