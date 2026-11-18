@@ -1,6 +1,6 @@
 {
   "provider": "openai-codex",
-  "model": "gpt-6.1-terra",
+  "model": "gpt-6.1-sol",
   "effort": "medium",
   "implementation_fallback": {
     "provider": "openai-codex",

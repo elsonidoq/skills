@@ -40,8 +40,8 @@ assignment owner, not reusable skill text.
 
 1. Use a lowercase, hyphenated directory name and matching frontmatter `name`.
 2. Start `description` with "Use when..." and state only concrete loading triggers, symptoms, or contexts. Do not summarize the workflow.
-3. Identify the job, inputs, decisions, outputs/consumers and authority boundary. Separate behavior this skill owns from results it consumes from an existing owner.
-4. Draft a fresh procedure from that conceptual contract, not the old headings or sentence inventory. Lead with normal work; put prerequisites and exceptions at the operation that needs them. Use observable conditions for branches and fallbacks.
+3. Identify the job, inputs, decisions, outputs/consumers and authority boundary. Separate behavior this skill owns from results it consumes from an existing owner. Present the purpose and core decision rules before procedural detail.
+4. For a new skill or an existing procedure that needs restructuring, draft a fresh procedure from that conceptual contract, not the old headings or sentence inventory. Otherwise, make a bounded revision to the sound procedure. Lead with normal work; put prerequisites and exceptions at the operation that needs them. Use observable conditions for branches and fallbacks.
 5. Prefer a positive recipe or output contract for shape problems. Reserve prohibitions for demonstrated safety or discipline failures.
 6. State each rule once. Delete duplication rather than move it into references. For an existing owner, state when to use it and which result to consume. Retain supporting files only for necessary reusable tools or substantial reference material linked from the main file.
 7. After drafting, compare the source and canonical contracts for lost behavior, capabilities or guarantees. Restore necessary behavior, not old prose; surface genuine conflicts rather than silently changing authority.

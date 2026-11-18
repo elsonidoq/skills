@@ -13,8 +13,43 @@ import time
 from unittest.mock import patch
 
 from coherence_workflow.pi_adapter import PiAdapter, WaitingQuestion, parent_question, terminal_question
-from coherence_workflow.store import Blocked
+from coherence_workflow.store import Authority, Blocked
+from coherence_workflow.trace_capture import persist_parent_events, optional_record, record_worker_question
 from fixtures.support import ProjectTest
+
+
+class ParentCaptureTests(ProjectTest):
+    def test_reopen_duplicate_conflict_and_credential_exclusion(self):
+        event = {'version': 1, 'id': 'stable', 'kind': 'owner_result', 'tool_call_id': 'one',
+                 'details': {'response': {'freeform': 'ordinary wording', 'comment': 'comment'},
+                             'authorization': 'CREDENTIAL-SENTINEL', 'token': 'TOKEN-SENTINEL'}}
+        with Authority(self.project) as authority:
+            persist_parent_events(authority.store, 'run', [event, event])
+        with Authority(self.project) as authority:
+            persist_parent_events(authority.store, 'run', [event])
+            rows = authority.store.db.execute("SELECT details FROM execution_history WHERE kind='parent_trace'").fetchall()
+            self.assertEqual(len(rows), 1)
+            self.assertNotIn('CREDENTIAL-SENTINEL', rows[0][0])
+            self.assertNotIn('TOKEN-SENTINEL', rows[0][0])
+            self.assertIn('ordinary wording', rows[0][0])
+            self.assertEqual(json.loads(rows[0][0])['gaps'], ['credential or transport field excluded'])
+            with self.assertRaisesRegex(ValueError, 'conflicting'):
+                persist_parent_events(authority.store, 'run', [{**event, 'id': 'new'}, {**event, 'kind': 'gap'}])
+            self.assertEqual(authority.store.db.execute("SELECT count(*) FROM execution_history WHERE kind='parent_trace'").fetchone()[0], 1)
+
+    def test_known_bridge_token_is_excluded_even_in_text(self):
+        with Authority(self.project) as authority, patch.dict(os.environ, {'COHERENCE_PARENT_BRIDGE_TOKEN': 'private-token-sentinel'}):
+            persist_parent_events(authority.store, 'run', [{'version': 1, 'id': 'one', 'kind': 'owner_result',
+                'content': [{'type': 'text', 'text': 'ordinary private-token-sentinel text'}]}])
+            row = authority.store.db.execute("SELECT details FROM execution_history WHERE kind='parent_trace'").fetchone()[0]
+            self.assertNotIn('private-token-sentinel', row)
+            self.assertIn('ordinary', row)
+            self.assertIn('excluded credential', row)
+
+    def test_optional_observer_error_is_not_an_operation_error(self):
+        def broken(*args): raise RuntimeError('storage failed')
+        self.assertFalse(optional_record(broken, 'actual reply'))
+        self.assertFalse(optional_record(None, 'actual reply'))
 
 
 class SDKTransportTests(ProjectTest):
@@ -125,6 +160,28 @@ class SDKTransportTests(ProjectTest):
             self.assertFalse((self.project/'steering-owned.txt').exists())
             self.assertFalse((self.project/'premature.txt').exists())
 
+    def test_real_sdk_sync_question_persists_caller_bound_identity(self):
+        host = Path(__file__).resolve().parents[1] / 'pi-host' / 'host.mjs'
+        preload = Path(__file__).parent / 'fixtures' / 'steering_adapter_fixture.mjs'
+        env = {'COHERENCE_HOST_PRELOAD': '1', 'NODE_OPTIONS': '--import=' + str(preload),
+               'COHERENCE_STEERING_CALLBACK': 'sync-question', 'PI_CODING_AGENT_DIR': str(self.root/'private-agent')}
+        with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, env):
+            with Authority(self.project) as authority:
+                def trace(state, **facts):
+                    record_worker_question(authority.store, 'run', 'task', 'invocation', state, **facts)
+                adapter = PiAdapter(self.project, {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'off'},
+                                    question=lambda _: 'coordinator resolution', question_trace=trace)
+                self.assertEqual(adapter.prompt('fixture'), 'steering complete')
+            with Authority(self.project) as authority:
+                rows = [(row['state'], json.loads(row['details'])) for row in authority.store.db.execute(
+                    "SELECT state, details FROM execution_history WHERE kind='worker_question_trace' ORDER BY seq")]
+                self.assertEqual([state for state, _ in rows], ['requested', 'resolved', 'sent'])
+                self.assertEqual((rows[0][1]['run_id'], rows[0][1]['task_id'], rows[0][1]['invocation_id']),
+                                 ('run', 'task', 'invocation'))
+                self.assertEqual(rows[0][1]['tool_call_id'], 'callback-tool')
+                self.assertEqual(rows[0][1]['question'], 'fixture callback')
+                self.assertEqual(rows[1][1]['resolution'], 'coordinator resolution')
+
     def test_adapter_multiplexes_steering_while_correlated_question_waits(self):
         self._real_sdk_callback_steering('question')
 
@@ -140,9 +197,11 @@ class SDKTransportTests(ProjectTest):
         target = {'run_id': 'run', 'task_id': 'T016', 'invocation_id': 'invocation', 'role': 'task_worker'}
         entered, release = threading.Event(), threading.Event()
         statuses = []
+        traces = []
         adapter = PiAdapter(self.project, {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'off'},
                             question=lambda question: (entered.set(), release.wait(5), 'ordinary callback')[-1],
-                            steering_status=lambda status: statuses.append(status))
+                            steering_status=lambda status: statuses.append(status),
+                            question_trace=lambda state, **facts: traces.append((state, {**target, **facts})))
         outcome = []
         env = {'COHERENCE_HOST_PRELOAD': '1', 'NODE_OPTIONS': '--import=' + str(preload),
                'COHERENCE_STEERING_CALLBACK': callback_kind,
@@ -179,6 +238,11 @@ class SDKTransportTests(ProjectTest):
         self.assertFalse(thread.is_alive())
         self.assertEqual(outcome, ['steering complete'])
         self.assertEqual(adapter.steering_states.get('direction-1'), 'consumed')
+        if callback_kind == 'question':
+            self.assertEqual([state for state, _ in traces], ['requested', 'resolved', 'sent'])
+            self.assertEqual(traces[0][1]['tool_call_id'], 'callback-tool')
+            self.assertEqual(traces[0][1]['invocation_id'], 'invocation')
+            self.assertEqual(traces[1][1]['resolution'], 'ordinary callback')
         assignment = {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'off'}
         self.assertEqual(adapter.last_observation['before']['requested_assignment'], assignment)
         self.assertEqual(adapter.last_observation['before']['sdk_observed_assignment'], assignment)
@@ -282,6 +346,35 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
         self.assertEqual(events, ['requested', 'returned', 'sent'])
         self.assertNotIn('PRIVATE-SENTINEL', str(events))
 
+    def test_structured_question_observations_preserve_ids_and_missing_legacy_id(self):
+        body = "for i in range(2):\n print(json.dumps({'type':'question','question':'Q'+str(i), **({'tool_call_id':'tool-1'} if i else {})}),flush=True); assert json.loads(input()) == {'answer': 'A'+str(i)}\nprint(json.dumps({'type':'result','text':'sent'}),flush=True)\n"
+        a, b = self.fixture(body)
+        events = []
+        with a, b:
+            adapter = PiAdapter(self.project, {}, question=lambda q: 'A' + q[-1],
+                                question_trace=lambda state, **facts: events.append((state, facts)))
+            self.assertEqual(adapter.prompt('fixture'), 'sent')
+        self.assertEqual([state for state, _ in events], ['requested', 'resolved', 'sent'] * 2)
+        self.assertIsNone(events[0][1]['tool_call_id'])
+        self.assertEqual(events[3][1]['tool_call_id'], 'tool-1')
+        self.assertEqual(events[4][1]['resolution'], 'A1')
+
+    def test_interleaved_question_records_keep_exact_tool_ids(self):
+        body = """for ident in ('one', 'two'):
+ print(json.dumps({'type':'question','tool_call_id':ident,'question':'Q '+ident}),flush=True)
+for ident in ('one', 'two'):
+ assert json.loads(input()) == {'answer':'A '+ident}
+print(json.dumps({'type':'result','text':'sent'}),flush=True)
+"""
+        a, b = self.fixture(body)
+        events = []
+        with a, b:
+            adapter = PiAdapter(self.project, {}, question=lambda q: q.replace('Q ', 'A '),
+                                question_trace=lambda state, **facts: events.append((state, facts)))
+            self.assertEqual(adapter.prompt('fixture'), 'sent')
+        self.assertEqual([(facts['tool_call_id'], facts['resolution']) for state, facts in events
+                          if state == 'resolved'], [('one', 'A one'), ('two', 'A two')])
+
     def test_repeated_framed_questions_use_the_same_callback(self):
         body = "for question in ('First?', 'Second?'):\n print(json.dumps({'type':'question','question':question}),flush=True); assert json.loads(input()) == {'answer': question + ' answer'}\nprint(json.dumps({'type':'result','text':'sent'}),flush=True)\n"
         a, b = self.fixture(body)
@@ -310,6 +403,32 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
         thread.join()
         self.assertEqual(received[0]['run_id'], 'run')
         self.assertNotIn('PRIVATE-SENTINEL', str(received[0] | {'question': '<redacted>'}))
+
+    def test_capture_observer_failure_preserves_actual_parent_reply(self):
+        endpoint = str(self.root/'capture.sock')
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
+            server.bind(endpoint)
+            server.listen(2)
+            requests = []
+            def serve():
+                for _ in range(2):
+                    client, _ = server.accept()
+                    with client:
+                        request = json.loads(client.makefile('r', encoding='utf-8').readline())
+                        requests.append(request)
+                        response = {'request_id': request['request_id']}
+                        response.update({'answer': 'real reply'} if request['type'] == 'question' else {'events': []})
+                        client.sendall((json.dumps(response) + '\n').encode())
+            thread = threading.Thread(target=serve)
+            thread.start()
+            values = {'COHERENCE_PARENT_BRIDGE_SOCKET': endpoint, 'COHERENCE_PARENT_BRIDGE_TOKEN': 'token',
+                      'COHERENCE_PARENT_BRIDGE_SESSION': 'session', 'COHERENCE_PARENT_BRIDGE_RUN': 'run'}
+            def broken(*args): raise RuntimeError('observer failed')
+            with patch.dict(os.environ, values), contextlib.redirect_stderr(io.StringIO()) as errors:
+                self.assertEqual(parent_question('question', trace_observer=broken), 'real reply')
+            thread.join()
+            self.assertIn('capture gap', errors.getvalue())
+            self.assertEqual([r['type'] for r in requests], ['question', 'trace_drain'])
 
     def test_owner_only_question_carries_context_and_rejects_empty_answer(self):
         endpoint = str(self.root/'owner-only.sock')
@@ -436,8 +555,24 @@ print(json.dumps({'type':'result','text':'corrected'}),flush=True)
             deadline = time.monotonic() + 5
             while not closed.exists() and time.monotonic() < deadline: time.sleep(.01)
             return 'yes'
+        events = []
         with a, b, self.assertRaises(BrokenPipeError):
-            PiAdapter(self.project, {}, question=answer, observe_question=lambda state: (_ for _ in ()).throw(RuntimeError('recorder'))).prompt('fixture')
+            PiAdapter(self.project, {}, question=answer,
+                      observe_question=lambda state: (_ for _ in ()).throw(RuntimeError('recorder')),
+                      question_trace=lambda state, **facts: events.append((state, facts))).prompt('fixture')
+        self.assertEqual([state for state, _ in events], ['requested', 'resolved', 'delivery_failed'])
+        self.assertEqual(events[1][1]['resolution'], 'yes')
+
+    def test_question_cancellation_never_records_a_resolution(self):
+        a, b = self.fixture("print(json.dumps({'type':'question','tool_call_id':'cancelled','question':'Scope?'}),flush=True)\nassert sys.stdin.read() == ''\n")
+        events = []
+        def cancel(_):
+            raise Blocked('cancelled')
+        with a, b, self.assertRaisesRegex(Blocked, 'cancelled'):
+            PiAdapter(self.project, {}, question=cancel,
+                      question_trace=lambda state, **facts: events.append((state, facts))).prompt('fixture')
+        self.assertEqual([state for state, _ in events], ['requested', 'unanswered'])
+        self.assertTrue(all('resolution' not in facts for _, facts in events))
 
     def test_lost_pause_result_is_uncertain_not_permission_to_redispatch(self):
         a, b = self.fixture("assert request['pauseQuestions'] is True\n")

@@ -13,6 +13,14 @@ const startParameters = {
     tasks: {type: 'string'}, executor: {type: 'string'}, run: {type: 'string'}, resume: {type: 'boolean'},
     recovery_action: {type: 'string', enum: ['continue', 'fresh', 'escalate']}, diagnosis: {type: 'string'},
     parallel: {type: 'boolean'},
+    delivery_scope: {type: 'object', additionalProperties: false, properties: {
+      target: {type: 'string'},
+      authority: {type: 'object', additionalProperties: false, properties: {
+        run_id: {type: 'string'}, target: {type: 'string'},
+        operations: {type: 'array', items: {type: 'string'}}, approval_ref: {type: 'string'},
+      }},
+      known_linked_prs: {type: 'array', items: {type: 'string'}},
+    }},
   }, required: ['run'],
 };
 const replyParameters = {
@@ -123,6 +131,27 @@ export default function coordinateImplementationBridge(pi) {
         {triggerTurn: false});
       return;
     }
+    if (request && ['trace_drain', 'trace_ack'].includes(request.type)) {
+      if (request.token !== bridge.token || request.session_id !== bridge.session || request.run_id !== bridge.run ||
+          typeof request.request_id !== 'string') {
+        send(socket, {error: 'bridge request does not target this parent session and run'}); return;
+      }
+      if (request.type === 'trace_drain') {
+        if (request.final === true) {
+          for (const [callId, call] of bridge.traceCalls) {
+            if (!call.missingReported) {
+              record(bridge, 'gap', callId, {request_id: call.requestId, reason: 'owner tool result missing at final drain'});
+              call.missingReported = true;
+            }
+          }
+        }
+        send(socket, {request_id: request.request_id, events: [...bridge.trace.values()]});
+      } else if (Array.isArray(request.event_ids) && request.event_ids.every(id => typeof id === 'string')) {
+        for (const id of request.event_ids) bridge.trace.delete(id);
+        send(socket, {request_id: request.request_id, acknowledged: true});
+      } else send(socket, {request_id: request.request_id, error: 'invalid trace acknowledgement'});
+      return;
+    }
     const ownerOnly = request?.owner_only === true;
     const context = request?.decision_context;
     const validOwnerContext = context && typeof context === 'object' && !Array.isArray(context) &&
@@ -175,6 +204,7 @@ export default function coordinateImplementationBridge(pi) {
     async execute(_id, params, signal, _update, ctx) {
       if (active) throw new Error('coordinate implementation bridge already has an active run');
       if (params.resume && params.parallel !== undefined) throw new Error('parallel is start-only; resume retains original direction');
+      if (params.resume && params.delivery_scope !== undefined) throw new Error('delivery_scope is start-only; resume retains original scope');
       if ((params.recovery_action || params.diagnosis) && (!params.resume || !params.recovery_action || !params.diagnosis))
         throw new Error('worker recovery requires resume, recovery_action and diagnosis');
       if (!params.resume && (typeof params.tasks !== 'string' || typeof params.executor !== 'string'))
@@ -185,7 +215,7 @@ export default function coordinateImplementationBridge(pi) {
       const token = randomBytes(32).toString('hex');
       const sockets = new Set();
       const bridge = {directory, endpoint, session, token, run: params.run, sockets, pending: undefined, questions: [], targets: new Map(),
-        directions: new Map(), server: undefined, child: undefined, exited: undefined, closing: undefined, abortSignal: signal, abort: undefined};
+        directions: new Map(), trace: new Map(), traceCalls: new Map(), traceSeen: new Set(), server: undefined, child: undefined, exited: undefined, closing: undefined, abortSignal: signal, abort: undefined};
       try {
         await chmod(directory, 0o700);
         const server = createServer(socket => {
@@ -204,7 +234,10 @@ export default function coordinateImplementationBridge(pi) {
           socket.on('close', () => {
             sockets.delete(socket);
             bridge.questions = bridge.questions.filter(question => question.socket !== socket);
-            if (bridge.pending?.socket === socket) { bridge.pending = undefined; showNextQuestion(bridge); }
+            if (bridge.pending?.socket === socket) {
+              record(bridge, 'gap', null, {request_id: bridge.pending.request_id, reason: 'question transport lost before reply'});
+              bridge.pending = undefined; showNextQuestion(bridge);
+            }
             for (const [key, target] of bridge.targets) {
               if (target.socket === socket) { settleUnknown(bridge, target.target); bridge.targets.delete(key); }
             }
@@ -230,6 +263,7 @@ export default function coordinateImplementationBridge(pi) {
         ] : [
           'start', '--project', ctx.cwd, '--tasks', params.tasks, '--executor', params.executor, '--run', params.run,
           ...(params.parallel ? ['--parallel'] : []),
+          ...(params.delivery_scope !== undefined ? ['--delivery-scope', JSON.stringify(params.delivery_scope)] : []),
         ], {cwd: ctx.cwd, stdio: ['ignore', 2, 2], env: {...process.env,
           COHERENCE_PARENT_BRIDGE_SOCKET: endpoint, COHERENCE_PARENT_BRIDGE_TOKEN: token,
           COHERENCE_PARENT_BRIDGE_SESSION: session, COHERENCE_PARENT_BRIDGE_RUN: params.run}});
@@ -306,6 +340,8 @@ export default function coordinateImplementationBridge(pi) {
       if (active.pending.ownerOnly) throw new Error('owner-only decision requires registered ask_user and coordinate_implementation_owner_reply');
       const pending = active.pending;
       active.pending = undefined;
+      record(active, 'coordinator_reply', null, {request_id: params.request_id, answer: params.answer,
+        responder: 'coordinator', delivery: pending.socket.destroyed ? 'failed' : 'attempted'});
       send(pending.socket, {request_id: params.request_id, answer: params.answer});
       showNextQuestion(active);
       return textResult('Returned the routine response to the waiting worker.', {request_id: params.request_id, run: params.run});
@@ -324,11 +360,53 @@ export default function coordinateImplementationBridge(pi) {
       if (!params.answer.trim()) throw new Error('owner-only decision needs a nonempty actual owner answer');
       const pending = active.pending;
       active.pending = undefined;
+      record(active, 'coordinator_reply', null, {request_id: params.request_id, answer: params.answer,
+        responder: 'owner_relay', delivery: pending.socket.destroyed ? 'failed' : 'attempted'});
       send(pending.socket, {request_id: params.request_id, answer: params.answer});
       showNextQuestion(active);
       return textResult('Relayed the actual owner answer to the waiting worker.', {request_id: params.request_id, run: params.run});
     },
   });
 
+  // Observe the normal tool lifecycle, not ask:answered broadcast metadata.
+  const record = (bridge, kind, callId, facts) => {
+    const id = randomBytes(16).toString('hex');
+    try {
+      const snapshot = JSON.parse(JSON.stringify({version: 1, id, kind, tool_call_id: callId, ...facts}));
+      bridge.trace.set(id, snapshot);
+    } catch {
+      bridge.trace.set(id, {version: 1, id, kind: 'gap', tool_call_id: typeof callId === 'string' ? callId : null,
+        reason: 'tool facts could not be serialized'});
+    }
+  };
+  pi.on('tool_call', event => {
+    if (!active || event.toolName !== 'ask_user') return;
+    const callId = event.toolCallId;
+    if (typeof callId !== 'string' || !callId || active.traceSeen.has(callId)) {
+      if (active.traceCalls.has(callId)) active.traceCalls.get(callId).conflicting = true;
+      record(active, 'gap', callId ?? null, {reason: 'missing or conflicting tool call ID'});
+      return;
+    }
+    const requestId = active.pending?.request_id ?? null;
+    active.traceSeen.add(callId);
+    active.traceCalls.set(callId, {requestId, missingReported: false});
+    record(active, 'owner_call', callId, {input: event.input, request_id: requestId});
+  });
+  pi.on('tool_result', event => {
+    if (!active || event.toolName !== 'ask_user') return;
+    const callId = event.toolCallId;
+    if (!active.traceCalls.has(callId)) {
+      record(active, 'gap', callId ?? null, {reason: 'result without matching call'});
+      return;
+    }
+    const {requestId, conflicting} = active.traceCalls.get(callId);
+    if (conflicting) {
+      record(active, 'gap', callId, {request_id: requestId, reason: 'result has conflicting tool call ID'});
+      return;
+    }
+    active.traceCalls.delete(callId);
+    record(active, 'owner_result', callId, {request_id: requestId, content: event.content,
+      details: event.details, is_error: event.isError === true});
+  });
   pi.on('session_shutdown', () => active && close(active, true));
 }

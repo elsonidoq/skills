@@ -42,7 +42,8 @@ from .engine import (Engine, _COMPLETION_REPORTING, _DECISION_CONSTRAINTS,
 from .sessions import select_session
 from types import SimpleNamespace
 from .git_effects import FocusedGit
-from .pi_adapter import WaitingQuestion, effective_saved_session
+from .pi_adapter import WaitingQuestion, effective_saved_session, question_context
+from .trace_capture import consuming_question_context, optional_record, question_scope, record_worker_question
 from .store import Blocked, canonical, git
 import hashlib
 import re
@@ -240,7 +241,8 @@ def task_graph(engine, saver, *, review=False):
     def prepare(task, complete, *, in_wave=False):
         baseline = git(project, 'rev-parse', 'HEAD').decode().strip()
         store.task(run, task['id'], 'running', baseline)
-        manual_gates(task, engine.question)
+        with question_scope(task_id=task['id'], purpose='manual_gate'):
+            manual_gates(task, engine.question)
         return {'task_id': task['id'], 'baseline': baseline, 'invocation_id': uuid.uuid4().hex,
                 'chain': [], 'prompt_kind': 'initial', 'correction_id': '',
                 'session': None, 'recovery': None, 'checkpoints': complete, 'next_node': 'worker',
@@ -279,6 +281,9 @@ def task_graph(engine, saver, *, review=False):
                 and recovery['action'] in ('fresh', 'escalate'))):
             adapters[task['id']] = engine.adapter(project, profile, question=engine.question)
         adapter = adapters[task['id']]
+        def question_trace(status, **facts):
+            optional_record(record_worker_question, store, run, task['id'], invocation, status, **facts)
+        adapter.question_trace = question_trace
         adapter.lock_fd = engine.authority.lock.fileno()
         if state.get('session') is not None:
             adapter.saved_session = state['session']
@@ -341,10 +346,13 @@ def task_graph(engine, saver, *, review=False):
         store.reserve_worker_dispatch(run, task['id'], invocation, session, recovery=dispatch_recovery)
         if dispatch_recovery and recovery['action'] == 'escalate':
             store.history(run, task['id'], 'implementation_escalation', 'started',
-                          {**dispatch_recovery, 'executor': profile})
+                          {**dispatch_recovery, 'executor': profile, 'invocation_id': invocation})
         invocation_kind = 'corrective_worker' if state['chain'] else 'task_worker'
         store.history(run, task['id'], 'worker_invocation', 'started',
-                      {'invocation_id': invocation, 'session': session, 'prompt': prompt, 'executor': profile})
+                      {'invocation_id': invocation, 'session': session, 'prompt': prompt, 'executor': profile,
+                       'predecessor_invocation_id': state['chain'][-1] if state['chain'] else None,
+                       'correction_id': state.get('correction_id'),
+                       'recovery_id': recovery['id'] if recovery else None})
         steering = {'run_id': run, 'task_id': task['id'], 'invocation_id': invocation,
                     'role': invocation_kind}
         if getattr(adapter, 'parent_steering_available', lambda: False)():
@@ -356,12 +364,27 @@ def task_graph(engine, saver, *, review=False):
         monitoring = getattr(engine, '_local_tracing', None)
         boundary = (monitoring.boundary('worker', task_id=task['id'], invocation=True, model=profile.get('model'))
                     if monitoring else nullcontext())
+        if state['prompt_kind'] == 'answer':
+            question_trace('continuation_started', route='paused', tool_call_id=state['pending_question'].get('tool_call_id'),
+                           predecessor_invocation_id=state['question_invocation'])
+        submitted = {'submission': {'version': 1, 'report': None, 'evidence': [],
+                                    'gaps': ['submission report unavailable or capture failed']}}
+        def retain_submission(result):
+            if not isinstance(result, WaitingQuestion):
+                from .trace_capture import submission_facts
+                submitted.update(submission_facts(project, task, result,
+                                                  claimed_paths=focused.task_edited | focused.known_artifacts))
         with boundary:
             try:
                 result = engine._prompt_worker(adapter, prompt, claim=claim, command=command,
                                                cleanup=focused.cleanup_artifact, saved_session=session, reuse_key=reuse_key,
-                                               pause_questions=True)
+                                               pause_questions=True, submission=retain_submission)
             except BaseException as exc:
+                if state['prompt_kind'] == 'answer':
+                    question_trace('continuation_failed', route='paused',
+                                   tool_call_id=state['pending_question'].get('tool_call_id'),
+                                   predecessor_invocation_id=state['question_invocation'],
+                                   error_type=type(exc).__name__)
                 actual = getattr(adapter, 'opened_session', None) or getattr(adapter, 'saved_session', None)
                 if actual is not None:
                     store.bind_worker_dispatch(run, task['id'], invocation, actual)
@@ -369,7 +392,7 @@ def task_graph(engine, saver, *, review=False):
                 store.history(run, task['id'], 'worker_invocation', status,
                               {'invocation_id': invocation, 'error': _safe_error(exc), 'session': actual,
                                'effects': effects(task['id']), 'prompt': prompt,
-                               'diagnostic': getattr(exc, 'diagnostic', None)})
+                               'diagnostic': getattr(exc, 'diagnostic', None), **submitted})
                 store.history(run, task['id'], 'worker', status, {'role': role, 'error': _safe_error(exc)})
                 engine._append_metric(adapter, invocation_id=invocation, task_id=task['id'],
                                       role=role if role == 'fixing_worker' else 'corrective_worker' if state['chain'] else 'worker', outcome=status,
@@ -384,14 +407,19 @@ def task_graph(engine, saver, *, review=False):
         actual = getattr(adapter, 'opened_session', None) or getattr(adapter, 'saved_session', None)
         if actual is not None:
             store.bind_worker_dispatch(run, task['id'], invocation, actual)
+        if state['prompt_kind'] == 'answer':
+            question_trace('continuation_returned', route='paused', tool_call_id=state['pending_question'].get('tool_call_id'),
+                           predecessor_invocation_id=state['question_invocation'])
         if isinstance(result, WaitingQuestion):
+            question_trace('requested', route='paused', **result.question)
             facts = {'invocation_id': invocation, 'session': result.session, 'waiting': True,
                      'question': result.question, 'effects': effects(task['id'])}
             store.history(run, task['id'], 'worker_invocation', 'returned', facts)
             return {'session': result.session, 'pending_question': result.question, 'next_node': 'wait'}
         paths, artifacts = focused.facts()['paths'], focused.facts()['artifacts']
         selected = paths + artifacts
-        facts = {'invocation_id': invocation, 'summary': result, 'session': actual,
+        facts = {'invocation_id': invocation,
+                 'summary': submitted.get('submission', {}).get('report') or result, 'session': actual, **submitted,
                  'head': git(project, 'rev-parse', 'HEAD').decode().strip(), 'paths': paths, 'artifacts': artifacts,
                  'source_state': Engine._repair_source_state(project, selected),
                  'index_state': Engine._repair_index_state(project, selected),
@@ -414,6 +442,9 @@ def task_graph(engine, saver, *, review=False):
         if len(facts) != 1:
             raise Blocked('settled question evidence missing or ambiguous; inspect retained invocation')
         verify_effects(facts[0]['effects'])
+        optional_record(record_worker_question, store, run, state['task_id'], state['invocation_id'],
+                        'resolved', route='paused', tool_call_id=state['pending_question'].get('tool_call_id'),
+                        question=state['pending_question'].get('question'), resolution=answer['answer'])
         return {'answer': answer['answer'], 'prompt_kind': 'answer',
                 'question_invocation': state['invocation_id'],
                 'invocation_id': uuid.uuid4().hex, 'chain': [*state['chain'], state['invocation_id']],
@@ -434,7 +465,9 @@ def task_graph(engine, saver, *, review=False):
             raise Blocked('worker effects changed before checks; inspect Git and selected bytes before continuation')
         refs = []
         def retain(status, attempt):
-            store.history(run, task['id'], 'check', status, attempt)
+            store.history(run, task['id'], 'check', status,
+                          {**attempt, 'producer_invocation_id': state['chain'][-1],
+                           'correction_id': state.get('correction_id')})
             if status == 'passed':
                 refs.append(store.db.execute(
                     "SELECT seq FROM execution_history WHERE run_id=? AND task_id=? AND kind='check' AND state='passed' ORDER BY seq DESC LIMIT 1",
@@ -450,12 +483,14 @@ def task_graph(engine, saver, *, review=False):
             if exc.attempt == previous:
                 raise Blocked('required check failed and remains unchanged after scoped correction: ' + canonical(exc.attempt))
             correction_id = uuid.uuid4().hex
-            record(task['id'], 'graph_correction', correction_id, {'failure': exc.attempt, 'effects': effects(task['id'])})
+            record(task['id'], 'graph_correction', correction_id, {
+                'failure': exc.attempt, 'effects': effects(task['id']),
+                'producer_invocation_id': state['chain'][-1], 'predecessor_correction_id': state.get('correction_id')})
             return {'correction_id': correction_id, 'prompt_kind': 'correction',
                     'invocation_id': uuid.uuid4().hex, 'next_node': 'worker'}
         check_id = uuid.uuid4().hex
         record(task['id'], 'graph_checks', check_id, {'checks': results, 'check_refs': refs,
-                                                       'effects': effects(task['id'])})
+                'producer_invocation_id': state['chain'][-1], 'effects': effects(task['id'])})
         return {'check_id': check_id, 'next_node': 'checkpoint'}
 
     def checkpoint(state, config: RunnableConfig):
@@ -501,7 +536,10 @@ def task_graph(engine, saver, *, review=False):
                 if failure == previous:
                     raise Blocked('checkpoint remains unchanged after scoped correction: ' + str(exc))
                 correction_id = uuid.uuid4().hex
-                record(task['id'], 'graph_correction', correction_id, {'failure': failure, 'effects': effects(task['id'])})
+                record(task['id'], 'graph_correction', correction_id, {
+                    'failure': failure, 'effects': effects(task['id']),
+                    'producer_invocation_id': state['chain'][-1],
+                    'checkpoint_occurrence_id': occurrence, 'predecessor_correction_id': state.get('correction_id')})
                 return {'correction_id': correction_id, 'prompt_kind': 'correction',
                         'invocation_id': uuid.uuid4().hex, 'next_node': 'worker'}
         result['parent'] = None if result['no_change'] else git(project, 'rev-parse', result['sha'] + '^').decode().strip()
@@ -517,7 +555,8 @@ def task_graph(engine, saver, *, review=False):
                    {'summary': summary, 'checks': checked['checks'], 'paths': result['paths'],
                     'generated_artifacts': result['artifacts']})
         if state.get('recovery') and state['recovery']['action'] == 'escalate':
-            store.history(run, task['id'], 'implementation_escalation', 'completed', {'sha': result['sha']})
+            store.history(run, task['id'], 'implementation_escalation', 'completed', {'sha': result['sha'],
+                'producer_invocation_id': state['chain'][-1], 'recovery_id': state['recovery']['id']})
         return {'next_node': 'ready'}
 
     def escalation_guard(node):
@@ -671,7 +710,7 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, tran
     recovery = {'id': identity, 'action': action, 'diagnosis': diagnosis, 'predecessor': predecessor}
     reference = {'invocation_id': predecessor, 'error': failure.get('error'),
                  'saved_session_id': (failure.get('session') or {}).get('id'), 'targeted_correction': diagnosis}
-    store.history(run, task_id, 'graph_recovery', 'recorded', {'id': identity, 'effects': value, 'reference': reference})
+    store.history(run, task_id, 'graph_recovery', 'recorded', {'id': identity, 'action': action, 'effects': value, 'reference': reference})
     chain = list(state.get('chain') or [])
     if predecessor not in chain:
         chain.append(predecessor)
@@ -682,7 +721,7 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, tran
     return graph.invoke(None, config, durability='sync')
 
 
-def answer_graph_question(graph, config, question):
+def answer_graph_question(graph, config, question, *, trace_observer=None):
     """Present the retained question through a terminal or attached consumer.
 
     No input leaves the checkpoint paused. The invocation identity binds the reply
@@ -693,11 +732,26 @@ def answer_graph_question(graph, config, question):
     if len(interrupts) != 1:
         raise Blocked('no single pending graph question; inspect the retained graph before answering')
     pending = interrupts[0].value
+    def trace(status, **facts):
+        optional_record(trace_observer, pending, status, **facts)
+    token = question_context.set(trace)
+    context_token = consuming_question_context.set({
+        'task_id': pending.get('task_id'), 'invocation_id': pending['invocation_id'],
+        'tool_call_id': pending['question'].get('tool_call_id'), 'route': 'paused'})
     try:
-        answer = question(pending['question']['question'])
-    except (Blocked, EOFError):
-        return None
+        try:
+            answer = question(pending['question']['question'])
+        except (Blocked, EOFError) as exc:
+            trace('unanswered', error_type=type(exc).__name__)
+            return None
+        except BaseException as exc:
+            trace('unanswered', error_type=type(exc).__name__)
+            raise
+    finally:
+        consuming_question_context.reset(context_token)
+        question_context.reset(token)
     if not isinstance(answer, str) or not answer.strip():
+        trace('unanswered')
         return None
     return graph.invoke(Command(resume={'invocation_id': pending['invocation_id'], 'answer': answer}),
                         config, durability='sync')
@@ -719,11 +773,28 @@ def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_autho
     engine._local_tracing = monitoring
     try:
         with tracing_context(enabled=False, parent=False):
-            return _run_graph(engine, action=action, diagnosis=diagnosis, transfer=transfer,
-                              owner_authorized=owner_authorized, scope=scope)
+            try:
+                result = _run_graph(engine, action=action, diagnosis=diagnosis, transfer=transfer,
+                                    owner_authorized=owner_authorized, scope=scope)
+            except BaseException as exc:
+                # The original exception remains authoritative, even if history,
+                # capture, publication or the status callback is unavailable.
+                report = engine.finish_delivery_trace(error=exc)
+                try:
+                    import sys
+                    print('coherence trace finish: ' + json.dumps(report), file=sys.stderr, flush=True)
+                except BaseException:
+                    pass
+                raise
+            waiting = isinstance(result, dict) and result.get('status') == 'waiting'
+            report = engine.finish_delivery_trace(waiting=waiting)
+            return {**result, 'trace': report} if isinstance(result, dict) else result
     finally:
         if monitoring is not None:
-            monitoring.close()
+            try:
+                monitoring.close()
+            except BaseException:
+                pass
         engine._local_tracing = None
 
 
@@ -738,6 +809,7 @@ def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_auth
         if saved['contract'] != engine.contract or saved['executor'] != engine.input_executor:
             raise Blocked('graph run inputs differ from retained contract or executor; restore the original run inputs before continuation')
         engine.parallel = authority.get('parallel', False)
+        engine.delivery_scope = authority.get('delivery_scope')
         if authority.get('paid_scope') != engine.paid_scope:
             raise Blocked('graph paid scope differs from retained launch; restore the original scope')
     if not engine.resume:
@@ -752,7 +824,8 @@ def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_auth
             raise Blocked('review_base must resolve to an ancestor of the run baseline') from None
         store.start(run, baseline, contract=engine.contract, executor=engine.input_executor,
                     authority={'backend': 'langgraph-v1', 'paid_scope': engine.paid_scope, 'parallel': engine.parallel,
-                               'routine_authority': True, 'review_policy': 'owner-pair-v1'},
+                               'routine_authority': True, 'review_policy': 'owner-pair-v1',
+                               **({'delivery_scope': engine.delivery_scope} if engine.delivery_scope is not None else {})},
                     review_base=review_base)
     config = {'configurable': {'thread_id': run}, 'recursion_limit': max(100, len(engine.contract['tasks']) * 20 + 50)}
     try:
@@ -767,7 +840,11 @@ def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_auth
                 result = graph_recovery_action(engine, graph, config, action, diagnosis=diagnosis,
                                                transfer=transfer, owner_authorized=owner_authorized, scope=scope)
             elif snapshot.interrupts:
-                result = answer_graph_question(graph, config, engine.question)
+                def trace_pending(pending, status, **facts):
+                    optional_record(record_worker_question, engine.authority.store, engine.run,
+                                    pending['task_id'], pending['invocation_id'], status, route='paused',
+                                    **pending['question'], **facts)
+                result = answer_graph_question(graph, config, engine.question, trace_observer=trace_pending)
             else:
                 result = graph.invoke(None if engine.resume else {}, config, durability='sync')
             snapshot = graph.get_state(config)
@@ -790,14 +867,18 @@ def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_auth
             return result
     except BaseException as exc:
         state = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
-        active = store.db.execute("SELECT task_id,baseline FROM execution_tasks WHERE run_id=? AND state='running'", (run,)).fetchall()
-        for item in active:
-            store.task(run, item['task_id'], state, item['baseline'], details={'error': _safe_error(exc)})
-        head = git(project, 'rev-parse', 'HEAD').decode().strip()
-        retained = store.db.execute('SELECT state,result,error FROM execution_runs WHERE run_id=?', (run,)).fetchone()
-        if tuple(retained) != (state, head, _safe_error(exc)):
-            store.finish(run, state, head, _safe_error(exc))
-        engine._finalize_metric_artifact()
+        try:
+            active = store.db.execute("SELECT task_id,baseline FROM execution_tasks WHERE run_id=? AND state='running'", (run,)).fetchall()
+            for item in active:
+                store.task(run, item['task_id'], state, item['baseline'], details={'error': _safe_error(exc)})
+            head = git(project, 'rev-parse', 'HEAD').decode().strip()
+            retained = store.db.execute('SELECT state,result,error FROM execution_runs WHERE run_id=?', (run,)).fetchone()
+            if retained is not None and tuple(retained) != (state, head, _safe_error(exc)):
+                store.finish(run, state, head, _safe_error(exc))
+            engine._finalize_metric_artifact()
+        except BaseException:
+            # Failed failure-bookkeeping cannot mask the operation that failed.
+            pass
         raise
 
 

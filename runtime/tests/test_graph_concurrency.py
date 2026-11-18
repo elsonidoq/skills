@@ -65,7 +65,12 @@ EXECUTOR = {'provider': 'openai', 'model': 'gpt-4o-mini', 'effort': 'off',
 
 class ProductionWaveTests(ProjectTest):
     def environment(self, *, barrier=False, fail=''):
-        return {**os.environ, 'PYTHONDONTWRITEBYTECODE': '1',
+        # These subprocesses own isolated runs, not the invoking agent's bridge.
+        environment = dict(os.environ)
+        for name in ('COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
+                     'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN'):
+            environment.pop(name, None)
+        return {**environment, 'PYTHONDONTWRITEBYTECODE': '1',
                 'PYTHONPATH': str(Path(__file__).resolve().parents[1]),
                 'COHERENCE_HOST_PRELOAD': '1',
                 'NODE_OPTIONS': '--import=' + str(Path(__file__).parent/'fixtures/steering_adapter_fixture.mjs'),

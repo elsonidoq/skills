@@ -24,6 +24,21 @@ You **MUST** consider the user input before proceeding (if not empty). Carry any
 delivery issue URL from the specification into the plan and subsequent task handoff; absence
 is not a prerequisite.
 
+## Design agreement before setup or detail
+
+Resolve the installed suite's `skills/planner/references/approval-and-recovery.md` and apply
+its interactive design agreement before detail contract, including standalone and resumed
+entry. Discover the project-owned page destination and produce the self-contained interactive
+HTML high-level design covering approach, interfaces, dependencies and material risks. Show
+the actual page and obtain explicit owner design agreement before setup-plan or detailed
+architecture plan production or continuation, including planning hooks below. Return to the
+coordinating caller for the real answer when delegated. Carry shown content identity, actual
+answer/scope and ordering into the plan. Page creation/interaction, silence, denial or
+cancellation is not consent. Significant design changes renew agreement before affected
+detail; reuse a settled grant for its actual shown scope. Requirements approval, design
+agreement and final implementation approval remain distinct. Routine mechanics remain
+autonomous. Raw standalone entry does not bypass this design gate.
+
 ## Pre-Execution Checks
 
 **Check for extension hooks (before planning)**:
@@ -61,7 +76,7 @@ is not a prerequisite.
 
 ## Outline
 
-1. **Setup**: Under `planner`, do not run setup or create planning artifacts until the distinct independent `spec_review` has returned, any answered material findings have been incorporated by the specification producer, and the existing current-specification approval is recorded. Return the unmet boundary to planner. Raw standalone SpecKit remains available, but is outside planner's independently reviewed Standard guarantee. Once this prerequisite is met, run `.specify/scripts/bash/setup-plan.sh --json` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, FEATURE_DIR, BRANCH. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+1. **Setup**: Under `planner`, do not run setup or create planning artifacts until the distinct independent `spec_review` has returned, any answered material findings have been incorporated by the specification producer, and the existing current-specification approval is recorded. Return the unmet boundary to planner. Raw standalone SpecKit remains available, but is outside planner's independently reviewed Standard guarantee. Once this prerequisite and the HTML design agreement above are met, run `.specify/scripts/bash/setup-plan.sh --json` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, FEATURE_DIR, BRANCH. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 2. **Load context**: Under `planner`, load the current approved FEATURE_SPEC only after that boundary; the reviewer is read-only and does not edit it. Read FEATURE_SPEC and `.specify/memory/constitution.md`. Load IMPL_PLAN template (already copied).
 

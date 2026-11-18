@@ -93,6 +93,34 @@ ceremony. Project-specific selection is in the [operating guide](coordinate-impl
 The monitoring descriptor's `requested_executor` still describes the worker profile; it
 does not establish the reviewer's actual model or retrofit historical reviewer records.
 
+## Parent owner-tool capture interface
+
+The optional private bridge batch contains version 1 events with stable `id`, `kind`,
+`tool_call_id` and, when known, `request_id`. `owner_call.input` is the actual tool
+input; `owner_result.content`, `details` and `is_error` are the actual SDK result.
+`coordinator_reply.answer`, `responder` and `delivery` describe a distinct resolution,
+not an inferred owner answer or consent. A `gap.reason` identifies unmatched IDs,
+missing final results or a lost pending transport. Final drain marks still-open calls;
+absence of a result does not become an answer.
+
+`drain_parent_trace(observer, final=...)` sends the private batch to an observer, then
+acknowledges only after it returns successfully. `persist_parent_events(store, run, events)`
+commits a batch in short transactions as `execution_history.kind = parent_trace`, with
+versioned details containing `event`, `source_digest` and `gaps`. Exact repeats deduplicate
+after reopen; conflicting IDs reject the entire batch. Known credential/transport fields are
+excluded and listed as gaps; this is not universal secret detection. A request ID on an owner
+call means that request was pending at observation, not proof that the owner answered it or
+that a later coordinator resolution matches it. The capture interface is optional and failures
+do not change replies or required operation history. Abrupt process or parent death can lose
+events not yet acknowledged; buffer contents are not durable until stored.
+
+The installed SDK's normal `tool_call`/`tool_result` hook path is exercised by the offline
+`test_parent_trace.mjs` fixture with a controlled owner tool and actual locked SQLite store;
+it is not a live provider or human acceptance test. Ordinary runner calls currently remain
+compatible bare calls: terminal/success/error composition must bind the held Store observer and
+perform the final drain before teardown (T009); this producer alone does not enable automatic
+ordinary-run capture.
+
 ## Current progress tables
 
 The project database remains `.coherence/workflow/workflow.sqlite`. New execution uses:
@@ -104,6 +132,19 @@ The project database remains `.coherence/workflow/workflow.sqlite`. New executio
 - required chain rows: `execution_review_executions` (actual reviewer/fixer ID, ordinal/round, explicit trigger/predecessor and range), append-only `execution_review_attempts` (dispatch/outcome/uncertainty, private parsed findings and references), and `execution_review_suggestions` keyed to the attempt (optional parsed nonblocking suggestions). Review briefs derive task/repair attribution from retained checkpoint facts and actual Git commits/parents/paths, and private required-check attempts from existing `check`/`fixer_check` history (actual command, result and output) associated with those checkpoints. Reviewers treat retained passing execution, failed/missing required execution, and their read-only inability to rerun as distinct facts; they do not invent live checks. No-change records no commit changes, while intervening or missing attribution remains explicitly unrelated/unattributed context rather than ownership inference or a new registry. Initial and follow-up briefs separately include available completed task summaries as private worker-reported returns with task ID and result checkpoint; missing, empty or unusable historical returns are unavailable, and unsuccessful diagnostics are not completed acceptance. Returns do not prove checks or Git facts. Raw check output and returns never enter safe CLI/monitor projections or review references.
 
 Legacy `execution_usage_memberships` and `execution_usage_intervals` remain untouched when present; new runs do not write or read them.
+
+Optional launch delivery scope is stored unchanged as
+`execution_run_inputs.authority.delivery_scope`, with the exact JSON object shape
+`{target?, authority?: {run_id?, target?, operations?: [string], approval_ref?}, known_linked_prs?: [string]}`.
+The CLI accepts JSON through start-only `--delivery-scope`; the attached facade admits the
+same object through start-only `delivery_scope` and serializes it as that CLI argument.
+These fields are optional for transport, not task eligibility or proof of permission.
+`Engine.publish_delivery_trace()` passes the carrier's `target`, `authority` and
+`known_linked_prs` unchanged to `publish_trace`; missing/drifted grants defer writes at that
+boundary. Resume restores the retained carrier, with absence remaining valid for old runs.
+No credentials or inferred grant are added. This carrier does not change task prompts,
+executor selection, shared routine authority or paid/manual gates, and does not itself
+activate automatic finish. See [supported scope and operation semantics](coordinate-implementation.md#optional-delivery-scope-transport).
 
 Inputs preserve the parsed original contract/order, selected executor, settled authority and resolved initial review base. Explicit same-run resume is limited to failed/interrupted rows: it records its inspected prior invocation/cause, reuses those retained inputs without a new paid-scope question, and skips only completed task rows with matching checkpoint history/SHA. Missing retained input/history or uncertain effects remains an action-specific limit, never a filesystem admission test. History retains actual invocation/task/check/checkpoint outcomes, so a failed required command/exit/output remains after correction. Before a task mutation, append its explicit claimed source paths and known generated artifacts; an interrupted same-run task may reuse only those task-local facts for its next edit or selective file cleanup. Before a focused commit, private checkpoint-start history retains the attempted parent, exact changed paths and their Git index object IDs and modes (including deletions), plus the passing check references and producer context. A temporary index previews those facts without changing the real index; the real selected entries are checked and an attempt marker is retained immediately before the normal hooked/signed commit. A retained start without an attempt can continue as not committed; an unsettled attempt at its parent is uncertain. After a missing result write, reopen examines the unique direct child of that parent on current HEAD's ancestry, even if HEAD advanced, and requires exact parent, paths, objects and modes before recording the original SHA. Ambiguous or mismatched effects stop the affected continuation without another commit. Genuine no-change has no commit and retains its observed head. A later owner-pair repair retains its recovered commit but still respects the existing granted-review-target drift boundary. Checkpoint facts retain explicit task-edited paths, known generated artifacts, SHA and available actual parent. Latest task rows are a current projection only; they cannot erase failure/interruption history. The safe CLI projection exposes task IDs, review base and operation facts, never original task text, prompts, answers or check output. These are operation-local facts, not global HEAD/index/dirty/file snapshots, unchanged-tree proof, custody ledger, custom trailers, legacy backfill or resume policy. A coordinator-scoped external repair is separately inspected: its exact paths, diff, checks and focused checkpoint settle before explicit continuation of the retained unfinished run; it never widens the original worker's paths or authorizes a blind retry.
 
@@ -139,7 +180,93 @@ For a failed `owner-pair-v1` run whose latest settled findings-free evidence/cov
 
 For a failed `owner-pair-v1` run whose latest settled actionable rejection has an exact unreserved authorized pair grant and a changed current HEAD, `refresh-review-target --project ROOT --run RUN` appends a fresh read-only review execution over the retained original base through current HEAD. It retains the prior ordinal/round, identifies the old rejection as trigger/predecessor, and does not rebind, reserve or consume the stale grant. Approval completes the run at the actually reviewed head; rejection retains failure and can supply a new causal rejection for explicit resume. Uncertain stages, reserved grants, unchanged targets and other policies do not qualify. Existing tables and historical attempts/inputs/checkpoints remain unchanged; valid terminal observations use existing baseline/head fields. See the [operating guide](coordinate-implementation.md) for activation and commands.
 
-Additional owner-authorized repairs use existing private history for recovery: `fixer_invocation` starts precede calls; returned facts retain explicit paths/artifacts, baseline and head, not raw repair answers. A settled explicit unsuccessful invocation retains its private diagnostic plus its baseline, HEAD, claimed paths/artifacts, exact working-byte SHA256 digests/file modes (including missing-file state), and operation-local selected-path Git index entries, separately from Git-normalized checkpoint blob hashes. Explicit resume checks those effects before restoring ownership; missing facts or target/source/index drift stops that continuation without adopting staged or working bytes. The same-assignment corrective brief includes the actual diagnostic and partial diff and requires a targeted diagnosis/correction before editing, without a routine human terminal question. Earlier failure history remains intact but does not override a later returned call: local checks/checkpoint reconciliation consumes only events after that latest return and takes precedence over another provider call. Earlier check/checkpoint attempts remain historical, not current correction stages; uncertainty in any fixer invocation still blocks replay. Returned fixer calls and passed fixer checks also retain exact working-byte SHA256 digests/file modes and selected-path Git index entries for claimed source and artifacts. Before restoring uncommitted ownership from either stage, resume verifies those exact facts, not only Git-normalized blobs; absent historical facts or drift stops the affected continuation with staged and working bytes preserved and no provider replay. Historical `fixer_mutation` rows are preserved but not consumed or newly written. `fixer_checks` records local-check start/pass, and `fixer_checkpoint` start retains the attempted parent, selected paths and expected blob hashes before Git. Reopen may dispatch a provably not-started reserved stage once, continue returned local work without repeating its provider call, or continue that same diagnosed explicit-unsuccessful fixer; the latter must rerun its actual checks, checkpoint (or establish genuine no-change), and receive a fresh full-range review. It retains a matching passed checkpoint or reconciles a completed commit against that intent before writing its missing result. Missing/uncertain facts, ordinary failed invocations without an explicit diagnostic/effect facts, unsettled checks, and mismatched SHA/parent/content stop the affected continuation. This does not upgrade historical gaps or reset consumed grants. Safe CLI `review_authorization.next_stage` follows the last execution outcome as well as reservation facts, distinguishing completion, blocked calls, pending owner decisions and eligible local reconciliation; it is a projection, never dispatch authority.
+Additional owner-authorized repairs use existing private history for recovery: `fixer_invocation` starts precede calls; returned facts retain explicit paths/artifacts, baseline, head and the meaningful repair summary. A settled explicit unsuccessful invocation retains its private diagnostic plus its baseline, HEAD, claimed paths/artifacts, exact working-byte SHA256 digests/file modes (including missing-file state), and operation-local selected-path Git index entries, separately from Git-normalized checkpoint blob hashes. Explicit resume checks those effects before restoring ownership; missing facts or target/source/index drift stops that continuation without adopting staged or working bytes. The same-assignment corrective brief includes the actual diagnostic and partial diff and requires a targeted diagnosis/correction before editing, without a routine human terminal question. Earlier failure history remains intact but does not override a later returned call: local checks/checkpoint reconciliation consumes only events after that latest return and takes precedence over another provider call. Earlier check/checkpoint attempts remain historical, not current correction stages; uncertainty in any fixer invocation still blocks replay. Returned fixer calls and passed fixer checks also retain exact working-byte SHA256 digests/file modes and selected-path Git index entries for claimed source and artifacts. Before restoring uncommitted ownership from either stage, resume verifies those exact facts, not only Git-normalized blobs; absent historical facts or drift stops the affected continuation with staged and working bytes preserved and no provider replay. Historical `fixer_mutation` rows are preserved but not consumed or newly written. `fixer_checks` records local-check start/pass, and `fixer_checkpoint` start retains the attempted parent, selected paths and expected blob hashes before Git. Reopen may dispatch a provably not-started reserved stage once, continue returned local work without repeating its provider call, or continue that same diagnosed explicit-unsuccessful fixer; the latter must rerun its actual checks, checkpoint (or establish genuine no-change), and receive a fresh full-range review. It retains a matching passed checkpoint or reconciles a completed commit against that intent before writing its missing result. Missing/uncertain facts, ordinary failed invocations without an explicit diagnostic/effect facts, unsettled checks, and mismatched SHA/parent/content stop the affected continuation. This does not upgrade historical gaps or reset consumed grants. Safe CLI `review_authorization.next_stage` follows the last execution outcome as well as reservation facts, distinguishing completion, blocked calls, pending owner decisions and eligible local reconciliation; it is a projection, never dispatch authority.
+
+## Factual trace projection v1
+
+`Store.trace_source(run)` opens a separate read-only SQLite connection and one read
+transaction. `read_trace_source(db, run)` is the equivalent existing-connection reader;
+its caller holds the read snapshot. Neither performs DDL, writes, graph deserialization,
+checkout reads or external operations. Missing optional tables remain explicit gaps.
+The source includes ordered history, every review execution and attempt, per-attempt
+suggestions and selected review inputs, plus the observed run outcome and delivery issue.
+It does not copy retained authority, executor configuration or complete task input dumps.
+
+The fixed `boundary` records the last factual history sequence, review-attempt sequence
+and actual review execution IDs. Run outcome, inputs and suggestions are captured in the
+same SQLite snapshot. `trace_publication*`, `trace_delivery*` and `trace_linkage*` history
+kinds are reserved publication bookkeeping and excluded **before** computing the boundary.
+Appending only publication facts cannot change the factual snapshot. Reuse the entire
+captured source for a fixed projection; a sequence bound alone cannot reconstruct an
+older mutable run outcome after continuation.
+
+`trace_projection.project_trace(store, run, source=optional_saved_source,
+known_credentials=())` returns deterministic version 1 structured facts and a SHA-256
+`snapshot_id` over their canonical JSON (excluding the ID itself). The projection keeps
+full meaningful submissions and captured evidence, failed/passing validation output,
+rejection findings, every review attempt, inspected recovery/escalation, and supported
+commit/code/PR references. Source row identities and source-local ordering remain visible;
+wall time does not invent cross-table causality. Raw assignment prompts, private control
+state, environment/config/credential fields and known session/transport paths are excluded.
+Known credential values (explicit supplied values, observed credential fields and current
+bridge token) are replaced wherever encountered, with explicit gaps. This is not universal
+secret detection. No arbitrary content truncation, file harvesting or URL fetch occurs.
+
+Questions pair only by actual tool-call and original invocation identities, or exact
+consuming-question identity. Paused continuations use their explicit predecessor. Parent
+owner-tool answers, coordinator resolutions and actual consuming answers remain distinct
+stages with original wording and delivery outcomes. Missing IDs, results, evidence or
+delivery are explicit gaps, never guessed answers/consent. Unattributed stages stay visible
+but do not inflate logical counts. Invocation starts/returns share one count; review
+executions, actual dispatched review invocations and retained review-attempt rows are
+separate counts (a corrected delivery can dispatch twice within one execution).
+
+`counts.*.observed` counts identified retained facts, including a genuine **observed**
+zero. `counts.*.total` remains null: current optional producers do not establish complete
+interval coverage. Empty/old coverage is `unavailable`, observed coverage is `partial`,
+not proof that no unobserved event occurred. Implementation outcome is the actual observed
+run state, not capture coverage. Submission claims, runner checks and independent review
+remain separate facts; owner acceptance stays `NOT VERIFIED`, never inferred from them.
+
+`render_markdown(snapshot)` emits a Markdown document with an exact, reversible JSON
+carrier and a fence longer than any backtick sequence in the content. Ordinary Unicode,
+newlines and long meaningful text survive unchanged after JSON decoding. Embedded evidence
+is untrusted data, not instructions. Publication/confirmation and terminal parent drain
+are separate consumers (T006/T009), not delivered by this projector. Existing safe status,
+historical readers and metadata-only Phoenix projections do not consume this rich payload.
+
+## Private submission capture v1
+
+New `worker_invocation` and `fixer_invocation` terminal rows retain `submission`:
+`version: 1`, actual `status` (`submitted` for compatible text, or the explicit
+unsuccessful outcome), `report`, `evidence: [{reference, content}]`, and `gaps`.
+Capture occurs at the actual return before unsuccessful-outcome rejection and before
+runner checks. Earlier reports and file contents survive correction, deletion and reopen;
+no historical rows are backfilled. Missing reports/capture failures are gaps, not acceptance.
+Fixer returned rows also retain `summary`; task reviewers still consume only the existing
+completed-task worker evidence, not unsuccessful reports as completion proof.
+
+Only explicit Markdown links, backtick-quoted file paths and `Evidence: \`path\``
+references are resolved. Local content must be a readable regular text file under the
+assignment's owned/generated paths or actual claimed paths. Existing `safe_path` checks
+reject absolute paths, traversal and symlinks. No directory scan, URL fetch, unrelated-path
+read or credential-file collection occurs. Unavailable, out-of-scope, binary and excluded
+credential references produce gaps. Known bridge credentials are excluded from captured
+reports/content; this is not universal secret detection. Ordinary report/content text has
+no trace-specific truncation. These are private history payloads, not safe status/monitor
+or Phoenix projections. Snapshotting does not expand write or external-operation authority.
+
+Worker starts link predecessor invocation, correction ID and inspected recovery context;
+checks and check groups identify their producing invocation. Graph corrections identify
+the preceding producer/correction and checkpoint occurrence when relevant. Fixer starts
+link their review trigger, predecessor invocation and the failed check/checkpoint history
+`decision_ref` for corrective calls. Fixer checks identify their producer; focused fixer
+checkpoint results retain producer and correction chain in addition to existing check
+references. Existing review execution/attempt rows remain the owner of review causality,
+findings and coverage; failed review outcomes retain their actual error as well as category.
+These links neither grant a retry nor infer owner acceptance from prose. Existing dispatch,
+check, checkpoint and independent review safety remains unchanged. Normal-run parent
+drain/observer/finish integration remains a separate required consumer (T009).
 
 ## Metric artifact JSONL v1
 

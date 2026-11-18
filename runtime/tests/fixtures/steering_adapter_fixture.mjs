@@ -33,9 +33,28 @@ export function installSteeringProvider(callback = 'question', directory = proce
             const priorEffect = context.messages.some(item => item.role === 'toolResult' && item.toolCallId === 'prior-tool');
             const priorQuestion = context.messages.some(item => item.role === 'assistant' &&
               item.content?.some(part => part.type === 'toolCall' && part.id === 'callback-tool'));
-            const first = (pauseFixture ? !priorQuestion : calls++ === 0) && !reviewer;
+            const first = (pauseFixture ? !priorQuestion : calls++ === 0) && (!reviewer || callback === 'parent-trace');
             stream.push({type: 'start', partial: message});
-            if (callback === 'graph-parallel') {
+            if (callback === 'parent-trace') {
+              if (first) {
+                for (const [index, id] of ['owner-one', 'owner-two', 'owner-missing', 'owner-error'].entries()) {
+                  const args = {question: `owner question ${index + 1}`};
+                  const toolCall = {type: 'toolCall', id, name: 'ask_user', arguments: args};
+                  message.content.push(toolCall);
+                  stream.push({type: 'toolcall_start', contentIndex: index, partial: message});
+                  stream.push({type: 'toolcall_delta', contentIndex: index, delta: JSON.stringify(args), partial: message});
+                  stream.push({type: 'toolcall_end', contentIndex: index, toolCall, partial: message});
+                }
+                message.stopReason = 'toolUse';
+              } else {
+                const text = 'parent fixture complete';
+                message.content.push({type: 'text', text});
+                stream.push({type: 'text_start', contentIndex: 0, partial: message});
+                stream.push({type: 'text_delta', contentIndex: 0, delta: text, partial: message});
+                stream.push({type: 'text_end', contentIndex: 0, content: text, partial: message});
+                message.stopReason = 'stop';
+              }
+            } else if (callback === 'graph-parallel') {
               const latest = context.messages.filter(item => item.role === 'user').at(-1);
               const text = typeof latest?.content === 'string' ? latest.content
                 : latest?.content?.filter(part => part.type === 'text').map(part => part.text).join('\n');
@@ -118,7 +137,7 @@ export function installSteeringProvider(callback = 'question', directory = proce
                 assert.ok(reply, 'saved question tool identity must survive reopen');
                 const answer = context.messages.filter(item => item.role === 'user').at(-1);
                 assert.match(JSON.stringify(answer), /actual consent|actual denial/, 'continuation must carry the actual answer');
-              } else if (!reviewer) {
+              } else if (!reviewer && callback !== 'sync-question') {
                 const directions = context.messages.filter(item => item.role === 'user' && JSON.stringify(item.content).includes('[owner-direction id='));
                 assert.ok(directions.length, 'real SDK loop must consume queued direction before next provider request');
                 const prompt = context.messages.find(item => item.role === 'user');

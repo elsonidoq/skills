@@ -44,6 +44,17 @@ applicable source observable to its task dependency or gate, task-local REQUIRED
 worker/reviewer briefs. The constraint must affect that mapping, not merely appear as a link.
 A source/task conflict or uncertain supersession stops only the affected mapping for resolution.
 
+For new TinySpec and Standard planning, inspect the upstream project-owned self-contained
+interactive HTML high-level design and explicit owner design agreement under
+[the existing approval contract](../planner/references/approval-and-recovery.md#interactive-design-agreement-before-detail).
+Verify shown content identity, actual answer/scope and ordering before detailed architecture
+plan production or continuation; missing or invalid evidence returns affected planned work
+to that gate, not an invented historical answer. Significant design changes renew agreement.
+Page interaction, silence, denial or cancellation is not consent. Requirements approval,
+design agreement and final implementation approval remain distinct; reuse a settled grant
+for its actual shown scope. This does not impose new planning on direct coding or unrelated
+legacy execution, nor alter current launch authority or shared routine permissions.
+
 ## Make each outcome independently finishable
 
 <a id="executor-sized-outcomes"></a>
@@ -88,6 +99,11 @@ stay together. Established cross-system wiring may also stay one task when its f
 and support work establish the final observable; multiple files alone do not require a split.
 
 ## Give each task sufficient proof
+
+Each planned task must state observable acceptance, meaningful submitted completion evidence,
+required validation and applicable manual/permission gates in existing fields or source mappings.
+Preserve whole REQUIRED mappings; a worker claim or tool return alone is not accepted completion.
+These are task proof obligations, not additional startup eligibility fields.
 
 Use the smallest relevant project check that observes the changed behavior, not generic green
 output. For a wiring task, this can be the existing fixture that captures the selected ID at the

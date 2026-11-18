@@ -26,6 +26,17 @@ You **MUST** consider the user input before proceeding (if not empty). Carry any
 delivery issue URL from the source into human tasks and optional top-level `delivery_issue` in
 the executable object and coordinator handoff. Bare lists and absent issues remain valid.
 
+Before planned task production, apply the installed suite's interactive design agreement
+before detail contract in `skills/planner/references/approval-and-recovery.md`. Inspect the
+project-owned self-contained interactive HTML high-level design, shown content identity and
+actual owner answer/scope proving explicit design agreement before detailed architecture plan
+production or continuation. Return missing/invalid evidence to that gate, including standalone
+or resumed entry; do not backfill consent. Significant design changes renew agreement before
+affected planning. Page interaction, silence, denial or cancellation is not consent. Requirements
+approval, design agreement and final implementation approval remain distinct; reuse a settled
+grant only for its actual shown scope. Routine mechanics remain autonomous. Preserve current
+launch authority and shared routine permissions; this is not a runtime intake rule.
+
 ## Pre-Execution Checks
 
 **Check for extension hooks (before tasks generation)**:
@@ -144,6 +155,11 @@ the JSON/YAML handoff is executable input and Markdown is its human presentation
 
 A task delivers an independently verifiable outcome, not a phase, layer or entity noun.
 Story labels may help readers but do not determine execution order.
+
+**Task-local proof**: Every planned task defines observable acceptance, meaningful submitted
+completion evidence, required validation and applicable manual/permission gates in existing
+fields or source mappings. Preserve whole REQUIRED mappings; worker return alone is not
+accepted completion. No new task schema or startup eligibility is required.
 
 **Verification**: Preserve owner/source-required checks, necessary security, persistence and
 integration protections, and actual manual/permission gates. Broader hardening is optional,

@@ -189,7 +189,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
             }));
             return {content: [{type: 'text', text: 'Awaiting owner decision; no answer was provided.'}], details: {awaitingDecision: true}};
           }
-          const answer = await ask({type: 'question', question: args.question});
+          const answer = await ask({type: 'question', tool_call_id: id, question: args.question});
           if (answer.error) throw new Error(answer.error);
           return {content: [{type: 'text', text: answer.answer}], details: {}};
         },

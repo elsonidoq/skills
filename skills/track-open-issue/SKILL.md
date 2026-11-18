@@ -12,7 +12,8 @@ Choose the operation first:
   below; preserve the intended body for the separate quality review.
 - **Publish delivery or change state:** use the known qualified issue and recorded delivery/outcome
   evidence. An ordinary delivery comment does not require fresh candidate RCA, overlap discovery
-  or issue-body quality review. A substantive problem-body change does.
+  or issue-body quality review. Trace/link comments also do not require problem-body quality
+  review. A substantive problem-body change does.
 
 Do not modify product code, tests, generated assets, deployment state or unrelated issues. Keep
 credentials, tokens, personal data and sensitive payloads out of all records. A bare `#N` or
@@ -82,6 +83,34 @@ limited listing is not full discovery. Never deduplicate, merge or reopen solely
 similarity. Report closed overlaps without automatically reopening. Create only with current explicit
 write authority and no exact match; for an exact match, report `deduplicated` or make only the
 narrowly authorized change.
+
+## Establish planner issue association
+
+For planner entry without an issue, first understand the request and conduct needed owner
+brainstorming; readiness or depth selection alone does not establish association. Before planned
+artifact production, apply the existing target/capability/authentication discovery and complete
+open/closed overlap procedure above. Compare intent, problem, scope and primary evidence, not
+just titles. Independently GET any exact match and confirm qualified identity/URL, body and state;
+reuse an open or closed exact match without duplicate or reopen. Ambiguous overlap needs
+inspection or owner resolution, not speculative creation.
+
+With no exact match and actual target- and issue-create operation-scoped authority, actually
+create the requested issue, independently read it back and complete the separate problem-body
+quality review below. Do not ask a repeated routine creation question for unchanged granted
+scope. A request to plan, depth selection, credentials or a drafted body alone grants no write
+scope. Follow the existing user-requested versus autonomous label rules, not a new label policy.
+An uncertain create must reconcile complete open/closed pages and exact candidate GETs before
+any retry; incomplete discovery or ambiguous effects cannot authorize another create.
+
+Return the qualified URL and observed outcome to planner only as ready after confirmed exact
+reuse, or confirmed creation plus completed body-quality review and any necessary correction
+readback. If creation/readback succeeded but review is unavailable, retain that issue identity,
+report review incomplete and resume its review, never create another issue. Missing/conflicting
+target, capability, authentication, operation scope or required review blocks association and
+planned artifact production with the affected operation and concrete corrective action. Keep
+safe understanding/dialogue available; never invent a fallback register. An existing qualified
+issue stays associated; this procedure does not create runtime issues or require delivery_issue
+on bare runtime tasks.
 
 ## Make the scoped effect and read it back
 
@@ -155,6 +184,35 @@ If publication is uncertain, inspect the exact issue/comments before retrying. I
 succeeded, report the partial result and retry only the missing operation after inspection. Missing
 capability or authority defers the tracker effect with corrective action, not an authorized chat
 report. Unobserved feedback, acceptance and closure are `NOT VERIFIED`.
+
+## Confirm delivery issue/PR links
+
+Use the known qualified delivery issue and known PR URLs, not a bare number or a guessed
+association. Independently GET the issue identity and each PR's issue and pull-request
+identities on their explicit host/repository. Read the current bodies and all comment pages.
+Every delivery PR must link its qualified issue and the issue must discover every delivery
+PR, regardless of trace host. A PR-hosted trace additionally needs issue links to every
+confirmed trace part. Read back retained trace parts in full; a submitted claim or uncertain
+trace publication is not confirmed delivery.
+
+Reuse verified body/comment links. For missing links only, require actual run-, target- and
+`link_comment` operation-scoped authority for each destination. `trace_comment` authority,
+issue context, read access and credentials do not grant link writes. When the installed
+Coherence runtime is available, its `confirm_delivery_links` publisher uses explicit-host
+GET/POST, durable intent, complete pagination reconciliation and independent
+full-body/identity/target comment readback. Use JSON stdin/argument arrays through that
+publisher, never interpolate remote text into commands. Without the runtime,
+use the same scoped append-only procedure through available normal tools; do not invent a
+second delivery record. Before retrying an uncertain send, reconcile all destination pages
+and exact candidate bodies/identities; a collision or incomplete scan stops new comments.
+
+Late PR discovery establishes only missing reciprocal links and refers to the already
+confirmed trace: no trace resend, implementation replay or reopened review. Missing authority,
+partial effects or failed readback are incomplete linkage, not success; name the affected
+destination and corrective action. Do not create PRs, push, replace issue/PR bodies, close or
+reopen as part of linkage. Link/trace comments need no separate problem-body quality reviewer;
+retain that reviewer for new or substantively changed problem bodies. Link confirmation is
+not owner acceptance or closure authority.
 
 ## Review a recorded problem body
 

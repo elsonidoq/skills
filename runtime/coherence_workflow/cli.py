@@ -239,7 +239,7 @@ def cancel(signum, frame):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest='command', required=True)
-    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task'):
+    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task', 'recover-publication'):
         sub = subs.add_parser(command)
         if command != 'intake':
             sub.add_argument('--project', required=True)
@@ -248,9 +248,15 @@ def main(argv=None):
         if command == 'start':
             sub.add_argument('--executor', help='JSON file with provider, model and effort; no manifest or binding proof')
             sub.add_argument('--run', default=None)
+            sub.add_argument('--delivery-scope', type=json.loads,
+                             help='optional JSON carrier of already granted target/authority/known_linked_prs; retained for resume, not a grant')
             sub.add_argument('--parallel', action='store_true', help='explicitly direct disjoint dependency-ready worker waves; default sequential')
-        if command in ('resume', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task'):
+        if command in ('resume', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task', 'recover-publication'):
             sub.add_argument('--run', required=True)
+        if command == 'recover-publication':
+            sub.add_argument('--snapshot', help='exact retained snapshot ID; defaults to latest prepared snapshot, or retained facts if none')
+            sub.add_argument('--delivery-scope', type=json.loads,
+                             help='actual publication grant carrier; must match retained scope when present')
         if command == 'resume':
             sub.add_argument('--recovery-action', choices=('continue', 'fresh', 'escalate'),
                              help='coordinator-selected inspected continuation of the unfinished task')
@@ -268,6 +274,21 @@ def main(argv=None):
         if args.command in ('status', 'history'):
             print(canonical(status(args.project, args.run)))
             return 0
+        if args.command == 'recover-publication':
+            from .trace_publication import recover_publication
+            database = Path(args.project).resolve() / '.coherence/workflow/workflow.sqlite'
+            if not database.is_file():
+                print(canonical({
+                    'implementation': {'state': 'unavailable', 'replayed': False},
+                    'publication': {'state': 'deferred', 'snapshot_id': args.snapshot,
+                                    'urls': [], 'correction': 'Publication recovery needs retained workflow storage; restore the original database, not a coding replay.'}}))
+                return 2
+            with Authority(args.project, wait=True) as authority:
+                result = recover_publication(authority.store, args.run, snapshot_id=args.snapshot,
+                                             delivery_scope=args.delivery_scope)
+                print(canonical(result))
+            return 0 if (result['publication']['state'] == 'confirmed' and
+                         result.get('linkage', {}).get('state') == 'confirmed') else 2
         if args.command == 'recover-task' and not args.owner_authorized:
             raise Blocked('external task recovery requires actual owner authorization; obtain it and supply --owner-authorized')
         if args.command == 'resume' and any(os.environ.get('COHERENCE_PARENT_BRIDGE_' + field) for field in ('SOCKET', 'TOKEN', 'SESSION', 'RUN')) and os.environ.get('COHERENCE_PARENT_BRIDGE_RUN') != args.run:
@@ -354,7 +375,8 @@ def main(argv=None):
                       + '; created clean execution storage', file=sys.stderr)
             writer_entered = True
             engine = Engine(authority, run_id, contract, executor, adapter=PiAdapter,
-                            paid_scope=paid_scope, parallel=args.parallel, **({'question': question} if question else {}))
+                            paid_scope=paid_scope, parallel=args.parallel, delivery_scope=args.delivery_scope,
+                            **({'question': question} if question else {}))
             result = run_graph(engine)
             print(canonical(result))
         return 0

@@ -37,6 +37,20 @@ Useful existing optional fields remain valid; no historical regeneration is need
 
 ## Verification and review
 
+For new planned TinySpec/Standard work, reference the project-owned self-contained interactive
+HTML high-level design and actual explicit owner design agreement before detailed architecture
+plan production or continuation. Retain shown content identity, answer/scope and ordering in
+existing approval conventions. Significant design changes renew agreement before affected
+planning; page interaction, silence, denial or cancellation is not consent. Requirements
+approval, design agreement and final implementation approval remain distinct; reuse a settled
+grant for its actual shown scope. No historical answer is invented; current launch authority
+and shared routine permissions remain valid.
+
+Every planned task defines observable acceptance, meaningful submitted completion evidence,
+required validation and applicable manual/permission gates in existing fields or source
+mappings. Preserve whole REQUIRED mappings; worker return alone is not accepted completion.
+Routine mechanics remain autonomous; these proof obligations add no startup eligibility.
+
 Acceptance/context and check commands are useful task detail, not universal startup fields.
 Preserve owner/source-required checks, necessary security, persistence and integration
 protections, and actual manual/permission gates. Additional hardening is optional and
