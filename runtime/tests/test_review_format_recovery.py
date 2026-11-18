@@ -254,7 +254,6 @@ class ReviewFormatRecoveryTests(ProjectTest):
             return 'no' if kwargs.get('owner_only') else str(self.followup)
         with Authority(self.project) as owner:
             original = owner.store.review_chain('fixture', private=True)
-            owner.store.authorize_routine_review_continuation('fixture', owner.store.review_scope('fixture'))
             owner.store.resume('fixture')
             with self.assertRaisesRegex(Blocked, 'owner did not authorize'):
                 Engine(owner, 'fixture', self.contract, EXECUTOR, adapter=adapter, resume=True,
@@ -273,10 +272,34 @@ class ReviewFormatRecoveryTests(ProjectTest):
         self.assertTrue(any(kwargs.get('owner_only') for _, kwargs in asked))
         self.assertEqual([kind for kind, _ in self.calls], ['writer', 'review', 'fixer', 'review'])
 
+    def test_followup_recovery_honors_existing_scoped_routine_authority(self):
+        verdict, adapter = self.start_followup_failed()
+        asked = []
+        def question(prompt, **kwargs):
+            asked.append((prompt, kwargs))
+            return str(self.followup)
+        with Authority(self.project) as owner:
+            owner.store.authorize_routine_review_continuation('fixture', owner.store.review_scope('fixture'))
+            owner.store.resume('fixture')
+            with patch.object(Engine, 'run_fix', side_effect=Blocked('fixture stop before fixer')) as fixer:
+                with self.assertRaisesRegex(Blocked, 'fixture stop before fixer'):
+                    Engine(owner, 'fixture', self.contract, EXECUTOR, adapter=adapter, resume=True,
+                           question=question).invoke()
+            chain = owner.store.review_chain('fixture', private=True)
+            grants = list(owner.store.db.execute("select state,details from execution_history where run_id='fixture' and kind='review_pair_grant'"))
+        self.assertEqual(chain['executions'][-1]['findings'][-1], verdict['findings'])
+        self.assertEqual(len(grants), 1)
+        self.assertEqual(grants[0]['state'], 'authorized')
+        self.assertEqual(json.loads(grants[0]['details'])['rejecting_execution_id'], chain['executions'][-1]['execution_id'])
+        self.assertEqual(fixer.call_count, 1)
+        self.assertFalse(any(kwargs.get('owner_only') for _, kwargs in asked))
+        self.assertEqual([kind for kind, _ in self.calls], ['writer', 'review', 'fixer', 'review'])
+
     def test_followup_context_and_predecessor_mismatch_stay_blocked(self):
         self.start_followup_failed()
         original = [json.loads(x) for x in self.followup.read_text().splitlines()]
         with Authority(self.project) as owner:
+            owner.store.authorize_routine_review_continuation('fixture', owner.store.review_scope('fixture'))
             owner.store.resume('fixture')
             engine = Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
                             question=lambda _: str(self.followup))
@@ -301,6 +324,7 @@ class ReviewFormatRecoveryTests(ProjectTest):
                     with self.assertRaises(Blocked):
                         engine._recover_format_rejection(candidate, self.base)
             self.assertTrue(owner.store.review_chain('fixture')['uncertain'])
+            self.assertEqual(owner.store.db.execute("select count(*) from execution_history where run_id='fixture' and kind='review_pair_grant'").fetchone()[0], 0)
 
     def test_incomplete_and_non_rejection_artifacts_stay_blocked(self):
         self.start_failed()
