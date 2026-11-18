@@ -134,6 +134,17 @@ Request → Planner → Choose│                                               
                                                                → Analyze → Final approval ─┘
 ```
 
+- **Design before detail (both depths):** discover a project-owned self-contained interactive
+  HTML page. Show approach, interfaces, dependencies and material risks with clickable component
+  briefs and overall executive bullets; require keyboard/mobile readability and Close/Escape/focus
+  return. Obtain actual owner design agreement before detailed architecture plan production or
+  continuation. Page interaction, silence, denial or cancellation is not consent. Significant
+  changes renew agreement before affected planning. Requirements approval, design agreement and
+  final implementation approval remain distinct; reuse a settled grant for its actual shown scope.
+  Routine mechanics remain autonomous. No renderer/framework or new task schema is required.
+  TinySpec drafts what/acceptance and the page before its detailed how; Standard retains spec
+  approval, then page/agreement before setup-plan. See the
+  [operational gate](skills/planner/references/approval-and-recovery.md#interactive-design-agreement-before-detail).
 - **TinySpec:** compact context, scope, decisions, approach, acceptance and validation;
   fresh independent specification review before mandatory separate tasks, then a fresh independent
   read-only task review before one combined approval. The parent evaluates its findings and routes
@@ -188,8 +199,11 @@ Approval evidence: [combined approval, or specification and overall approvals]
 Approved current content/revisions and implementation scope: [evidence]
 ```
 
-Coordinate Implementation executes requested tasks sequentially using the existing CLI and
-installed Pi SDK. Source worktrees reuse that Pi SDK rather than requiring copied runtime
+Coordinate Implementation executes requested tasks sequentially through one LangGraph controller,
+using the existing CLI and installed Pi SDK. File-backed checkpoints support task/review transitions
+and durable question resume. Explicitly owner-directed path-disjoint waves remain later work.
+Historical non-graph runs remain readable; mutation requires an explicitly selected compatible
+runtime, never automatic conversion or replay. See [legacy retention and rollback](docs/coordinate-implementation.md#legacy-run-retention-and-compatible-continuation). Source worktrees reuse that Pi SDK rather than requiring copied runtime
 `node_modules`; explicit isolated workflow setup retains its lockfile-resolved SDK. Ordinary direct
 owner-authorized coding needs no new planning artifacts.
 Task intake checks only readable file, parsed list, ID/work, unique IDs, existing dependencies
@@ -202,9 +216,10 @@ scripts/coordinate-implementation start --project /absolute/project \
 ```
 
 Minimal tasks: `[{"id":"fix","description":"Fix the requested behavior and run its project test."}]`.
-Executor JSON contains the actual selected `provider`, `model`, `effort`; no substitution or
-provenance assessment. No workflow graph, manifest, catalogue, cgroup delegation, original
-session, parent receipt or proof-of-effect database is required. Installed entry is
+Executor JSON contains the actual selected `provider`, `model`, `effort` and a required `reviewer`
+object with its own selection; no substitution or provenance assessment. Graph checkpoints are control state, not acceptance or an extra admission
+protocol; no manifest, catalogue, cgroup delegation, original session, parent receipt or
+proof-of-effect database is required. Installed entry is
 `coordinate-implementation`; optional explicit isolated setup is separate install/network authority,
 never ordinary-use provisioning or auth refresh. Explicit cross-repository activation uses
 `scripts/install-workflow.sh --prefix "$HOME/.local/share/coherence-workflow" --allow-network --global`.
@@ -213,6 +228,34 @@ project auto-discovery, so new worktrees do not load a duplicate. Retain this su
 `~/.local/bin` on PATH, and start a fresh Pi/Paseo session. Existing bridge links need the
 [source-path update](docs/coordinate-implementation.md#setup-and-verification), not a runtime reinstall.
 Project tasks, executor selection and permissions remain local.
+
+Normal execution now drains acknowledged parent facts before terminal trace publication.
+Optional `--delivery-scope` carries actual run/target/comment authority, not inferred
+permission from an issue URL. Results report implementation status separately from
+`trace.capture`, `trace.publication` and reciprocal `trace.linkage`; errors retain their
+original exception and report trace outcomes on stderr. Waiting is not completion.
+Confirmed publication does not prove complete capture or owner acceptance. Missing scope,
+uncertain parts or incomplete PR links need the reported correction, not blind replay.
+See [terminal factual trace delivery](docs/coordinate-implementation.md#terminal-factual-trace-delivery).
+For publication alone, a terminal or attached agent shell can run
+`scripts/coordinate-implementation recover-publication --project /absolute/project --run EXACT-RUN-ID`.
+It reuses retained snapshots/intents and actual scope without coding/check/provider replay.
+See [publication-only recovery](docs/coordinate-implementation.md#publication-only-recovery)
+for `--snapshot`, `--delivery-scope`, separate outcomes and uncertain-effect handling.
+Changed global bridge/tools or skills need a fresh-session handoff and checkout/revision,
+current-approval and loaded-capability verification before live reliance; do not auto
+reload or restart the current Paseo session.
+
+For a later assessment, explicitly select a qualified issue or PR URL using
+[Assess Skill Improvements](skills/assess-skill-improvements/SKILL.md). The fresh-session
+handoff must retain that selection, current read/write scope and known evidence gaps;
+verify checkout/revision and the loaded updated skill before relying on its behavior.
+Assessment needs GitHub content, not the execution checkout. Missing pages/code or
+unconfirmed reciprocity make affected conclusions partial, not evidence of no failures.
+`python3 scripts/test-assess-skill-improvements.py` checks the carrier and controlled
+evidence cases only; actual issue-led and PR-led assessments and fresh-session behavior
+remain separate live acceptance, not proven by fixtures.
+
 Read actual `--help` and the
 [operating guide](docs/coordinate-implementation.md) / [storage owner](docs/coordinate-implementation-schema.md).
 
@@ -229,8 +272,8 @@ SDK compaction and long-output continuation remain normal behavior, not launch p
 releases its reservation without signalling processes or settling old effects, and preserves
 partial files/history. Current terminal input answers material questions without transcript
 proofs; noninteractive questions stop honestly. No automatic resume/replay or expensive retry
-loop. An ordinary writer lock prevents cooperating overlap; SDK tools are not an adversarial
-sandbox. Inspect actual conflicting writers/files and uncertain effects, never kill/adopt them.
+loop. One inherited worktree lock excludes competing controllers; explicitly directed disjoint
+workers may overlap within the controller after cutover. SDK tools are not an adversarial sandbox. Inspect actual conflicting writers/files and uncertain effects, never kill/adopt them.
 After adopting changed global skills/prompts in Paseo, prepare a fresh-session handoff instead of reloading or restarting the current session.
 
 ## Context-first recovery and owner guidance
@@ -252,10 +295,20 @@ local ownership/path/symlink, sensitive-data and dirty/concurrent protections; n
 history/index/run scaffolding or a second guidance store. Read the adopted index first and
 keep technical-gotcha retrieval distinct from guidance authority.
 
+Planner no-issue entry first understands the request and brainstorms with the owner if needed.
+Before planned artifact production, [track-open-issue](skills/track-open-issue/SKILL.md#establish-planner-issue-association)
+must confirm creation (including independent readback and body-quality review) or qualified exact
+open/closed overlap reuse without duplicate/reopen. It verifies the declared target, usable
+capability/authentication and complete overlap discovery. Actual target/issue-create scope permits
+creation without a repeated routine question; depth selection alone is not write authority.
+Missing/conflicting prerequisites stop association and artifacts with concrete corrective action,
+not a fallback register. Safe dialogue remains available. Bare runtime tasks still need no issue;
+existing qualified issues are retained, not recreated.
+
 Planner defaults to direct async stage → parent artifact/checkpoint inspection → next
 authorized stage with the saved assignment unchanged. A workflow needs earned branching,
 parallel independent work or other orchestration beyond convenience/single-child/sequential
-wrapping; stage authority/reviewer independence remain. Executable implementation remains single-writer and dependency-ordered.
+wrapping; stage authority/reviewer independence remain. Executable implementation remains dependency-ordered and sequential by default; explicit owner direction may permit disjoint workers.
 Coordinator trusts settled approved design, cheaply audits actual diffs/focused commits/
 REQUIRED outputs, then advances ready tasks. Only concrete invalidation reopens affected
 work; no routine replanning or unchanged preflight loops. Independent final review remains.
@@ -276,15 +329,17 @@ After changing global assets in Paseo, prepare a fresh-session handoff instead o
 - `finish-session`: reconcile documentation and other authorized owners with existing session outcomes;
   no fresh implementation review, rerun of implementation checks, or new acceptance gate.
 - `track-open-issue`: project-discovered GitHub unresolved-issue lifecycle, scoped writes, independent readback and configured read-only body review.
+- [`assess-skill-improvements`](skills/assess-skill-improvements/SKILL.md): explicitly owner-selected issue or PR assessment from durable GitHub evidence. Follow reciprocal links and all relevant comment/trace pages; inspect supported later fixes and code without the old checkout, SQLite or session. Separate reusable weaknesses from issue-specific omissions, supported causes from hypotheses and gaps. Default is read-only: no edits, agents, PR, implementation or tracker transition; assessment writes need separate scope. Analysis does not deliver changes or imply acceptance.
 - `import-open-issues`: default offline historical Markdown preview, conflict-aware reconciliation and separately authorized import; never an automatic migration.
 
 ## Validation and Documentation
 
-Run `scripts/check-skills-lint.sh` for deterministic suite checks. See the
-[planner regression guide](docs/plans/planner-regression.md) for trace fixtures, mutations,
-read-only RPC smoke testing, full behavioral scenarios and evidence limitations. Static tests
-are not proof of model obedience; live tests require separate authorization. See the
-[issue-derived evaluation convention](evaluations/README.md) for later selective comparisons.
+Run `scripts/check-skills-lint.sh` for deterministic suite checks. Choose the smallest
+meaningful check of the changed behavior and report its limits; preserve applicable runtime,
+integration, application, security and permission checks. Static, carrier and trace checks do
+not prove model obedience. Live application acceptance and its authority remain required where
+specified; no prior/candidate comparison, live RPC scenario or full historical replay is required.
+The [planner regression guide](docs/plans/planner-regression.md) retains trace details and historical observations.
 
 Use [docs/index.md](docs/index.md) to find the canonical documentation owner. Documentation
 describes current behavior; one project-local memory index carries verified non-obvious

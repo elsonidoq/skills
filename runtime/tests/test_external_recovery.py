@@ -3,17 +3,20 @@ import contextlib
 import hashlib
 import io
 import json
+import os
 from unittest.mock import patch
 
 from coherence_workflow import cli
 from coherence_workflow.engine import Engine
+from coherence_workflow.graph import graph_recovery_action, graph_saver, task_graph
+from coherence_workflow.intake import admit
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 from test_resume import EXECUTOR
 
 
 class ExternalRecoveryTests(ProjectTest):
-    def fail_run(self, checks=None, gates=None):
+    def fail_run(self, checks=None, gates=None, *, consumer_first=False):
         project, calls = self.project, []
         class Adapter:
             def __init__(self, *_args, **_kwargs): self.saved_session = None
@@ -27,13 +30,22 @@ class ExternalRecoveryTests(ProjectTest):
             {'id': 'one', 'description': 'original semantic acceptance', 'owned_paths': ['owned.txt'],
              'gates': gates or [], 'checks': checks or [['/bin/sh', '-c', 'test "$(cat owned.txt)" = recovered']]},
             {'id': 'two', 'description': 'dependent', 'depends': ['one'], 'owned_paths': ['next.txt']}]}
+        if consumer_first:
+            contract['tasks'].reverse()
         for attempt in range(3):
             with Authority(project) as owner:
                 if attempt: owner.store.resume('run')
                 with self.assertRaisesRegex(Blocked, 'incomplete transport'):
                     Engine(owner, 'run', contract, EXECUTOR, adapter=Adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=bool(attempt),
-                           question=lambda prompt: 'yes' if 'Approve this gate?' in prompt else 'inspected failure; targeted transport correction').invoke()
+                           question=lambda prompt: 'yes' if 'Approve this gate?' in prompt else 'inspected failure; targeted transport correction',
+                           worker_recovery={'action': 'continue', 'diagnosis': 'inspected incomplete transport; targeted correction'} if attempt else None).invoke()
         self.assertEqual(calls, ['old'] * 3)
+        with Authority(project) as owner:
+            owner.store.resume('run')
+            with self.assertRaisesRegex(Blocked, 'allowance exhausted'):
+                Engine(owner, 'run', contract, EXECUTOR, adapter=Adapter, resume=True,
+                       paid_scope={'agent_providers': ['fixture'], 'apis': []},
+                       worker_recovery={'action': 'continue', 'diagnosis': 'inspected incomplete transport; targeted correction'}).invoke()
         self.write('owned.txt', 'recovered\n')
         self.write('other.txt', 'unknown unrelated bytes\n')
         with Authority(project) as owner:
@@ -56,10 +68,6 @@ class ExternalRecoveryTests(ProjectTest):
         with Authority(self.project) as owner:
             original = [tuple(row) for row in owner.store.db.execute(
                 "SELECT * FROM execution_history WHERE kind IN ('worker_dispatch','worker_invocation')")]
-            owner.store.resume('run')
-            with self.assertRaisesRegex(Blocked, 'allowance exhausted'):
-                Engine(owner, 'run', self.contract, EXECUTOR, adapter=self.old_adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}, resume=True,
-                       question=lambda _: 'inspected targeted correction').invoke()
             result = self.recover(owner, transfer)
             self.assertFalse(result['no_change'])
             self.assertEqual(result['paths'], ['owned.txt'])
@@ -68,7 +76,9 @@ class ExternalRecoveryTests(ProjectTest):
             self.assertEqual(self.recover(owner, transfer)['sha'], result['sha'])
         calls, project = [], self.project
         class Healthy:
-            def __init__(self, _project, executor, **_kwargs): calls.append(executor)
+            def __init__(self, _project, executor, **_kwargs):
+                calls.append(executor)
+                self.saved_session = self.opened_session = {'id': 'healthy', 'file': '/fixture/healthy'}
             def prompt(self, prompt, **kwargs):
                 if kwargs.get('read_only'):
                     self_test.assertIn(self_test.base, prompt)
@@ -79,8 +89,16 @@ class ExternalRecoveryTests(ProjectTest):
                 return 'dependent done'
         self_test = self
         with Authority(project) as owner:
-            owner.store.resume('run')
-            outcome = Engine(owner, 'run', self.contract, EXECUTOR, adapter=Healthy, resume=True).invoke()
+            continuation = Engine(owner, 'run', self.contract, EXECUTOR, adapter=Healthy, resume=True,
+                                  paid_scope={'agent_providers': ['fixture'], 'apis': []})
+            with graph_saver(owner) as saver:
+                graph = task_graph(continuation, saver, review=True)
+                config = {'configurable': {'thread_id': 'run'}}
+                checkpoint = graph_recovery_action(continuation, graph, config, 'external',
+                                                   transfer=transfer, owner_authorized=True)
+                self.assertEqual(checkpoint['sha'], result['sha'])
+                self.assertEqual(calls, [])
+                outcome = graph.invoke(None, config, durability='sync')['result']
             self.assertEqual(outcome['status'], 'complete')
             self.assertEqual(owner.store.input('run')['executor'], EXECUTOR)
             reviewed = owner.store.db.execute(
@@ -125,18 +143,106 @@ class ExternalRecoveryTests(ProjectTest):
         self.assertEqual(self.calls, ['old'] * 3)
         self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
+    def test_graph_external_transfer_checks_then_continues_without_replaying_worker(self):
+        project, calls = self.project, []
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): self.saved_session = None
+            def prompt(self, _prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    calls.append('review')
+                    return json.dumps({'approved': True, 'findings': [], 'coverage': ['transfer'], 'coverage_gaps': []})
+                if not calls:
+                    calls.append('failed')
+                    self.saved_session = self.opened_session = {'id': 'failed', 'file': '/fixture/failed'}
+                    kwargs['claim']('owned.txt')
+                    (project/'owned.txt').write_text('partial\n')
+                    raise Blocked('inspected parser failure')
+                calls.append('dependent')
+                self.saved_session = self.opened_session = {'id': 'dependent', 'file': '/fixture/dependent'}
+                return 'dependent complete'
+        contract = admit([{'id': 'one', 'description': 'original acceptance', 'owned_paths': ['owned.txt'],
+                           'checks': [['/bin/sh', '-c', 'test "$(cat owned.txt)" = recovered']]},
+                          {'id': 'two', 'description': 'dependent', 'depends': ['one']}])
+        config = {'configurable': {'thread_id': 'graph-external'}}
+        with Authority(project) as owner:
+            owner.store.start('graph-external', self.base, contract=contract, executor=EXECUTOR,
+                              authority={'paid_scope': {'apis': []}}, review_base=self.base)
+            engine = Engine(owner, 'graph-external', contract, EXECUTOR, adapter=Adapter, resume=True, paid_scope={'apis': []})
+            with graph_saver(owner) as saver:
+                graph = task_graph(engine, saver, review=True)
+                with self.assertRaisesRegex(Blocked, 'parser failure'):
+                    graph.invoke({}, config, durability='sync')
+                invocation = graph.get_state(config).values['invocation_id']
+                owner.store.history('graph-external', 'one', 'implementation_escalation', 'failed', {'error': 'fixture escalation failed'})
+                owner.store.finish('graph-external', 'failed', self.base, 'parser failure')
+                with self.assertRaisesRegex(Blocked, 'owner direction required'):
+                    graph_recovery_action(engine, graph, config, 'fresh', diagnosis='inspected parser failure')
+                (project/'owned.txt').write_text('recovered\n')
+                (project/'other.txt').write_text('unrelated\n')
+                transfer = {'task_id': 'one', 'invocation_id': invocation, 'head': self.base,
+                            'diagnosis': 'inspected parser failure and completed external correction',
+                            'worker': 'authorized external fixture', 'summary': 'acceptance checked',
+                            'paths': {'owned.txt': {'sha256': hashlib.sha256(b'recovered\n').hexdigest(), 'mode': 420}}}
+                with self.assertRaisesRegex(Blocked, 'owner authorization'):
+                    graph_recovery_action(engine, graph, config, 'external', transfer=transfer)
+                checkpoint = graph_recovery_action(engine, graph, config, 'external', transfer=transfer, owner_authorized=True)
+                self.assertEqual(checkpoint['paths'], ['owned.txt'])
+                self.assertEqual(calls, ['failed'])
+                self.assertEqual(graph.get_state(config).next, ('ready',))
+                self.assertEqual(graph.invoke(None, config, durability='sync')['result']['status'], 'complete')
+        self.assertEqual(calls, ['failed', 'dependent', 'review'])
+        self.assertEqual((project/'other.txt').read_text(), 'unrelated\n')
+        self.assertEqual(git(project, 'show', 'HEAD:owned.txt'), b'recovered\n')
+
     def test_cli_requires_explicit_owner_flag(self):
         transfer = self.fail_run()
         path = self.root / 'transfer.json'
         path.write_text(json.dumps(transfer))
-        with contextlib.redirect_stdout(io.StringIO()) as output:
+        bridge = {key: value for key, value in os.environ.items() if not key.startswith('COHERENCE_PARENT_BRIDGE_')}
+        with patch.dict(os.environ, bridge, clear=True), \
+             patch.object(cli, 'PiAdapter', side_effect=AssertionError('recover-task must not dispatch a provider')) as adapter, \
+             contextlib.redirect_stdout(io.StringIO()) as output:
             self.assertEqual(cli.main(['recover-task', '--project', str(self.project), '--run', 'run', '--recovery', str(path)]), 2)
-            self.assertEqual(cli.main(['recover-task', '--project', str(self.project), '--run', 'run', '--recovery', str(path), '--owner-authorized']), 0)
+            self.assertEqual(cli.main(['recover-task', '--project', str(self.project), '--run', 'run', '--recovery', str(path), '--owner-authorized']), 0, output.getvalue())
+        adapter.assert_not_called()
+        self.assertFalse((self.project / 'next.txt').exists())
         self.assertNotIn(transfer['summary'], output.getvalue())
         status = cli.status(self.project, 'run')
         self.assertIn(transfer['invocation_id'], json.dumps(status))
         self.assertNotIn(transfer['diagnosis'], json.dumps(status))
         self.assertNotIn(transfer['summary'], json.dumps(status))
+
+    def test_cli_recovers_dependency_ready_task_before_earlier_consumer(self):
+        transfer = self.fail_run(consumer_first=True)
+        self.assertEqual([task['id'] for task in self.contract['tasks']], ['two', 'one'])
+        path = self.root / 'transfer.json'
+        path.write_text(json.dumps(transfer))
+        project, calls = self.project, []
+        class Healthy:
+            def __init__(self, *_args, **_kwargs):
+                self.saved_session = self.opened_session = {'id': 'dependency-ready', 'file': '/fixture/dependency-ready'}
+            def prompt(self, _prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    calls.append('review')
+                    return '{"approved":true,"coverage":["dependency-ready transfer"],"coverage_gaps":[],"findings":[]}'
+                calls.append('dependent')
+                self_test.assertEqual((project / 'owned.txt').read_text(), 'recovered\n')
+                kwargs['claim']('next.txt')
+                (project / 'next.txt').write_text('next\n')
+                return 'dependent complete'
+        self_test = self
+        bridge = {key: value for key, value in os.environ.items() if not key.startswith('COHERENCE_PARENT_BRIDGE_')}
+        with patch.dict(os.environ, bridge, clear=True), patch.object(cli, 'PiAdapter', Healthy), \
+             contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(cli.main(['recover-task', '--project', str(project), '--run', 'run',
+                                       '--recovery', str(path), '--owner-authorized']), 0, output.getvalue())
+            self.assertEqual(calls, [])
+            self.assertFalse((project / 'next.txt').exists())
+            self.assertEqual(cli.main(['resume', '--project', str(project), '--run', 'run']), 0, output.getvalue())
+        self.assertEqual(calls, ['dependent', 'review'])
+        self.assertEqual(self.calls, ['old'] * 3)
+        self.assertEqual(git(project, 'rev-list', '--count', self.base + '..HEAD').strip(), b'2')
+        self.assertEqual((project / 'other.txt').read_text(), 'unknown unrelated bytes\n')
 
     def test_manual_gate_denial_retains_uncommitted_recovery(self):
         transfer = self.fail_run(gates=['Required manual acceptance'])

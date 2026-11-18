@@ -1,198 +1,256 @@
 ---
 name: track-open-issue
-description: Use when verified unresolved work needs recording in its declared issue tracker.
+description: Use when verified unresolved work needs recording, or an existing issue needs an authorized delivery comment or state change in its declared tracker.
 ---
 
 # Track Open Issue
 
-Record a verified unresolved-work candidate in the declared canonical owner. Coherence-specific
-skill or workflow problems from any working project belong in the suite's declared tracker;
-application-specific problems remain in the working project's declared tracker. Include useful
-available context to help reproduce and address a Coherence problem; missing reproduction details
-alone do not block filing, and do not construct a reproducer or run an evaluation for filing.
-If the problem origin is unclear, clarify or defer it. For a target cut over to GitHub, use its
-explicitly configured GitHub Issues repository. Do not modify product code, tests, generated assets, deployment state, or
-unrelated issues. A bare `#N` or `OI-N` is not an identity: report native issues as a
-repository-qualified `HOST/OWNER/REPO#N` and URL.
+Resolve the declared tracker, make only the authorized effect, and independently read it back.
+Choose the operation first:
 
-## Declared owner before cutover
+- **Record a candidate or change its problem body:** investigate the candidate and discover overlap
+  below; preserve the intended body for the separate quality review.
+- **Publish delivery or change state:** use the known qualified issue and recorded delivery/outcome
+  evidence. An ordinary delivery comment does not require fresh candidate RCA, overlap discovery
+  or issue-body quality review. Trace/link comments also do not require problem-body quality
+  review. A substantive problem-body change does.
 
-Read the relevant project or suite instructions and routing before selecting a tracker. Preserve the existing declared local register until approved cutover. This is not a fallback for a GitHub capability failure and does not create a parallel tracker. Do not infer cutover from an installed skill, repository remote, or unfinished migration proof.
+Do not modify product code, tests, generated assets, deployment state or unrelated issues. Keep
+credentials, tokens, personal data and sensitive payloads out of all records. A bare `#N` or
+`OI-N` is not an identity: report native issues as `HOST/OWNER/REPO#N` and URL.
 
-If the selected owner's routing still declares an existing local register, first perform the bounded investigation below, then read it and inspect open and closed entries for the same problem/evidence before adding or narrowly updating a candidate. Retain the verified observations/cause, hypotheses, primary evidence, resumption condition, uncertainty and established identifier/format; preserve unrelated entry bytes and history. Close or reopen only with recorded problem-specific evidence and authority. Re-read before editing, stop on concurrent changes, then read back the affected entry and use the focused task checkpoint below. A missing or conflicting declared owner is deferred with the candidate/evidence/resumption and a corrective ownership action, not permission to initialize another tracker. Return after this local operation; the remote instructions below apply only to a declared GitHub owner.
+## Resolve the owner and authority
 
-## Investigate candidate, then resolve target
+Read project/suite instructions and routing. Coherence skill/workflow problems belong in the
+suite's declared tracker; application problems belong in the working project's tracker. Clarify
+or defer unclear origin. Include available reproduction context, but missing detail alone does
+not block filing; do not build a reproducer or run an evaluation just to file.
 
-Read every named source artifact before creating or changing an issue. Perform a bounded,
-evidence-based RCA and retain the original intent alongside four distinct kinds of information:
+Preserve the existing declared local register until approved cutover. Installed skills, repository
+remotes or unfinished migration proof do not establish cutover. A declared local register is
+not a fallback for GitHub failure. For local candidate work, perform the investigation below,
+then inspect open and closed entries for the same problem/evidence. Retain its identifier/format,
+intent, observations/cause, hypotheses, evidence, uncertainty and resumption condition; preserve
+unrelated entry bytes and history. For local delivery, consume the delivery contract below.
+Close/reopen only with recorded problem-specific evidence and scoped authority; delivery closure
+also needs acceptance of the presented revision. Re-read before editing, stop on concurrent
+changes, read back the affected entry and apply the focused checkpoint. Return after the local
+operation; the remote procedure does not apply. Missing/conflicting ownership defers the operation
+with evidence, resumption condition and corrective ownership action, never a new tracker.
 
-- **verified observations:** directly supported failure facts and primary evidence;
-- **verified cause:** only a causal conclusion supported by that evidence;
-- **hypotheses:** plausible but unverified explanations, clearly labelled as such; and
-- **uncertainty and next useful investigation:** what remains unknown and the next action,
-  prerequisite, or observation that could resolve it.
+For GitHub, resolve `HOST`, `OWNER`, and `REPO` from the selected owner's configuration/instructions
+and confirm the same target from verified remote evidence. Never infer it from a bare number,
+`origin` alone or another repository's issue URL. Ask only about the target if evidence conflicts
+or is missing. Before remote operations, verify usable `gh`, authentication for that explicit host
+and read capability for its issues, without printing tokens. For example:
 
-Do not promote an unverified claim to a cause. An uncertain RCA does not block tracking
-indefinitely: create a focused investigation issue when the verified observations, uncertainty,
-and next useful investigation establish a concrete unresolved problem. Classify it as a bug,
-risk, shortcut, missing capability, or investigation only where that classification is verified
-or supported.
+```sh
+gh auth status --hostname "$HOST"
+gh api --method GET --hostname "$HOST" "repos/$OWNER/$REPO/issues?per_page=1"
+```
 
-Prepare the intended body from that investigation. It must retain the original intent, verified
-problem/evidence, any verified cause separately from hypotheses, uncertainty, and resumption
-condition. Keep credentials, tokens, personal data, and sensitive payloads out of both the
-investigation record and body. Preserve the intended body and the independently read-back body
-for the later separate read-only quality review; creation/readback is not that review.
+Do not install `gh`, refresh authentication, change credentials or use an implicit default repo.
+Current write authority must explicitly cover this target and operation; successful reads or an
+ADMIN-looking field do not grant it. Missing target, capability, authentication or required authority
+returns `issue tracking: UNAVAILABLE` or `deferred`: candidate/operation, evidence, resumption
+condition, missing requirement and corrective action. For GitHub ownership, never create a persistent
+local fallback or write a historical register.
 
-Resolve `HOST`, `OWNER`, and `REPO` from the selected owner's instructions/configuration, then
-confirm the same target from verified remote evidence. Do not infer a target from a bare
-number, an `origin` name alone, or another repository's issue URL. Missing or conflicting
-target evidence requires a concise question about that target only.
+## Investigate and compare candidates
 
-Before any remote operation, check that `gh` is usable, authenticated for the explicit host,
-and can read the target's issues without printing token values. For example, use
-`gh auth status --hostname "$HOST"` and an explicit `gh api --method GET` target query.
-Do not install `gh`, refresh authentication, change credentials, or use an implicit default
-repository. A current authorization to write issues must be explicit for this target and
-operation; successful reads or an ADMIN-looking field do not establish it.
+Read every named source artifact. Perform bounded evidence-based RCA and prepare one body that
+retains original intent, verified problem/category (bug, risk, shortcut, missing capability or
+investigation where supported), primary evidence and resumption condition. Distinguish:
 
-If target, `gh`, authentication, issue capability, or required write authority is unavailable,
-return `issue tracking: UNAVAILABLE` or `deferred`, together with the candidate, evidence,
-resumption condition, missing capability/authority, and corrective action. Do not create or
-fall back to a persistent local register.
+- verified observations from directly supported evidence;
+- verified cause only when causally established;
+- labelled hypotheses, not promoted assumptions;
+- uncertainty and the next useful investigation, prerequisite or observation.
 
-## Discover overlap
+Uncertain cause is not an indefinite filing block: concrete observations, uncertainty and next
+investigation can support a focused investigation issue.
 
-For a verified candidate and usable read capability, inspect likely overlaps by problem,
-affected area, and primary evidence across **all open and closed issues**. Use the explicit
-target and complete pagination, for example:
+With usable read capability, inspect overlaps by problem, affected area and primary evidence across
+**all open and closed issues**, with complete pagination:
 
 ```sh
 gh api --method GET --hostname "$HOST" --paginate \
   "repos/$OWNER/$REPO/issues?state=all&per_page=100"
 ```
 
-Exclude pull requests from this REST listing. Inspect every returned page and likely issue
-body/comments as needed; GitHub's default open-only listing and a result limit are not full
-discovery. Never deduplicate, merge, or reopen solely from a title or partial similarity.
-A closed overlap remains evidence for the report and is not automatically reopened.
+Exclude pull requests. Inspect every page and likely bodies/comments as needed; an open-only or
+limited listing is not full discovery. Never deduplicate, merge or reopen solely by title or partial
+similarity. Report closed overlaps without automatically reopening. Create only with current explicit
+write authority and no exact match; for an exact match, report `deduplicated` or make only the
+narrowly authorized change.
 
-The intended body states the original intent, verified problem and category where supported,
-primary evidence, verified cause only when established, clearly labelled hypotheses,
-uncertainty, and resumption condition. Prepare Markdown in a local body file and pass it with
-`--body-file`; do not interpolate Markdown into a shell command, use `eval`, upload
-attachments, or add labels (except the required `AI generated` label below), assignees,
-projects, parent/blocked-by relations, or unrelated fields. An authorized create is explicitly targeted, for example:
+## Establish planner issue association
+
+For planner entry without an issue, first understand the request and conduct needed owner
+brainstorming; readiness or depth selection alone does not establish association. Before planned
+artifact production, apply the existing target/capability/authentication discovery and complete
+open/closed overlap procedure above. Compare intent, problem, scope and primary evidence, not
+just titles. Independently GET any exact match and confirm qualified identity/URL, body and state;
+reuse an open or closed exact match without duplicate or reopen. Ambiguous overlap needs
+inspection or owner resolution, not speculative creation.
+
+With no exact match and actual target- and issue-create operation-scoped authority, actually
+create the requested issue, independently read it back and complete the separate problem-body
+quality review below. Do not ask a repeated routine creation question for unchanged granted
+scope. A request to plan, depth selection, credentials or a drafted body alone grants no write
+scope. Follow the existing user-requested versus autonomous label rules, not a new label policy.
+An uncertain create must reconcile complete open/closed pages and exact candidate GETs before
+any retry; incomplete discovery or ambiguous effects cannot authorize another create.
+
+Return the qualified URL and observed outcome to planner only as ready after confirmed exact
+reuse, or confirmed creation plus completed body-quality review and any necessary correction
+readback. If creation/readback succeeded but review is unavailable, retain that issue identity,
+report review incomplete and resume its review, never create another issue. Missing/conflicting
+target, capability, authentication, operation scope or required review blocks association and
+planned artifact production with the affected operation and concrete corrective action. Keep
+safe understanding/dialogue available; never invent a fallback register. An existing qualified
+issue stays associated; this procedure does not create runtime issues or require delivery_issue
+on bare runtime tasks.
+
+## Make the scoped effect and read it back
+
+Prepare Markdown in a local body file and use `--body-file`; do not interpolate Markdown into shell
+commands or use `eval`. No attachment uploads, labels (except `AI generated` below), assignees,
+projects, parent/blocked-by relations or unrelated fields are authorized by candidate recording.
+
+For every autonomously agent-initiated new issue, require the exact label `AI generated`. General
+permission to track findings is not a user request for that specific issue. User-requested issues
+need no label under this rule; do not relabel existing overlap matches. Before autonomous creation,
+inspect all label pages:
 
 ```sh
-gh issue create --repo "$HOST/$OWNER/$REPO" --title "$title" --body-file "$body_file"
+gh api --method GET --hostname "$HOST" --paginate "repos/$OWNER/$REPO/labels?per_page=100"
 ```
 
-## Label agent-initiated issues
-
-For every new issue initiated autonomously by an agent, rather than explicitly requested by
-the user, require the exact label `AI generated`. General permission to track discovered work
-is not a user request to create that specific issue. User-requested issues do not require this
-label under this rule. Do not relabel existing matches found during overlap discovery.
-
-Before an autonomous create, inspect the target repository's labels with complete pagination
-(`gh api --method GET --hostname "$HOST" --paginate "repos/$OWNER/$REPO/labels?per_page=100"`).
-If the exact label is absent, autonomously create it without asking for separate approval:
+If absent, create only that label without separate approval; do not alter existing label metadata:
 
 ```sh
 gh label create 'AI generated' --repo "$HOST/$OWNER/$REPO"
 ```
 
-This rule authorizes only that label creation and assignment, not issue creation without the
-existing target-specific issue-write authority. Do not modify an existing label's metadata.
-If label creation fails or its response is unknown, re-read the labels to reconcile a possible
-successful or concurrent creation; do not blindly retry. If the required label remains unavailable,
-defer the issue create and report the failure and corrective action; do not create it unlabelled.
-Once the label exists, include it in the issue creation operation:
+This does not grant issue-write authority. On failure/unknown response, re-read labels to reconcile
+successful or concurrent creation, never blindly retry. If still unavailable, defer creation with
+the failure/corrective action; do not create unlabelled. Use an explicit target, adding the label
+only when required:
 
 ```sh
 gh issue create --repo "$HOST/$OWNER/$REPO" --title "$title" --body-file "$body_file" --label 'AI generated'
 ```
 
-## Create, scoped change, and state transitions
+Immediately before a body overwrite or state transition, GET the exact issue and compare with the
+content/state inspected for that operation. Preserve unknown sections, comments/history, labels,
+assignees and unrelated state. Changed content, ambiguity or uncertain preservation stops the
+overwrite/transition: report `deferred` and reinspection/review action. This is not atomic compare-and-swap.
+Close only with recorded evidence tied to the problem and current close authority; reopen only
+with verified recurrence/resumption and current reopen authority. Record the basis in intended fields.
+An authorized close without outcome evidence confirms an operation, not a verified fix.
 
-Create only when there is current explicit issue-write authority for this target and no exact
-existing match. For an exact match, report `deduplicated`, or make only a narrowly authorized
-change to the intended fields.
-
-Before any scoped body overwrite or state transition, immediately GET the exact issue and
-compare it with the content/state inspected for the proposed operation. Build a replacement
-body by preserving unknown sections; do not erase comments/history, labels, assignees, or
-unrelated state. If the issue changed, is ambiguous, or cannot be safely preserved, stop that
-overwrite and report `deferred` with reinspection/review action. This read/check is not an
-atomic compare-and-swap guarantee.
-
-Close only with recorded evidence tied to the issue's problem and current close authority.
-Reopen only with a verified recurrence or resumption basis and current reopen authority. Record
-the basis in the intended issue fields and do not change unrelated issues. An authorized close
-without outcome evidence is an operation confirmation, not a verified fix.
-
-After every create, update, close, or reopen, independently GET the exact issue by number:
+After every create, update, close or reopen, independently GET the exact issue by number:
 
 ```sh
 gh api --method GET --hostname "$HOST" "repos/$OWNER/$REPO/issues/$number"
 ```
 
-Confirm the exact qualified URL/identity, original intent, intended problem/evidence/cause-or-
-hypothesis/uncertainty/resumption content, and intended state. For an agent-initiated create,
-also confirm that the independently read-back labels include the exact `AI generated` label.
-If missing, apply only that label to the exact issue and independently GET it again; report
-any failure as incomplete labelling, not successful compliance, and do not create a duplicate.
-Keep the actual read-back body
-available with the original intent and investigation evidence for the separate read-only review;
-do not represent creation/readback as independent review. Readback failure or unknown mutation
-response leaves verification unknown: do not blindly retry a possibly successful mutation.
-Instead return the qualified candidate and reconciliation action (GET/list complete open+closed
-results, then inspect the exact issue). Separate remote operation confirmation from proof that
-the underlying problem is resolved.
+Confirm qualified identity/URL, intended content and state. For a candidate body, compare all
+investigation fields above and retain both intended and actual read-back body for quality review.
+For autonomous creation, confirm the exact `AI generated` label; if missing, apply only that label
+to the exact issue and GET again. Report failure as incomplete labelling, not compliance, and never
+create a duplicate. For comments, read back the exact comment effect as well.
 
-## Separate read-only quality review and one correction
+Unknown response or failed readback leaves verification unknown. Inspect the exact issue/comments;
+for uncertain creation reconcile complete open+closed listings and exact GET before any retry.
+Do not blindly retry a possibly successful mutation. Operation confirmation is distinct from proof
+that the underlying problem is resolved.
 
-After successful issue-body readback, use a separate read-only reviewer context. Read the
-project's selected reviewer configuration; do not hardcode a provider or model. Dispatch the suite-owned `coherence-reviewer`
-global user-agent role in a fresh context, with that model/effort unchanged. Use the
-`subagent` tool `get` action to inspect its user source, effective prompt and read-only tools.
-If it is missing or its effective configuration conflicts with the review boundary, report
-review incomplete with the [suite setup correction](../../README.md#coherence-role-activation),
-not a substitute reviewer or project activation. Give that
-reviewer only the original user intent, primary evidence, uncertainty/next investigation, and
-the actual read-back body. Ask it to identify downstream ambiguity or conflicts, omissions,
-promoted assumptions, scope creep, and over-prescribed mechanisms or checks. It must not author
-new product requirements or mutate the issue.
+## Reviewed issue-linked delivery
 
-Evaluate each finding against the original intent and evidence. A clean review is a distinct
-result, not a substitute for evaluating an actionable finding. For an ordinary in-scope wording
-correction, retain the existing scoped mutation authority: immediately GET the exact issue,
-compare the body used for review, preserve unknown content and change only the narrow affected
-field. If the body changed, preservation is uncertain, or the proposed correction would
-materially change the outcome, do not overwrite it; report `deferred` and either reinspection or
-owner action as appropriate. After an authorized correction, independently GET the exact issue
-again and report the before/after narrow content and final observed body. Do not run an automatic
-multi-round review loop or add planning/approval ceremony for an ordinary correction.
+Load [finish-session's delivery contract](../finish-session/SKILL.md#issue-linked-delivery) when
+publishing implementation delivery. Consume its meaningful executive text, attribution, evidence,
+exact reviewed revision, feedback/correction links and acceptance trace for the issue and owner chat;
+do not repeat an implementation review or invent missing evidence. If unavailable, defer delivery
+with the missing contract and corrective action.
 
-If the reviewer is unavailable or fails, preserve the create/readback outcome and report the
-review as incomplete with the capability/failure and resumption action. Do not fabricate an
-assessment or blindly retry an expensive reviewer invocation; inspect a failed invocation before
-any targeted retry. Actual reviewer judgment requires usable selected reviewer/delegation
-capability, just as actual issue mutation requires exact target and operation authority.
+Keep this local guard: close only after explicit acceptance of the presented revision and current
+operation-scoped closure authority, then independently read back closure. Acceptance of an earlier
+revision does not accept a corrected revision; acceptance alone grants no closure, RCA, skill edit,
+PR or unrelated issue change.
 
-## Report and checkpoint boundary
+If publication is uncertain, inspect the exact issue/comments before retrying. If issue or chat alone
+succeeded, report the partial result and retry only the missing operation after inspection. Missing
+capability or authority defers the tracker effect with corrective action, not an authorized chat
+report. Unobserved feedback, acceptance and closure are `NOT VERIFIED`.
 
-Report exactly one creation outcome: `created`, `updated`, `deduplicated`, `deferred`, or `not recorded`.
-Include the qualified target/URL when known, original intent, verified observations/cause,
-hypotheses, uncertainty/next investigation, intended and observed state, and required owner
-action. Separately report mutation/readback outcome and review result (`complete`, `incomplete`,
-or `not run`), including any finding evaluation, correction/readback, and whether GitHub and
-reviewer actors were actual or simulated.
+## Confirm delivery issue/PR links
 
-External-only issue work creates no empty Git commit. If this skill produces an authorized
-retained repository deliverable, follow the focused task checkpoint contract at
-[`task-commit-contract`](../memory-handling/references/task-commit-contract.md); preserve real
-manual gates, explicit authority, unrelated work, hooks, and signing. Local small fixtures are
-allowed under routine authority, but they do not prove live GitHub behavior or grant external
-write authority.
+Use the known qualified delivery issue and known PR URLs, not a bare number or a guessed
+association. Independently GET the issue identity and each PR's issue and pull-request
+identities on their explicit host/repository. Read the current bodies and all comment pages.
+Every delivery PR must link its qualified issue and the issue must discover every delivery
+PR, regardless of trace host. A PR-hosted trace additionally needs issue links to every
+confirmed trace part. Read back retained trace parts in full; a submitted claim or uncertain
+trace publication is not confirmed delivery.
+
+Reuse verified body/comment links. For missing links only, require actual run-, target- and
+`link_comment` operation-scoped authority for each destination. `trace_comment` authority,
+issue context, read access and credentials do not grant link writes. When the installed
+Coherence runtime is available, its `confirm_delivery_links` publisher uses explicit-host
+GET/POST, durable intent, complete pagination reconciliation and independent
+full-body/identity/target comment readback. Use JSON stdin/argument arrays through that
+publisher, never interpolate remote text into commands. Without the runtime,
+use the same scoped append-only procedure through available normal tools; do not invent a
+second delivery record. Before retrying an uncertain send, reconcile all destination pages
+and exact candidate bodies/identities; a collision or incomplete scan stops new comments.
+
+Late PR discovery establishes only missing reciprocal links and refers to the already
+confirmed trace: no trace resend, implementation replay or reopened review. Missing authority,
+partial effects or failed readback are incomplete linkage, not success; name the affected
+destination and corrective action. Do not create PRs, push, replace issue/PR bodies, close or
+reopen as part of linkage. Link/trace comments need no separate problem-body quality reviewer;
+retain that reviewer for new or substantively changed problem bodies. Link confirmation is
+not owner acceptance or closure authority.
+
+## Review a recorded problem body
+
+After successful candidate issue-body readback, use a separate fresh read-only quality reviewer.
+Read the project's selected reviewer configuration, preserving its model/effort; do not hardcode
+or substitute a provider/model. Inspect the suite-owned `coherence-reviewer` global user-agent with
+`subagent` `get`: user source, effective prompt and read-only tools. Verify usable selected reviewer/
+delegation capability. If absent or conflicting, report review incomplete with the
+[suite setup correction](../../README.md#coherence-role-activation), not project activation or a
+substitute reviewer.
+
+Give it only original user intent, primary evidence, uncertainty/next investigation and actual
+read-back body. Request ambiguity/conflict, omission, promoted-assumption, scope-creep and
+over-prescribed-mechanism/check findings. It must not create product requirements or mutate issues.
+Creation/readback is not independent quality review.
+
+Evaluate each finding against intent/evidence; a clean review is a distinct result, not a substitute
+for evaluating actionable findings. For one ordinary in-scope wording correction, retain existing
+scoped authority: immediately GET, compare with the reviewed body, preserve unknown content and
+change only the affected field. Drift or uncertain preservation defers to reinspection; material
+outcome changes need owner action. After correction, GET again and report narrow before/after content
+and the final observed body. No automatic multi-round review loop or extra planning/approval ceremony
+for an ordinary correction.
+
+If review is unavailable or fails, preserve the mutation/readback outcome and report review incomplete
+with failure/capability and resumption action. Do not fabricate assessment or blindly retry an
+expensive reviewer; inspect the failed invocation before any targeted retry.
+
+## Return the observed result
+
+For candidate recording report one outcome: `created`, `updated`, `deduplicated`, `deferred` or
+`not recorded`. Include qualified target/URL when known, intent, observations/cause, hypotheses,
+uncertainty/next investigation, intended/observed state and required owner action. For delivery/state
+operations, report that operation's observed result rather than inventing a creation outcome.
+Separately report mutation/readback and review (`complete`, `incomplete` or `not run`), finding
+evaluation/correction/readback and whether tracker/reviewer actors were actual or simulated.
+
+External-only work makes no empty Git commit. Authorized retained repository deliverables use the
+[focused task checkpoint contract](../memory-handling/references/task-commit-contract.md), preserving
+manual gates, explicit authority, unrelated work, hooks and signing. Routine small local fixtures do
+not prove live GitHub behavior or grant external write authority.

@@ -71,6 +71,7 @@ class SequentialExecutionTests(ProjectTest):
                 if read_only:
                     case.assertIn('Diff:', prompt)
                     case.assertIn('consumer', prompt)
+                    case.assertEqual(git(project, 'show', 'HEAD:new.txt'), b'consumer\n')
                     return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
                 if len(sessions) == 1:
                     claim('owned.txt')
@@ -104,22 +105,16 @@ class SequentialExecutionTests(ProjectTest):
         self.assertEqual(git(project, 'rev-list', '--count', self.base+'..HEAD'), b'2\n')
         import sqlite3
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        observations = list(db.execute('SELECT phase,task_id,kind FROM execution_observations ORDER BY seq'))
-        kinds = [row[2] for row in observations]
-        descriptor = json.loads(db.execute("SELECT description FROM execution_monitor_runs WHERE run_id='fixture'").fetchone()[0])
-        identity = db.execute("SELECT runner_identity FROM execution_monitor_runs WHERE run_id='fixture'").fetchone()[0]
+        history = list(db.execute("SELECT kind,task_id,state FROM execution_history WHERE run_id='fixture' ORDER BY seq"))
+        review_base, review_started = db.execute("SELECT review_base,dispatched_at FROM execution_review_executions WHERE run_id='fixture'").fetchone()
+        checkpoint_passed = db.execute("SELECT recorded_at FROM execution_history WHERE run_id='fixture' AND task_id='consumer' AND kind='checkpoint' AND state='passed'").fetchone()[0]
         db.close()
-        self.assertIn('started', kinds)
-        self.assertIn('returned', kinds)
-        self.assertIn('passed', kinds)
-        self.assertIn('prepare', next(phase for phase in descriptor['phases'] if phase['id'] == 'checkpoint')['possible_branches'])
-        self.assertLess(observations.index(('worker', 'consumer', 'returned')),
-                        observations.index(('check', 'consumer', 'passed')))
-        self.assertLess(observations.index(('check', 'consumer', 'passed')),
-                        observations.index(('checkpoint', 'consumer', 'passed')))
-        self.assertLess(observations.index(('checkpoint', 'consumer', 'passed')),
-                        observations.index(('review', None, 'started')))
-        self.assertIsNotNone(identity)
+        self.assertLess(history.index(('worker', 'consumer', 'returned')),
+                        history.index(('check', 'consumer', 'passed')))
+        self.assertLess(history.index(('check', 'consumer', 'passed')),
+                        history.index(('checkpoint', 'consumer', 'passed')))
+        self.assertEqual(review_base, self.base)
+        self.assertLessEqual(checkpoint_passed, review_started)
 
     def test_exact_handoff_input_claims_preserved_recovery_bytes_and_checkpoints_only_owned_results(self):
         project = self.project
@@ -285,10 +280,163 @@ print(json.dumps(RECORD), flush=True)
                 Engine._prompt_worker(type('Offline', (), {'prompt': lambda _self, _prompt: empty})(), 'fixture')
             self.assertEqual(prompt({'type': 'result', 'text': 'ordinary completed text', 'outcome': 'completed'}),
                              'ordinary completed text')
-            with self.assertRaisesRegex(Blocked, 'SDK result outcome must be completed'):
+            with self.assertRaisesRegex(Blocked, 'SDK result has an invalid outcome'):
                 prompt({'type': 'result', 'text': 'ignored', 'outcome': 'invalid'})
             with self.assertRaisesRegex(Blocked, 'SDK result text must be a string'):
                 prompt({'type': 'result', 'text': None, 'outcome': 'failed'})
+
+    def test_synchronous_fixer_question_trace_uses_current_invocation(self):
+        """Production run_fix binds every real adapter call, including restored review sessions."""
+        import socket
+        import threading
+        from contextlib import nullcontext
+        from coherence_workflow.pi_adapter import parent_question
+        from coherence_workflow.trace_capture import persist_parent_events
+
+        host = self.root / 'fix_question_host.py'
+        host.write_text("""import json, sys
+from pathlib import Path
+request = json.loads(input())
+with Path(LOG).open('a') as log:
+    log.write(json.dumps(request) + '\\n')
+if request['readOnly']:
+    session = {'id': 'saved-reviewer', 'file': 'private-review.jsonl', 'compatibility': {'readOnly': True}}
+else:
+    assert request['savedSession']['id'] == 'saved-reviewer'
+    corrective = 'Actual failed attempt:' in request['prompt']
+    if not corrective:
+        assert request['reviewRepair'] is True
+    tool = 'corrective-tool' if corrective else 'initial-tool'
+    print(json.dumps({'type': 'question', 'request_id': tool, 'tool_call_id': tool, 'question': 'Worker asks ' + tool}), flush=True)
+    answer = sys.stdin.readline()
+    if not answer:
+        sys.exit(0)
+    answer = json.loads(answer)
+    assert answer == {'type': 'reply', 'request_id': tool, 'reply': {'answer': 'coordinator resolution'}}
+    if corrective:
+        Path(MARKER).write_text('corrected')
+    session = {'id': 'saved-reviewer', 'file': 'private-review.jsonl', 'compatibility': {'readOnly': False}}
+print(json.dumps({'type': 'result', 'text': 'real adapter result', 'session': session}), flush=True)
+""".replace('LOG', repr(str(self.root / 'fix-questions.jsonl')))
+           .replace('MARKER', repr(str(self.root / 'corrected'))))
+        log, marker = self.root / 'fix-questions.jsonl', self.root / 'corrected'
+        for cached in (True, False):
+            for mode in ('recorded', 'capture-failure', 'cancel-capture-failure'):
+                with self.subTest(cached=cached, mode=mode):
+                    if marker.exists():
+                        marker.unlink()
+                    log.write_text('')
+                    run = 'fix-question-' + str(cached) + '-' + mode
+                    contract = admit([{'id': 'original', 'description': 'Offline repair', 'owned_paths': [],
+                        'check': [sys.executable, '-B', '-c',
+                                  'from pathlib import Path; assert Path(' + repr(str(marker)) + ').exists()']}])
+                    env = {'COHERENCE_NODE': sys.executable, 'COHERENCE_PARENT_BRIDGE_SOCKET': '',
+                           'COHERENCE_PARENT_BRIDGE_TOKEN': '', 'COHERENCE_PARENT_BRIDGE_SESSION': '',
+                           'COHERENCE_PARENT_BRIDGE_RUN': ''}
+                    with patch('coherence_workflow.pi_adapter.host_path', return_value=host), patch.dict(os.environ, env):
+                        with Authority(self.project) as owner:
+                            owner.store.start(run, self.base, contract=contract, executor=EXECUTOR,
+                                              authority={}, review_base=self.base)
+                            worker = PiAdapter(self.project, EXECUTOR['reviewer'])
+                            self.assertEqual(worker.prompt('review', read_only=True), 'real adapter result')
+                            owner.store.review_dispatch(run, 'review', review_base=self.base, review_head=self.base)
+                            owner.store.review_outcome(run, 'review', 'rejected', findings=['fixture defect'],
+                                references={'base': self.base, 'head': self.base, 'saved_session': worker.saved_session})
+                        # Reopen the store; only the cached case retains the actual adapter.
+                        with Authority(self.project) as owner:
+                            cancelled = Blocked('actual question cancelled')
+                            def cancel(_):
+                                raise cancelled
+                            endpoint = str(self.root / 'fix-question.sock')
+                            server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                            server.bind(endpoint)
+                            server.listen(3)
+                            server.settimeout(10)
+                            bridge_errors = []
+                            def respond():
+                                try:
+                                    for call in range(2):
+                                        parent_id = None
+                                        for _ in range(3):
+                                            conn, _ = server.accept()
+                                            with conn, conn.makefile('r') as stream:
+                                                request = json.loads(stream.readline())
+                                                if request['type'] == 'question':
+                                                    parent_id = request['request_id']
+                                                    reply = {'answer': 'coordinator resolution'}
+                                                elif request['type'] == 'trace_drain':
+                                                    reply = {'events': [{'version': 1, 'id': 'owner-' + str(call),
+                                                        'kind': 'owner_result', 'tool_call_id': 'owner-tool-' + str(call),
+                                                        'request_id': parent_id, 'content': 'actual owner answer'}]}
+                                                else:
+                                                    reply = {'acknowledged': True}
+                                                conn.sendall((json.dumps({'request_id': request['request_id'], **reply}) + '\n').encode())
+                                except Exception as exc:
+                                    bridge_errors.append(exc)
+                                finally:
+                                    server.close()
+                            thread = None
+                            if not mode.startswith('cancel'):
+                                thread = threading.Thread(target=respond)
+                                thread.start()
+                            def attached(text):
+                                return parent_question(text, trace_observer=lambda run, events:
+                                    persist_parent_events(owner.store, run, events))
+                            engine = Engine(owner, run, contract, EXECUTOR, question=cancel if mode.startswith('cancel') else attached)
+                            if cached:
+                                worker.question = engine.question
+                                worker.question_trace = lambda *a, **k: self.fail('stale reviewer observer used')
+                                engine._review_workers = {'review': worker}
+                            capture = (nullcontext() if mode == 'recorded' else patch(
+                                'coherence_workflow.trace_capture.record_worker_question', side_effect=RuntimeError('optional capture failed')))
+                            try:
+                                with capture, patch.dict(os.environ, {'COHERENCE_PARENT_BRIDGE_SOCKET': endpoint,
+                                        'COHERENCE_PARENT_BRIDGE_TOKEN': 'token', 'COHERENCE_PARENT_BRIDGE_SESSION': 'parent',
+                                        'COHERENCE_PARENT_BRIDGE_RUN': run}):
+                                    if mode.startswith('cancel'):
+                                        with self.assertRaises(Blocked) as raised:
+                                            engine.run_fix(['fixture defect'], trigger_execution_id='review',
+                                                review_base=self.base, execution_id='fixer')
+                                        self.assertIs(raised.exception, cancelled)
+                                    else:
+                                        result = engine.run_fix(['fixture defect'], trigger_execution_id='review',
+                                            review_base=self.base, execution_id='fixer')
+                                        self.assertEqual(result['summary'], 'real adapter result')
+                                        self.assertTrue(result['checkpoint']['no_change'])
+                            finally:
+                                if thread:
+                                    thread.join(12)
+                                    self.assertFalse(thread.is_alive())
+                                else:
+                                    server.close()
+                                os.unlink(endpoint)
+                            self.assertEqual(bridge_errors, [])
+                            rows = [(r['kind'], r['state'], json.loads(r['details'])) for r in owner.store.db.execute(
+                                'SELECT kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq', (run,))]
+                            invocations = [d['invocation_id'] for k, s, d in rows if k == 'fixer_invocation' and s == 'started']
+                            self.assertEqual(len(invocations), 1 if mode.startswith('cancel') else 2)
+                            self.assertEqual(len(set(invocations)), len(invocations))
+                            traces = [(s, d) for k, s, d in rows if k == 'worker_question_trace']
+                            if mode == 'recorded':
+                                self.assertEqual([s for s, d in traces], ['requested', 'parent_request', 'resolved', 'sent'] * 2)
+                                for index, tool in enumerate(('initial-tool', 'corrective-tool')):
+                                    group = traces[index * 4:(index + 1) * 4]
+                                    for state, facts in group:
+                                        self.assertEqual((facts['run_id'], facts['task_id'], facts['invocation_id']),
+                                                         (run, 'fix-fixer', invocations[index]))
+                                        self.assertEqual(facts['tool_call_id'], tool)
+                                        self.assertEqual(facts['question'], 'Worker asks ' + tool)
+                                    self.assertEqual(group[2][1]['resolution'], 'coordinator resolution')
+                                    event = next(d['event'] for k, s, d in rows if k == 'parent_trace' and d['event']['id'] == 'owner-' + str(index))
+                                    self.assertEqual(event['request_id'], group[1][1]['parent_request_id'])
+                                    self.assertNotEqual(event['tool_call_id'], tool)
+                                    self.assertNotEqual(event['content'], group[2][1]['resolution'])
+                            else:
+                                self.assertEqual(traces, [])
+                    requests = [json.loads(line) for line in log.read_text().splitlines()]
+                    self.assertEqual(len(requests), 2 if mode.startswith('cancel') else 3)
+                    self.assertTrue(requests[0]['readOnly'])
+                    self.assertTrue(all(not r['readOnly'] and r['savedSession']['id'] == 'saved-reviewer' for r in requests[1:]))
 
     def test_actual_adapter_unsuccessful_fixer_stops_before_checkpoint_and_rereview(self):
         """Synthetic host responses traverse the real adapter and repair consumer."""
@@ -358,7 +506,8 @@ print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=Tr
                 claim('owned.txt')
                 (project/'owned.txt').write_text('changed\n')
                 return 'changed'
-        with self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
+        with patch('sys.stdin.isatty', return_value=False), \
+                self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
             self.execute([{'id': 'fix', 'description': 'Fix'}], OfflineReview)
         self.assertNotEqual(git(project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
@@ -374,35 +523,14 @@ print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=Tr
         self.assertEqual(len(answers), 1)
         import sqlite3
         db = sqlite3.connect(self.project/'.coherence/workflow/workflow.sqlite')
-        rows = list(db.execute('SELECT occurrence_id,phase,kind,facts FROM execution_observations ORDER BY seq'))
+        history = list(db.execute("SELECT kind,state FROM execution_history WHERE run_id='fixture' ORDER BY seq"))
+        state = db.execute("SELECT state FROM execution_runs WHERE run_id='fixture'").fetchone()[0]
         db.close()
-        self.assertNotIn('worker', [row[1] for row in rows])
-        gate = [(row[0], row[2], json.loads(row[3])) for row in rows if row[1] == 'gate']
-        self.assertIn('question_requested', [row[1] for row in gate])
-        self.assertIn('answer_returned', [row[1] for row in gate])
-        self.assertNotIn('answer_sent', [row[1] for row in gate])
-        question = next(row for row in gate if row[1] == 'question_requested')
-        self.assertTrue(question[2]['parent_occurrence_id'])
+        self.assertFalse(any(kind in ('worker_dispatch', 'worker_invocation') for kind, _ in history))
+        self.assertEqual(state, 'failed')
+        self.assertEqual(git(self.project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
-    def test_worker_question_lifecycle_uses_distinct_question_occurrence(self):
-        project = self.project
-        class OfflineQuestions:
-            def __init__(self, project, executor, **kwargs): self.observe_question = kwargs.get('observe_question')
-            def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
-                for state in ('requested', 'returned', 'sent'):
-                    self.observe_question(state)
-                return 'offline question adapter'
-        self.execute([{'id': 'fix', 'description': 'Fix'}], OfflineQuestions)
-        import sqlite3
-        db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        rows = list(db.execute("SELECT occurrence_id,kind,facts FROM execution_observations WHERE phase='worker' AND kind LIKE 'answer_%' OR phase='worker' AND kind='question_requested'"))
-        db.close()
-        self.assertEqual([row[1] for row in rows], ['question_requested', 'answer_returned', 'answer_sent'])
-        self.assertEqual(len({row[0] for row in rows}), 1)
-        self.assertTrue(json.loads(rows[0][2])['parent_occurrence_id'])
-
-    def test_real_framed_question_send_failure_records_delivery_failed(self):
+    def test_real_framed_question_send_failure_is_retained_without_public_payload(self):
         import os, sys
         from pathlib import Path
         host, closed = self.root/'broken_answer_host.py', self.root/'stdin-closed'
@@ -434,12 +562,11 @@ else:
                     Engine(owner, 'broken-send', contract, EXECUTOR, adapter=__import__('coherence_workflow.pi_adapter', fromlist=['PiAdapter']).PiAdapter, question=answer).invoke()
         import sqlite3
         db = sqlite3.connect(self.project/'.coherence/workflow/workflow.sqlite')
-        rows = list(db.execute("SELECT occurrence_id,kind,facts FROM execution_observations WHERE run_id='broken-send' AND phase='worker'"))
+        states = [row[0] for row in db.execute("SELECT state FROM execution_history WHERE run_id='broken-send' AND kind='worker_invocation' ORDER BY seq")]
         db.close()
-        sent = [(row[0], row[1], json.loads(row[2])) for row in rows if row[1] == 'delivery_failed']
-        self.assertEqual(len(sent), 1)
-        self.assertTrue(sent[0][2]['parent_occurrence_id'])
-        self.assertNotIn('PRIVATE-SENTINEL', str(rows))
+        self.assertIn('failed', states)
+        from coherence_workflow.cli import status
+        self.assertNotIn('PRIVATE-SENTINEL', canonical(status(self.project, 'broken-send')))
 
     def test_review_base_must_be_ancestor_and_actual_prompt_uses_it(self):
         project = self.project
@@ -488,13 +615,14 @@ else:
                             for prompt in prompts))
         import sqlite3
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        terminal = [row[0] for row in db.execute("SELECT kind FROM execution_observations WHERE run_id='original' AND phase='terminal'")]
-        roles = [json.loads(row[0]).get('role') for row in db.execute("SELECT facts FROM execution_observations WHERE run_id='fixing' AND phase='worker'")]
-        review_ranges = [json.loads(row[0]) for row in db.execute("SELECT facts FROM execution_observations WHERE run_id='fixing' AND phase='review'")]
+        original_state = db.execute("SELECT state FROM execution_runs WHERE run_id='original'").fetchone()[0]
+        roles = [json.loads(row[0]).get('role') for row in db.execute("SELECT details FROM execution_history WHERE run_id='fixing' AND kind='worker'")]
+        review_bases = [row[0] for row in db.execute("SELECT review_base FROM execution_review_executions WHERE run_id='fixing'")]
         db.close()
-        self.assertIn('failed', terminal)
+        self.assertEqual(original_state, 'failed')
         self.assertIn('fixing_worker', roles)
-        self.assertTrue(all(row['review_base'] == self.base for row in review_ranges if 'review_base' in row))
+        self.assertTrue(review_bases)
+        self.assertTrue(all(base == self.base for base in review_bases))
 
     def test_review_transport_failure_records_selected_range(self):
         project = self.project
@@ -509,48 +637,13 @@ else:
                 Engine(owner, 'review-failure', contract, EXECUTOR, adapter=Offline).invoke()
         import sqlite3
         db = sqlite3.connect(project/'.coherence/workflow/workflow.sqlite')
-        facts = json.loads(db.execute("SELECT facts FROM execution_observations WHERE run_id='review-failure' AND phase='review' AND kind='failed'").fetchone()[0])
+        review_base = db.execute("SELECT review_base FROM execution_review_executions WHERE run_id='review-failure'").fetchone()[0]
+        attempts = [row[0] for row in db.execute("SELECT state FROM execution_review_attempts WHERE run_id='review-failure'")]
         db.close()
-        self.assertEqual(facts['review_base'], self.base)
+        self.assertEqual(review_base, self.base)
+        self.assertIn('failed', attempts)
 
-    def test_store_recording_failures_do_not_veto_actual_engine_boundaries(self):
-        project = self.project
-        class Successful:
-            def __init__(self, *a, **k): pass
-            def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
-                kwargs['claim']('owned.txt')
-                project.joinpath('owned.txt').write_text('done\n')
-                return 'offline worker'
-        task = admit([{'id': 'fix', 'description': 'Fix', 'checks': [['python3', '-B', '-c', "assert open('owned.txt').read() == 'done\\n'"]]}])
-        # Initial registration failure leaves no fabricated eligible monitor run.
-        with Authority(project) as owner, patch.object(owner.store, 'register_monitor_run', side_effect=RuntimeError('setup unavailable')):
-            self.assertEqual(Engine(owner, 'registration-failure', task, EXECUTOR, adapter=Successful).invoke()['status'], 'complete')
-            self.assertIsNone(owner.store.monitor('registration-failure'))
-        # A transient append failure recovers with ordinary worker/check/Git/review execution intact.
-        with Authority(project) as owner:
-            original, calls = owner.store.append_monitor_observation, [0]
-            def transient(*args):
-                calls[0] += 1
-                if calls[0] == 1: raise RuntimeError('append unavailable')
-                return original(*args)
-            with patch.object(owner.store, 'append_monitor_observation', side_effect=transient):
-                result = Engine(owner, 'mid-failure', task, EXECUTOR, adapter=Successful).invoke()
-            self.assertEqual(result['status'], 'complete')
-            kinds = [row['kind'] for row in owner.store.monitor('mid-failure')['observations']]
-            self.assertIn('gap', kinds)
-            self.assertIn('passed', kinds)
-        # Final terminal append failure cannot replace the completed review/result.
-        with Authority(project) as owner:
-            original = owner.store.append_monitor_observation
-            def end_failure(*args):
-                if args[2] == 'terminal' and args[4] == 'passed': raise RuntimeError('end unavailable')
-                return original(*args)
-            with patch.object(owner.store, 'append_monitor_observation', side_effect=end_failure):
-                self.assertEqual(Engine(owner, 'end-failure', task, EXECUTOR, adapter=Successful).invoke()['status'], 'complete')
-            self.assertEqual(owner.store.db.execute("SELECT state FROM execution_runs WHERE run_id='end-failure'").fetchone()[0], 'complete')
-
-    def test_append_failure_preserves_original_worker_check_and_review_errors(self):
+    def test_worker_check_review_and_git_errors_are_preserved(self):
         project = self.project
         class WorkerFailure:
             def __init__(self, *a, **k): pass
@@ -565,8 +658,8 @@ else:
             ('append-worker', admit([{'id': 'worker', 'description': 'Worker'}]), WorkerFailure, 'original worker failure'),
             ('append-check', admit([{'id': 'check', 'description': 'Check', 'checks': ['exit 23']}]), ReviewFailure, 'exit 23'),
             ('append-review', admit([{'id': 'review', 'description': 'Review'}]), ReviewFailure, 'owner authorization unavailable')):
-            with self.subTest(run=run), Authority(project) as owner, patch.object(owner.store, 'append_monitor_observation', side_effect=RuntimeError('append unavailable')):
-                with self.assertRaisesRegex(Blocked, reason):
+            with self.subTest(run=run), Authority(project) as owner:
+                with patch('sys.stdin.isatty', return_value=False), self.assertRaisesRegex(Blocked, reason):
                     Engine(owner, run, task, EXECUTOR, adapter=adapter).invoke()
         class GitFailure:
             def __init__(self, *a, **k):
@@ -580,7 +673,7 @@ else:
         hook.write_text('#!/bin/sh\nexit 9\n')
         hook.chmod(0o755)
         self.addCleanup(lambda: hook.unlink(missing_ok=True))
-        with Authority(project) as owner, patch.object(owner.store, 'append_monitor_observation', side_effect=RuntimeError('append unavailable')):
+        with Authority(project) as owner:
             with self.assertRaisesRegex(Blocked, 'Git operation failed'):
                 Engine(owner, 'append-git', admit([{'id': 'git', 'description': 'Git'}]), EXECUTOR, adapter=GitFailure).invoke()
 

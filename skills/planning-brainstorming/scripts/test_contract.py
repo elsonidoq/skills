@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Static contract checks for the shared brainstorming skill."""
+"""Static obligations and removal sensitivity, not live dialogue proof."""
 
 from pathlib import Path
 import unittest
+import re
 
 
 SKILL = Path(__file__).parents[1] / "SKILL.md"
@@ -13,45 +14,95 @@ class PlanningBrainstormingContractTests(unittest.TestCase):
     def setUpClass(cls):
         cls.text = SKILL.read_text(encoding="utf-8")
 
+    def require(self, heading, clauses):
+        carrier = re.sub(r"```.*?```", "", self.text, flags=re.S)
+        carrier = carrier.split(heading, 1)[1].split("\n## ", 1)[0]
+        carrier = " ".join(carrier.split())
+        for clause in clauses:
+            with self.subTest(clause=clause):
+                self.assertIn(clause, carrier)
+                self.assertNotIn(clause, carrier.replace(clause, "REMOVED", 1))
+
     def test_frontmatter_and_gate_outcomes(self):
         self.assertIn("name: planning-brainstorming", self.text)
         self.assertIn("description: Use when", self.text)
-        self.assertIn("`NO_BRAINSTORM_NEEDED`", self.text)
-        self.assertIn("`BRAINSTORM_NEEDED`", self.text)
-        self.assertIn("Bias toward `NO_BRAINSTORM_NEEDED`", self.text)
+        self.require("## Judge readiness", (
+            "`NO_BRAINSTORM_NEEDED`", "`BRAINSTORM_NEEDED`", "Bias toward this result",
+            "direction is settled", "blocks readiness", "read-only", "retain answers in session history",
+            "Create no source, decision or state files, including for resume",
+        ))
+
+    def test_retention_before_readiness_and_operation_boundary_capabilities(self):
+        self.require("## Judge readiness", (
+            "Before judging readiness, verify", "mode's permitted carrier",
+            "retain source bounds, decisions, deferrals and the handoff",
+            "report the missing retention capability",
+            "stop before returning readiness or producing downstream artifacts",
+            "restore a usable permitted carrier",
+        ))
+        self.assertLess(self.text.index("Before judging readiness, verify"),
+                        self.text.index("`NO_BRAINSTORM_NEEDED`"))
+        self.require("## Resolve the material questions with the owner", (
+            "Verify the question capability", "runtime requirements",
+        ))
+        self.require("## Apply and return the decisions", (
+            "permitted and callable at dispatch",
+        ))
+
+    def test_execution_rules_are_not_planning_prerequisites(self):
+        self.require("## Judge readiness", (
+            "Implementation-only batching, task-count and REQUIRED-item rules are not planning prerequisites",
+        ))
+        self.require("## Apply and return the decisions", (
+            "task generation owns their task-level mapping",
+            "does not select runtime bindings",
+            "Executable runtime bindings require separate approval",
+        ))
 
     def test_parent_gate_needs_no_child_or_saved_assignment(self):
-        self.assertIn("Gate assessment runs directly in the parent session", self.text)
-        self.assertIn("owner-launched model and effort", self.text)
-        self.assertIn("Do not delegate the gate or resolve a saved `brainstorm-assessment` binding", self.text)
-        self.assertIn("A settled request\nneeds no child call", self.text)
-        self.assertIn("missing delegation capability or a saved brainstorming assignment does not\nblock parent assessment or owner dialogue", self.text)
-        self.assertIn("The parent assesses readiness without a subagent call", self.text)
+        self.require("# Planning Brainstorming", (
+            "parent conducts assessment and dialogue", "owner-launched model and effort",
+            "neither requires a child call or a saved assignment",
+            "does not choose TinySpec/Standard",
+        ))
+        self.require("## Resolve the material questions with the owner", (
+            "missing delegation alone does not block parent dialogue",
+        ))
 
     def test_bounded_agenda_and_owner_dialogue(self):
-        self.assertIn("no more than three items", self.text)
-        self.assertIn("two to four concrete alternatives", self.text)
-        self.assertIn("The orchestrator, not a delegated worker", self.text)
-        self.assertIn("at a time through the available question capability", self.text)
+        self.require("## Judge readiness", (
+            "no more than three items", "two to four concrete alternatives",
+            "`open-design`, `product-decision` or `technical-tradeoff`", "blocking reason",
+        ))
+        self.require("## Resolve the material questions with the owner", (
+            "parent, not a delegated worker", "one agenda item at a time", "owner's rationale",
+            "Record deferrals and their rationale", "ask in prose and end the turn",
+            "Missing answers, cancellation or unavailable dialogue never authorize inferred decisions",
+            "A caller's mandatory preflight can stop earlier",
+        ))
 
     def test_exact_bounded_application_and_recovery(self):
-        self.assertIn("apply exactly the recorded owner decisions", self.text)
-        self.assertIn("Do not invent scope", self.text)
-        self.assertIn("re-present the saved agenda", self.text)
-        self.assertIn("Record owner deferrals", self.text)
+        self.require("## Apply and return the decisions", (
+            "exactly the recorded decisions", "do not expand scope or rewrite unrelated sections",
+            "Re-present the saved agenda", "repeat the applicability consultation above",
+            "If source or decisions changed materially, run the readiness judgment again",
+            "task-commit contract", "Read-only preselection creates no empty commit",
+        ))
+        self.require("## Judge readiness", (
+            "Memory Handling", "[save-adr](../save-adr/SKILL.md#consult-and-propagate)", "fresh or resumed standalone entry",
+            "even if the caller did not supply them", "An absent decision store alone is nonblocking",
+        ))
 
     def test_shared_saved_assignment_dispatch_and_capability_stop(self):
-        self.assertIn("Only for authorized delegated decision application, resolve `brainstorm-application`", self.text)
-        self.assertIn("[shared saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)", self.text)
-        self.assertIn("shared saved `brainstorming` assignment", self.text)
-        self.assertIn("exact binding\nunchanged in the bounded brief and dispatch", self.text)
-        self.assertIn("permitted and callable only\nat dispatch", self.text)
-        self.assertIn("focused owner-correction question and no\ncandidate recommendation, inference, substitution, or fallback", self.text)
-        self.assertIn("The parent still\nconducts owner dialogue", self.text)
-        self.assertIn("Only in selected-production or legacy-repair mode", self.text)
-        self.assertIn("missing capability and stop before downstream production", self.text)
-        self.assertIn("ask in prose and end the turn", self.text)
-        self.assertIn("do not continue downstream or infer an", self.text)
+        self.require("## Apply and return the decisions", (
+            "Only with selected-production or legacy-repair write authority",
+            "Resolve `brainstorm-application`",
+            "[saved-assignment contract](../planner/SKILL.md#saved-planner-assignments)",
+            "shared `brainstorming` assignment", "exact binding unchanged in the brief and dispatch",
+            "permitted and callable at dispatch", "stops only application",
+            "focused correction question", "no recommendation, inferred substitute or fallback binding",
+            "Do not resolve `brainstorm-assessment` for the parent",
+        ))
         for retired in ("qualified seed rubric", "six applicable factors", "family/effort",
                         "Family and Effort rationales", "shared readiness conjunction",
                         "owner-selected profile"):

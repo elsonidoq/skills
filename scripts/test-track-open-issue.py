@@ -107,35 +107,131 @@ def review_then_correct(gh, reviewer, original_intent, evidence, uncertainty, re
     return "complete", finding, gh.readback(readback["number"])
 
 
+class SimulatedPlannerLifecycle:
+    """Offline expected-order fixture, NOT a planner implementation or live GitHub proof."""
+
+    def __init__(self, *, brainstorm=False, target=True, capability=True, auth=True,
+                 scope=True, complete=True, overlap=None, uncertain=False, reviewer=True):
+        self.options = locals().copy()
+        self.events = []
+        self.url = None
+
+    def run(self):
+        o, events = self.options, self.events
+        events.append('understand')
+        if o['brainstorm']:
+            events.extend(('owner-question', 'actual-owner-answer'))
+        events.append('depth-selection')  # Not issue-create authority.
+        for prerequisite in ('target', 'capability', 'auth'):
+            events.append('verify-' + prerequisite)
+            if not o[prerequisite]:
+                return 'pending: restore ' + prerequisite
+        events.append('all-open-closed-pages-excluding-prs')
+        if not o['complete']:
+            return 'pending: finish overlap pagination'
+        if o['overlap'] in ('open', 'closed'):
+            events.extend(('compare-intent-scope-evidence', 'exact-GET-body-identity-state'))
+            self.url = f'https://{TARGET}/issues/3'
+            events.append('reuse-' + o['overlap'])
+        elif o['overlap'] == 'ambiguous':
+            return 'pending: inspect ambiguous overlap'
+        else:
+            if not o['scope']:
+                return 'pending: obtain target/issue-create scope'
+            events.append('CREATE-once-with-body-file')
+            if o['uncertain']:
+                events.extend(('reconcile-all-open-closed-pages', 'exact-candidate-GET'))
+                return 'pending: resolve uncertain create; no retry'
+            events.append('independent-GET-body-identity-state')
+            self.url = f'https://{TARGET}/issues/27'
+            if not o['reviewer']:
+                return 'pending: resume body review on existing issue'
+            events.append('separate-quality-review-complete')
+        events.append(('artifacts-with-url', self.url))
+        return 'ready'
+
+
+class PlannerAssociationFixtureTests(unittest.TestCase):
+    """Coupled by the planner carrier tests; simulated transcripts are not model obedience."""
+
+    def test_needed_dialogue_create_readback_review_then_artifacts(self):
+        flow = SimulatedPlannerLifecycle(brainstorm=True)
+        self.assertEqual(flow.run(), 'ready')
+        self.assertEqual(flow.events, [
+            'understand', 'owner-question', 'actual-owner-answer', 'depth-selection',
+            'verify-target', 'verify-capability', 'verify-auth',
+            'all-open-closed-pages-excluding-prs', 'CREATE-once-with-body-file',
+            'independent-GET-body-identity-state', 'separate-quality-review-complete',
+            ('artifacts-with-url', f'https://{TARGET}/issues/27')])
+        self.assertFalse(any('creation-question' in str(event) for event in flow.events))
+
+    def test_exact_open_and_closed_reuse_needs_no_write_scope_or_reopen(self):
+        for state in ('open', 'closed'):
+            with self.subTest(state=state):
+                flow = SimulatedPlannerLifecycle(overlap=state, scope=False, reviewer=False)
+                self.assertEqual(flow.run(), 'ready')
+                self.assertEqual(flow.url, f'https://{TARGET}/issues/3')
+                self.assertIn('exact-GET-body-identity-state', flow.events)
+                self.assertIn('reuse-' + state, flow.events)
+                self.assertFalse(any('CREATE' in str(e) or 'reopen' in str(e) for e in flow.events))
+                self.assertEqual(flow.events[-1], ('artifacts-with-url', flow.url))
+
+    def test_missing_prerequisites_partial_pages_and_ambiguous_effects_stop_artifacts(self):
+        for options, correction in (
+            ({'target': False}, 'restore target'),
+            ({'capability': False}, 'restore capability'),
+            ({'auth': False}, 'restore auth'),
+            ({'scope': False}, 'obtain target/issue-create scope'),
+            ({'complete': False}, 'finish overlap pagination'),
+            ({'overlap': 'ambiguous'}, 'inspect ambiguous overlap'),
+            ({'uncertain': True}, 'resolve uncertain create; no retry'),
+            ({'reviewer': False}, 'resume body review on existing issue'),
+        ):
+            with self.subTest(options=options):
+                flow = SimulatedPlannerLifecycle(**options)
+                self.assertEqual(flow.run(), 'pending: ' + correction)
+                self.assertFalse(any(isinstance(e, tuple) for e in flow.events))
+                creates = flow.events.count('CREATE-once-with-body-file')
+                self.assertEqual(creates, int('uncertain' in options or 'reviewer' in options))
+                if 'uncertain' in options:
+                    self.assertEqual(flow.events[-2:], [
+                        'reconcile-all-open-closed-pages', 'exact-candidate-GET'])
+                if 'reviewer' in options:
+                    self.assertEqual(flow.url, f'https://{TARGET}/issues/27')
+
+
 class TrackOpenIssueContractTests(unittest.TestCase):
     def setUp(self):
         self.text = SKILL.read_text()
 
     def test_source_contract_requires_investigation_before_create_and_readback(self):
+        text = " ".join(self.text.split())
         clauses = (
-            "Perform a bounded,\nevidence-based RCA",
-            "**verified observations:**",
-            "**verified cause:**",
-            "**hypotheses:**",
-            "**uncertainty and next useful investigation:**",
-            "An uncertain RCA does not block tracking\nindefinitely",
-            "Preserve the intended body and the independently read-back body",
-            "creation/readback is not that review",
-            "## Separate read-only quality review and one correction",
-            "selected reviewer configuration; do not hardcode a provider or model",
-            "original user intent, primary evidence, uncertainty/next investigation, and",
-            "the actual read-back body",
-            "downstream ambiguity or conflicts, omissions,",
-            "promoted assumptions, scope creep, and over-prescribed mechanisms or checks",
-            "immediately GET the exact issue",
-            "automatic\nmulti-round review loop",
-            "After every create, update, close, or reopen, independently GET the exact issue",
-            "do not blindly retry a possibly successful mutation",
+            "Perform bounded evidence-based RCA", "verified observations",
+            "verified cause only when causally established", "labelled hypotheses",
+            "uncertainty and the next useful investigation",
+            "Uncertain cause is not an indefinite filing block",
+            "retain both intended and actual read-back body for quality review",
+            "Creation/readback is not independent quality review",
+            "separate fresh read-only quality reviewer",
+            "selected reviewer configuration, preserving its model/effort; do not hardcode",
+            "original user intent, primary evidence, uncertainty/next investigation and actual read-back body",
+            "ambiguity/conflict, omission, promoted-assumption, scope-creep",
+            "over-prescribed-mechanism/check findings", "immediately GET, compare with the reviewed body",
+            "No automatic multi-round review loop",
+            "After every create, update, close or reopen, independently GET the exact issue",
+            "Do not blindly retry a possibly successful mutation",
         )
         for clause in clauses:
-            self.assertIn(clause, self.text)
-        self.assertLess(self.text.index("Perform a bounded,"), self.text.index("## Discover overlap"))
-        self.assertLess(self.text.index("## Discover overlap"), self.text.index("## Create, scoped change"))
+            self.assertIn(clause, text)
+        order = (
+            "Perform bounded evidence-based RCA", "inspect overlaps by problem",
+            "## Make the scoped effect and read it back",
+            "After every create, update, close or reopen",
+            "## Review a recorded problem body", "For one ordinary in-scope wording correction",
+        )
+        positions = [self.text.index(clause) for clause in order]
+        self.assertEqual(positions, sorted(positions))
 
     def test_simulated_rca_create_and_exact_readback_preserve_actual_body(self):
         body = investigated_body(
@@ -236,24 +332,50 @@ class TrackOpenIssueContractTests(unittest.TestCase):
         self.assertIn("No verified cause established.", body)
         self.assertIn("Next: obtain a redacted request trace", body)
 
+    def test_linkage_carrier_preserves_scope_reconciliation_and_review_separation(self):
+        # Inspect the actual operation, not an inert whole-file summary.
+        text = ' '.join(self.text.split('## Confirm delivery issue/PR links\n', 1)[1]
+                        .split('\n## ', 1)[0].split())
+        for clause in (
+            'known qualified delivery issue and known PR URLs',
+            'each PR\'s issue and pull-request identities on their explicit host/repository',
+            'all comment pages', 'regardless of trace host',
+            'issue links to every confirmed trace part',
+            'Reuse verified body/comment links',
+            '`link_comment` operation-scoped authority for each destination',
+            '`trace_comment` authority, issue context, read access and credentials do not grant link writes',
+            'durable intent, complete pagination reconciliation',
+            'independent full-body/identity/target comment readback',
+            'reconcile all destination pages and exact candidate bodies/identities',
+            'a collision or incomplete scan stops new comments',
+            'Late PR discovery establishes only missing reciprocal links',
+            'no trace resend, implementation replay or reopened review',
+            'partial effects or failed readback are incomplete linkage, not success',
+            'Link/trace comments need no separate problem-body quality reviewer',
+            'retain that reviewer for new or substantively changed problem bodies',
+            'Link confirmation is not owner acceptance or closure authority',
+            'Do not create PRs, push, replace issue/PR bodies, close or reopen',
+        ):
+            with self.subTest(clause=clause):
+                self.assertIn(clause, text)
+
     def test_retained_safeguards_are_explicit(self):
+        text = " ".join(self.text.split())
         safeguards = (
             "confirm the same target from verified remote evidence",
-            "check that `gh` is usable, authenticated for the explicit host",
-            "current authorization to write issues must be explicit",
-            "across **all open and closed issues**",
-            "Exclude pull requests",
-            "`--body-file`",
-            "credentials, tokens, personal data, and sensitive payloads",
-            "only a narrowly authorized\nchange to the intended fields",
-            "immediately GET the exact issue",
-            "preserving unknown sections",
-            "If the issue changed, is ambiguous, or cannot be safely preserved, stop that",
-            "GET/list complete open+closed\nresults",
-            "Do not create or\nfall back to a persistent local register",
+            "verify usable `gh`, authentication for that explicit host",
+            "Current write authority must explicitly cover this target and operation",
+            "across **all open and closed issues**", "Exclude pull requests",
+            "`--body-file`", "credentials, tokens, personal data and sensitive payloads",
+            "make only the narrowly authorized change",
+            "Immediately before a body overwrite or state transition, GET the exact issue",
+            "Preserve unknown sections",
+            "Changed content, ambiguity or uncertain preservation stops the overwrite/transition",
+            "reconcile complete open+closed listings and exact GET before any retry",
+            "never create a persistent local fallback or write a historical register",
         )
         for safeguard in safeguards:
-            self.assertIn(safeguard, self.text)
+            self.assertIn(safeguard, text)
 
 
 if __name__ == "__main__":

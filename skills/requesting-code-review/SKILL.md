@@ -17,7 +17,7 @@ For direct review requests in fresh or resumed contexts, consult [save-adr](../s
 
 1. Identify the requirements or acceptance criteria.
 2. Define the exact change scope using the evidence available: a working-tree diff, staged diff, patch, pull request, file list, or revision range. Do not invent a base branch or commit.
-3. Include verification already performed and known constraints.
+3. Include verification already performed, its limits and known constraints. Request the smallest meaningful checks for changed behavior; preserve applicable runtime, integration, application, security and permission checks. Static/carrier/trace sensitivity is not model-obedience proof. No mandatory prior/candidate comparison, live RPC scenario or full historical replay is required; retain specified live application acceptance and its authority.
 4. Exclude unrelated session history and secrets.
 
 ## Choose A Review Path

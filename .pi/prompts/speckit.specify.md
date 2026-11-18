@@ -20,7 +20,9 @@ necessary choices and optional hardening are distinct.
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+You **MUST** consider the user input before proceeding (if not empty). Carry any associated
+qualified delivery issue URL into the specification; absence is not a prerequisite. Association
+follows understanding and the installed `track-open-issue` contract, not automatic issue creation.
 
 ## Pre-Execution Checks
 

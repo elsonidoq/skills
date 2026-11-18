@@ -13,7 +13,10 @@ ROOT = Path(__file__).resolve().parents[2]
 class PackagingTests(unittest.TestCase):
     def test_only_live_product_resources_packaged(self):
         config = tomllib.loads((ROOT/'runtime/pyproject.toml').read_text())
-        self.assertEqual(config['project']['dependencies'], ['PyYAML==6.0.3'])
+        self.assertEqual(config['project']['dependencies'], [
+            'PyYAML==6.0.3', 'langgraph==1.2.21', 'langgraph-checkpoint-sqlite==3.1.3',
+            'opentelemetry-api==1.45.2', 'opentelemetry-sdk==1.45.2',
+            'opentelemetry-exporter-otlp-proto-http==1.45.2'])
         self.assertEqual(config['tool']['setuptools']['package-data']['coherence_workflow'], ['schemas/*.json'])
         host_files = config['tool']['setuptools']['data-files']['share/coherence-workflow/pi-host']
         self.assertIn('pi-host/sdk-resolution.mjs', host_files)

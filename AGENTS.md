@@ -59,15 +59,11 @@ before generalizing; supporting machinery must not become the main deliverable.
 
 ## Repository-local Definition of Done
 
-When a practical, meaningful evaluation is possible at a proportionate cost, the issue
-should include evidence that the intended behavior improved.
-
-Useful simpler evidence or a brief justification that evaluation is impractical, expensive,
-or low-value is sufficient; do not manufacture new fixtures or compliance tests. Evaluation
-belongs to later issue resolution, not initial issue filing. Preserve applicable existing
-checks, security and permission gates; this does not authorize skipping failing relevant
-existing checks or automatically running the whole behavioral collection. Follow the
-repository's evaluation convention in [evaluations/README.md](evaluations/README.md).
+Use the smallest meaningful check of the changed behavior and report its limits. Preserve
+applicable runtime, integration, application, security and permission checks. No retained
+behavioral comparison collection, mandatory prior/candidate run, live RPC scenario or
+full historical replay is required. Static/carrier/trace sensitivity is not model-obedience
+proof; genuine live application acceptance and its authority remain required where specified.
 
 ## Expensive Subagent Failures
 
@@ -122,6 +118,13 @@ rules above for reusable skills and commands.
     work. Do not infer the answer from agent, file or action counts.
   - Routing grants no new scope or external effects and waives no required acceptance, review,
     safety or permission gates. Preserve ordinary scoped repair authority and existing local overrides.
+- Pre-approved delivery operations: for owner-approved work in this repository, prepare and
+  push a dedicated branch containing only that work, open its PR in `github.com/elsonidoq/skills`,
+  establish reciprocal issue/PR links, and independently read back those effects without another
+  routine approval question. This is scoped operational authority, not permission to include unrelated
+  work, force-push, merge, close issues/PRs, deploy, change credentials or add paid services.
+  Preserve actual target, authentication, data-safety and final acceptance checks; investigate routine
+  operational errors autonomously rather than asking for the same authority again.
 - Planning (when routed to Coherence): request → `planner` understanding/brainstorming/scope → explicit owner
   TinySpec/Standard choice → reviewed tasks → approved handoff →
   `coordinate-implementation` → `finish-session`. TinySpec uses `tiny-spec`, separate
@@ -161,8 +164,9 @@ rules above for reusable skills and commands.
   Split independently testable concerns rather than bundling milestones into implementation tasks.
   Product bindings remain selected-config driven; the planning model is not an implementation assignment.
   Every workflow launch in this repository, including continuations and corrective runs, uses
-  `.pi/workflow-executor.json`: Terra/medium workers, with `openai-codex/gpt-6.1-sol`
-  at medium effort as the explicit implementation fallback and for every fresh reviewer session.
+  `.pi/workflow-executor.json`, which is authoritative for the current owner selection:
+  direct `openai-codex/gpt-6.1-sol` workers at medium effort, with the same model and effort
+  selected for the explicit implementation fallback and every fresh reviewer session.
   The coordinator may select inspected, cause-specific recovery or escalation without renewed
   operational permission. Prefer useful retained context; an incomplete return alone does not
   prove model incapability. If the Sol implementation escalation fails, stop and notify the owner
@@ -172,10 +176,14 @@ rules above for reusable skills and commands.
   Historical approvals stay historical. The latest owner direction supersedes older graph/SQL/
   custody/evidence eligibility mandates: task startup linter has only readable file, parsed list,
   ID/work description, unique IDs, existing dependency references and acyclic dependencies.
-- Execution: the existing `coordinate-implementation` CLI runs sequential tasks with normal SDK
-  tools, actual specified project checks/manual gates, focused explicit-owned-path Git commits and
-  fresh independent read-only final review. SQLite stores ordinary progress/history, not effect
-  proof. No manifest, catalogue, cgroup provisioning, session/parent receipts or binding assessment.
+- Execution target: one LangGraph `coordinate-implementation` controller uses normal SDK tools,
+  sequential execution by default and explicitly owner-directed path-disjoint waves. Quiesce sibling
+  mutations during shared checks and focused Git commits; retain actual specified checks/manual gates
+  and fresh independent read-only final review. Graph checkpoints hold control state; private operation
+  history and actual Git/SDK observations support reconciliation, not automatic acceptance. Historical
+  non-graph runs remain readable and use an explicitly selected compatible runtime for inspected
+  continuation, never silent conversion or replay. This target is not yet implemented. No manifest,
+  catalogue, cgroup provisioning, session/parent receipts or binding assessment.
   Preserve task-owned path boundaries, unrelated work, hooks/signing, old rows and actual errors.
   Current terminal input is authority when needed; no automatic install, auth refresh, reload,
   legacy restart, expensive failure retry loop or mass conversion.

@@ -8,6 +8,7 @@ from pathlib import Path, PurePosixPath
 import sqlite3
 import subprocess
 import tempfile
+import threading
 import uuid
 import time
 
@@ -139,9 +140,37 @@ class Authority:
     def __exit__(self, *exc): self.close()
 
 class Store:
+    @property
+    def db(self):
+        return getattr(self._connections, 'db', self._owner_db)
+
+    @db.setter
+    def db(self, value):
+        self._owner_db = value
+
+    @contextmanager
+    def thread_connection(self):
+        """Give a graph worker its own short-transaction SQLite connection.
+
+        The caller must leave this context after its worker settles. No transaction
+        may span an SDK call or wait; transaction() remains operation-local.
+        """
+        if hasattr(self._connections, 'db'):
+            yield self.db
+            return
+        connection = sqlite3.connect(self.path, isolation_level=None)
+        connection.row_factory = sqlite3.Row
+        self._connections.db = connection
+        try:
+            yield connection
+        finally:
+            del self._connections.db
+            connection.close()
+
     def __init__(self, path, authority):
         self.authority = authority
         self.path = Path(path)
+        self._connections = threading.local()
         self.db = sqlite3.connect(path, isolation_level=None)
         self.db.row_factory = sqlite3.Row
         # These progress tables neither deserialize nor settle legacy effects.
@@ -692,6 +721,55 @@ class Store:
         """Reconcile retained checkpoint results before dispatching unfinished work."""
         completed = {}
         for row in self.db.execute("SELECT task_id,state,baseline,result FROM execution_tasks WHERE run_id=?", (run,)):
+            events = list(self.db.execute("SELECT seq,state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='checkpoint' ORDER BY seq", (run, row['task_id'])))
+            started = next((event for event in reversed(events) if event['state'] == 'started'), None)
+            later = [event for event in events if started and event['seq'] > started['seq']]
+            settled = any(event['state'] == 'passed' or
+                          (event['state'] in ('failed', 'interrupted') and json.loads(event['details']).get('no_effect') is True)
+                          for event in later)
+            if started and not settled:
+                from .git_effects import FocusedGit
+                try:
+                    intent = json.loads(started['details'])
+                    paths, entries = intent['paths'], intent['entries']
+                    refs, checks = intent['check_refs'], intent['checks']
+                    if (not isinstance(paths, list) or sorted(set(paths)) != paths or
+                            not all(isinstance(name, str) and name for name in paths) or
+                            not isinstance(entries, dict) or set(entries) != set(paths) or
+                            not isinstance(refs, list) or not isinstance(checks, list) or len(refs) != len(checks) or
+                            not isinstance(intent['baseline'], str) or not isinstance(intent['parent'], str) or
+                            not isinstance(intent['artifacts'], list) or intent['task_id'] != row['task_id']):
+                        raise ValueError('invalid intent')
+                    for ref, check in zip(refs, checks):
+                        check_row = self.db.execute("SELECT details FROM execution_history WHERE seq=? AND run_id=? AND task_id=? AND kind='check' AND state='passed'", (ref, run, row['task_id'])).fetchone()
+                        if not check_row or json.loads(check_row['details']) != check:
+                            raise ValueError('missing passing check reference')
+                    focused = FocusedGit(self.authority.project, {})
+                    if intent.get('no_change') is True and not paths:
+                        result = {'baseline': intent['baseline'], 'sha': intent['parent'], 'parent': None,
+                                  'paths': [], 'artifacts': intent['artifacts'], 'no_change': True}
+                    elif paths:
+                        if not any(event['state'] == 'attempting' for event in later):
+                            if git(self.authority.project, 'rev-parse', 'HEAD').decode().strip() != intent['parent']:
+                                raise Blocked('checkpoint parent changed before Git attempt; preserve work and inspect Git effects')
+                            self.history(run, row['task_id'], 'checkpoint', 'failed',
+                                         {'error': 'interrupted before Git commit attempt', 'no_effect': True})
+                            continue
+                        result = focused.reconcile_intent(intent)
+                        if result is None:
+                            raise Blocked('checkpoint outcome is uncertain at its attempted parent; inspect Git effects before continuation')
+                    else:
+                        raise ValueError('invalid no-change intent')
+                    result.update({key: intent[key] for key in ('task_id', 'checkpoint_occurrence_id',
+                                   'producer_invocation_id', 'correction_chain')})
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise Blocked('checkpoint intent or check references are invalid for task ' + row['task_id'] + '; inspect retained history before continuation') from exc
+                self.history(run, row['task_id'], 'checkpoint', 'passed', result)
+                self.task(run, row['task_id'], 'complete', row['baseline'], result['sha'],
+                          {'summary': intent.get('summary'), 'checks': checks, 'paths': result['paths'],
+                           'generated_artifacts': result['artifacts']})
+                completed[row['task_id']] = result
+                continue
             history = self.db.execute("SELECT details FROM execution_history WHERE run_id=? AND task_id=? AND kind='checkpoint' AND state='passed' ORDER BY seq DESC LIMIT 1",
                                       (run, row['task_id'])).fetchone()
             if not history and row['state'] != 'complete':
@@ -718,22 +796,6 @@ class Store:
                 self.task(run, row['task_id'], 'complete', row['baseline'], details['sha'], recovered)
             completed[row['task_id']] = details
         return completed
-
-    def register_monitor_run(self, run, description, runner_identity=None):
-        """Add recording metadata without touching ordinary progress rows."""
-        from .monitoring import RECORDING_VERSION
-        self.authority.assert_held()
-        self.db.execute('INSERT INTO execution_monitor_runs(run_id,recording_version,description,started_at,runner_identity) VALUES(?,?,?,?,?)',
-                        (run, RECORDING_VERSION, canonical(description), time.time(), canonical(runner_identity) if runner_identity else None))
-
-    def append_monitor_observation(self, run, occurrence_id, phase, task_id, kind, facts):
-        """One short append; a caller treats all errors as optional warnings."""
-        self.authority.assert_held()
-        recorded = self.db.execute('SELECT recording_version FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()
-        if not recorded:
-            raise Blocked('monitor recording is not registered')
-        return self.db.execute('INSERT INTO execution_observations(run_id,recording_version,occurrence_id,phase,task_id,kind,recorded_at,facts) VALUES(?,?,?,?,?,?,?,?)',
-                               (run, recorded['recording_version'], occurrence_id, phase, task_id, kind, time.time(), canonical(facts))).lastrowid
 
     def monitor(self, run):
         row = self.db.execute('SELECT * FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone()
@@ -1109,13 +1171,6 @@ class Store:
             current = db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone()
             if current:
                 db.execute("UPDATE execution_runs SET state='abandoned' WHERE run_id=?", (run,))
-                # Monitoring is optional: an append failure must not veto explicit abandon.
-                try:
-                    if db.execute('SELECT 1 FROM execution_monitor_runs WHERE run_id=?', (run,)).fetchone():
-                        db.execute('INSERT INTO execution_observations(run_id,recording_version,occurrence_id,phase,task_id,kind,recorded_at,facts) VALUES(?,?,?,?,?,?,?,?)',
-                                   (run, 1, uuid.uuid4().hex, 'terminal', None, 'abandoned', time.time(), canonical({})))
-                except sqlite3.Error:
-                    pass
                 return dict(db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone())
             if not db.execute("SELECT 1 FROM sqlite_master WHERE name='wf_runs'").fetchone():
                 raise Blocked('unknown run; select the historical run to abandon')
@@ -1129,7 +1184,73 @@ class Store:
             self.event(db,run,None,'abandoned',{'reason':'explicit operator abandon; partial work and incomplete effects retained'})
             return dict(db.execute('SELECT * FROM wf_runs WHERE run_id=?',(run,)).fetchone())
 
+    def trace_publication_history(self, run):
+        """Retained publication intents/effects, in order; no remote transaction."""
+        return [dict(row) for row in self.db.execute(
+            "SELECT seq,state,details FROM execution_history "
+            "WHERE run_id=? AND kind='trace_publication' ORDER BY seq", (run,))]
+
+    def trace_source(self, run):
+        """Read a fixed factual source without writes, locks or graph deserialization."""
+        db = sqlite3.connect(self.path.resolve().as_uri() + '?mode=ro', uri=True)
+        db.row_factory = sqlite3.Row
+        try:
+            db.execute('BEGIN')
+            return read_trace_source(db, run)
+        finally:
+            db.close()
+
     def close(self): self.db.close()
+
+def trace_bookkeeping(kind):
+    """Publication cannot recursively become part of its own factual snapshot."""
+    return kind.startswith(('trace_publication', 'trace_linkage', 'trace_delivery'))
+
+
+def read_trace_source(db, run):
+    """Read only existing execution tables. Caller holds a SQLite read snapshot.
+
+    Optional absent tables remain absent coverage, never migrated/backfilled here.
+    Review attempts and suggestions are retained individually, not latest-only.
+    """
+    tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if 'execution_runs' not in tables:
+        raise Blocked('trace source needs execution history; use the compatible historical reader for legacy storage')
+    row = db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone()
+    if row is None:
+        raise Blocked('trace run not found: ' + run)
+    source = {'run': dict(row), 'missing_tables': []}
+    for name, order in (('execution_history', 'seq'),
+                        ('execution_review_executions', 'dispatched_at,execution_id'),
+                        ('execution_review_attempts', 'seq'),
+                        ('execution_review_inputs', 'execution_id')):
+        if name not in tables:
+            source[name] = []
+            source['missing_tables'].append(name)
+        else:
+            source[name] = [dict(item) for item in db.execute(
+                'SELECT * FROM ' + name + ' WHERE run_id=? ORDER BY ' + order, (run,))]
+    source['execution_history'] = [item for item in source['execution_history']
+                                   if not trace_bookkeeping(item['kind'])]
+    source['execution_review_suggestions'] = []
+    if 'execution_review_suggestions' in tables and 'execution_review_attempts' in tables:
+        source['execution_review_suggestions'] = [dict(item) for item in db.execute(
+            'SELECT s.* FROM execution_review_suggestions s JOIN execution_review_attempts a '
+            'ON a.seq=s.attempt_seq WHERE a.run_id=? ORDER BY s.attempt_seq', (run,))]
+    else:
+        source['missing_tables'].append('execution_review_suggestions')
+    saved = (db.execute('SELECT contract FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()
+             if 'execution_run_inputs' in tables else None)
+    try:
+        source['delivery_issue'] = json.loads(saved['contract']).get('delivery_issue') if saved else None
+    except (ValueError, TypeError, AttributeError):
+        source['delivery_issue'] = None
+    source['boundary'] = {
+        'history_seq': max((item['seq'] for item in source['execution_history']), default=0),
+        'review_attempt_seq': max((item['seq'] for item in source['execution_review_attempts']), default=0),
+        'review_execution_ids': [item['execution_id'] for item in source['execution_review_executions']]}
+    return source
+
 
 # Semantic reader v1. Internal proof tables are intentionally not a consumer API.
 HISTORY_FIELDS = frozenset(('task_id', 'attempt_id', 'attempt', 'runtime_revision',

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Retired batching carrier now guards no-orchestration and runtime ownership."""
+"""Guard the approved controller and task ownership contract, not runtime implementation."""
 from pathlib import Path
 import unittest
 from test_intake_contract import TEXT, contract_errors, section
@@ -10,8 +10,9 @@ ROOT=Path(__file__).resolve().parents[3]
 class RuntimeAuthorityTests(unittest.TestCase):
     def test_interface_cannot_own_orchestration_or_persistence(self):
         introduction=TEXT.split('## Load and Verify',1)[0]
-        for phrase in ('existing CLI runs sequential tasks', 'installed Pi SDK',
-                       'not effect proof or execution eligibility'):
+        for phrase in ('one LangGraph controller', 'installed Pi SDK', 'sequential by default',
+                       'explicitly owner-directed path-disjoint workers', 'sibling mutations quiescent',
+                       'not automatic acceptance', 'never silent conversion or replay'):
             self.assertIn(phrase,' '.join(introduction.split()))
             self.assertNotIn(phrase,' '.join(introduction.split()).replace(phrase,'REMOVED'))
         for phrase in ('never adopts or commits unknown work',

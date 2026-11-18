@@ -7,7 +7,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { mock, test } from 'node:test';
 import readline from 'node:readline';
-import { piSdk, createWorkflowSession, mutationTools, promptSession, steeringController } from '../pi-host/host.mjs';
+import { piSdk, createWorkflowSession, execute, mutationTools, promptSession, steeringController } from '../pi-host/host.mjs';
 const { AgentSession, createReadTool, createEditTool, createWriteTool, createBashTool } = piSdk;
 import {installSteeringProvider} from './fixtures/steering_adapter_fixture.mjs';
 
@@ -199,7 +199,11 @@ test('steering uses the installed SDK queue and matching user event, not queue i
     const entered = new Promise(resolve => { enter = resolve; });
     const answer = new Promise(resolve => { release = resolve; });
     const session = await createWorkflowSession({project,
-      executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'off'}}, async () => { enter(); return answer; });
+      executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'off'}}, async record => {
+      assert.equal(record.tool_call_id, 'callback-tool');
+      assert.equal(record.question, 'fixture callback');
+      enter(); return answer;
+    });
     try {
       const sdkEvents = [];
       session.subscribe(event => sdkEvents.push(event));
@@ -230,6 +234,27 @@ test('steering uses the installed SDK queue and matching user event, not queue i
       controller.close();
     } finally { session.dispose(); provider.mock.restore(); }
   } finally { await fs.rm(project, {recursive: true, force: true}); }
+});
+
+test('installed SDK pauses the original question at idle and reopens its saved session', {timeout: 15000}, async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-question-sdk-'));
+  const provider = installSteeringProvider('graph-pause', project);
+  try {
+    const request = {project, executor: {provider: 'openai', model: 'gpt-4o-mini', effort: 'off'},
+      prompt: 'ask before effect', pauseQuestions: true};
+    const first = await execute(request, () => {}, async record => {
+      assert.notEqual(record.type, 'question', 'paused question must not ask synchronously');
+      return {ok: true};
+    });
+    assert.equal(first.outcome, 'waiting');
+    assert.deepEqual(first.question, {tool_call_id: 'callback-tool', question: 'fixture callback'});
+    assert.equal(await fs.readFile(path.join(project, 'prior.txt'), 'utf8'), 'settled once\n');
+    const second = await execute({...request, savedSession: first.session, prompt: 'actual consent'},
+      () => {}, async () => ({ok: true}));
+    assert.equal(second.outcome, 'completed');
+    assert.equal(second.session.id, first.session.id);
+    assert.equal(await fs.readFile(path.join(project, 'steering-owned.txt'), 'utf8'), 'consented\n');
+  } finally { provider.mock.restore(); await fs.rm(project, {recursive: true, force: true}); }
 });
 
 test('preload installs SDK mocks before the host dispatcher handles its correlated callback', async () => {
