@@ -24,7 +24,7 @@ Exclude runtime extensions/tool interception, new orchestration engines or manda
 
 - `skills/coordinate-implementation/SKILL.md`, Execute and Integrate: already requires separate verified task commits before the next task; nearby policy and Finish text explicitly permits owner skip/defer decisions. Remove these exceptions.
 - Its batching and briefing sections preserve task checkpoints inside coherent sequential batches; final review occurs after implementation commits, not after every task.
-- `skills/infographic/SKILL.md` currently says not to commit without an explicit user request. Align authorized retained repository output with automatic checkpoints without granting creation/upload authority.
+- Some standalone instructions previously required an explicit commit request. Align authorized retained repository output with automatic checkpoints without granting creation/upload authority.
 - `skills/memory-handling/references/project-coordination.md` requires focused initialization commits, explicit paths, unrelated-index/worktree preservation and failure stops. Reuse this safety boundary, not blanket staging or whole-repository cleanup.
 - `skills/incorporate-skill/SKILL.md` prohibits writes/commits before adaptation-plan approval; preserve that approval boundary. `using-git-worktrees` prohibits silently changing ignore rules; preserve its workspace/setup choices, never turn them into a commit waiver.
 - `scripts/check-planner-workflow.py` freezes coordinator execution with `EXECUTION_SHA256`; intentional policy changes need a reviewed updated digest plus specific assertions/mutations, not removal of protection.
@@ -92,4 +92,4 @@ Run the existing skill lint, coordinator intake/batching tests, planner workflow
 
 ## Risks and rollout
 
-Package-wide retained-artifact commits intentionally change currently opt-in commit behavior, particularly infographic output and standalone closeout. This is the requested policy change; creation/adaptation/guideline approvals remain intact. No migration of prior history or automatic cleanup of dirty repositories. Adoption documentation must explain hard stops under incompatible policies. After implemented global skill/config changes, instruct `/reload` inside pi; plan-only documents need no reload.
+Package-wide retained-artifact commits intentionally change currently opt-in commit behavior, including standalone closeout. This is the requested policy change; creation/adaptation/guideline approvals remain intact. No migration of prior history or automatic cleanup of dirty repositories. Adoption documentation must explain hard stops under incompatible policies. After implemented global skill/config changes, instruct `/reload` inside pi; plan-only documents need no reload.

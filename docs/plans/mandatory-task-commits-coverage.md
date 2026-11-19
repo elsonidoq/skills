@@ -25,7 +25,6 @@ the consumer is already wired; later task evidence changes rows only after verif
 | receiving-code-review | Review fixes are separate verified tasks; review alone is read-only | integrated | T004 link/read-through |
 | writing-skills | Bounded skill deliverable is a task | integrated | T004 link/read-through |
 | incorporate-skill | Adaptation-plan approval precedes writes and checkpoints | integrated | T004 link/read-through |
-| infographic | Authorized retained repository output checkpoints automatically | integrated | T004 link/read-through |
 | scientific-method-debugging | Investigation-only work has no empty checkpoint; retained fix does | integrated | T004 link/read-through |
 
 Relevant active prompt routes (`.pi/prompts/speckit.*.md`) are package entry points rather than

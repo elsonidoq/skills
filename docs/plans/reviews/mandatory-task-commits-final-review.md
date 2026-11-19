@@ -14,7 +14,7 @@ Smallest safe correction: separate the commit restriction from push/additional d
 
 **NOT_READY — Merge verdict: BLOCK.** No open question affecting F1.
 
-Reviewer confirmed canonical ownership, path-limited commits, unknown-state guards, coordinator-only recovery, evidence checkpoints and truthful runtime limitations; final patch preserves existing SpecKit hooks and removes infographic commit opt-in. Reviewer read the complete 1,224-line patch/history, not a clean-worktree substitute, and inspected exact source/task approval identities.
+Reviewer confirmed canonical ownership, path-limited commits, unknown-state guards, coordinator-only recovery, evidence checkpoints and truthful runtime limitations; final patch preserves existing SpecKit hooks and removes a standalone commit opt-in. Reviewer read the complete 1,224-line patch/history, not a clean-worktree substitute, and inspected exact source/task approval identities.
 
 Verification limits: no reviewer-run commands (no shell); parent validations are supporting evidence. Static assertions/Git fixtures do not prove runtime model obedience. F1 correction and focused validation are required before acceptance.
 
