@@ -69,6 +69,28 @@ class StatusCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(f'Worktree: {self.linked}', result.stdout)
 
+    def test_project_rejects_database_outside_registered_worktree_root(self):
+        for project in (self.outside, self.repo / 'subdirectory'):
+            with self.subTest(project=project):
+                self.create_store(project)
+                result = self.run_status('named-run', '--project', str(project))
+                self.assertEqual(result.returncode, 1)
+                self.assertIn('registered Git worktree root', result.stderr)
+                self.assertEqual(result.stdout, '')
+
+    def test_relative_xdg_config_uses_home_default(self):
+        home = self.config.parents[2] / 'home'
+        home_config = home / '.config/coherence/status-projects'
+        home_config.parent.mkdir(parents=True)
+        self.config.rename(home_config)
+        relative_config = self.outside / 'config/coherence/status-projects'
+        relative_config.parent.mkdir(parents=True)
+        relative_config.write_text('invalid-relative-checkout\n')
+        self.env.update(HOME=str(home), XDG_CONFIG_HOME='config')
+        result = self.run_status('named-run')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f'Worktree: {self.linked}', result.stdout)
+
     def test_missing_run_and_config_are_actionable(self):
         result = self.run_status('missing-run')
         self.assertEqual(result.returncode, 1)
