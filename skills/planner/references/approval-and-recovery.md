@@ -9,6 +9,13 @@ page destination from the adopting project's routing and existing feature artifa
 an existing design page when present. No renderer, generator or framework is required.
 Preparation authority permits the page, not agreement or implementation.
 
+The report helps the owner judge how the architecture delivers the required properties
+and whether the design is proportionate. In the producer brief, ask for a schematic
+with named system components as boxes and labeled arrows showing what they exchange.
+Distinguish reused components from changes and additions. Before presenting the page,
+check that it shows how the components provide each important property and, for each
+material addition, what the existing design lacks and what tradeoff the addition brings.
+
 The page covers approach, interfaces, dependencies and material risks. Each clickable
 component box opens popup executive bullets for purpose, inputs/outputs, boundaries and
 significant choices. Executive bullets below the schematic explain the goal, relevant
