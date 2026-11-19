@@ -79,13 +79,18 @@ class StatusCliTests(unittest.TestCase):
                 self.assertEqual(result.stdout, '')
 
     def test_stale_nested_worktree_is_not_a_status_source(self):
-        nested = self.repo / 'stale linked worktree'
-        self.git('-C', str(self.repo), 'worktree', 'add', '-q', '--detach', str(nested))
-        (nested / '.git').unlink()
-        self.create_store(nested)
-        result = self.run_status('named-run', '--project', str(nested))
-        self.assertEqual(result.returncode, 1)
-        self.assertIn('registered Git worktree root', result.stderr)
+        self.git('-C', str(self.repo), 'worktree', 'lock', str(self.linked))
+        for state in ('unlocked', 'locked'):
+            with self.subTest(state=state):
+                nested = self.repo / f'stale {state} worktree'
+                self.git('-C', str(self.repo), 'worktree', 'add', '-q', '--detach', str(nested))
+                if state == 'locked':
+                    self.git('-C', str(self.repo), 'worktree', 'lock', str(nested))
+                (nested / '.git').unlink()
+                self.create_store(nested)
+                result = self.run_status('named-run', '--project', str(nested))
+                self.assertEqual(result.returncode, 1)
+                self.assertIn('registered Git worktree root', result.stderr)
         result = self.run_status('named-run')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(f'Worktree: {self.linked}', result.stdout)

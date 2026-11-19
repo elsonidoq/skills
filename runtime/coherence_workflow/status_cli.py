@@ -21,12 +21,21 @@ def git_output(checkout, *args):
 
 
 def git_worktrees(checkout):
-    for record in git_output(checkout, 'worktree', 'list', '--porcelain', '-z').split(b'\0\0'):
+    inventory = git_output(checkout, 'worktree', 'list', '--porcelain', '-z')
+    common = git_output(checkout, 'rev-parse', '--path-format=absolute', '--git-common-dir')
+    for record in inventory.split(b'\0\0'):
         header, *fields = record.split(b'\0')
-        if header.startswith(b'worktree ') and b'bare' not in fields:
-            if any(field.split(b' ', 1)[0] == b'prunable' for field in fields):
-                continue
-            yield Path(os.fsdecode(header[len(b'worktree '):])).resolve()
+        if not header.startswith(b'worktree ') or b'bare' in fields:
+            continue
+        path = Path(os.fsdecode(header[len(b'worktree '):])).resolve()
+        try:
+            # Locked registrations can outlast the checkout. Require both a live
+            # worktree root (empty prefix) and membership in this repository.
+            identity = git_output(path, 'rev-parse', '--path-format=absolute', '--git-common-dir', '--show-prefix')
+        except Blocked:
+            continue
+        if identity == common + b'\n':
+            yield path
 
 
 def configured_worktrees():
@@ -67,8 +76,7 @@ def select_run(run, project):
     if project is not None:
         path = project.expanduser().resolve()
         try:
-            # At a stale nested path, Git can discover the enclosing checkout instead.
-            registered = git_output(path, 'rev-parse', '--show-prefix') == b'\n' and path in git_worktrees(path)
+            registered = path in git_worktrees(path)
         except Blocked as exc:
             raise Blocked(f'{exc}; pass a registered Git worktree root to --project') from exc
         if not registered:
