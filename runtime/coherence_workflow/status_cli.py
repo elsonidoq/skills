@@ -11,20 +11,22 @@ from .cli import RunNotFound, status
 from .store import Blocked
 
 
-def git_worktrees(checkout):
+def git_output(checkout, *args):
     env = {key: value for key, value in os.environ.items()
            if key not in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR')}
-    git = subprocess.run(['git', '-C', str(checkout), 'worktree', 'list', '--porcelain', '-z'],
-                         env=env, capture_output=True)
-    if git.returncode:
-        raise Blocked(f'cannot list Git worktrees for {checkout}: {os.fsdecode(git.stderr).strip()}')
-    for record in git.stdout.split(b'\0\0'):
+    result = subprocess.run(['git', '-C', str(checkout), *args], env=env, capture_output=True)
+    if result.returncode:
+        raise Blocked(f'Git could not inspect {checkout}: {os.fsdecode(result.stderr).strip()}')
+    return result.stdout
+
+
+def git_worktrees(checkout):
+    for record in git_output(checkout, 'worktree', 'list', '--porcelain', '-z').split(b'\0\0'):
         header, *fields = record.split(b'\0')
         if header.startswith(b'worktree ') and b'bare' not in fields:
-            path = Path(os.fsdecode(header[len(b'worktree '):]))
-            if not path.exists() and any(field.startswith(b'prunable ') for field in fields):
+            if any(field.split(b' ', 1)[0] == b'prunable' for field in fields):
                 continue
-            yield path.resolve()
+            yield Path(os.fsdecode(header[len(b'worktree '):])).resolve()
 
 
 def configured_worktrees():
@@ -65,7 +67,8 @@ def select_run(run, project):
     if project is not None:
         path = project.expanduser().resolve()
         try:
-            registered = path in git_worktrees(path)
+            # At a stale nested path, Git can discover the enclosing checkout instead.
+            registered = git_output(path, 'rev-parse', '--show-prefix') == b'\n' and path in git_worktrees(path)
         except Blocked as exc:
             raise Blocked(f'{exc}; pass a registered Git worktree root to --project') from exc
         if not registered:

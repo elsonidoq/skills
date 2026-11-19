@@ -78,6 +78,18 @@ class StatusCliTests(unittest.TestCase):
                 self.assertIn('registered Git worktree root', result.stderr)
                 self.assertEqual(result.stdout, '')
 
+    def test_stale_nested_worktree_is_not_a_status_source(self):
+        nested = self.repo / 'stale linked worktree'
+        self.git('-C', str(self.repo), 'worktree', 'add', '-q', '--detach', str(nested))
+        (nested / '.git').unlink()
+        self.create_store(nested)
+        result = self.run_status('named-run', '--project', str(nested))
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('registered Git worktree root', result.stderr)
+        result = self.run_status('named-run')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f'Worktree: {self.linked}', result.stdout)
+
     def test_relative_xdg_config_uses_home_default(self):
         home = self.config.parents[2] / 'home'
         home_config = home / '.config/coherence/status-projects'
