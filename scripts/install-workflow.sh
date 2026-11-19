@@ -15,6 +15,7 @@ if [ -e "$PREFIX" ] || [ -L "$PREFIX" ]; then
 fi
 # Explicit global activation adds links only; preserve foreign destinations.
 BIN="$HOME/.local/bin/coordinate-implementation"
+STATUS_BIN="$HOME/.local/bin/coherence-status"
 EXTENSION="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/extensions/coordinate-implementation-bridge.js"
 check_link() {
   if [ -e "$1" ] || [ -L "$1" ]; then
@@ -26,6 +27,7 @@ check_link() {
 }
 if [ "$#" -eq 4 ]; then
   check_link "$BIN" "$PREFIX/bin/coordinate-implementation"
+  check_link "$STATUS_BIN" "$PREFIX/bin/coherence-status"
   check_link "$EXTENSION" "$ROOT/runtime/pi-extensions/coordinate-implementation-bridge.js"
 fi
 python3 -m venv "$PREFIX"
@@ -34,14 +36,16 @@ python3 -m venv "$PREFIX"
 "$PREFIX/bin/python" -m pip install --no-deps --no-build-isolation "$ROOT/runtime"
 HOST=$("$PREFIX/bin/python" -c 'from coherence_workflow.pi_adapter import host_path; print(host_path().parent)')
 npm ci --prefix "$HOST" --cache "$PREFIX/npm-cache" --ignore-scripts
-printf 'Isolated workflow ready: %s/bin/coordinate-implementation\n' "$PREFIX"
+printf 'Isolated workflow commands: %s/bin/coordinate-implementation and %s/bin/coherence-status\n' "$PREFIX" "$PREFIX"
 if [ "$#" -eq 4 ]; then
   check_link "$BIN" "$PREFIX/bin/coordinate-implementation"
+  check_link "$STATUS_BIN" "$PREFIX/bin/coherence-status"
   check_link "$EXTENSION" "$ROOT/runtime/pi-extensions/coordinate-implementation-bridge.js"
   mkdir -p "$(dirname "$BIN")" "$(dirname "$EXTENSION")"
   [ -L "$BIN" ] || ln -s "$PREFIX/bin/coordinate-implementation" "$BIN"
+  [ -L "$STATUS_BIN" ] || ln -s "$PREFIX/bin/coherence-status" "$STATUS_BIN"
   [ -L "$EXTENSION" ] || ln -s "$ROOT/runtime/pi-extensions/coordinate-implementation-bridge.js" "$EXTENSION"
-  printf 'Global command: %s\nGlobal Pi bridge: %s\nKeep this suite checkout. Ensure ~/.local/bin is on PATH; use a fresh Pi/Paseo session.\n' "$BIN" "$EXTENSION"
+  printf 'Global commands: %s and %s\nGlobal Pi bridge: %s\nKeep this suite checkout. Ensure ~/.local/bin is on PATH; use a fresh Pi/Paseo session.\n' "$BIN" "$STATUS_BIN" "$EXTENSION"
 else
   printf 'Use explicit --project, --tasks and --executor; no global activation.\n'
 fi

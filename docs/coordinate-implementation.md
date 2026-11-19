@@ -372,6 +372,26 @@ scripts/coordinate-implementation refresh-review-target --project /absolute/proj
   --run FAILED_OR_INTERRUPTED_RUN
 ```
 
+### Watch workflow status
+
+The global workflow install puts `coherence-status` in `~/.local/bin`. No virtual environment
+activation or `jq` is needed. To run it from any directory, add the absolute path of one Git
+checkout per repository to `${XDG_CONFIG_HOME:-$HOME/.config}/coherence/status-projects` (one path
+per line). The command searches those repositories' Git-registered worktrees for the exact run ID.
+
+```sh
+coherence-status fix-title           # show the recorded workflow and task states once
+coherence-status fix-title --watch   # check for changes every five seconds
+coherence-status fix-title --project /absolute/worktree --watch
+```
+
+`--project` selects an exact worktree without reading the list. If a name matches more than one
+worktree, the command lists the matches so you can use `--project`. Press Ctrl+C to stop watching;
+this does not stop the workflow. Status reflects what the runner recorded, not proof that its
+process is still alive. Use `coordinate-implementation status` for detailed JSON.
+
+### Executor resolution and resume
+
 The resolver requires only Python's standard library, prints only the absolute selected path on
 success, and sends actionable failures to stderr with a nonzero exit. It reads existing JSON and
 checks nonempty provider/model/effort strings, including an optional reviewer profile; it never

@@ -72,8 +72,17 @@ def _metric_invocation_ids(db, run):
     return identifiers
 
 
-def status(project, run):
+class RunNotFound(Blocked):
+    pass
+
+
+def status(project, run, *, summary_only=False):
     database = Path(project).resolve() / '.coherence/workflow/workflow.sqlite'
+    if summary_only:
+        try:
+            database.stat()
+        except FileNotFoundError as exc:
+            raise RunNotFound(f'no workflow database in {project}') from exc
     db = sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)
     db.row_factory = sqlite3.Row
     try:
@@ -83,12 +92,14 @@ def status(project, run):
         else:
             row = db.execute('SELECT * FROM execution_runs WHERE run_id=?', (run,)).fetchone()
             if row:
-                has_inputs = db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_run_inputs'").fetchone()
-                inputs = (db.execute('SELECT contract,review_base FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()
-                          if has_inputs else None)
                 result = {'run': dict(row), 'tasks': [
                     {key: item[key] for key in ('run_id', 'task_id', 'state', 'baseline', 'result')}
                     for item in db.execute('SELECT * FROM execution_tasks WHERE run_id=? ORDER BY rowid', (run,))]}
+                if summary_only:
+                    return result
+                has_inputs = db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_run_inputs'").fetchone()
+                inputs = (db.execute('SELECT contract,review_base FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()
+                          if has_inputs else None)
                 if inputs:
                     contract = json.loads(inputs['contract'])
                     authority = json.loads(db.execute('SELECT authority FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()['authority'])
@@ -191,7 +202,7 @@ def status(project, run):
                 except (sqlite3.Error, ValueError, TypeError):
                     result['monitoring'] = {'state': 'unknown'}
                 return result
-        raise Blocked('workflow run not found: ' + run + '; select an existing execution run ID')
+        raise RunNotFound('workflow run not found: ' + run + '; select an existing execution run ID')
     finally:
         db.close()
 
