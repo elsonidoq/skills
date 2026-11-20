@@ -23,11 +23,17 @@ class PackagingTests(unittest.TestCase):
         for path in host_files:
             self.assertTrue((ROOT/'runtime'/path).is_file())
         self.assertEqual(config['project']['scripts']['coordinate-implementation'], 'coherence_workflow.cli:main')
+        self.assertEqual(config['project']['scripts']['coherence-status'], 'coherence_workflow.status_cli:main')
 
-    def test_global_install_preserves_foreign_command_before_creating_prefix(self):
+    def test_global_install_preserves_foreign_commands_before_creating_prefix(self):
+        for name in ('coordinate-implementation', 'coherence-status'):
+            with self.subTest(name=name):
+                self.check_global_command_conflict(name)
+
+    def check_global_command_conflict(self, name):
         with tempfile.TemporaryDirectory(prefix='coherence-global-conflict-') as directory:
             home = Path(directory)
-            command = home / '.local/bin/coordinate-implementation'
+            command = home / '.local/bin' / name
             command.parent.mkdir(parents=True)
             command.write_text('foreign command\n')
             prefix = home / 'runtime'
@@ -69,6 +75,7 @@ chmod +x "$3/bin/python"
             bridge = agent / 'extensions/coordinate-implementation-bridge.js'
             self.assertEqual(bridge.readlink(), ROOT/'runtime/pi-extensions/coordinate-implementation-bridge.js')
             self.assertTrue(bridge.is_file())
+            self.assertEqual((home / '.local/bin/coherence-status').readlink(), prefix / 'bin/coherence-status')
             self.assertFalse((ROOT/'.pi/extensions/coordinate-implementation-bridge.js').exists())
 
     def test_actual_entry_help_from_unrelated_directory(self):

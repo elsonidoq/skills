@@ -372,6 +372,26 @@ scripts/coordinate-implementation refresh-review-target --project /absolute/proj
   --run FAILED_OR_INTERRUPTED_RUN
 ```
 
+### Watch workflow status
+
+The global workflow install puts `coherence-status` in `~/.local/bin`. No virtual environment
+activation or `jq` is needed. To run it from any directory, add the absolute path of one Git
+checkout per repository to `${XDG_CONFIG_HOME:-$HOME/.config}/coherence/status-projects` (one path
+per line). The command searches those repositories' Git-registered worktrees for the exact run ID.
+
+```sh
+coherence-status fix-title           # show the recorded workflow and task states once
+coherence-status fix-title --watch   # check for changes every five seconds
+coherence-status fix-title --project /absolute/worktree --watch
+```
+
+`--project` selects an exact worktree without reading the list. If a name matches more than one
+worktree, the command lists the matches so you can use `--project`. Press Ctrl+C to stop watching;
+this does not stop the workflow. Status reflects what the runner recorded, not proof that its
+process is still alive. Use `coordinate-implementation status` for detailed JSON.
+
+### Executor resolution and resume
+
 The resolver requires only Python's standard library, prints only the absolute selected path on
 success, and sends actionable failures to stderr with a nonzero exit. It reads existing JSON and
 checks nonempty provider/model/effort strings, including an optional reviewer profile; it never
@@ -774,12 +794,18 @@ For explicitly authorized global activation, add `--global`:
 scripts/install-workflow.sh --prefix "$HOME/.local/share/coherence-workflow" --allow-network --global
 ```
 
-Choose a new absolute prefix. This installs an isolated Python/SDK runtime and links its command
-at `~/.local/bin/coordinate-implementation` and the suite bridge at
-`${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/extensions/coordinate-implementation-bridge.js`.
+Choose a new absolute prefix. This installs an isolated Python/SDK runtime and creates three links:
+
+- `~/.local/bin/coordinate-implementation`
+- `~/.local/bin/coherence-status`
+- `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/extensions/coordinate-implementation-bridge.js`
+
 Existing foreign prefixes or link destinations are preserved and reported. Keep this suite checkout:
-the bridge and globally linked skills refer to its current files, while the installed runner is a
-snapshot and needs an explicit new-prefix installation to update. Ensure `~/.local/bin` is on PATH.
+the bridge and globally linked skills refer to its current files, while the installed commands are a
+snapshot. To update them, choose a new prefix and verify which command links point to the old
+Coherence prefix. Remove only those verified installer-owned links before running the installer for
+the new prefix; retain the old prefix and project data. Leave the bridge link in place if it already
+points to the suite source shown below. Ensure `~/.local/bin` is on PATH.
 The bridge source stays outside `.pi/extensions/`, so the suite checkout, new Git worktrees and
 unrelated repositories load only the global entry. Do not copy it into project extension directories.
 For an existing installation, inspect the global bridge link and repoint only the verified suite-owned
@@ -797,8 +823,8 @@ A one-shot print/JSON parent can settle after an intermediate notification and e
 cancels its owned runner; it is not a reliable harness for a nonempty asynchronous run. An empty-task
 smoke verifies discovery/launch without creating a workflow store; use a disposable repository for
 actual worker/reviewer smoke checks rather than adding runtime artifacts to an unrelated project.
-To roll back global activation, remove
-only the two proven installer-owned symlinks, leaving the isolated runtime and project data intact.
+To roll back global activation, remove only the verified installer-owned links listed above.
+Leave the isolated runtime, status configuration, and project data intact.
 
 Focused checks in the prepared environment:
 
