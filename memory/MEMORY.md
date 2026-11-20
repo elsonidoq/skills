@@ -23,9 +23,9 @@ substitute or store secrets, completed-work inventories or fabricated knowledge.
 
 ### Routine repair authorization
 
-- **Trigger:** Continuing routine repair/review rounds after the owner has explicitly authorized them within a bounded implementation scope.
-- **Action:** Do not repeatedly ask for the same routine authorization. Use the supported run-and-scope-bound authority mechanism; preserve actual material scope, manual, paid, security, data and external-action gates. A conflicting runtime consent rule needs a scoped correction, not fabricated owner replies or silent bypass.
-- **Provenance:** Explicit owner feedback during #30 implementation: “Why do you keep asking for these authorizations? Yes I authorize them all” and “Stop asking me for authorization for routine things like that.” The owner then approved the proposed scoped policy correction and retained continuation with “Go ahead.” This records the conversational preference, not blanket permission for unrelated runs or actions.
+- **Trigger:** An approved implementation needs a routine repair and another review.
+- **Action:** Proceed within the approved scope without asking for permission to continue. Keep required checks, fresh independent review, and actual material scope, manual, paid, security, data and external-action gates. See [Review and Acceptance](../skills/coordinate-implementation/SKILL.md#review-and-acceptance) for current behavior.
+- **Provenance:** The owner said, “routine repairs are always approved by default,” and approved removing `authorize-routine-repairs`. This supersedes the run-specific workaround adopted during #30 after the owner said, “Stop asking me for authorization for routine things like that.”
 
 ### Routine approved-work publication
 
