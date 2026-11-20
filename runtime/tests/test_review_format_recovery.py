@@ -290,7 +290,7 @@ class ReviewFormatRecoveryTests(ProjectTest):
                            question=lambda _: str(self.artifact)).invoke()
         return verdict, Adapter
 
-    def test_followup_recovery_preserves_history_and_requires_actual_owner_pair(self):
+    def test_followup_recovery_preserves_history_and_assigns_default_pair(self):
         verdict, adapter = self.start_followup_failed()
         asked = []
         def question(prompt, **kwargs):
@@ -299,7 +299,7 @@ class ReviewFormatRecoveryTests(ProjectTest):
         with Authority(self.project) as owner:
             original = owner.store.review_chain('fixture', private=True)
             owner.store.resume('fixture')
-            with self.assertRaisesRegex(Blocked, 'owner did not authorize'):
+            with patch.object(Engine, 'run_fix', side_effect=Blocked('fixture stop')), self.assertRaisesRegex(Blocked, 'fixture stop'):
                 Engine(owner, 'fixture', self.contract, EXECUTOR, adapter=adapter, resume=True,
                        question=question).invoke()
             chain = owner.store.review_chain('fixture', private=True)
@@ -312,8 +312,8 @@ class ReviewFormatRecoveryTests(ProjectTest):
         self.assertEqual(chain['executions'][-1]['findings'][-1], verdict['findings'])
         self.assertEqual(chain['executions'][-1]['references']['review_summary'],
                          {key: verdict[key] for key in ('coverage', 'coverage_gaps')})
-        self.assertEqual(grants, 0)
-        self.assertTrue(any(kwargs.get('owner_only') for _, kwargs in asked))
+        self.assertEqual(grants, 1)
+        self.assertFalse(any(kwargs.get('owner_only') for _, kwargs in asked))
         self.assertEqual([kind for kind, _ in self.calls], ['writer', 'review', 'fixer', 'review'])
 
     def test_followup_rejects_verdict_already_accepted_by_prior_parser(self):
@@ -364,7 +364,8 @@ class ReviewFormatRecoveryTests(ProjectTest):
             asked.append((prompt, kwargs))
             return str(self.followup)
         with Authority(self.project) as owner:
-            owner.store.authorize_routine_review_continuation('fixture', owner.store.review_scope('fixture'))
+            owner.store.history('fixture', None, 'routine_review_authority', 'authorized',
+                                {'decision': 'affirmative_actual_owner', 'original_scope': owner.store.review_scope('fixture')})
             owner.store.resume('fixture')
             with patch.object(Engine, 'run_fix', side_effect=Blocked('fixture stop before fixer')) as fixer:
                 with self.assertRaisesRegex(Blocked, 'fixture stop before fixer'):
@@ -384,7 +385,8 @@ class ReviewFormatRecoveryTests(ProjectTest):
         self.start_followup_failed()
         original = [json.loads(x) for x in self.followup.read_text().splitlines()]
         with Authority(self.project) as owner:
-            owner.store.authorize_routine_review_continuation('fixture', owner.store.review_scope('fixture'))
+            owner.store.history('fixture', None, 'routine_review_authority', 'authorized',
+                                {'decision': 'affirmative_actual_owner', 'original_scope': owner.store.review_scope('fixture')})
             owner.store.resume('fixture')
             engine = Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
                             question=lambda _: str(self.followup))

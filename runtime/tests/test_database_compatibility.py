@@ -45,7 +45,6 @@ class DatabaseCompatibilityTests(ProjectTest):
         before = self.database.read_bytes()
         self.assertEqual(status(self.project, 'legacy')['run']['state'], 'failed')
         for action, extra in [('resume', []), ('abandon', []),
-                              ('authorize-routine-repairs', ['--scope', 'fixture']),
                               ('refresh-review-target', []),
                               ('recover-task', ['--owner-authorized', '--recovery', 'absent'])]:
             with self.subTest(action=action), contextlib.redirect_stdout(io.StringIO()) as out:

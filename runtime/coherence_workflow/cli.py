@@ -169,7 +169,7 @@ def status(project, run, *, summary_only=False):
                                                   if pair['rejecting_execution_id'] == last['execution_id']), None)
                                     next_stage = ('reserve_assigned_fixer' if grant and grant['state'] == 'authorized'
                                                   else 'assigned_fixer' if grant and grant['state'] == 'fixer_reserved'
-                                                  else 'owner_authorization_required' if grant is None else 'blocked')
+                                                  else 'automatic_fixer' if grant is None else 'blocked')
                             elif last['role'] == 'fixer' and last['state'] == 'dispatched' and last['fixing_round'] > 1:
                                 calls = {}
                                 for event in db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND kind='fixer_invocation' ORDER BY seq", (run,)):
@@ -250,7 +250,7 @@ def cancel(signum, frame):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest='command', required=True)
-    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task', 'recover-publication'):
+    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon', 'refresh-review-target', 'recover-task', 'recover-publication'):
         sub = subs.add_parser(command)
         if command != 'intake':
             sub.add_argument('--project', required=True)
@@ -262,7 +262,7 @@ def main(argv=None):
             sub.add_argument('--delivery-scope', type=json.loads,
                              help='optional JSON carrier of already granted target/authority/known_linked_prs; retained for resume, not a grant')
             sub.add_argument('--parallel', action='store_true', help='explicitly direct disjoint dependency-ready worker waves; default sequential')
-        if command in ('resume', 'status', 'history', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task', 'recover-publication'):
+        if command in ('resume', 'status', 'history', 'abandon', 'refresh-review-target', 'recover-task', 'recover-publication'):
             sub.add_argument('--run', required=True)
         if command == 'recover-publication':
             sub.add_argument('--snapshot', help='exact retained snapshot ID; defaults to latest prepared snapshot, or retained facts if none')
@@ -272,8 +272,6 @@ def main(argv=None):
             sub.add_argument('--recovery-action', choices=('continue', 'fresh', 'escalate'),
                              help='coordinator-selected inspected continuation of the unfinished task')
             sub.add_argument('--diagnosis', help='inspected cause and targeted correction; not renewed owner consent')
-        if command == 'authorize-routine-repairs':
-            sub.add_argument('--scope', required=True, help='exact retained original task scope from the authorized handoff')
         if command == 'recover-task':
             sub.add_argument('--recovery', required=True, help='JSON exact external same-task completion transfer; see operating guide')
             sub.add_argument('--owner-authorized', action='store_true', help='assert actual owner authorization for this exact transfer')
@@ -304,15 +302,11 @@ def main(argv=None):
             raise Blocked('external task recovery requires actual owner authorization; obtain it and supply --owner-authorized')
         if args.command == 'resume' and any(os.environ.get('COHERENCE_PARENT_BRIDGE_' + field) for field in ('SOCKET', 'TOKEN', 'SESSION', 'RUN')) and os.environ.get('COHERENCE_PARENT_BRIDGE_RUN') != args.run:
             raise Blocked('parent owner bridge run mismatch; launch this run through its parent-session bridge')
-        if args.command in ('resume', 'abandon', 'authorize-routine-repairs', 'refresh-review-target', 'recover-task'):
+        if args.command in ('resume', 'abandon', 'refresh-review-target', 'recover-task'):
             require_graph_run(args.project, args.run, list(argv) if argv is not None else sys.argv[1:])
         if args.command == 'abandon':
             with Authority(args.project, wait=True) as authority:
                 print(canonical(authority.store.abandon(args.run)))
-            return 0
-        if args.command == 'authorize-routine-repairs':
-            with Authority(args.project, wait=True) as authority:
-                print(canonical(authority.store.authorize_routine_review_continuation(args.run, args.scope)))
             return 0
         if args.command == 'recover-task':
             if not args.owner_authorized:

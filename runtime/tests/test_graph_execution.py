@@ -26,13 +26,14 @@ class GraphExecutionTests(ProjectTest):
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, **kwargs):
                 calls.append('review' if kwargs.get('read_only') else 'worker')
-                return (json.dumps({'approved': False, 'findings': ['owned.txt:1 - fixture defect'],
+                approved = calls.count('review') == 4
+                return (json.dumps({'approved': approved, 'findings': [] if approved else ['owned.txt:1 - fixture defect'],
                                     'coverage': ['fixture'], 'coverage_gaps': []})
                         if kwargs.get('read_only') else 'no change fixture')
         contract = admit([{'id': 'one', 'description': 'fixture'}])
         with Authority(project) as owner:
             runner = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, question=lambda *_a, **_k: 'no')
-            with self.assertRaisesRegex(Blocked, 'did not authorize'):
+            with patch.object(owner.store, 'authorize_owner_pair', side_effect=Blocked('fixture interruption')), self.assertRaisesRegex(Blocked, 'fixture interruption'):
                 runner.invoke()
             rejection = owner.store.review_chain('refresh', private=True)['executions'][-1]
             owner.store.authorize_owner_pair('refresh', 'grant', rejecting_execution_id=rejection['execution_id'],
@@ -50,10 +51,9 @@ class GraphExecutionTests(ProjectTest):
             self.assertEqual(owner.store.db.execute("SELECT state FROM execution_runs WHERE run_id='refresh'").fetchone()[0], 'failed')
         with Authority(project) as owner:
             owner.store.resume('refresh')
-            runner = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, resume=True, question=lambda *_a, **_k: 'no')
-            with self.assertRaisesRegex(Blocked, 'did not authorize'):
-                runner.invoke()
-        self.assertEqual(calls[before:], ['review'])
+            runner = Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, resume=True, question=lambda *_a, **_k: self.fail('unexpected question'))
+            self.assertEqual(runner.invoke()['status'], 'complete')
+        self.assertEqual(calls[before:], ['review', 'worker', 'review'])
 
     def test_metric_commit_after_failure_does_not_invalidate_exact_scoped_recovery(self):
         project = self.project
@@ -159,7 +159,7 @@ class GraphExecutionTests(ProjectTest):
         self.assertEqual(len(calls), 2)
         self.assertIn('Evidence reassessment:', calls[1])
 
-    def test_graph_later_repair_uses_scope_bound_routine_grant(self):
+    def test_graph_distinct_scoped_repairs_run_required_checks_without_consent(self):
         project, reviews, fixes = self.project, [], []
         class Adapter:
             def __init__(self, *args, **kwargs):
@@ -168,18 +168,19 @@ class GraphExecutionTests(ProjectTest):
                 if kwargs.get('read_only'):
                     reviews.append(prompt)
                     return json.dumps({'approved': len(reviews) == 3,
-                        'findings': ['owned.txt:1 - remaining defect'] if len(reviews) < 3 else [],
+                        'findings': ['owned.txt:1 - missing input crashes' if len(reviews) == 1 else
+                                     'owned.txt:2 - malformed input hangs'] if len(reviews) < 3 else [],
                         'coverage': ['examined'], 'coverage_gaps': []})
                 kwargs['claim']('owned.txt')
                 if 'Continue the rejecting review' in prompt:
                     fixes.append(prompt)
                 (project/'owned.txt').write_text('version ' + str(len(fixes)) + '\n')
                 return 'done'
-        contract = admit([{'id': 'one', 'description': 'work', 'owned_paths': ['owned.txt']}])
+        contract = admit([{'id': 'one', 'description': 'work', 'owned_paths': ['owned.txt'],
+                           'checks': [['grep', '-q', '^version ', 'owned.txt']]}])
         with Authority(project) as owner:
             owner.store.start('later-repair', self.base, contract=contract, executor=EXECUTOR,
                 authority={'review_policy': 'owner-pair-v1'}, review_base=self.base)
-            owner.store.authorize_routine_review_continuation('later-repair', owner.store.review_scope('later-repair'))
             engine = Engine(owner, 'later-repair', contract, EXECUTOR, adapter=Adapter,
                             question=lambda *_a, **_k: self.fail('routine grant must not ask again'))
             with graph_saver(owner) as saver:
@@ -190,6 +191,11 @@ class GraphExecutionTests(ProjectTest):
             self.assertEqual(result['result']['status'], 'complete')
             self.assertEqual(chain[3]['trigger_execution_id'], chain[2]['execution_id'])
             self.assertEqual(chain[4]['trigger_execution_id'], chain[3]['execution_id'])
+            checks = owner.store.db.execute(
+                "SELECT state,details FROM execution_history WHERE run_id=? AND kind='fixer_check' ORDER BY seq",
+                ('later-repair',)).fetchall()
+            self.assertEqual([(row['state'], json.loads(row['details'])['execution_id']) for row in checks],
+                             [('passed', chain[i]['execution_id']) for i in (1, 3)])
         self.assertEqual((len(reviews), len(fixes)), (3, 2))
 
     def test_failed_escalation_stops_graph_before_any_dispatch(self):

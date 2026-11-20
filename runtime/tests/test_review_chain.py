@@ -41,14 +41,19 @@ class OwnerPairPrimitiveTests(ProjectTest):
             store = owner.store
             store.start('pair', self.base, authority=authority)
             self._rejection(store)
-            grant = store.authorize_owner_pair('pair', 'grant-1', rejecting_execution_id='review-2',
-                                               review_base=self.base, review_head=self.base, original_scope=store.review_scope('pair'),
-                                               fixer_execution_id='fix-2', reviewer_execution_id='review-3')
+            # Seed the grant as written by the earlier runtime; never reissue it.
+            grant = {'grant_id': 'grant-1', 'decision': 'affirmative_actual_owner',
+                     'rejecting_execution_id': 'review-2', 'review_base': self.base, 'review_head': self.base,
+                     'original_scope': store.review_scope('pair'), 'fixer_execution_id': 'fix-2',
+                     'reviewer_execution_id': 'review-3'}
+            store.history('pair', None, 'review_pair_grant', 'authorized', grant)
             reserved = store.reserve_owner_pair_fixer('pair', 'grant-1', rejecting_execution_id='review-2',
                                                        review_base=self.base, review_head=self.base, original_scope=store.review_scope('pair'))
             self.assertEqual((grant['grant_id'], reserved['fixer_execution_id']), ('grant-1', 'fix-2'))
         with Authority(self.project) as owner:
             store = owner.store
+            retained = store.db.execute("SELECT details FROM execution_history WHERE kind='review_pair_grant'").fetchall()
+            self.assertEqual([json.loads(row['details']) for row in retained], [grant])
             self.assertEqual(store.review_policy('pair'), 'owner-pair-v1')
             self.assertEqual(store.reserve_owner_pair_fixer('pair', 'grant-1', rejecting_execution_id='review-2',
                                                              review_base=self.base, review_head=self.base,
@@ -562,8 +567,6 @@ class EvidenceReassessmentRecoveryTests(ProjectTest):
 
     def test_new_actionable_findings_retain_exact_pair_grant_and_following_reviewer(self):
         self._start([self.gap])
-        with Authority(self.project) as owner:
-            owner.store.authorize_routine_review_continuation('evidence-real', owner.store.review_scope('evidence-real'))
         self.verdicts.extend([self.actionable, self.approved])
         self.assertEqual(self._resume()['status'], 'complete')
         with Authority(self.project) as owner:
@@ -683,8 +686,8 @@ class ChainHistoryTests(ProjectTest):
 
         contract = admit({'tasks': [{'id': 'original', 'description': 'PRIVATE-TASK-TEXT'}]})
         with Authority(project) as owner:
-            with patch('sys.stdin.isatty', return_value=False), \
-                    self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
+            with patch.object(owner.store, 'authorize_owner_pair', side_effect=Blocked('fixture interruption')), \
+                    self.assertRaisesRegex(Blocked, 'fixture interruption'):
                 Engine(owner, 'reviewed', contract, EXECUTOR, adapter=RejectedReview,
                        paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
         observed = status(project, 'reviewed')
@@ -755,8 +758,8 @@ class BoundedChainTests(ProjectTest):
                         calls.append(kwargs.get('read_only', False))
                         return verdict if kwargs.get('read_only') else 'worker answer'
                 with Authority(self.project) as owner:
-                    with patch('sys.stdin.isatty', return_value=False), \
-                            self.assertRaisesRegex(Blocked, 'owner authorization unavailable|remaining coverage gaps'):
+                    with patch.object(owner.store, 'authorize_owner_pair', side_effect=Blocked('fixture interruption')), \
+                            self.assertRaisesRegex(Blocked, 'fixture interruption|remaining coverage gaps'):
                         Engine(owner, name, admit({'tasks': [{'id': 'task', 'description': 'fixture'}]}),
                                EXECUTOR, adapter=Adapter).invoke()
                     chain = owner.store.review_chain(name)
@@ -985,7 +988,7 @@ class BoundedChainTests(ProjectTest):
         self.assertNotIn('saved_session', public['executions'][0]['references'])
         self.assertEqual(private['executions'][0]['references']['saved_session']['id'], 'review-context')
 
-    def test_final_rejection_stops_after_two_reviews_and_one_fixer(self):
+    def test_later_settled_rejection_status_shows_automatic_fixer(self):
         class Adapter:
             reviews = 0
             def __init__(self, *_args, **_kwargs): pass
@@ -996,13 +999,16 @@ class BoundedChainTests(ProjectTest):
                             else '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:2 - final [basis: correctness]"]}')
                 return 'synthetic worker'
         with Authority(self.project) as owner:
-            with patch('sys.stdin.isatty', return_value=False), \
-                    self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
+            with patch.object(owner.store, 'authorize_owner_pair', side_effect=Blocked('fixture interruption')), \
+                    self.assertRaisesRegex(Blocked, 'fixture interruption'):
                 Engine(owner, 'final-rejection', admit({'tasks': [{'id': 'dummy', 'description': 'synthetic'}]}),
                        EXECUTOR, adapter=Adapter, paid_scope={'agent_providers': ['fixture'], 'apis': []}).invoke()
             chain = owner.store.review_chain('final-rejection')
         self.assertEqual((chain['review_count'], chain['fixing_round_count']), (2, 1))
         self.assertEqual(chain['executions'][-1]['findings'], ['owned.txt:2 - final [basis: correctness]'])
+        observed = status(self.project, 'final-rejection')
+        self.assertEqual(observed['review_authorization']['next_stage'], 'automatic_fixer')
+        self.assertEqual(observed['run']['state'], 'failed')
 
     def test_unrecoverable_fixer_failure_never_launches_second_review(self):
         class Adapter:
@@ -1028,46 +1034,7 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual([(item['role'], item['state']) for item in chain['executions']],
                          [('reviewer', 'rejected'), ('fixer', 'failed')])
 
-    def test_new_policy_authorizes_one_later_pair_and_fresh_full_range_review(self):
-        calls, decisions = [], []
-        class Adapter:
-            reviews = 0
-            def __init__(self, *_args, **_kwargs): pass
-            def prompt(self, _prompt, **kwargs):
-                if kwargs.get('read_only'):
-                    Adapter.reviews += 1
-                    calls.append(('review', id(self)))
-                    if Adapter.reviews < 3:
-                        return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - defect [basis: correctness]"]}'
-                    return '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}'
-                calls.append(('fix-or-worker', id(self)))
-                return 'fixture'
-        def owner_question(question, **kwargs):
-            decisions.append((question, kwargs))
-            return 'yes'
-        contract = admit({'tasks': [{'id': 'task', 'description': 'fixture'}]})
-        with Authority(self.project) as owner:
-            result = Engine(owner, 'owner-pair-lifecycle', contract, EXECUTOR, adapter=Adapter,
-                            question=owner_question).invoke()
-            chain = owner.store.review_chain('owner-pair-lifecycle', private=True)
-            saved = owner.store.input('owner-pair-lifecycle')
-            grants = [json.loads(row['details']) for row in owner.store.db.execute(
-                "SELECT details FROM execution_history WHERE run_id='owner-pair-lifecycle' AND kind='review_pair_grant'")]
-        self.assertEqual(result['status'], 'complete')
-        self.assertEqual(saved['authority']['review_policy'], 'owner-pair-v1')
-        self.assertEqual([(item['role'], item['state']) for item in chain['executions']], [
-            ('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'rejected'),
-            ('fixer', 'approved'), ('reviewer', 'approved')])
-        self.assertEqual([item['review_ordinal'] for item in chain['executions'] if item['role'] == 'reviewer'], [1, 2, 3])
-        self.assertEqual([item['fixing_round'] for item in chain['executions'] if item['role'] == 'fixer'], [1, 2])
-        self.assertEqual(len(decisions), 1)
-        self.assertTrue(decisions[0][1]['owner_only'])
-        self.assertEqual(len(grants), 1)
-        self.assertEqual(grants[0]['rejecting_execution_id'], chain['executions'][2]['execution_id'])
-        self.assertTrue(all(item['references']['base'] == self.base for item in chain['executions'] if item['role'] == 'reviewer'))
-
-    def test_current_scoped_routine_authority_skips_later_pair_questions_but_keeps_each_pair_causal(self):
-        decisions, granted = [], [False]
+    def test_routine_default_skips_later_pair_questions_but_keeps_each_pair_causal(self):
         class Adapter:
             reviews = 0
             def __init__(self, *_args, **_kwargs): pass
@@ -1076,13 +1043,9 @@ class BoundedChainTests(ProjectTest):
                     Adapter.reviews += 1
                     return ('{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - correctness defect"]}'
                             if Adapter.reviews < 4 else '{"approved":true,"coverage":["fixture examined"],"coverage_gaps":[],"findings":[]}')
-                if not granted[0]:
-                    granted[0] = True
-                    owner.store.authorize_routine_review_continuation('routine-authority', owner.store.review_scope('routine-authority'))
                 return 'fixture'
         def question(*args, **kwargs):
-            decisions.append((args, kwargs))
-            return 'yes'
+            self.fail('unexpected owner question')
         contract = admit({'tasks': [{'id': 'task', 'description': 'fixture'}]})
         with Authority(self.project) as owner:
             result = Engine(owner, 'routine-authority', contract, EXECUTOR, adapter=Adapter, question=question).invoke()
@@ -1090,10 +1053,8 @@ class BoundedChainTests(ProjectTest):
             grants = [json.loads(row['details']) for row in owner.store.db.execute(
                 "SELECT details FROM execution_history WHERE run_id='routine-authority' AND kind='review_pair_grant' ORDER BY seq")]
             scope = owner.store.review_scope('routine-authority')
-            self.assertTrue(owner.store.routine_review_authority('routine-authority', scope))
-            self.assertIsNone(owner.store.routine_review_authority('routine-authority', 'wrong-scope'))
         self.assertEqual(result['status'], 'complete')
-        self.assertEqual(decisions, [])
+        self.assertEqual([grant['decision'] for grant in grants], ['routine_default'] * 2)
         self.assertEqual([(item['role'], item['state']) for item in chain['executions']], [
             ('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'rejected'),
             ('fixer', 'approved'), ('reviewer', 'rejected'), ('fixer', 'approved'), ('reviewer', 'approved')])
@@ -1116,14 +1077,13 @@ class BoundedChainTests(ProjectTest):
                 return 'scoped repair'
         with Authority(self.project) as owner:
             store = owner.store
-            with self.assertRaisesRegex(Blocked, 'did not authorize'):
+            with patch.object(store, 'authorize_owner_pair', side_effect=Blocked('fixture interruption')), self.assertRaisesRegex(Blocked, 'fixture interruption'):
                 Engine(owner, 'graph-refresh', contract, EXECUTOR, adapter=Adapter,
                        question=lambda *_a, **_k: 'no').invoke()
             rejection = store.review_chain('graph-refresh', private=True)['executions'][-1]['execution_id']
             scope = store.review_scope('graph-refresh')
             store.authorize_owner_pair('graph-refresh', 'stale', rejecting_execution_id=rejection, review_base=self.base,
                 review_head=self.base, original_scope=scope, fixer_execution_id='stale-fix', reviewer_execution_id='stale-review')
-            store.authorize_routine_review_continuation('graph-refresh', scope)
             self.project.joinpath('owned.txt').write_text('intervening change\n')
             git(self.project, 'add', '--', 'owned.txt')
             git(self.project, 'commit', '-qm', 'intervening correction')
@@ -1165,7 +1125,7 @@ class BoundedChainTests(ProjectTest):
             return 'no'
         with Authority(self.project) as owner:
             store = owner.store
-            with self.assertRaisesRegex(Blocked, 'did not authorize'):
+            with patch.object(store, 'authorize_owner_pair', side_effect=Blocked('fixture interruption')), self.assertRaisesRegex(Blocked, 'fixture interruption'):
                 Engine(owner, 'refresh', contract, EXECUTOR, adapter=Adapter, question=question, paid_scope=paid).invoke()
             chain = store.review_chain('refresh', private=True)['executions']
             rejection = chain[-1]['execution_id']
@@ -1175,7 +1135,6 @@ class BoundedChainTests(ProjectTest):
             store.authorize_owner_pair('refresh', 'stale', rejecting_execution_id=rejection, review_base=self.base,
                                        review_head=self.base, original_scope=scope,
                                        fixer_execution_id='stale-fix', reviewer_execution_id='stale-review')
-            store.authorize_routine_review_continuation('refresh', scope)
             self.project.joinpath('owned.txt').write_text('known intervening correction\n')
             git(self.project, 'add', '--', 'owned.txt')
             git(self.project, 'commit', '-m', 'known intervening correction')
@@ -1198,7 +1157,7 @@ class BoundedChainTests(ProjectTest):
                             paid_scope=paid, resume=True).invoke()
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(calls[before:], [('review', 3), ('fixer', None), ('review', 4)])
-        self.assertEqual(len(questions), 1)
+        self.assertEqual(questions, [])
 
 
 class ReviewBoundaryRegressionTests(ProjectTest):
@@ -1263,37 +1222,6 @@ class ReviewBoundaryRegressionTests(ProjectTest):
         finding = 'file.py:12 - dereferencing the missing record crashes requests'
         self.assertEqual(Engine._review_value(json.dumps({'approved': False, 'findings': [finding]})),
                          {'approved': False, 'findings': [finding], 'suggestions': []})
-
-    def test_owner_only_transport_never_retries_as_routine(self):
-        for mode in ('legacy', 'internal-error', 'no', '', 'cancel', 'ambiguous'):
-            run, calls, questions = 'owner-' + mode, [], []
-            class Adapter:
-                reviews = 0
-                def __init__(self, *_args, **_kwargs): pass
-                def prompt(self, _prompt, **kwargs):
-                    calls.append(kwargs.get('read_only', False))
-                    if kwargs.get('read_only'):
-                        return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - requests crash on missing record"]}'
-                    return 'fixture'
-            def question(text, **kwargs):
-                questions.append(kwargs)
-                if mode == 'internal-error':
-                    raise TypeError('owner capability failed internally')
-                return mode
-            if mode == 'legacy':
-                def question(text):
-                    questions.append({})
-                    return 'yes'  # A routine callback must never be invoked for consent.
-            with Authority(self.project) as owner:
-                with self.assertRaisesRegex(Blocked, 'owner authorization unavailable|did not authorize'):
-                    Engine(owner, run, admit([{'id': 'task', 'description': 'fixture'}]), EXECUTOR,
-                           adapter=Adapter, question=question).invoke()
-                self.assertEqual(owner.store.review_chain(run)['fixing_round_count'], 1)
-                self.assertEqual(owner.store.db.execute("SELECT count(*) FROM execution_history WHERE run_id=? AND kind='review_pair_grant'", (run,)).fetchone()[0], 0)
-            self.assertEqual(calls, [False, True, False, True])
-            self.assertEqual(len(questions), 0 if mode == 'legacy' else 1)
-            if questions:
-                self.assertTrue(questions[0]['owner_only'])
 
     def test_additional_round_reopen_boundaries_retain_exact_pair_and_effects(self):
         # Each subcase has its own run and chain; a simulated process death suppresses
@@ -1460,7 +1388,7 @@ class ReviewBoundaryRegressionTests(ProjectTest):
                     else:
                         result = engine.invoke()
                         self.assertEqual(result['status'], 'complete')
-                        self.assertEqual((Adapter.fixes, Adapter.reviews, len(questions)), (2, 3, 1))
+                        self.assertEqual((Adapter.fixes, Adapter.reviews, len(questions)), (2, 3, 0))
                         if boundary in ('commit', 'checkpoint_passed', 'fixer_complete', 'reviewer_reserved', 'review_complete'):
                             self.assertEqual(result['sha'], before)
                         chain = owner.store.review_chain('recovery')

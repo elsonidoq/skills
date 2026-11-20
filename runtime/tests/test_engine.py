@@ -501,13 +501,15 @@ print(json.dumps({'type': 'result', 'text': text, 'outcome': outcome}), flush=Tr
         class OfflineReview:
             def __init__(self, *args, **kwargs): pass
             def prompt(self, prompt, *, read_only=False, claim=None, command=None):
+                if 'Actionable findings:' in prompt:
+                    raise Blocked('fixture cannot repair defect')
                 if read_only:
                     return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - defect"]}'
                 claim('owned.txt')
                 (project/'owned.txt').write_text('changed\n')
                 return 'changed'
         with patch('sys.stdin.isatty', return_value=False), \
-                self.assertRaisesRegex(Blocked, 'owner authorization unavailable'):
+                self.assertRaisesRegex(Blocked, 'fixture cannot repair defect'):
             self.execute([{'id': 'fix', 'description': 'Fix'}], OfflineReview)
         self.assertNotEqual(git(project, 'rev-parse', 'HEAD').decode().strip(), self.base)
 
@@ -652,12 +654,12 @@ else:
             def __init__(self, *a, **k):
                 self.saved_session = {'id': 'append-review', 'file': '/private/append-review.jsonl'}
             def prompt(self, prompt, **kwargs):
-                if kwargs.get('read_only'): return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["review.txt:1 - original review failure"]}'
+                if kwargs.get('read_only'): return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":["original review failure"],"findings":[]}'
                 return 'worker'
         for run, task, adapter, reason in (
             ('append-worker', admit([{'id': 'worker', 'description': 'Worker'}]), WorkerFailure, 'original worker failure'),
             ('append-check', admit([{'id': 'check', 'description': 'Check', 'checks': ['exit 23']}]), ReviewFailure, 'exit 23'),
-            ('append-review', admit([{'id': 'review', 'description': 'Review'}]), ReviewFailure, 'owner authorization unavailable')):
+            ('append-review', admit([{'id': 'review', 'description': 'Review'}]), ReviewFailure, 'original review failure')):
             with self.subTest(run=run), Authority(project) as owner:
                 with patch('sys.stdin.isatty', return_value=False), self.assertRaisesRegex(Blocked, reason):
                     Engine(owner, run, task, EXECUTOR, adapter=adapter).invoke()

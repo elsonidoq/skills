@@ -631,7 +631,7 @@ def task_graph(engine, saver, *, review=False):
 
 
 def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, transfer=None,
-                          owner_authorized=False, scope=None):
+                          owner_authorized=False):
     """Apply an inspected action; external transfer stops before further dispatch.
 
     Explicit continuation actions resume the retained thread. A failed invocation
@@ -663,8 +663,6 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, tran
     completed = store.completed_checkpoints(run)
     snapshot = graph.get_state(config)
     state = snapshot.values
-    if action == 'authorize-routine-repairs':
-        return store.authorize_routine_review_continuation(run, scope)
     if action == 'refresh-review-target':
         if len(completed) != len(engine.contract['tasks']) or snapshot.interrupts or 'review_route' not in graph.nodes:
             raise Blocked('review target refresh needs completed tasks and an unpaused review graph; reconcile unfinished work first')
@@ -757,7 +755,7 @@ def answer_graph_question(graph, config, question, *, trace_observer=None):
                         config, durability='sync')
 
 
-def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_authorized=False, scope=None):
+def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_authorized=False):
     """Run with isolated local tracing and scoped suppression of hosted graph tracing."""
     from langsmith import tracing_context
     try:
@@ -775,7 +773,7 @@ def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_autho
         with tracing_context(enabled=False, parent=False):
             try:
                 result = _run_graph(engine, action=action, diagnosis=diagnosis, transfer=transfer,
-                                    owner_authorized=owner_authorized, scope=scope)
+                                    owner_authorized=owner_authorized)
             except BaseException as exc:
                 # The original exception remains authoritative, even if history,
                 # capture, publication or the status callback is unavailable.
@@ -798,7 +796,7 @@ def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_autho
         engine._local_tracing = None
 
 
-def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_authorized=False, scope=None):
+def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_authorized=False):
     """Run the public graph against its retained input and checkpoint."""
     store, project, run = engine.authority.store, engine.authority.project, engine.run
     if engine.resume:
@@ -838,7 +836,7 @@ def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_auth
                 graph.update_state(config, {'result': None, 'review_action': None, 'next_node': 'review_route'}, as_node='ready')
             if action:
                 result = graph_recovery_action(engine, graph, config, action, diagnosis=diagnosis,
-                                               transfer=transfer, owner_authorized=owner_authorized, scope=scope)
+                                               transfer=transfer, owner_authorized=owner_authorized)
             elif snapshot.interrupts:
                 def trace_pending(pending, status, **facts):
                     optional_record(record_worker_question, engine.authority.store, engine.run,
@@ -1031,25 +1029,11 @@ def _add_review_nodes(builder, engine, validate):
         if store.review_policy(run) == 'owner-pair-v1' and rejection['review_ordinal'] > 1:
             grant = store.owner_pair_for_rejection(run, rejecting_execution_id=rejection['execution_id'],
                                                     review_base=base(), review_head=head, original_scope=scope)
-            if grant is None and store.routine_review_authority(run, scope):
-                grant = store.authorize_owner_pair(run, uuid.uuid4().hex, rejecting_execution_id=rejection['execution_id'],
-                    review_base=base(), review_head=head, original_scope=scope, fixer_execution_id=fixer, reviewer_execution_id=uuid.uuid4().hex)
             if grant is None:
-                context = {'rejecting_execution': rejection['execution_id'], 'review_base': base(), 'review_head': head, 'scope': scope,
-                           'effect': 'Authorize exactly one scoped repair and one fresh cumulative repair review; no repeat grant.'}
-                try:
-                    answer = engine.question('Authorize exactly one scoped repair and fresh cumulative review for ' + canonical(context) + '? [yes/no]',
-                                             owner_only=True, decision_context=context)
-                except BaseException as exc:
-                    store.history(run, None, 'review_pair_decision', 'unavailable', context)
-                    raise Blocked('owner authorization unavailable; no repair/review pair dispatched: ' + str(exc)) from exc
-                if not isinstance(answer, str) or answer.strip().lower() not in ('yes', 'y'):
-                    store.history(run, None, 'review_pair_decision', 'denied', context)
-                    raise Blocked('owner did not authorize an additional repair/review pair; blockers retained')
                 grant = store.authorize_owner_pair(run, uuid.uuid4().hex, rejecting_execution_id=rejection['execution_id'],
                     review_base=base(), review_head=head, original_scope=scope, fixer_execution_id=fixer, reviewer_execution_id=uuid.uuid4().hex)
             if git(project, 'rev-parse', 'HEAD').decode().strip() != grant['review_head']:
-                raise Blocked('review target drifted after owner authorization; inspect and renew affected authority before dispatch')
+                raise Blocked('review target drifted after pair assignment; inspect the affected target before dispatch')
             fixer = store.reserve_owner_pair_fixer(run, grant['grant_id'], rejecting_execution_id=rejection['execution_id'],
                                                    review_base=base(), review_head=head, original_scope=scope)['fixer_execution_id']
             if any(item['execution_id'] == fixer for item in items):

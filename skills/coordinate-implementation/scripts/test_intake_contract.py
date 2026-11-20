@@ -23,7 +23,7 @@ GUARDS = {
                               'No extra evidence-only checkpoint', 'no empty commit'),
     'Review and Acceptance': ('fresh independent read/search-only reviewer context',
                               'the first actionable rejection gets the existing scoped repair/checkpoint',
-                              'Every later actionable rejection asks the actual owner unless the run has current explicit `authorize-routine-repairs` authority bound to its unchanged original scope',
+                              'Routine repairs within the assigned scope are approved by default at every round',
                               'Material scope, paid, security, data, external, uncertain, and target-drift cases remain blocked or owner-gated',
                               'Historical runs without policy retain the old two-review/one-fixer limit'),
     'Runner-configured worker role': ('Do NOT launch this CLI', 'stage/commit or manage workflow state',
