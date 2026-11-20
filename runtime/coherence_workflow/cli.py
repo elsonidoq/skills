@@ -100,10 +100,12 @@ def status(project, run, *, summary_only=False):
                 has_inputs = db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_run_inputs'").fetchone()
                 inputs = (db.execute('SELECT contract,review_base FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()
                           if has_inputs else None)
+                graph_backend = False
                 if inputs:
                     contract = json.loads(inputs['contract'])
                     authority = json.loads(db.execute('SELECT authority FROM execution_run_inputs WHERE run_id=?', (run,)).fetchone()['authority'])
                     policy = authority.get('review_policy') if isinstance(authority, dict) else None
+                    graph_backend = isinstance(authority, dict) and authority.get('backend') == 'langgraph-v1'
                     result['input'] = {'task_ids': [task['id'] for task in contract.get('tasks', [])],
                                        'review_base': inputs['review_base'],
                                        'review_policy': policy if policy is not None else 'historical-two-review-one-fixer'}
@@ -169,7 +171,7 @@ def status(project, run, *, summary_only=False):
                                                   if pair['rejecting_execution_id'] == last['execution_id']), None)
                                     next_stage = ('reserve_assigned_fixer' if grant and grant['state'] == 'authorized'
                                                   else 'assigned_fixer' if grant and grant['state'] == 'fixer_reserved'
-                                                  else 'automatic_fixer' if grant is None else 'blocked')
+                                                  else 'automatic_fixer' if grant is None and graph_backend else 'blocked')
                             elif last['role'] == 'fixer' and last['state'] == 'dispatched' and last['fixing_round'] > 1:
                                 calls = {}
                                 for event in db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND kind='fixer_invocation' ORDER BY seq", (run,)):

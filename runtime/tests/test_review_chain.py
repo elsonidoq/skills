@@ -988,7 +988,7 @@ class BoundedChainTests(ProjectTest):
         self.assertNotIn('saved_session', public['executions'][0]['references'])
         self.assertEqual(private['executions'][0]['references']['saved_session']['id'], 'review-context')
 
-    def test_later_settled_rejection_status_shows_automatic_fixer(self):
+    def test_later_settled_rejection_status_shows_automatic_fixer_only_for_graph(self):
         class Adapter:
             reviews = 0
             def __init__(self, *_args, **_kwargs): pass
@@ -1008,6 +1008,16 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual(chain['executions'][-1]['findings'], ['owned.txt:2 - final [basis: correctness]'])
         observed = status(self.project, 'final-rejection')
         self.assertEqual(observed['review_authorization']['next_stage'], 'automatic_fixer')
+        self.assertEqual(observed['run']['state'], 'failed')
+
+        # Model the same settled review chain from before graph cutover.
+        with Authority(self.project) as owner:
+            authority = owner.store.input('final-rejection')['authority']
+            self.assertEqual(authority.pop('backend'), 'langgraph-v1')
+            owner.store.db.execute('UPDATE execution_run_inputs SET authority=? WHERE run_id=?',
+                                   (json.dumps(authority), 'final-rejection'))
+        observed = status(self.project, 'final-rejection')
+        self.assertEqual(observed['review_authorization']['next_stage'], 'blocked')
         self.assertEqual(observed['run']['state'], 'failed')
 
     def test_unrecoverable_fixer_failure_never_launches_second_review(self):
