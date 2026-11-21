@@ -38,7 +38,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, Send, interrupt
 
 from .engine import (Engine, _COMPLETION_REPORTING, _DECISION_CONSTRAINTS,
-                     _IMPLEMENTATION_AUTHORITY, _ROUTINE_AUTHORITY, _safe_error)
+                     _IMPLEMENTATION_AUTHORITY, _ROUTINE_AUTHORITY, _dirty_input, _safe_error)
 from .sessions import select_session
 from types import SimpleNamespace
 from .git_effects import FocusedGit
@@ -160,16 +160,26 @@ def _head_matches(engine, expected):
     return False
 
 
-def _verify_target(engine, target):
+def _verify_target(engine, state, target=None):
+    target = target or state.get('verification_target')
     if target is None:
         return
     project = engine.authority.project
     if git(project, 'rev-parse', 'HEAD').decode().strip() != target:
         raise Blocked('verification target differs from HEAD; inspect the pinned repair revision before continuation')
-    # Private history and the runner's own metrics stream are not verifier inputs.
-    if git(project, 'status', '--porcelain=v1', '--untracked-files=all', '--', '.',
-           ':(exclude).coherence/workflow', ':(exclude)' + artifact_relative(engine.run)):
-        raise Blocked('verification target has uncommitted changes; preserve them and verify a clean repair revision')
+    saved = engine.authority.store.input(engine.run)
+    paths = set()
+    for base in (saved['review_base'], target + '^'):
+        changed = git(project, 'diff', '--no-renames', '--name-only', '-z', base, target)
+        paths.update(os.fsdecode(raw) for raw in changed.split(b'\0') if raw)
+    for task in engine.contract['tasks']:
+        for key in (('owned_paths', 'read_paths') if task['id'] == state['task_id'] else ('owned_paths',)):
+            values = task.get(key)
+            if isinstance(values, list):
+                paths.update(str(PurePosixPath(p)) for p in values if isinstance(p, str) and p)
+    name = _dirty_input(project, paths)
+    if name:
+        raise Blocked('verification input has uncommitted changes in ' + name + '; preserve and reconcile it before retrying')
 
 
 def task_graph(engine, saver, *, review=False):
@@ -433,7 +443,7 @@ def task_graph(engine, saver, *, review=False):
                      'question': result.question, 'effects': effects(task['id'])}
             store.history(run, task['id'], 'worker_invocation', 'returned', facts)
             return {'session': result.session, 'pending_question': result.question, 'next_node': 'wait'}
-        _verify_target(engine, state.get('verification_target'))
+        _verify_target(engine, state)
         paths, artifacts = focused.facts()['paths'], focused.facts()['artifacts']
         selected = paths + artifacts
         facts = {'invocation_id': invocation,
@@ -510,7 +520,7 @@ def task_graph(engine, saver, *, review=False):
                 'producer_invocation_id': state['chain'][-1], 'predecessor_correction_id': state.get('correction_id')})
             return {'correction_id': correction_id, 'prompt_kind': 'correction',
                     'invocation_id': uuid.uuid4().hex, 'next_node': 'worker'}
-        _verify_target(engine, state.get('verification_target'))
+        _verify_target(engine, state)
         if state.get('verification_target'):
             # Reopen reconciles a no-change intent against the exact referenced check rows.
             results = [{**attempt, **attribution} for attempt in results]
@@ -612,7 +622,7 @@ def task_graph(engine, saver, *, review=False):
                                              if phase not in ('ready', 'join') else None)
                         if monitoring else nullcontext())
             with store.thread_connection(), boundary:
-                _verify_target(engine, state.get('verification_target'))
+                _verify_target(engine, state)
                 return node(state, config)
         return call
 
@@ -661,7 +671,7 @@ def task_graph(engine, saver, *, review=False):
     return builder.compile(checkpointer=saver)
 
 
-def _validate_verification_retry(engine, state, status, failure, target_head, diagnosis):
+def _validate_verification_retry(engine, state, status, failure, target_head):
     project, store, run = engine.authority.project, engine.authority.store, engine.run
     task_id, value = state['task_id'], failure['effects']
     task = next(task for task in engine.contract['tasks'] if task['id'] == task_id)
@@ -673,11 +683,7 @@ def _validate_verification_retry(engine, state, status, failure, target_head, di
             or any(store.task_facts(run, task_id).values())
             or value != {'head': state['baseline'], 'paths': [], 'source_state': {}, 'index_state': {}}):
         raise Blocked('verification needs explicit empty owned_paths and no write effects; inspect the task and retained claims')
-    prefix = 'offline; no outstanding external effects; '
-    cause = diagnosis[len(prefix):].strip().lower()
-    if not diagnosis.lower().startswith(prefix) or cause in ('', 'unknown', 'retry', 'yes'):
-        raise Blocked('inspect the failed operation, then prefix its cause-specific diagnosis with "' + prefix + '"')
-    _verify_target(engine, target_head)
+    _verify_target(engine, state, target_head)
     parents = git(project, '--no-replace-objects', 'rev-list', '--parents', '-1', target_head).decode().split()
     if parents != [target_head, value['head']]:
         raise Blocked('verification target must be a direct single-parent repair; inspect the failed revision and HEAD')
@@ -720,7 +726,7 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, targ
     snapshot = graph.get_state(config)
     state = snapshot.values
     if set(snapshot.next).intersection({'worker', 'checks', 'checkpoint', 'ready'}):
-        _verify_target(engine, state.get('verification_target'))
+        _verify_target(engine, state)
     completed = store.completed_checkpoints(run)
     if action == 'refresh-review-target':
         if len(completed) != len(engine.contract['tasks']) or snapshot.interrupts or 'review_route' not in graph.nodes:
@@ -757,7 +763,7 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, targ
         raise Blocked('graph recovery failure lacks exact invocation/effect evidence; inspect retained call before continuation')
     value = failure['effects']
     if target_head is not None:
-        _validate_verification_retry(engine, state, rows[-1]['state'], failure, target_head, diagnosis)
+        _validate_verification_retry(engine, state, rows[-1]['state'], failure, target_head)
     elif (not _head_matches(engine, value['head']) or
             Engine._repair_source_state(project, value['paths']) != value['source_state'] or
             Engine._repair_index_state(project, value['paths']) != value['index_state']):
@@ -896,10 +902,12 @@ def _run_graph(engine, *, action=None, diagnosis=None, target_head=None, transfe
                                **({'delivery_scope': engine.delivery_scope} if engine.delivery_scope is not None else {})},
                     review_base=review_base)
     config = {'configurable': {'thread_id': run}, 'recursion_limit': max(100, len(engine.contract['tasks']) * 20 + 50)}
+    may_have_pin = target_head is not None
     try:
         with graph_saver(engine.authority) as saver:
             graph = task_graph(engine, saver, review=True)
             snapshot = graph.get_state(config)
+            may_have_pin = may_have_pin or bool(snapshot.values.get('verification_target'))
             if engine.resume and not snapshot.values and not snapshot.next:
                 raise Blocked('graph checkpoint is missing; inspect retained run and graph storage before continuation')
             if (engine.resume and not snapshot.next and (snapshot.values.get('result') or {}).get('status') == 'rejected'):
@@ -943,7 +951,14 @@ def _run_graph(engine, *, action=None, diagnosis=None, target_head=None, transfe
             retained = store.db.execute('SELECT state,result,error FROM execution_runs WHERE run_id=?', (run,)).fetchone()
             if retained is not None and tuple(retained) != (state, head, _safe_error(exc)):
                 store.finish(run, state, head, _safe_error(exc))
-            engine._finalize_metric_artifact()
+            # Do not advance a pinned application HEAD to commit optional telemetry on failure.
+            pinned = False
+            if may_have_pin and engine.metric_artifact is not None:
+                with graph_saver(engine.authority) as saver:
+                    pending = task_graph(engine, saver, review=True).get_state(config).values
+                pinned = pending.get('verification_target')
+            if not pinned:
+                engine._finalize_metric_artifact()
         except BaseException:
             # Failed failure-bookkeeping cannot mask the operation that failed.
             pass
@@ -1055,7 +1070,7 @@ def _add_review_nodes(builder, engine, validate):
         if predecessor is None:
             if items:
                 raise Blocked('review history changed before initial dispatch; inspect retained chain')
-            _verify_target(engine, state.get('verification_target'))
+            _verify_target(engine, state)
             ordinal, round_, reviewer_id = 1, 0, state['review_execution']
             inputs = engine._review_inputs(list(state['checkpoints'].values()))
         else:

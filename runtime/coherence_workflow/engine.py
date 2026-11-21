@@ -29,6 +29,20 @@ def _failure(exc):
     return 'transport' if isinstance(exc, Blocked) else 'unknown'
 
 
+def _dirty_input(project, targets):
+    """Find index, worktree, or untracked drift overlapping a literal input path."""
+    dirty = b''.join(git(project, *args) for args in (
+        ('diff', '--no-renames', '--name-only', '-z'),
+        ('diff', '--cached', '--no-renames', '--name-only', '-z'),
+        ('ls-files', '--others', '--exclude-standard', '-z')))
+    for raw in dirty.split(b'\0'):
+        name = os.fsdecode(raw)
+        if name and any(name == target or name.startswith(target + '/') or target.startswith(name + '/')
+                        for target in targets):
+            return name
+    return None
+
+
 def _safe_error(exc):
     """Use the existing public error carrier without projecting host-returned text."""
     import os
@@ -1308,16 +1322,10 @@ class Engine:
         def check_target():
             if git(project, 'rev-parse', 'HEAD').decode().strip() != head:
                 raise Blocked('review recovery target drifted; inspect the original reviewed head before continuation')
-            dirty = b''.join(git(project, *args) for args in (
-                ('diff', '--no-renames', '--name-only', '-z'),
-                ('diff', '--cached', '--no-renames', '--name-only', '-z'),
-                ('ls-files', '--others', '--exclude-standard', '-z')))
-            for raw in dirty.split(b'\0'):
-                name = os.fsdecode(raw)
-                if name and any(name == target or name.startswith(target + '/') or target.startswith(name + '/')
-                                for target in targets):
-                    raise Blocked('review recovery target has changes in ' + name +
-                                  '; preserve and reconcile the reviewed or task-owned path before continuation')
+            name = _dirty_input(project, targets)
+            if name:
+                raise Blocked('review recovery target has changes in ' + name +
+                              '; preserve and reconcile the reviewed or task-owned path before continuation')
         check_target()
         with question_scope(execution_id=item['execution_id'], purpose='review_recovery'):
             path = self.question('A read-only review has an uncertain failed outcome. If inspection found its exact completed '

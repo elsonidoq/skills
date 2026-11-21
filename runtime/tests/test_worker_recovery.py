@@ -10,8 +10,9 @@ from unittest.mock import patch
 from coherence_workflow import cli, engine
 
 from coherence_workflow.engine import Engine
-from coherence_workflow.graph import graph_recovery_action, graph_saver, task_graph
+from coherence_workflow.graph import graph_recovery_action, graph_saver, run_graph, task_graph
 from coherence_workflow.intake import admit
+from coherence_workflow.metric_artifacts import artifact_relative
 from coherence_workflow.pi_adapter import TaskOutcome
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
@@ -178,9 +179,9 @@ class GraphRecoveryTests(ProjectTest):
     def verification_retry(self, case):
         test, project, calls = self, self.project, []
         def head(): return git(project, 'rev-parse', 'HEAD').decode().strip()
-        diagnosis = 'Offline; no outstanding external effects; inspected the parser fixture repair; rerun all checks.'
+        diagnosis = 'The local parser check settled without external effects; rerun all offline checks on the repaired fixture.'
         check = [sys.executable, '-c', 'from pathlib import Path; assert Path("other.txt").read_text() == "fixed"; print("checked fixture")']
-        verifier = {'id': 'verify', 'description': 'offline verification', 'depends': ['producer'], 'checks': [check]}
+        verifier = {'id': 'verify', 'description': 'offline verification', 'depends': ['producer'], 'checks': [check], 'read_paths': ['fixtures/']}
         if case != 'undeclared':
             verifier['owned_paths'] = []
         contract = admit([{'id': 'producer', 'description': 'produce fixture', 'owned_paths': ['owned.txt']},
@@ -226,13 +227,19 @@ class GraphRecoveryTests(ProjectTest):
                     (run, 'verify', kind, state))]
             runner = Engine(owner, run, contract, EXECUTOR, adapter=Adapter, paid_scope={'apis': []},
                             question=lambda *_: self.fail('routine verification asked owner'))
-            with self.assertRaisesRegex(Blocked, 'explicitly failed'):
+            # Model an old attempt without an optional metrics file. On retry the
+            # real capture/finalizer can create a committable JSONL for the first time.
+            metrics = case == 'metrics interruption'
+            with (patch.object(runner, '_append_metric') if metrics else contextlib.nullcontext()), \
+                 self.assertRaisesRegex(Blocked, 'explicitly failed'):
                 runner.invoke()
             failed_head = head()
             before = owner.store.completed_checkpoints(run)
             failures = events('worker_invocation', 'failed')
             self.write('other.txt', 'broken' if case == 'check failure' else 'fixed')
-            git(project, 'commit', '-qm', 'external fixture repair', '--', 'other.txt')
+            if metrics:
+                self.write('.gitignore', '.coherence/workflow/\n')
+            git(project, 'commit', '-qam', 'external fixture repair')
             target = head()
             runner = Engine(owner, run, contract, EXECUTOR, adapter=Adapter, paid_scope={'apis': []}, resume=True)
             with graph_saver(owner) as saver:
@@ -245,13 +252,20 @@ class GraphRecoveryTests(ProjectTest):
                     self.assertEqual(calls, ['producer', 'verify'])
                     return
                 with self.assertRaisesRegex(Blocked, 'differs from HEAD'): retry(failed_head)
-                with self.assertRaisesRegex(Blocked, 'no outstanding external effects'): retry(target, DIAGNOSIS)
                 if case == 'pass':
                     self.write('other.txt', 'next repair')
                     with self.assertRaisesRegex(Blocked, 'uncommitted changes'): retry(target)
                     git(project, 'commit', '-qm', 'later fixture revision', '--', 'other.txt')
                     with self.assertRaisesRegex(Blocked, 'direct single-parent'): retry(head())
                     git(project, 'switch', '--detach', target)
+                    (project/'fixtures').mkdir()
+                    self.write('fixtures/new', 'new check input')
+                    with self.assertRaisesRegex(Blocked, 'fixtures/new'): retry(target)
+                    (project/'fixtures/new').unlink()
+                    self.write('STATE.md', 'unrelated staged')
+                    git(project, 'add', '--', 'STATE.md')
+                    (project/'STATE.md').unlink()
+                    self.write('notes.tmp', 'unrelated untracked')
                 if case == 'check failure':
                     with self.assertRaisesRegex(Blocked, 'required verification failed'): retry(target)
                     self.assertEqual(calls, ['producer', 'verify', 'verify'])
@@ -264,13 +278,20 @@ class GraphRecoveryTests(ProjectTest):
                         return record(*args, **kwargs)
                     with patch.object(owner.store, 'history', side_effect=lose_checkpoint), self.assertRaises(KeyboardInterrupt):
                         retry(target)
-                if case == 'drift':
+                if metrics or case == 'drift':
                     record = owner.store.history
                     def interrupt(*args, **kwargs):
                         record(*args, **kwargs)
                         if args[2:4] == ('worker_invocation', 'returned'): raise KeyboardInterrupt()
                     with patch.object(owner.store, 'history', side_effect=interrupt), self.assertRaises(KeyboardInterrupt):
-                        retry(target)
+                        run_graph(runner, action='fresh', diagnosis=diagnosis, target_head=target)
+                    if metrics:
+                        self.assertEqual(head(), target)
+                        metric = artifact_relative(run)
+                        self.assertEqual(git(project, 'status', '--porcelain', '--', metric).decode().strip(), '?? ' + metric)
+                        row = json.loads((project/metric).read_text())
+                        self.assertEqual(row['invocation_id'], events('worker_invocation', 'returned')[-1]['invocation_id'])
+                if case == 'drift':
                     self.write('other.txt', 'unexpected')
                     git(project, 'commit', '-qm', 'later change', '--', 'other.txt')
                     with self.assertRaisesRegex(Blocked, 'differs from HEAD'):
@@ -281,11 +302,15 @@ class GraphRecoveryTests(ProjectTest):
         # Public source CLI reopens the stopped thread with its original inputs.
         out = io.StringIO()
         with patch.object(cli, 'PiAdapter', Adapter), contextlib.redirect_stdout(out):
-            args = [] if case == 'checkpoint interruption' else [
+            args = [] if metrics or case == 'checkpoint interruption' else [
                 '--recovery-action', 'fresh', '--target-head', target, '--diagnosis', diagnosis]
             self.assertEqual(cli.main(['resume', '--project', str(project), '--run', run, *args]), 0, out.getvalue())
         self.assertEqual(calls, ['producer', 'verify', 'verify', 'after', 'review'])
         self.assertEqual(head(), target)
+        if case == 'pass':
+            self.assertEqual(git(project, 'show', ':STATE.md'), b'unrelated staged')
+            self.assertFalse((project/'STATE.md').exists())
+            self.assertEqual((project/'notes.tmp').read_text(), 'unrelated untracked')
         with Authority(project) as owner:
             after = owner.store.completed_checkpoints(run)
             self.assertEqual(before, {'producer': after['producer']})
@@ -303,6 +328,7 @@ class GraphRecoveryTests(ProjectTest):
             self.assertEqual((reference['failed_head'], reference['target_head']), (failed_head, target))
 
     def test_fresh_verification_at_repair_commit(self): self.verification_retry('pass')
+    def test_pinned_interruption_leaves_real_metrics_uncommitted_on_reopen(self): self.verification_retry('metrics interruption')
     def test_target_verification_needs_empty_ownership(self): self.verification_retry('undeclared')
     def test_pinned_no_change_intent_reopens_without_replay(self): self.verification_retry('checkpoint interruption')
     def test_failed_target_check_blocks_dependent(self): self.verification_retry('check failure')

@@ -657,18 +657,21 @@ current HEAD with the failed revision as its only parent, select it by full SHA:
 ```sh
 scripts/coordinate-implementation resume --project /absolute/project --run RETAINED_RUN \
   --recovery-action fresh --target-head "$INSPECTED_FULL_SHA" \
-  --diagnosis 'Offline; no outstanding external effects; inspected the fixture correction; rerun the full original verification.'
+  --diagnosis 'The failed local check settled without external effects. The inspected repair corrects its fixture; rerun the full offline verification.'
 ```
 
-Use that diagnosis prefix only after establishing both facts; empty ownership alone proves
-neither. Give the actual cause and correction after it. This is not a transfer, an owner
-receipt or a grant for paid, security, data or external actions. Preserve dirty work; do not
-adopt it as part of the target. The new attempt uses the original executor, manual gates and
-required checks. Ordinary offline commands need no repeat approval; no project edit is
+Explain the inspected cause and correction, why the attempt was offline, and why no external
+effects remain. No particular wording proves those facts. This is not a transfer, an owner
+receipt or a grant for paid, security, data or external actions. Git drift on delivery, repair,
+owned or declared verifier read paths blocks this attempt. Preserve unrelated dirty work.
+Inspect any other actual check inputs yourself; the runner does not trace dependencies.
+The new attempt uses the original executor, manual gates and required checks. Ordinary offline commands need no repeat approval; no project edit is
 authorized. Only a new result and passing checks can release dependents. The verifier's
 no-change checkpoint does not claim the repair commit. Final review keeps the original range.
 If interrupted after pinning, inspect the attempt and use plain `resume` to reconcile it;
-do not select another target to replay a returned call. Uncertain calls and target drift stop.
+do not select another target to replay a returned call. Failure finalization leaves optional
+metrics uncommitted while verification is pinned, so telemetry cannot move its target. On
+reopen those bytes are not adopted. Uncertain calls and target drift stop.
 
 If implementation escalation fails—including an unsuccessful worker return, required check or
 checkpoint failure—stop and notify the owner with the diagnosis, preserved work and unmet checks.
