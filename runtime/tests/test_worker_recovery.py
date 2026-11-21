@@ -179,9 +179,13 @@ class GraphRecoveryTests(ProjectTest):
     def verification_retry(self, case):
         test, project, calls = self, self.project, []
         def head(): return git(project, 'rev-parse', 'HEAD').decode().strip()
+        self.write('runbook.txt', 'offline')
+        git(project, 'add', '--', 'runbook.txt')
+        git(project, 'commit', '-qm', 'baseline verifier input', '--', 'runbook.txt')
+        self.base = head()
         diagnosis = 'The local parser check settled without external effects; rerun all offline checks on the repaired fixture.'
-        check = [sys.executable, '-c', 'from pathlib import Path; assert Path("other.txt").read_text() == "fixed"; print("checked fixture")']
-        verifier = {'id': 'verify', 'description': 'offline verification', 'depends': ['producer'], 'checks': [check], 'read_paths': ['fixtures/']}
+        check = [sys.executable, '-c', 'from pathlib import Path; assert Path("runbook.txt").read_text() == "offline"; assert Path("other.txt").read_text() == "fixed"; print("checked fixture")']
+        verifier = {'id': 'verify', 'description': 'offline verification', 'depends': ['producer'], 'checks': [check], 'paths': ['fixtures/', 'runbook.txt']}
         if case != 'undeclared':
             verifier['owned_paths'] = []
         contract = admit([{'id': 'producer', 'description': 'produce fixture', 'owned_paths': ['owned.txt']},
@@ -208,6 +212,8 @@ class GraphRecoveryTests(ProjectTest):
                 if len(calls) == 2:
                     return TaskOutcome('failed', 'old fixture failed offline verification')
                 test.assertIsNone(kwargs.get('saved_session'))
+                if case == 'second repair' and len(calls) == 3:
+                    return TaskOutcome('failed', 'fixture is still broken')
                 test.assertIn('security/data restriction, or external-operation restriction', prompt)
                 test.assertIn('explicit manual gates', prompt)
                 test.assertIn('This authority is not proof that checks succeeded', prompt)
@@ -236,7 +242,7 @@ class GraphRecoveryTests(ProjectTest):
             failed_head = head()
             before = owner.store.completed_checkpoints(run)
             failures = events('worker_invocation', 'failed')
-            self.write('other.txt', 'broken' if case == 'check failure' else 'fixed')
+            self.write('other.txt', 'broken' if case in ('check failure', 'second repair') else 'fixed')
             if metrics:
                 self.write('.gitignore', '.coherence/workflow/\n')
             git(project, 'commit', '-qam', 'external fixture repair')
@@ -252,7 +258,27 @@ class GraphRecoveryTests(ProjectTest):
                     self.assertEqual(calls, ['producer', 'verify'])
                     return
                 with self.assertRaisesRegex(Blocked, 'differs from HEAD'): retry(failed_head)
+                if case == 'second repair':
+                    with self.assertRaisesRegex(Blocked, 'explicitly failed'): retry(target)
+                    first_target = target
+                    self.write('other.txt', 'fixed')
+                    git(project, 'commit', '-qm', 'second fixture repair', '--', 'other.txt')
+                    target = head()
+                    with self.assertRaisesRegex(Blocked, 'differs from HEAD'):
+                        graph.invoke(None, config, durability='sync')
+                    result = retry(target, 'The first local retry settled without external effects but its fixture was still broken; verify the corrected data.')
+                    self.assertEqual(calls, ['producer', 'verify', 'verify', 'verify', 'after', 'review'])
+                    self.assertEqual(result['checkpoints']['verify']['sha'], target)
+                    refs = [row['reference'] for row in events('graph_recovery', 'recorded')]
+                    self.assertEqual([(r['failed_head'], r['target_head']) for r in refs],
+                                     [(failed_head, first_target), (first_target, target)])
+                    self.assertEqual([r['invocation_id'] for r in refs],
+                                     [row['invocation_id'] for row in events('worker_invocation', 'failed')])
+                    return
                 if case == 'pass':
+                    self.write('runbook.txt', 'uncommitted instructions')
+                    with self.assertRaisesRegex(Blocked, 'runbook.txt'): retry(target)
+                    self.write('runbook.txt', 'offline')
                     self.write('other.txt', 'next repair')
                     with self.assertRaisesRegex(Blocked, 'uncommitted changes'): retry(target)
                     git(project, 'commit', '-qm', 'later fixture revision', '--', 'other.txt')
@@ -327,6 +353,7 @@ class GraphRecoveryTests(ProjectTest):
             reference = events('graph_recovery', 'recorded')[0]['reference']
             self.assertEqual((reference['failed_head'], reference['target_head']), (failed_head, target))
 
+    def test_explicit_second_repair_after_pinned_worker_fails(self): self.verification_retry('second repair')
     def test_fresh_verification_at_repair_commit(self): self.verification_retry('pass')
     def test_pinned_interruption_leaves_real_metrics_uncommitted_on_reopen(self): self.verification_retry('metrics interruption')
     def test_target_verification_needs_empty_ownership(self): self.verification_retry('undeclared')

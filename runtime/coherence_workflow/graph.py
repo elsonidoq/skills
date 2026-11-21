@@ -173,7 +173,7 @@ def _verify_target(engine, state, target=None):
         changed = git(project, 'diff', '--no-renames', '--name-only', '-z', base, target)
         paths.update(os.fsdecode(raw) for raw in changed.split(b'\0') if raw)
     for task in engine.contract['tasks']:
-        for key in (('owned_paths', 'read_paths') if task['id'] == state['task_id'] else ('owned_paths',)):
+        for key in (('owned_paths', 'paths') if task['id'] == state['task_id'] else ('owned_paths',)):
             values = task.get(key)
             if isinstance(values, list):
                 paths.update(str(PurePosixPath(p)) for p in values if isinstance(p, str) and p)
@@ -725,7 +725,8 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, targ
     _check_unfinished_escalation(store, run)
     snapshot = graph.get_state(config)
     state = snapshot.values
-    if set(snapshot.next).intersection({'worker', 'checks', 'checkpoint', 'ready'}):
+    selecting_target = target_head is not None and tuple(snapshot.next) == ('worker',)
+    if not selecting_target and set(snapshot.next).intersection({'worker', 'checks', 'checkpoint', 'ready'}):
         _verify_target(engine, state)
     completed = store.completed_checkpoints(run)
     if action == 'refresh-review-target':
