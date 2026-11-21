@@ -59,6 +59,7 @@ def _merge_results(left, right):
 class TaskState(TypedDict, total=False):
     task_id: str
     baseline: str
+    verification_target: str | None
     invocation_id: str
     chain: list
     prompt_kind: str
@@ -159,6 +160,18 @@ def _head_matches(engine, expected):
     return False
 
 
+def _verify_target(engine, target):
+    if target is None:
+        return
+    project = engine.authority.project
+    if git(project, 'rev-parse', 'HEAD').decode().strip() != target:
+        raise Blocked('verification target differs from HEAD; inspect the pinned repair revision before continuation')
+    # Private history and the runner's own metrics stream are not verifier inputs.
+    if git(project, 'status', '--porcelain=v1', '--untracked-files=all', '--', '.',
+           ':(exclude).coherence/workflow', ':(exclude)' + artifact_relative(engine.run)):
+        raise Blocked('verification target has uncommitted changes; preserve them and verify a clean repair revision')
+
+
 def task_graph(engine, saver, *, review=False):
     """Compile the task boundary with optional directed waves and independent review.
 
@@ -245,7 +258,7 @@ def task_graph(engine, saver, *, review=False):
             manual_gates(task, engine.question)
         return {'task_id': task['id'], 'baseline': baseline, 'invocation_id': uuid.uuid4().hex,
                 'chain': [], 'prompt_kind': 'initial', 'correction_id': '',
-                'session': None, 'recovery': None, 'checkpoints': complete, 'next_node': 'worker',
+                'session': None, 'recovery': None, 'verification_target': None, 'checkpoints': complete, 'next_node': 'worker',
                 'in_wave': in_wave, 'wave_error': None}
 
     def worker(state, config: RunnableConfig):
@@ -331,6 +344,10 @@ def task_graph(engine, saver, *, review=False):
                     + 'Pending question, actual answer and settled effects: ' + canonical({'invocation_id': state['question_invocation'],
                         'question': state['pending_question'], 'answer': state['answer'], 'effects': settled[0]['effects']})
                     + '\n' + _DECISION_CONSTRAINTS + engine.paid_authority() + '\nTask: ' + canonical(task))
+        if state.get('verification_target'):
+            body += ('\nRerun the original offline verification at ' + state['verification_target'] +
+                     '. Run ordinary offline checks only; do not edit project files or perform external actions. '
+                     'Return fresh results; the prior proof does not establish acceptance.')
         prompt = (_IMPLEMENTATION_AUTHORITY + _ROUTINE_AUTHORITY + _COMPLETION_REPORTING + '\n'
                   + engine._delivery_issue_context() + body)
         def claim(name):
@@ -416,6 +433,7 @@ def task_graph(engine, saver, *, review=False):
                      'question': result.question, 'effects': effects(task['id'])}
             store.history(run, task['id'], 'worker_invocation', 'returned', facts)
             return {'session': result.session, 'pending_question': result.question, 'next_node': 'wait'}
+        _verify_target(engine, state.get('verification_target'))
         paths, artifacts = focused.facts()['paths'], focused.facts()['artifacts']
         selected = paths + artifacts
         facts = {'invocation_id': invocation,
@@ -464,10 +482,12 @@ def task_graph(engine, saver, *, review=False):
                 Engine._repair_index_state(project, selected) != facts['index_state']):
             raise Blocked('worker effects changed before checks; inspect Git and selected bytes before continuation')
         refs = []
+        attribution = {'producer_invocation_id': state['chain'][-1], 'correction_id': state.get('correction_id')}
+        if state.get('verification_target'):
+            attribution['target_head'] = state['verification_target']
         def retain(status, attempt):
             store.history(run, task['id'], 'check', status,
-                          {**attempt, 'producer_invocation_id': state['chain'][-1],
-                           'correction_id': state.get('correction_id')})
+                          {**attempt, **attribution})
             if status == 'passed':
                 refs.append(store.db.execute(
                     "SELECT seq FROM execution_history WHERE run_id=? AND task_id=? AND kind='check' AND state='passed' ORDER BY seq DESC LIMIT 1",
@@ -475,6 +495,8 @@ def task_graph(engine, saver, *, review=False):
         try:
             results = run_checks(project, task, lock_fd=engine.authority.lock.fileno(), completed=retain)
         except CheckFailure as exc:
+            if state.get('verification_target'):
+                raise Blocked('required verification failed at the pinned revision; inspect check history: ' + str(exc)) from exc
             if state.get('recovery') and state['recovery']['action'] == 'escalate':
                 store.history(run, task['id'], 'implementation_escalation', 'failed', {'error': canonical(exc.attempt)})
                 raise Blocked('implementation escalation required check failed; stop and notify the owner; owner direction required: ' + canonical(exc.attempt)) from exc
@@ -488,6 +510,10 @@ def task_graph(engine, saver, *, review=False):
                 'producer_invocation_id': state['chain'][-1], 'predecessor_correction_id': state.get('correction_id')})
             return {'correction_id': correction_id, 'prompt_kind': 'correction',
                     'invocation_id': uuid.uuid4().hex, 'next_node': 'worker'}
+        _verify_target(engine, state.get('verification_target'))
+        if state.get('verification_target'):
+            # Reopen reconciles a no-change intent against the exact referenced check rows.
+            results = [{**attempt, **attribution} for attempt in results]
         check_id = uuid.uuid4().hex
         record(task['id'], 'graph_checks', check_id, {'checks': results, 'check_refs': refs,
                 'producer_invocation_id': state['chain'][-1], 'effects': effects(task['id'])})
@@ -509,6 +535,8 @@ def task_graph(engine, saver, *, review=False):
         focused = focused_for(state)
         occurrence = uuid.uuid4().hex
         def intent(value):
+            if state.get('verification_target') and value['parent'] != state['verification_target']:
+                raise Blocked('verification checkpoint differs from pinned revision; inspect HEAD before continuation')
             store.history(run, task['id'], 'checkpoint', 'started', {**value, 'check_refs': checked['check_refs'],
                 'checks': checked['checks'], 'task_id': task['id'], 'checkpoint_occurrence_id': occurrence,
                 'producer_invocation_id': state['chain'][-1], 'correction_chain': state['chain'], 'summary': summary})
@@ -524,6 +552,8 @@ def task_graph(engine, saver, *, review=False):
             store.history(run, task['id'], 'checkpoint', status,
                           {'error': str(exc), 'no_effect': result is None and not uncertain})
             if result is None:
+                if state.get('verification_target'):
+                    raise
                 if state.get('recovery') and state['recovery']['action'] == 'escalate':
                     store.history(run, task['id'], 'implementation_escalation', 'failed', {'error': str(exc)})
                     raise Blocked('implementation escalation failed; stop and notify the owner; owner direction required: ' + str(exc)) from exc
@@ -582,6 +612,7 @@ def task_graph(engine, saver, *, review=False):
                                              if phase not in ('ready', 'join') else None)
                         if monitoring else nullcontext())
             with store.thread_connection(), boundary:
+                _verify_target(engine, state.get('verification_target'))
                 return node(state, config)
         return call
 
@@ -630,7 +661,31 @@ def task_graph(engine, saver, *, review=False):
     return builder.compile(checkpointer=saver)
 
 
-def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, transfer=None,
+def _validate_verification_retry(engine, state, status, failure, target_head, diagnosis):
+    project, store, run = engine.authority.project, engine.authority.store, engine.run
+    task_id, value = state['task_id'], failure['effects']
+    task = next(task for task in engine.contract['tasks'] if task['id'] == task_id)
+    # Use the retained _UnsuccessfulOutcome, not optional submission capture or an SDK error.
+    if (status != 'failed' or failure.get('error') != 'worker explicitly failed; partial work retained'
+            or not failure.get('session')):
+        raise Blocked('verification needs an explicitly returned failed outcome; inspect the settled worker call')
+    if (task.get('owned_paths') != [] or task.get('generated_outputs') or task.get('handoff_paths')
+            or any(store.task_facts(run, task_id).values())
+            or value != {'head': state['baseline'], 'paths': [], 'source_state': {}, 'index_state': {}}):
+        raise Blocked('verification needs explicit empty owned_paths and no write effects; inspect the task and retained claims')
+    prefix = 'offline; no outstanding external effects; '
+    cause = diagnosis[len(prefix):].strip().lower()
+    if not diagnosis.lower().startswith(prefix) or cause in ('', 'unknown', 'retry', 'yes'):
+        raise Blocked('inspect the failed operation, then prefix its cause-specific diagnosis with "' + prefix + '"')
+    _verify_target(engine, target_head)
+    parents = git(project, '--no-replace-objects', 'rev-list', '--parents', '-1', target_head).decode().split()
+    if parents != [target_head, value['head']]:
+        raise Blocked('verification target must be a direct single-parent repair; inspect the failed revision and HEAD')
+    with question_scope(task_id=task_id, purpose='manual_gate'):
+        manual_gates(task, engine.question)
+
+
+def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, target_head=None, transfer=None,
                           owner_authorized=False):
     """Apply an inspected action; external transfer stops before further dispatch.
 
@@ -649,6 +704,8 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, tran
     if retained_paid is not None and retained_paid != engine.paid_scope:
         raise Blocked('graph recovery paid scope differs from retained run; restore original scope')
     inspect_recorded_writers(store.db, 'graph recovery')
+    if target_head is not None and action != 'fresh':
+        raise Blocked('--target-head requires fresh verification; inspect the failed offline invocation')
     if action == 'external':
         snapshot = graph.get_state(config)
         if (not isinstance(transfer, dict) or snapshot.values.get('task_id') != transfer.get('task_id')
@@ -660,9 +717,11 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, tran
         return checkpoint
     _check_escalation_stop(store, run)
     _check_unfinished_escalation(store, run)
-    completed = store.completed_checkpoints(run)
     snapshot = graph.get_state(config)
     state = snapshot.values
+    if set(snapshot.next).intersection({'worker', 'checks', 'checkpoint', 'ready'}):
+        _verify_target(engine, state.get('verification_target'))
+    completed = store.completed_checkpoints(run)
     if action == 'refresh-review-target':
         if len(completed) != len(engine.contract['tasks']) or snapshot.interrupts or 'review_route' not in graph.nodes:
             raise Blocked('review target refresh needs completed tasks and an unpaused review graph; reconcile unfinished work first')
@@ -675,6 +734,8 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, tran
         raise Blocked('graph recovery needs a substantive inspected diagnosis and targeted correction')
     task_id = state.get('task_id')
     if task_id in completed:
+        if target_head is not None:
+            raise Blocked('verification task already checkpointed; inspect its result instead of retrying')
         graph.update_state(config, {'next_node': 'ready', 'recovery': None}, as_node='checkpoint')
         return graph.invoke(None, config, durability='sync')
     if snapshot.interrupts or tuple(snapshot.next) != ('worker',):
@@ -682,6 +743,8 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, tran
     rows = list(store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker_invocation' ORDER BY seq", (run, task_id)))
     if rows and rows[-1]['state'] == 'returned':
         returned = json.loads(rows[-1]['details'])
+        if target_head is not None:
+            raise Blocked('verification needs a failed invocation; reconcile the returned call with plain resume')
         if returned.get('invocation_id') == state.get('invocation_id'):
             return graph.invoke(None, config, durability='sync')
     if not rows or rows[-1]['state'] not in ('failed', 'interrupted'):
@@ -693,7 +756,9 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, tran
     if predecessor != state.get('invocation_id') or not isinstance(failure.get('effects'), dict):
         raise Blocked('graph recovery failure lacks exact invocation/effect evidence; inspect retained call before continuation')
     value = failure['effects']
-    if (not _head_matches(engine, value['head']) or
+    if target_head is not None:
+        _validate_verification_retry(engine, state, rows[-1]['state'], failure, target_head, diagnosis)
+    elif (not _head_matches(engine, value['head']) or
             Engine._repair_source_state(project, value['paths']) != value['source_state'] or
             Engine._repair_index_state(project, value['paths']) != value['index_state']):
         raise Blocked('failed worker effects drifted; inspect selected Git and source state before continuation')
@@ -708,11 +773,16 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, tran
     recovery = {'id': identity, 'action': action, 'diagnosis': diagnosis, 'predecessor': predecessor}
     reference = {'invocation_id': predecessor, 'error': failure.get('error'),
                  'saved_session_id': (failure.get('session') or {}).get('id'), 'targeted_correction': diagnosis}
+    update = {}
+    if target_head is not None:
+        reference.update(failed_head=value['head'], target_head=target_head)
+        value = {**value, 'head': target_head}
+        update = {'baseline': target_head, 'verification_target': target_head}
     store.history(run, task_id, 'graph_recovery', 'recorded', {'id': identity, 'action': action, 'effects': value, 'reference': reference})
     chain = list(state.get('chain') or [])
     if predecessor not in chain:
         chain.append(predecessor)
-    graph.update_state(config, {'prompt_kind': 'recovery', 'recovery': recovery, 'chain': chain, 'wave_error': None,
+    graph.update_state(config, {**update, 'prompt_kind': 'recovery', 'recovery': recovery, 'chain': chain, 'wave_error': None,
                                'invocation_id': uuid.uuid4().hex,
                                'session': failure.get('session') if action == 'continue' else None,
                                'next_node': 'worker'}, as_node='ready')
@@ -755,7 +825,7 @@ def answer_graph_question(graph, config, question, *, trace_observer=None):
                         config, durability='sync')
 
 
-def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_authorized=False):
+def run_graph(engine, *, action=None, diagnosis=None, target_head=None, transfer=None, owner_authorized=False):
     """Run with isolated local tracing and scoped suppression of hosted graph tracing."""
     from langsmith import tracing_context
     try:
@@ -772,7 +842,7 @@ def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_autho
     try:
         with tracing_context(enabled=False, parent=False):
             try:
-                result = _run_graph(engine, action=action, diagnosis=diagnosis, transfer=transfer,
+                result = _run_graph(engine, action=action, diagnosis=diagnosis, target_head=target_head, transfer=transfer,
                                     owner_authorized=owner_authorized)
             except BaseException as exc:
                 # The original exception remains authoritative, even if history,
@@ -796,7 +866,7 @@ def run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_autho
         engine._local_tracing = None
 
 
-def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_authorized=False):
+def _run_graph(engine, *, action=None, diagnosis=None, target_head=None, transfer=None, owner_authorized=False):
     """Run the public graph against its retained input and checkpoint."""
     store, project, run = engine.authority.store, engine.authority.project, engine.run
     if engine.resume:
@@ -835,7 +905,7 @@ def _run_graph(engine, *, action=None, diagnosis=None, transfer=None, owner_auth
             if (engine.resume and not snapshot.next and (snapshot.values.get('result') or {}).get('status') == 'rejected'):
                 graph.update_state(config, {'result': None, 'review_action': None, 'next_node': 'review_route'}, as_node='ready')
             if action:
-                result = graph_recovery_action(engine, graph, config, action, diagnosis=diagnosis,
+                result = graph_recovery_action(engine, graph, config, action, diagnosis=diagnosis, target_head=target_head,
                                                transfer=transfer, owner_authorized=owner_authorized)
             elif snapshot.interrupts:
                 def trace_pending(pending, status, **facts):
@@ -985,6 +1055,7 @@ def _add_review_nodes(builder, engine, validate):
         if predecessor is None:
             if items:
                 raise Blocked('review history changed before initial dispatch; inspect retained chain')
+            _verify_target(engine, state.get('verification_target'))
             ordinal, round_, reviewer_id = 1, 0, state['review_execution']
             inputs = engine._review_inputs(list(state['checkpoints'].values()))
         else:

@@ -175,6 +175,139 @@ class GraphRecoveryTests(ProjectTest):
                     graph_recovery_action(engine, graph, config, 'fresh', diagnosis=DIAGNOSIS)
         self.assertEqual(calls, ['worker'])
 
+    def verification_retry(self, case):
+        test, project, calls = self, self.project, []
+        def head(): return git(project, 'rev-parse', 'HEAD').decode().strip()
+        diagnosis = 'Offline; no outstanding external effects; inspected the parser fixture repair; rerun all checks.'
+        check = [sys.executable, '-c', 'from pathlib import Path; assert Path("other.txt").read_text() == "fixed"; print("checked fixture")']
+        verifier = {'id': 'verify', 'description': 'offline verification', 'depends': ['producer'], 'checks': [check]}
+        if case != 'undeclared':
+            verifier['owned_paths'] = []
+        contract = admit([{'id': 'producer', 'description': 'produce fixture', 'owned_paths': ['owned.txt']},
+                          verifier, {'id': 'after', 'description': 'dependent', 'depends': ['verify']}])
+
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): self.saved_session = None
+            def prompt(self, prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    calls.append('review')
+                    test.assertIn('Original range: ' + test.base + '..' + target, prompt)
+                    test.assertIn('task verify: no commit changes', prompt)
+                    return json.dumps({'approved': True, 'findings': [], 'coverage': ['fixture'], 'coverage_gaps': []})
+                self.saved_session = self.opened_session = {'id': str(len(calls)), 'file': '/fixture/session'}
+                if 'produce fixture' in prompt:
+                    calls.append('producer')
+                    kwargs['claim']('owned.txt')
+                    test.write('owned.txt', 'produced')
+                    return 'produced fixture'
+                if 'offline verification' not in prompt:
+                    calls.append('after')
+                    return 'dependent complete'
+                calls.append('verify')
+                if len(calls) == 2:
+                    return TaskOutcome('failed', 'old fixture failed offline verification')
+                test.assertIsNone(kwargs.get('saved_session'))
+                test.assertIn('security/data restriction, or external-operation restriction', prompt)
+                test.assertIn('explicit manual gates', prompt)
+                test.assertIn('This authority is not proof that checks succeeded', prompt)
+                with test.assertRaisesRegex(Blocked, 'outside optional owned_paths'):
+                    kwargs['claim']('owned.txt')
+                kwargs['command']('start', 'git rev-parse HEAD')
+                proof = 'fresh proof at ' + head()
+                kwargs['command']('end', 'git rev-parse HEAD')
+                return proof
+
+        run = 'verification'
+        config = {'configurable': {'thread_id': run}}
+        with Authority(project) as owner:
+            def events(kind, state):
+                return [json.loads(row[0]) for row in owner.store.db.execute(
+                    'SELECT details FROM execution_history WHERE run_id=? AND task_id=? AND kind=? AND state=? ORDER BY seq',
+                    (run, 'verify', kind, state))]
+            runner = Engine(owner, run, contract, EXECUTOR, adapter=Adapter, paid_scope={'apis': []},
+                            question=lambda *_: self.fail('routine verification asked owner'))
+            with self.assertRaisesRegex(Blocked, 'explicitly failed'):
+                runner.invoke()
+            failed_head = head()
+            before = owner.store.completed_checkpoints(run)
+            failures = events('worker_invocation', 'failed')
+            self.write('other.txt', 'broken' if case == 'check failure' else 'fixed')
+            git(project, 'commit', '-qm', 'external fixture repair', '--', 'other.txt')
+            target = head()
+            runner = Engine(owner, run, contract, EXECUTOR, adapter=Adapter, paid_scope={'apis': []}, resume=True)
+            with graph_saver(owner) as saver:
+                graph = task_graph(runner, saver, review=True)
+                def retry(commit, reason=diagnosis):
+                    return graph_recovery_action(runner, graph, config, 'fresh', diagnosis=reason, target_head=commit)
+                with self.assertRaisesRegex(Blocked, 'effects drifted'): retry(None)
+                if case == 'undeclared':
+                    with self.assertRaisesRegex(Blocked, 'explicit empty owned_paths'): retry(target)
+                    self.assertEqual(calls, ['producer', 'verify'])
+                    return
+                with self.assertRaisesRegex(Blocked, 'differs from HEAD'): retry(failed_head)
+                with self.assertRaisesRegex(Blocked, 'no outstanding external effects'): retry(target, DIAGNOSIS)
+                if case == 'pass':
+                    self.write('other.txt', 'next repair')
+                    with self.assertRaisesRegex(Blocked, 'uncommitted changes'): retry(target)
+                    git(project, 'commit', '-qm', 'later fixture revision', '--', 'other.txt')
+                    with self.assertRaisesRegex(Blocked, 'direct single-parent'): retry(head())
+                    git(project, 'switch', '--detach', target)
+                if case == 'check failure':
+                    with self.assertRaisesRegex(Blocked, 'required verification failed'): retry(target)
+                    self.assertEqual(calls, ['producer', 'verify', 'verify'])
+                    self.assertEqual(before, owner.store.completed_checkpoints(run))
+                    return
+                if case == 'checkpoint interruption':
+                    record = owner.store.history
+                    def lose_checkpoint(*args, **kwargs):
+                        if args[2:4] == ('checkpoint', 'passed'): raise KeyboardInterrupt()
+                        return record(*args, **kwargs)
+                    with patch.object(owner.store, 'history', side_effect=lose_checkpoint), self.assertRaises(KeyboardInterrupt):
+                        retry(target)
+                if case == 'drift':
+                    record = owner.store.history
+                    def interrupt(*args, **kwargs):
+                        record(*args, **kwargs)
+                        if args[2:4] == ('worker_invocation', 'returned'): raise KeyboardInterrupt()
+                    with patch.object(owner.store, 'history', side_effect=interrupt), self.assertRaises(KeyboardInterrupt):
+                        retry(target)
+                    self.write('other.txt', 'unexpected')
+                    git(project, 'commit', '-qm', 'later change', '--', 'other.txt')
+                    with self.assertRaisesRegex(Blocked, 'differs from HEAD'):
+                        task_graph(runner, saver, review=True).invoke(None, config, durability='sync')
+                    self.assertEqual(calls, ['producer', 'verify', 'verify'])
+                    self.assertEqual(before, owner.store.completed_checkpoints(run))
+                    return
+        # Public source CLI reopens the stopped thread with its original inputs.
+        out = io.StringIO()
+        with patch.object(cli, 'PiAdapter', Adapter), contextlib.redirect_stdout(out):
+            args = [] if case == 'checkpoint interruption' else [
+                '--recovery-action', 'fresh', '--target-head', target, '--diagnosis', diagnosis]
+            self.assertEqual(cli.main(['resume', '--project', str(project), '--run', run, *args]), 0, out.getvalue())
+        self.assertEqual(calls, ['producer', 'verify', 'verify', 'after', 'review'])
+        self.assertEqual(head(), target)
+        with Authority(project) as owner:
+            after = owner.store.completed_checkpoints(run)
+            self.assertEqual(before, {'producer': after['producer']})
+            self.assertEqual(failures, events('worker_invocation', 'failed'))
+            proof, = events('worker_invocation', 'returned')
+            checked, = events('graph_checks', 'recorded')
+            self.assertEqual(proof['summary'], 'fresh proof at ' + target)
+            self.assertEqual((proof['head'], checked['effects']['head']), (target, target))
+            self.assertEqual(checked['checks'][0]['output'].strip(), 'checked fixture')
+            self.assertEqual(checked['producer_invocation_id'], proof['invocation_id'])
+            cp = after['verify']
+            self.assertEqual((cp['baseline'], cp['sha'], cp['no_change'], cp['paths']), (target, target, True, []))
+            self.assertEqual(cp['correction_chain'], [failures[0]['invocation_id'], proof['invocation_id']])
+            reference = events('graph_recovery', 'recorded')[0]['reference']
+            self.assertEqual((reference['failed_head'], reference['target_head']), (failed_head, target))
+
+    def test_fresh_verification_at_repair_commit(self): self.verification_retry('pass')
+    def test_target_verification_needs_empty_ownership(self): self.verification_retry('undeclared')
+    def test_pinned_no_change_intent_reopens_without_replay(self): self.verification_retry('checkpoint interruption')
+    def test_failed_target_check_blocks_dependent(self): self.verification_retry('check failure')
+    def test_returned_verification_reopen_checks_target_without_replay(self): self.verification_retry('drift')
+
     def test_continue(self): self.exercise('continue')
     def test_fresh(self): self.exercise('fresh')
     def test_escalate(self): self.exercise('escalate')

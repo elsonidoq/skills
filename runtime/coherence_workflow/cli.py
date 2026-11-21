@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import sqlite3
 import signal
@@ -249,6 +250,12 @@ def cancel(signum, frame):
     raise KeyboardInterrupt
 
 
+def _commit_id(value):
+    if not re.fullmatch(r'(?:[0-9a-f]{40}|[0-9a-f]{64})', value):
+        raise argparse.ArgumentTypeError('supply the full inspected commit SHA, not a ref or abbreviation')
+    return value
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest='command', required=True)
@@ -273,6 +280,7 @@ def main(argv=None):
         if command == 'resume':
             sub.add_argument('--recovery-action', choices=('continue', 'fresh', 'escalate'),
                              help='coordinator-selected inspected continuation of the unfinished task')
+            sub.add_argument('--target-head', type=_commit_id, metavar='COMMIT', help='full inspected direct-child commit for fresh offline verification')
             sub.add_argument('--diagnosis', help='inspected cause and targeted correction; not renewed owner consent')
         if command == 'recover-task':
             sub.add_argument('--recovery', required=True, help='JSON exact external same-task completion transfer; see operating guide')
@@ -351,13 +359,15 @@ def main(argv=None):
                 # missing reviewer needs owner correction, not a stranded running run.
                 if bool(args.recovery_action) != bool(args.diagnosis):
                     raise Blocked('resume recovery needs both --recovery-action and --diagnosis')
+                if args.target_head is not None and args.recovery_action != 'fresh':
+                    raise Blocked('--target-head requires --recovery-action fresh and --diagnosis')
                 recovery = {'action': args.recovery_action, 'diagnosis': args.diagnosis} if args.recovery_action else None
                 engine = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
                                 paid_scope=paid_scope, resume=True, worker_recovery=recovery,
                                 **({'question': question} if question else {}))
                 authority.store.resume(args.run)
                 writer_entered = True
-                result = run_graph(engine, action=args.recovery_action, diagnosis=args.diagnosis)
+                result = run_graph(engine, action=args.recovery_action, diagnosis=args.diagnosis, target_head=args.target_head)
                 print(canonical(result))
             return 0
         if not contract['tasks']:

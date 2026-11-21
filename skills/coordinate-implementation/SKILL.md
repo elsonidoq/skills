@@ -89,6 +89,7 @@ that work. Do not add a risk schema, scoring, admission checklist, or parent ack
   Supply `--recovery-action continue|fresh|escalate --diagnosis TEXT` for a coordinator-selected
   cause-specific continuation. `fresh` replaces the unfinished task's context; `escalate` uses its
   retained `implementation_fallback`. Neither needs renewed routine operational approval.
+  For an explicitly failed offline verification with no write scope, the [source CLI guide](../../docs/coordinate-implementation.md#coordinator-selected-worker-recovery) documents `fresh --target-head COMMIT` for an inspected direct-child repair, not acceptance of old proof.
   The parent start tool accepts the equivalent `recovery_action` and `diagnosis` fields with `resume: true`.
 - `recover-task --project ROOT --run ID --recovery FILE --owner-authorized`: after actual owner authorization, accept an inspected external completion of the next unfinished same task. The exact working-byte/mode transfer, original checks/manual gates and focused checkpoint precede normal `resume`; no old SDK invocation is rewritten, allowance reset, fake edit required, or later executor changed. See the [supported transfer format and limits](../../docs/coordinate-implementation.md#accept-an-owner-authorized-external-same-task-completion). This launches no provider and does not replace independent final review. Unknown/live calls, changed transfer or failed checks remain blocked.
 - `abandon --project ROOT --run ID`: explicitly label abandoned work, never completed effects.
