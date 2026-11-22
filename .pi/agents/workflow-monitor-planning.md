@@ -2,7 +2,7 @@
 name: workflow-monitor-planning
 description: Checkout-local bounded monitoring-feature planning producer/reviewer; no implementation authority.
 tools: read, grep, find, ls, bash, edit, write, contact_supervisor
-model: openai-codex/gpt-6.2-sol
+model: openai-codex/gpt-6.1-sol
 thinking: medium
 systemPromptMode: append
 inheritProjectContext: true

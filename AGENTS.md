@@ -165,7 +165,7 @@ rules above for reusable skills and commands.
   Product bindings remain selected-config driven; the planning model is not an implementation assignment.
   Every workflow launch in this repository, including continuations and corrective runs, uses
   `.pi/workflow-executor.json`, which is authoritative for the current owner selection:
-  direct `openai-codex/gpt-6.2-sol` workers at medium effort, with the same model and effort
+  direct `openai-codex/gpt-6.1-sol` workers at medium effort, with the same model and effort
   selected for the explicit implementation fallback and every fresh reviewer session.
   The coordinator may select inspected, cause-specific recovery or escalation without renewed
   operational permission. Prefer useful retained context; an incomplete return alone does not

@@ -1,15 +1,15 @@
 {
   "provider": "openai-codex",
-  "model": "gpt-6.2-sol",
+  "model": "gpt-6.1-sol",
   "effort": "medium",
   "implementation_fallback": {
     "provider": "openai-codex",
-    "model": "gpt-6.2-sol",
+    "model": "gpt-6.1-sol",
     "effort": "medium"
   },
   "reviewer": {
     "provider": "openai-codex",
-    "model": "gpt-6.2-sol",
+    "model": "gpt-6.1-sol",
     "effort": "medium"
   }
 }

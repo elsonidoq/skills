@@ -5,15 +5,15 @@
       "effort": "medium"
     },
     "source-and-tasks": {
-      "model": "openai-codex/gpt-6.2-sol",
+      "model": "openai-codex/gpt-6.1-sol",
       "effort": "medium"
     },
     "standard-plan": {
-      "model": "openai-codex/gpt-6.2-astra",
+      "model": "openai-codex/gpt-6-astra",
       "effort": "medium"
     },
     "standard-review": {
-      "model": "openai-codex/gpt-6.2-sol",
+      "model": "openai-codex/gpt-6.1-sol",
       "effort": "medium"
     }
   },

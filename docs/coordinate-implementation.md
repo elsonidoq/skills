@@ -329,7 +329,7 @@ Executor JSON uses the actual owner selection and a required `reviewer` object f
 read-only review executor, for example:
 
 ```json
-{"provider":"openai-codex","model":"gpt-6.2-sol","effort":"medium","reviewer":{"provider":"openai-codex","model":"gpt-6.2-sol","effort":"medium"}}
+{"provider":"openai-codex","model":"gpt-6.1-sol","effort":"medium","reviewer":{"provider":"openai-codex","model":"gpt-6.1-sol","effort":"medium"}}
 ```
 
 A missing or malformed reviewer profile fails with a corrective diagnostic, never a
@@ -340,7 +340,7 @@ alone grants no implementation fallback. Availability errors remain actual error
 authenticate or silently substitute another model.
 For **this repository**, every launch (including continuations/corrections) supplies
 `--executor .pi/workflow-executor.json`, or that file's absolute path through the parent
-bridge: Sol 6.2/medium workers, implementation fallback and reviewers. Other projects retain their own
+bridge: Sol 6.1/medium workers, implementation fallback and reviewers. Other projects retain their own
 configuration. Existing historical reviewer nodes are not changed retroactively.
 
 The canonical project-local configuration is `<project-root>/.pi/workflow-executor.json`.
