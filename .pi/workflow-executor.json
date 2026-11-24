@@ -1,15 +1,15 @@
 {
-  "provider": "openai-codex",
-  "model": "gpt-6.1-sol",
+  "provider": "claude-bridge",
+  "model": "claude-opus-5-5",
   "effort": "medium",
   "implementation_fallback": {
-    "provider": "openai-codex",
-    "model": "gpt-6.1-sol",
+    "provider": "claude-bridge",
+    "model": "claude-opus-5-5",
     "effort": "medium"
   },
   "reviewer": {
-    "provider": "openai-codex",
-    "model": "gpt-6.1-sol",
+    "provider": "claude-bridge",
+    "model": "claude-opus-5-5",
     "effort": "medium"
   }
 }
