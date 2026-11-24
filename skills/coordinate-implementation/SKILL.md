@@ -208,7 +208,8 @@ operation and corrective action; unrelated safe work continues. Initial review e
 ## Runner-configured worker role
 
 Do NOT launch this CLI recursively, delegate, stage/commit or manage workflow state.
-Implement only the selected task with normal SDK tools; correct ordinary scoped technical errors in the
+Implement only the selected task with normal SDK tools; create and change files only with edit/write, because
+files written by bash are never checkpointed. Correct ordinary scoped technical errors in the
 same conversation, including isolated test/server and necessary local setup issues. Preserve unrelated
 work; use `ask_owner` only for product decisions, substantial complexity increases, separately scoped
 paid usage, or actions outside authority. Authority never proves a check passed. Leave the independent
