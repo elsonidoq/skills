@@ -353,6 +353,12 @@ keeps the same explicit worker/reviewer tool list; extension tools stay inactive
 ```
 
 A path that does not load stops the session with the path and the load error.
+
+Workers and fixers must create and change files with the `edit`/`write` tools: the focused
+checkpoint includes only files changed through them, never files written by `bash`. Their
+briefs state this rule. Repairs that never reach approval stop at the graph step limit with a
+`Blocked` diagnosis and a `failed` run; inspect `history`, correct the cause, then abandon the
+run and start a new one.
 For **this repository**, every launch (including continuations/corrections) supplies
 `--executor .pi/workflow-executor.json`, or that file's absolute path through the parent
 bridge: Sol 6.1/medium workers, implementation fallback and reviewers. Other projects retain their own
@@ -805,6 +811,9 @@ and checks its owning package metadata for the Pi SDK name. Discovery does not e
 the CLI or scan other global installations; an unrelated runnable `pi` is not bypassed.
 A new Git/Paseo worktree does not need copied `node_modules`. An invalid explicitly selected
 package reports its actual error rather than silently switching SDKs.
+A stale local `runtime/pi-host/node_modules` (for example, from an earlier `npm ci`) takes
+precedence over the installed Pi, so its older model catalog applies, also to extension
+providers such as `claude-bridge`. Remove it to follow the installed Pi release.
 
 Package discovery uses Node's package lookup; entry and SDK-dependency loading use Node's ESM
 resolver and public package exports, not constructed `dist/` paths or nested dependency paths.

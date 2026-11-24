@@ -34,6 +34,7 @@ import json
 import uuid
 
 from langchain_core.runnables import RunnableConfig
+from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, Send, interrupt
 
@@ -923,7 +924,15 @@ def _run_graph(engine, *, action=None, diagnosis=None, target_head=None, transfe
                                     **pending['question'], **facts)
                 result = answer_graph_question(graph, config, engine.question, trace_observer=trace_pending)
             else:
-                result = graph.invoke(None if engine.resume else {}, config, durability='sync')
+                try:
+                    result = graph.invoke(None if engine.resume else {}, config, durability='sync')
+                except GraphRecursionError as exc:
+                    rounds = store.review_chain(run)['fixing_round_count']
+                    raise Blocked('run stopped at the graph step limit after ' + str(rounds) + ' repair rounds without '
+                                  'approval, so repairs are not making progress. Inspect the review findings and fixer '
+                                  'returns with history (for example, a file changed outside edit/write is never '
+                                  'committed); correct the cause, then abandon this run and start a new run for the '
+                                  'remaining work.') from exc
             snapshot = graph.get_state(config)
             if snapshot.interrupts:
                 pending = snapshot.interrupts[0].value

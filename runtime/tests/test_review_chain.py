@@ -1071,6 +1071,22 @@ class BoundedChainTests(ProjectTest):
         self.assertEqual(len(grants), 2)
         self.assertTrue(all(grant['original_scope'] == scope for grant in grants))
 
+    def test_repairs_without_progress_stop_with_actionable_diagnosis_at_graph_limit(self):
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): pass
+            def prompt(self, _prompt, **kwargs):
+                if kwargs.get('read_only'):
+                    return '{"approved":false,"coverage":["fixture examined"],"coverage_gaps":[],"findings":["owned.txt:1 - not committed"]}'
+                return 'fixture'
+        contract = admit({'tasks': [{'id': 'task', 'description': 'fixture'}]})
+        with Authority(self.project) as owner:
+            with self.assertRaisesRegex(Blocked, r'graph step limit after \d+ repair rounds without approval.*abandon this run'):
+                Engine(owner, 'no-progress', contract, EXECUTOR, adapter=Adapter,
+                       question=lambda *_a, **_k: self.fail('unexpected owner question')).invoke()
+            run = owner.store.db.execute("SELECT state,error FROM execution_runs WHERE run_id='no-progress'").fetchone()
+        self.assertEqual(run['state'], 'failed')
+        self.assertIn('repairs are not making progress', run['error'])
+
     def test_graph_refreshes_stale_pair_before_new_scoped_repair(self):
         contract = {'tasks': []}
         calls = []
