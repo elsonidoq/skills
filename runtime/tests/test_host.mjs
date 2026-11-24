@@ -392,6 +392,50 @@ test('actual SDK assistant error is an operation error, not successful prompt co
   await assert.rejects(() => promptSession(session, 'fixture', () => {}), /fixture provider error/);
 });
 
+test('host attests an SDK error as settled only with no session or an idle session', async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-settled-error-'));
+  const executor = {provider: 'openai', model: 'gpt-4o-mini', effort: 'off'};
+  const failure = async request => {
+    try { await execute({project, prompt: 'fixture', pauseQuestions: true, ...request}, () => {}, async () => ({})); }
+    catch (error) { return error; }
+    assert.fail('execute must reject');
+  };
+  const prompt = mock.method(AgentSession.prototype, 'prompt', async () => { throw new Error('Prompt is too long'); });
+  try {
+    const missing = await failure({executor: {...executor, model: 'missing-model'}});
+    assert.match(missing.message, /Model not found/);
+    assert.equal(missing.coherenceSettled, true, 'no session means no tool call in flight');
+    const idle = await failure({executor});
+    assert.equal(idle.message, 'Prompt is too long');
+    assert.equal(idle.coherenceSettled, true, 'an idle session has no tool call in flight');
+    const active = mock.getter(AgentSession.prototype, 'isIdle', () => false);
+    try {
+      const running = await failure({executor});
+      assert.equal(running.coherenceSettled, undefined, 'an active run stays uncertain');
+    } finally { active.mock.restore(); }
+  } finally { prompt.mock.restore(); await fs.rm(project, {recursive: true, force: true}); }
+});
+
+test('host transport carries the settled attestation on its error record', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-settled-transport-'));
+  const host = fileURLToPath(new URL('../pi-host/host.mjs', import.meta.url));
+  const child = spawn(process.execPath, [host], {cwd: root, stdio: ['pipe', 'pipe', 'pipe'],
+    env: {...process.env, PI_CODING_AGENT_DIR: path.join(root, 'private-agent')}});
+  try {
+    child.stdin.end(JSON.stringify({project: root, prompt: 'fixture', pauseQuestions: true,
+      executor: {provider: 'openai', model: 'missing-model', effort: 'off'}}) + '\n');
+    const records = [];
+    for await (const line of readline.createInterface({input: child.stdout})) records.push(JSON.parse(line));
+    assert.equal(records.length, 1);
+    assert.equal(records[0].type, 'error');
+    assert.match(records[0].message, /Model not found/);
+    assert.equal(records[0].settled, true);
+  } finally {
+    if (child.exitCode === null) child.kill('SIGTERM');
+    await fs.rm(root, {recursive: true, force: true});
+  }
+});
+
 test('SDK command cancellation drains its owned subprocess without cgroups', {timeout: 10000}, async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-simplification-03-cancel-'));
   const controller = new AbortController();

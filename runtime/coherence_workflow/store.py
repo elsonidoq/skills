@@ -330,15 +330,24 @@ class Store:
                               '; inspect retained invocation history before continuation') from exc
         # Existing invocation facts cannot silently become a new initial allowance when
         # reservation history is absent. Starts and terminals describe the same call.
-        invocation_states = {}
+        invocation_states, sessionless = {}, set()
         for row in self.db.execute(
                 "SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? "
                 "AND kind='worker_invocation' ORDER BY seq", (run, task)):
             try:
-                prior_id = json.loads(row['details'])['invocation_id']
+                details = json.loads(row['details'])
+                prior_id = details['invocation_id']
                 if prior_id not in reservations:
                     raise ValueError
                 invocation_states[prior_id] = row['state']
+                # A host-attested settled SDK error that opened no session leaves
+                # nothing to bind (pi_adapter.sdk_error_detail omits the uncertain marker).
+                error = str(details.get('error', ''))
+                if (row['state'] == 'failed' and details.get('session') is None and
+                        error.startswith('SDK operation failed: ') and 'effects are uncertain' not in error):
+                    sessionless.add(prior_id)
+                else:
+                    sessionless.discard(prior_id)
             except (TypeError, ValueError, KeyError):
                 raise Blocked('worker dispatch history is missing for task ' + task +
                               '; inspect retained invocation history before continuation') from None
@@ -348,7 +357,7 @@ class Store:
         if invocation_id in reservations or invocation_id in bindings:
             raise Blocked('worker dispatch invocation is already reserved; inspect retained invocation history before continuation')
         unresolved = [prior_id for prior_id, prior in reservations.items()
-                      if prior is None and prior_id not in bindings]
+                      if prior is None and prior_id not in bindings and prior_id not in sessionless]
         if unresolved:
             raise Blocked('worker dispatch history has an unbound fresh session for task ' + task +
                           '; inspect retained invocation ' + unresolved[-1] + ' before continuation')

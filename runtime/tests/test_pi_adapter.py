@@ -579,6 +579,15 @@ print(json.dumps({'type':'result','text':'sent'}),flush=True)
         with a, b, self.assertRaisesRegex(Blocked, 'settlement and effects are uncertain.*do not redispatch'):
             PiAdapter(self.project, {}).prompt('fixture', pause_questions=True)
 
+    def test_only_host_attested_sdk_error_is_settled(self):
+        for record, uncertain in (({'settled': True}, False), ({}, True), ({'settled': 'true'}, True)):
+            body = "print(json.dumps(" + repr({'type': 'error', 'message': 'Prompt is too long', **record}) + "))\n"
+            a, b = self.fixture(body)
+            with self.subTest(record=record), a, b, self.assertRaises(Blocked) as raised:
+                PiAdapter(self.project, {}).prompt('fixture', pause_questions=True)
+            self.assertIn('SDK operation failed: Prompt is too long', str(raised.exception))
+            self.assertEqual('effects are uncertain' in str(raised.exception), uncertain)
+
     def test_noninteractive_question_stops_without_fabricating_answer(self):
         with patch('sys.stdin.isatty', return_value=False):
             with self.assertRaisesRegex(Blocked, 'terminal-question operation blocked'):

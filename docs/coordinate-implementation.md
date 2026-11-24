@@ -676,7 +676,11 @@ The parent `coordinate_implementation_start` tool accepts `resume: true`, `run`,
 and `diagnosis`. These are coordinator decisions, not fabricated owner answers. The route keeps
 original inputs, scope, source claims, completed checkpoints and attempt history. Fresh dispatch
 requires a settled exact predecessor and known session effects; uncertain calls and unknown bytes
-are not adopted. Rerun affected required checks and keep independent review. Existing runs retain
+are not adopted. An SDK error is a settled predecessor only when the host attests `settled: true`
+on its `error` record: no session was created, or the session was idle with no pending question,
+so no tool call was in flight. A settled error that opened no session needs `fresh`, not
+`continue`. Other SDK errors, a lost host result and historical failure rows stay uncertain.
+Rerun affected required checks and keep independent review. Existing runs retain
 their launch configuration: no fallback is inferred from a later file change or reviewer profile.
 
 **Fresh offline verification at a repaired commit (source CLI only).** Inspect the failed call,

@@ -13,7 +13,7 @@ from coherence_workflow.engine import Engine
 from coherence_workflow.graph import graph_recovery_action, graph_saver, run_graph, task_graph
 from coherence_workflow.intake import admit
 from coherence_workflow.metric_artifacts import artifact_relative
-from coherence_workflow.pi_adapter import TaskOutcome
+from coherence_workflow.pi_adapter import TaskOutcome, sdk_error_detail
 from coherence_workflow.store import Authority, Blocked, git
 from fixtures.support import ProjectTest
 
@@ -147,6 +147,47 @@ class GraphRecoveryTests(ProjectTest):
                 with self.assertRaisesRegex(Blocked, 'owner direction required'):
                     graph_recovery_action(engine, graph, config, 'fresh', diagnosis=DIAGNOSIS)
         self.assertEqual(calls, [])
+
+    def test_settled_sdk_error_allows_fresh_recovery_and_unattested_error_blocks(self):
+        # (case, host attested settled, a session was opened before the error)
+        for case, settled, opened in (('pre-session', True, False), ('overflow', True, True), ('unattested', False, True)):
+            with self.subTest(case=case):
+                project, calls, thread = self.project, [], 'sdk-error-' + case
+                class Adapter:
+                    def __init__(self, *_args, **_kwargs): self.saved_session = None
+                    def prompt(self, prompt, **kwargs):
+                        if kwargs.get('read_only'):
+                            return json.dumps({'approved': True, 'findings': [], 'coverage': ['fixture'], 'coverage_gaps': []})
+                        calls.append('worker')
+                        self.saved_session = self.opened_session = (
+                            {'id': thread + str(len(calls)), 'file': '/fixture/' + thread} if opened or len(calls) > 1 else None)
+                        if len(calls) == 1:
+                            record = {'type': 'error', 'message': 'SDK fixture failure', **({'settled': True} if settled else {})}
+                            raise Blocked(sdk_error_detail(record, kwargs['pause_questions']))
+                        kwargs['claim']('owned.txt')
+                        (project/'owned.txt').write_text(thread + '\n')
+                        return 'complete'
+                contract = admit([{'id': 'one', 'description': 'parser', 'owned_paths': ['owned.txt']}])
+                config = {'configurable': {'thread_id': thread}}
+                with Authority(project) as owner:
+                    owner.store.start(thread, self.base, contract=contract, executor=EXECUTOR)
+                    engine = Engine(owner, thread, contract, EXECUTOR, adapter=Adapter, resume=True)
+                    with graph_saver(owner) as saver:
+                        graph = task_graph(engine, saver)
+                        with self.assertRaisesRegex(Blocked, 'SDK fixture failure'):
+                            graph.invoke({}, config, durability='sync')
+                        if not settled:
+                            for action in ('continue', 'fresh', 'escalate'):
+                                with self.assertRaisesRegex(Blocked, 'effects are uncertain'):
+                                    graph_recovery_action(engine, graph, config, action, diagnosis=DIAGNOSIS)
+                            self.assertEqual(calls, ['worker'])
+                            continue
+                        if not opened:
+                            with self.assertRaisesRegex(Blocked, 'needs the exact saved session'):
+                                graph_recovery_action(engine, graph, config, 'continue', diagnosis=DIAGNOSIS)
+                        graph_recovery_action(engine, graph, config, 'fresh', diagnosis=DIAGNOSIS)
+                        self.assertIn('one', owner.store.completed_checkpoints(thread))
+                        self.assertEqual(calls, ['worker', 'worker'])
 
     def test_effect_drift_and_unknown_diagnosis_stop_before_dispatch(self):
         calls, project = [], self.project

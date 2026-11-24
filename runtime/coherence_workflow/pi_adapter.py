@@ -37,6 +37,14 @@ class TaskOutcome:
         self.explanation = explanation
 
 
+def sdk_error_detail(value, pause_questions):
+    """An SDK error is settled only when the host attests it from observed SDK state."""
+    detail = 'SDK operation failed: ' + str(value.get('message'))
+    if pause_questions and value.get('settled') is not True:
+        detail += '; settlement and effects are uncertain; inspect the saved session and operation before continuation, do not redispatch'
+    return detail
+
+
 def host_path():
     source = Path(__file__).resolve().parents[1] / 'pi-host/host.mjs'
     return source if source.exists() else Path(sys.prefix) / 'share/coherence-workflow/pi-host/host.mjs'
@@ -496,10 +504,7 @@ class PiAdapter:
                             # for controls; the result is its terminal boundary.
                             close_input()
                         elif kind == 'error':
-                            detail = 'SDK operation failed: ' + str(value.get('message'))
-                            if pause_questions:
-                                detail += '; settlement and effects are uncertain; inspect the saved session and operation before continuation, do not redispatch'
-                            raise Blocked(detail)
+                            raise Blocked(sdk_error_detail(value, pause_questions))
                         else:
                             raise Blocked('unknown SDK transport record: ' + str(kind))
                 except BaseException as exc:

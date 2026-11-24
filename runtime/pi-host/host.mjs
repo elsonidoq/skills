@@ -382,7 +382,13 @@ export function steeringController(request, session, emit) {
 }
 
 export async function execute(request, emit, ask, controls = null) {
-  const session = await createWorkflowSession(request, ask);
+  let session;
+  try { session = await createWorkflowSession(request, ask); }
+  catch (error) {
+    // No agent run was started, so no tool call can still be in flight.
+    if (error && typeof error === 'object') error.coherenceSettled = true;
+    throw error;
+  }
   session.coherenceEpoch = crypto.randomUUID();
   // Preserve the existing session identity before an invocation can fail. The
   // adapter can then expose that failed call/cause for inspection, never retry it.
@@ -409,6 +415,13 @@ export async function execute(request, emit, ask, controls = null) {
     return {text, outcome: waiting ? 'waiting' : session.coherenceTaskOutcome?.() ?? 'completed',
       ...(waiting ? {question: waiting} : {}),
       session: session.coherenceSavedSession, before, after: observation(session)};
+  } catch (error) {
+    // Settled only from observed SDK state: an idle session has no agent run,
+    // compaction or tool call in flight, and no question is pending.
+    if (error && typeof error === 'object' && session.isIdle === true && !session.coherencePendingQuestion()) {
+      error.coherenceSettled = true;
+    }
+    throw error;
   } finally {
     process.off('SIGTERM', cancel);
     process.off('SIGINT', cancel);
@@ -469,7 +482,7 @@ async function main() {
     lines.close();
     await input;
   } catch (error) {
-    emit({type: 'error', message: error.message});
+    emit({type: 'error', message: error.message, ...(error?.coherenceSettled === true ? {settled: true} : {})});
     process.exitCode = 1;
   } finally {
     lines.close();
