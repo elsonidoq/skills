@@ -414,7 +414,7 @@ override fails, authenticates providers or invokes a model. Downstream reads/val
 apply; resolution does not prove runtime/provider availability. Resume uses retained executor
 input rather than selecting new configuration.
 
-Set `COHERENCE_PYTHON` only if the dependencies are in a selected environment. Source execution
+The wrapper uses `runtime/.venv/bin/python` when it exists (install: `python3 -m venv runtime/.venv && runtime/.venv/bin/pip install -r runtime/requirements.lock && runtime/.venv/bin/pip install -e runtime`). Set `COHERENCE_PYTHON` only to select a different environment. Source execution
 uses the suite-relative SDK host; installed execution uses its packaged host. `COHERENCE_NODE`
 can select an existing Node executable. Optional `COHERENCE_AUTH_PATH` and
 `COHERENCE_CATALOG_PATH` select existing SDK credential/model storage; do not print or copy secrets.

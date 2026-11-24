@@ -101,7 +101,9 @@ rules above for reusable skills and commands.
 
 - Required runtime: pi coding agent, `pi-subagents` and `pi-ask-user`. Do not require
   specific versions. Verify registered, usable
-  capabilities before applicable stages; report missing requirements rather than install.
+  capabilities before applicable stages. Missing Python runtime dependencies of `runtime/` may be
+  installed into `runtime/.venv` from `runtime/requirements.lock` (`pip install -r requirements.lock`,
+  then `pip install -e .`); report other missing requirements rather than install.
   SpecKit is required only for a project's Standard planning stages, not TinySpec;
   Jev is optional for `finish-session-jev` with manual routing fallback.
 - Work routing for this repository:
@@ -185,7 +187,7 @@ rules above for reusable skills and commands.
   continuation, never silent conversion or replay. This target is not yet implemented. No manifest,
   catalogue, cgroup provisioning, session/parent receipts or binding assessment.
   Preserve task-owned path boundaries, unrelated work, hooks/signing, old rows and actual errors.
-  Current terminal input is authority when needed; no automatic install, auth refresh, reload,
+  Current terminal input is authority when needed; no automatic install beyond the `runtime/.venv` dependencies above, auth refresh, reload,
   legacy restart, expensive failure retry loop or mass conversion.
 - Worktree retention: a disposable worktree or scratch directory must not hold the only copy of
   information or runtime assets required after work ends, regardless of how the worktree was created.

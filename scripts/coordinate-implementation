@@ -5,4 +5,5 @@ SCRIPT=$(readlink -f -- "$0")
 ROOT=$(CDPATH= cd -- "$(dirname -- "$SCRIPT")/.." && pwd)
 export PYTHONPATH="$ROOT/runtime${PYTHONPATH:+:$PYTHONPATH}"
 export PYTHONDONTWRITEBYTECODE=1
+if [ -z "${COHERENCE_PYTHON:-}" ] && [ -x "$ROOT/runtime/.venv/bin/python" ]; then COHERENCE_PYTHON="$ROOT/runtime/.venv/bin/python"; fi
 exec "${COHERENCE_PYTHON:-python3}" -I -B -c 'import sys,runpy;sys.path.insert(0,sys.argv.pop(1));runpy.run_module("coherence_workflow.cli",run_name="__main__",alter_sys=True)' "$ROOT/runtime" "$@"
