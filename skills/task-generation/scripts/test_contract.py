@@ -195,6 +195,13 @@ class TaskGenerationContractTests(unittest.TestCase):
                       ' '.join(review.split()))
 
 
+    def test_manual_steps_are_gates_not_shell_checks(self):
+        require_clauses(self, '## Encode the tasks for their consumer', (
+            'The runner executes every `checks` entry as a shell command',
+            'put a manual or owner-confirmation step in the task `gates` list',
+            'never in `checks`',
+        ))
+
     def test_adapter_legacy_and_checkpoint_boundaries_remain(self):
         require_clauses(self, '## Draft outcomes from the source', (
             'existing task-embedded legacy requirements remain valid',

@@ -168,7 +168,9 @@ edit-time ownership to the runner under [Coordinate Implementation's execution c
 Existing `required` check mappings remain
 consumed when supplied. Put an authored deterministic required command once in an existing
 `checks`, `check`, or `required[].check` field. Keep semantic criteria as prose; never compile
-prose into shell, and leave absent optional checks absent. Sources may supply context without
+prose into shell, and leave absent optional checks absent. The runner executes every `checks`
+entry as a shell command; put a manual or owner-confirmation step in the task `gates` list as
+its question text, never in `checks`. Sources may supply context without
 content-pinning execution authority; external effects still need authority at the action.
 
 Carry an associated qualified issue URL from the source or brief as optional top-level
