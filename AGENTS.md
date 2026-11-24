@@ -167,11 +167,12 @@ rules above for reusable skills and commands.
   Product bindings remain selected-config driven; the planning model is not an implementation assignment.
   Every workflow launch in this repository, including continuations and corrective runs, uses
   `.pi/workflow-executor.json`, which is authoritative for the current owner selection:
-  direct `openai-codex/gpt-6.1-sol` workers at medium effort, with the same model and effort
-  selected for the explicit implementation fallback and every fresh reviewer session.
+  direct `claude-bridge/claude-sonnet-5-5` workers at medium effort, with
+  `claude-bridge/claude-opus-5-5` at medium effort for the explicit implementation fallback
+  and every fresh reviewer session.
   The coordinator may select inspected, cause-specific recovery or escalation without renewed
   operational permission. Prefer useful retained context; an incomplete return alone does not
-  prove model incapability. If the Sol implementation escalation fails, stop and notify the owner
+  prove model incapability. If the Opus implementation escalation fails, stop and notify the owner
   with the diagnosis, preserved work and unmet checks; no further dispatch without owner direction.
   Preserve actual scope, manual, paid, security, data and external-action gates. Do not reuse
   historical Terra-only executor files for new launches or rewrite historical reviewer records.

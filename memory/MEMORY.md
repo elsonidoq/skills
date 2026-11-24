@@ -36,8 +36,8 @@ substitute or store secrets, completed-work inventories or fabricated knowledge.
 ### Direct implementation executor
 
 - **Trigger:** Selecting executors for future implementation tasks in this repository.
-- **Action:** Use the current `.pi/workflow-executor.json` selection: Sol/medium directly, not Terra with Sol reserved only for fallback. Preserve historical runs and review records; do not reinterpret their actual assignments.
-- **Provenance:** Explicit owner direction during issue #45: “use Sol/medium for future tasks directly”. Configuration was changed in commit `80090951`.
+- **Action:** Use the current `.pi/workflow-executor.json` selection: Sonnet 5.5/medium task workers, Opus 5.5/medium implementation fallback and reviewers. Preserve historical runs and review records; do not reinterpret their actual assignments.
+- **Provenance:** Explicit owner direction during the #51–#53 session (2026-11-24), after a Codex usage-limit failure: “update .pi/workflow-executor.json to use opus 5.5 medium instead of sol”, then “the task executor must be sonnet, not opus”. Configuration changed in commits `eb8c8da` and `e983551`. This supersedes the issue #45 direction “use Sol/medium for future tasks directly” (commit `80090951`).
 
 ### Installed agent capability versions
 
