@@ -939,10 +939,11 @@ class Engine:
             raise _ReviewFormat('reviewer result needs boolean approved, findings string list, and optional suggestions string list')
         # Findings are repair dispatch inputs, not a severity vocabulary.  Each must say
         # where the defect is, its concrete impact, and why it violates accepted work.
-        location = r'\S+:\d+(?:-\d+)?(?:(?:,\s*|\s+and\s+)\d+(?:-\d+)?)*'
-        pattern = re.compile(r'^' + location + r'(?:,\s+interacting with\s+' + location + r')?\s+-\s+\S')
+        # Only the leading path:line anchor is structural; further ranges and
+        # cross-file references are prose, so natural forms keep the verdict.
+        pattern = re.compile(r'^\S+:\d+\b.*?\s-\s+\S')
         if any(not pattern.match(item.strip()) for item in findings):
-            raise _ReviewFormat('review blocker needs a path:line or path:start-end[,start-end] location and concrete defect/impact')
+            raise _ReviewFormat('review blocker needs to start with a path:line location, then " - " and the concrete defect/impact')
         # Basis is described in ordinary defect prose, not a mandatory suffix.
         result = {'approved': value['approved'], 'findings': findings, 'suggestions': suggestions}
         if require_coverage or 'coverage' in value or 'coverage_gaps' in value:
@@ -1203,7 +1204,8 @@ class Engine:
                 + 'Identify concrete correctness, scope or data-safety defects, not missing workflow ceremony. '
                 'Return only JSON with boolean approved, findings, coverage, coverage_gaps, and optional suggestions string lists. '
                 'Example: {"approved":true,"findings":[],"coverage":["area examined and why it works"],"coverage_gaps":[],"suggestions":[]}. '
-                'For rejection use findings like "path:line[-end_line] - concrete defect, impact and accepted basis in ordinary prose". '
+                'For rejection use findings like "path:line[-end_line] - concrete defect, impact and accepted basis in ordinary prose"; '
+                'start each finding with one path:line location and put other ranges or files in the prose. '
                 'Always distinguish examined/passing areas from what must be fixed or remains unchecked. Never approve with coverage gaps. '
                 'Use findings only for blockers: each needs a location, concrete impact, and basis of requirement, correctness, security, or data-safety. '
                 'Put only nonblocking advice in suggestions; crashes, hangs, target/credential risks, and false-unavailable observations are blockers. Never approve when blockers exist.\n'

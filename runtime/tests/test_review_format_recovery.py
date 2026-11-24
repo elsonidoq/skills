@@ -241,16 +241,24 @@ class ReviewFormatRecoveryTests(ProjectTest):
             self.assertTrue(Engine(owner, 'fixture', self.contract, EXECUTOR, resume=True,
                                    question=lambda _: str(self.artifact))._recover_format_rejection(chain, self.base))
 
-    def test_parser_accepts_single_comma_and_and_rejects_malformed_locations(self):
+    def test_parser_needs_only_a_leading_location_and_defect(self):
         for location in ('owned.txt:1', 'owned.txt:1-2,4-5', 'owned.txt:1-2 and 4-5',
-                         'owned.txt:1, 3 and 5-6', 'owned.txt:1-2 and 4-5, interacting with other.txt:7-9'):
+                         'owned.txt:1, 3 and 5-6', 'owned.txt:1-2 and 4-5, interacting with other.txt:7-9',
+                         'owned.txt:1 and other.txt:2', 'scripts/a.ts:53 and 269 (with admin/b.ts:146)'):
             finding = location + ' - concrete defect'
             value = dict(self.verdict, findings=[finding])
             self.assertEqual(Engine._review_value(json.dumps(value), require_coverage=True)['findings'], [finding])
-        for location in ('owned.txt:1 and other.txt:2', 'owned.txt:1 and', 'owned.txt:1,,2',
-                         'owned.txt:1, interacting with other.txt', 'owned.txt:1, arbitrary words other.txt:2'):
-            with self.subTest(location=location), self.assertRaises(_ReviewFormat):
-                Engine._review_value(json.dumps(dict(self.verdict, findings=[location + ' - defect'])), require_coverage=True)
+        for finding in ('owned.txt - defect', 'defect in owned.txt:1 - impact', 'owned.txt:1x - defect',
+                        'owned.txt:1 defect without separator', 'owned.txt:1 -'):
+            with self.subTest(finding=finding), self.assertRaises(_ReviewFormat):
+                Engine._review_value(json.dumps(dict(self.verdict, findings=[finding])), require_coverage=True)
+
+    def test_cross_file_finding_keeps_the_whole_rejecting_verdict(self):
+        findings = ['scripts/a.ts:53 and 269 (with admin/b.ts:146) - A deadline is ignored',
+                    'scripts/a.ts:291-314 - The rule drops rows']
+        value = Engine._review_value(json.dumps(dict(self.verdict, findings=findings)), require_coverage=True)
+        self.assertIs(value['approved'], False)
+        self.assertEqual(value['findings'], findings)
 
     def start_followup_failed(self, restore_base=False):
         self.start_failed()
