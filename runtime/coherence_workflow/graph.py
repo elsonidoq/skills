@@ -125,8 +125,63 @@ def _ready_wave(ready):
     return selected
 
 
-def _head_matches(engine, expected):
-    """Allow only verified same-run focused checkpoints and the metric commit."""
+def _head_matches(engine, expected, task=None):
+    """Allow verified same-run focused checkpoints and the metric commit.
+
+    For an implementation task's effects, also accept linear commits made outside the
+    run (for example by the coordinator) that leave unfinished tasks' claimed paths
+    alone; the task's checks and the final review still run on the actual HEAD.
+    Review/completion targets pass no task: a commit after review must not ship
+    unreviewed. Verification tasks (owned_paths: []) prove one exact HEAD, so a new
+    commit still needs an explicitly pinned target.
+    """
+    if _own_head_matches(engine, expected):
+        return True
+    return task is not None and task.get('owned_paths') != [] and _external_commits_accepted(engine, expected)
+
+
+def _external_commits_accepted(engine, expected):
+    store, project, run = engine.authority.store, engine.authority.project, engine.run
+    current = git(project, 'rev-parse', 'HEAD').decode().strip()
+    try:
+        git(project, 'merge-base', '--is-ancestor', expected, current)
+    except Blocked:
+        return False  # reset, rebase or amend: history was rewritten
+    rows = git(project, 'rev-list', '--reverse', '--parents', expected + '..' + current).decode().split('\n')
+    own = {item['sha'] for item in store.completed_checkpoints(run).values() if not item.get('no_change')}
+    own |= {json.loads(row['details']).get('sha') for row in store.db.execute(
+        "SELECT details FROM execution_history WHERE run_id=? AND kind='metric_artifact'", (run,))}
+    recorded = {json.loads(row['details']).get('sha') for row in store.db.execute(
+        "SELECT details FROM execution_history WHERE run_id=? AND kind='external_commit'", (run,))}
+    live = {}
+    for row in store.db.execute("SELECT task_id FROM execution_tasks WHERE run_id=? AND state!='complete'", (run,)):
+        facts = store.task_facts(run, row['task_id'])
+        for name in facts['paths'] + facts['artifacts']:
+            live[name] = row['task_id']
+    cursor, external = expected, []
+    for row in filter(None, rows):
+        sha, *parents = row.split()
+        if parents != [cursor]:
+            return False  # merge or non-linear history
+        cursor = sha
+        if sha in own:
+            continue
+        paths = sorted(filter(None, git(project, 'diff-tree', '--no-commit-id', '--no-renames',
+                                        '--name-only', '-r', '-z', sha).decode().split('\0')))
+        for name in paths:
+            if name in live:
+                raise Blocked('commit ' + sha + ' made outside the run includes ' + name + ', which unfinished task '
+                              + live[name] + ' claimed; the run cannot verify that task\'s work. Move the path out of '
+                              'that commit (for example git reset --soft ' + sha + '^, then commit without it), '
+                              'or let the task finish first, then resume.')
+        external.append((sha, paths))
+    for sha, paths in external:
+        if sha not in recorded:
+            store.history(run, None, 'external_commit', 'accepted', {'sha': sha, 'paths': paths})
+    return True
+
+
+def _own_head_matches(engine, expected):
     store, project = engine.authority.store, engine.authority.project
     current = git(project, 'rev-parse', 'HEAD').decode().strip()
     if current == expected:
@@ -221,8 +276,8 @@ def task_graph(engine, saver, *, review=False):
                 'source_state': Engine._repair_source_state(project, selected),
                 'index_state': Engine._repair_index_state(project, selected)}
 
-    def verify_effects(value):
-        if (not _head_matches(engine, value['head']) or
+    def verify_effects(value, task):
+        if (not _head_matches(engine, value['head'], task) or
                 Engine._repair_source_state(project, value['paths']) != value['source_state'] or
                 Engine._repair_index_state(project, value['paths']) != value['index_state']):
             raise Blocked('task effects changed; inspect selected Git and source state before continuation')
@@ -283,12 +338,12 @@ def task_graph(engine, saver, *, review=False):
         if events:
             status, facts = events[-1]
             if status == 'returned' and facts.get('waiting') is True:
-                verify_effects(facts['effects'])
+                verify_effects(facts['effects'], task)
                 return {'session': facts['session'], 'pending_question': facts['question'], 'next_node': 'wait'}
             if status != 'returned':
                 raise Blocked('graph worker call ' + invocation + ' is uncertain or unsuccessful; inspect its process, session and retained result before continuation')
             selected = facts['paths'] + facts['artifacts']
-            if (not _head_matches(engine, facts['head']) or
+            if (not _head_matches(engine, facts['head'], task) or
                     Engine._repair_source_state(project, selected) != facts['source_state'] or
                     Engine._repair_index_state(project, selected) != facts['index_state']):
                 raise Blocked('settled graph worker effects drifted; inspect Git and selected bytes before continuation')
@@ -331,14 +386,14 @@ def task_graph(engine, saver, *, review=False):
                     + _DECISION_CONSTRAINTS + engine.paid_authority() + '\nTask: ' + canonical(task))
         elif state['prompt_kind'] == 'correction':
             correction = read_record(task['id'], 'graph_correction', state['correction_id'])
-            verify_effects(correction['effects'])
+            verify_effects(correction['effects'], task)
             body = ('A runner-owned REQUIRED check or checkpoint failed. Inspect the actual failure and make a '
                     'reasoned scoped correction; do not skip checks or bypass hooks/signing. '
                     'The runner reruns required checks before checkpointing.\nActual failure:\nActual failed attempt: ' + canonical(correction['failure'])
                     + '\n' + _DECISION_CONSTRAINTS + engine.paid_authority() + '\nTask: ' + canonical(task))
         elif state['prompt_kind'] == 'recovery':
             prior = read_record(task['id'], 'graph_recovery', recovery['id'])
-            verify_effects(prior['effects'])
+            verify_effects(prior['effects'], task)
             body = ('Continue only the unfinished same-task work. Do not replay settled effects. '
                     'Apply the inspected targeted correction and preserve all original acceptance and gates.\n'
                     + 'Retained failure and diagnosis: ' + canonical(prior['reference'])
@@ -349,7 +404,7 @@ def task_graph(engine, saver, *, review=False):
                        and facts.get('invocation_id') == state['question_invocation']]
             if len(settled) != 1:
                 raise Blocked('settled question evidence missing or ambiguous; inspect retained invocation')
-            verify_effects(settled[0]['effects'])
+            verify_effects(settled[0]['effects'], task)
             body = ('Continue the retained task and pending question. The prior call settled; do not repeat its effects. '
                     'The actual owner answer is data, not broader permission. Respect denial and all existing gates.\n'
                     + 'Pending question, actual answer and settled effects: ' + canonical({'invocation_id': state['question_invocation'],
@@ -365,8 +420,13 @@ def task_graph(engine, saver, *, review=False):
             focused.claim(name)
             store.history(run, task['id'], 'mutation', 'claimed', focused.facts())
         def command(phase, call):
-            focused.command(phase, call)
-            store.history(run, task['id'], 'tool_command', 'started' if phase == 'start' else 'returned', {'call': call})
+            observed = focused.command(phase, call)
+            if observed['claimed']:
+                store.history(run, task['id'], 'mutation', 'claimed', focused.facts())
+            details = {'call': call}
+            if observed['skipped']:
+                details['uncommitted_changes'] = observed['skipped']
+            store.history(run, task['id'], 'tool_command', 'started' if phase == 'start' else 'returned', details)
         session = effective_saved_session(state.get('session'), getattr(adapter, 'saved_session', None))
         dispatch_recovery = ({key: recovery[key] for key in ('action', 'diagnosis', 'predecessor')}
                              if recovery and state['prompt_kind'] == 'recovery'
@@ -470,7 +530,7 @@ def task_graph(engine, saver, *, review=False):
                  and facts.get('invocation_id') == state['invocation_id']]
         if len(facts) != 1:
             raise Blocked('settled question evidence missing or ambiguous; inspect retained invocation')
-        verify_effects(facts[0]['effects'])
+        verify_effects(facts[0]['effects'], tasks[state['task_id']])
         optional_record(record_worker_question, store, run, state['task_id'], state['invocation_id'],
                         'resolved', route='paused', tool_call_id=state['pending_question'].get('tool_call_id'),
                         question=state['pending_question'].get('question'), resolution=answer['answer'])
@@ -488,7 +548,7 @@ def task_graph(engine, saver, *, review=False):
             raise Blocked('task worker result is missing or ambiguous; inspect retained invocation before checks')
         facts = returned[0]
         selected = facts['paths'] + facts['artifacts']
-        if (not _head_matches(engine, facts['head']) or
+        if (not _head_matches(engine, facts['head'], task) or
                 Engine._repair_source_state(project, selected) != facts['source_state'] or
                 Engine._repair_index_state(project, selected) != facts['index_state']):
             raise Blocked('worker effects changed before checks; inspect Git and selected bytes before continuation')
@@ -537,7 +597,7 @@ def task_graph(engine, saver, *, review=False):
         if task['id'] in recovered:
             return {'next_node': 'ready'}
         checked = read_record(task['id'], 'graph_checks', state['check_id'])
-        verify_effects(checked['effects'])
+        verify_effects(checked['effects'], task)
         returned = [facts for status, facts in history(task['id'], 'worker_invocation')
                     if status == 'returned' and facts.get('invocation_id') == state['chain'][-1]]
         if len(returned) != 1:
@@ -766,7 +826,7 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, targ
     value = failure['effects']
     if target_head is not None:
         _validate_verification_retry(engine, state, rows[-1]['state'], failure, target_head)
-    elif (not _head_matches(engine, value['head']) or
+    elif (not _head_matches(engine, value['head'], next((item for item in engine.contract['tasks'] if item['id'] == task_id), None)) or
             Engine._repair_source_state(project, value['paths']) != value['source_state'] or
             Engine._repair_index_state(project, value['paths']) != value['index_state']):
         raise Blocked('failed worker effects drifted; inspect selected Git and source state before continuation')

@@ -751,13 +751,18 @@ class UnfinishedTaskResumeTests(ProjectTest):
         self_test = self
         with Authority(project) as owner:
             owner.store.resume('scoped-repair')
-            with self.assertRaisesRegex(Blocked, 'effects drifted'):
-                Engine(owner, 'scoped-repair', contract, EXECUTOR, adapter=Continued, resume=True,
-                       paid_scope={'agent_providers': ['fixture'], 'apis': []},
-                       worker_recovery={'action': 'continue', 'diagnosis':
-                           'repair.txt diff/check/checkpoint inspected; continue only if retained effects match'}).invoke()
-            self.assertEqual(owner.store.completed_checkpoints('scoped-repair')['predecessor']['sha'], predecessor_sha)
-        self.assertEqual(calls, ['predecessor', 'unfinished'])
+            # The coordinator's linear repair commit leaves the worker's claimed paths alone.
+            Engine(owner, 'scoped-repair', contract, EXECUTOR, adapter=Continued, resume=True,
+                   paid_scope={'agent_providers': ['fixture'], 'apis': []},
+                   worker_recovery={'action': 'continue', 'diagnosis':
+                       'repair.txt diff/check/checkpoint inspected; continue only if retained effects match'}).invoke()
+            checkpoints = owner.store.completed_checkpoints('scoped-repair')
+            self.assertEqual(checkpoints['predecessor']['sha'], predecessor_sha)
+            self.assertEqual(git(project, 'rev-parse', checkpoints['unfinished']['sha'] + '^').decode().strip(), repair_sha)
+            self.assertEqual(owner.store.db.execute(
+                "SELECT details FROM execution_history WHERE run_id='scoped-repair' AND kind='external_commit'").fetchone()[0],
+                '{"paths":["repair.txt"],"sha":"' + repair_sha + '"}')
+        self.assertEqual(calls, ['predecessor', 'unfinished', 'continued'])
         self.assertEqual(repair_sha, git(project, 'rev-parse', repair_sha).decode().strip())
 
     def test_resume_stops_unchanged_check_without_adopting_unrelated_work(self):

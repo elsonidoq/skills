@@ -281,6 +281,89 @@ class GraphExecutionTests(ProjectTest):
             self.assertIn('manual gate', prompt.lower())
             self.assertIn('save-adr', prompt)
 
+    def _run_bash_task_with_external_commit(self, run, external):
+        """A bash call edits owned files; the run stops; someone commits; the run resumes."""
+        project = self.project
+        (project/'gone.txt').write_text('tracked\n')
+        git(project, 'add', '--', 'gone.txt')
+        git(project, 'commit', '-qm', 'fixture tracked file')
+        self.base = git(project, 'rev-parse', 'HEAD').decode().strip()
+        (project/'coordinator.txt').write_text('coordinator work\n')
+        class Worker:
+            def __init__(self, *args, **kwargs):
+                self.saved_session = {'id': 'fixture', 'file': str(project/'session')}
+            def prompt(self, prompt, **kwargs):
+                # One bash call creates, changes and deletes owned files without edit/write.
+                kwargs['command']('start', 'bash-1')
+                (project/'owned.txt').write_text('changed by bash\n')
+                (project/'new').mkdir()
+                (project/'new/file.txt').write_text('created by bash\n')
+                (project/'gone.txt').unlink()
+                (project/'outside.txt').write_text('not owned\n')
+                kwargs['command']('end', 'bash-1')
+                return 'done'
+        tasks = [{'id': 'bash', 'description': 'bash edits', 'owned_paths': ['owned.txt', 'new/', 'gone.txt']}]
+        with Authority(project) as owner:
+            engine = self.start(owner, run, tasks, Worker)
+            original = owner.store.history
+            def stop(run_id, task, kind, state, details=None, **kwargs):
+                result = original(run_id, task, kind, state, details, **kwargs)
+                if kind == 'worker_invocation' and state == 'returned':
+                    raise KeyboardInterrupt()
+                return result
+            config = {'configurable': {'thread_id': run}}
+            with graph_saver(owner) as saver, patch.object(owner.store, 'history', side_effect=stop):
+                with self.assertRaises(KeyboardInterrupt):
+                    task_graph(engine, saver).invoke({}, config, durability='sync')
+            for name in external:
+                git(project, 'add', '--', name)
+            git(project, 'commit', '-qm', 'coordinator commit', '--', *external)
+            with graph_saver(owner) as saver:
+                result = task_graph(engine, saver).invoke(None, config, durability='sync')
+            history = [(r['kind'], json.loads(r['details'])) for r in owner.store.db.execute(
+                'SELECT kind,details FROM execution_history WHERE run_id=? ORDER BY seq', (run,))]
+        return result, history
+
+    def test_bash_changes_are_committed_and_external_commit_is_accepted(self):
+        project = self.project
+        result, history = self._run_bash_task_with_external_commit('bash', ['coordinator.txt'])
+        self.assertIn('bash', result['checkpoints'])
+        commit = git(project, 'show', '--name-status', '--format=%s', 'HEAD').decode().split('\n')
+        self.assertEqual(commit[0], 'workflow: bash')
+        self.assertEqual(sorted(filter(None, commit[1:])), ['A\tnew/file.txt', 'D\tgone.txt', 'M\towned.txt'])
+        self.assertEqual(git(project, 'show', '--format=%s', '-s', 'HEAD^'), b'coordinator commit\n')
+        # A file outside owned_paths is not observed, claimed or committed.
+        self.assertIn('?? outside.txt', git(project, 'status', '--porcelain').decode())
+        self.assertEqual([facts['paths'] for kind, facts in history if kind == 'external_commit'], [['coordinator.txt']])
+
+    def test_bash_change_the_task_cannot_claim_is_reported_not_fatal(self):
+        project = self.project
+        (project/'owned.txt').write_text('prior dirty work\n')
+        class Worker:
+            def __init__(self, *args, **kwargs):
+                self.saved_session = {'id': 'fixture', 'file': str(project/'session')}
+            def prompt(self, prompt, **kwargs):
+                kwargs['command']('start', 'bash-1')
+                (project/'owned.txt').write_text('changed by bash\n')
+                (project/'fresh.txt').write_text('new\n')
+                kwargs['command']('end', 'bash-1')
+                return 'done'
+        tasks = [{'id': 'one', 'description': 'work', 'owned_paths': ['owned.txt', 'fresh.txt']}]
+        with Authority(project) as owner:
+            engine = self.start(owner, 'skip', tasks, Worker)
+            with graph_saver(owner) as saver:
+                task_graph(engine, saver).invoke({}, {'configurable': {'thread_id': 'skip'}}, durability='sync')
+            skipped = [item['path'] for row in owner.store.db.execute(
+                "SELECT details FROM execution_history WHERE run_id='skip' AND kind='tool_command'")
+                for item in json.loads(row['details']).get('uncommitted_changes', [])]
+        self.assertEqual(skipped, ['owned.txt'])
+        self.assertEqual(git(project, 'show', '--name-only', '--format=', 'HEAD'), b'fresh.txt\n')
+        self.assertEqual((project/'owned.txt').read_text(), 'changed by bash\n')
+
+    def test_external_commit_of_claimed_path_stops_with_actionable_error(self):
+        with self.assertRaisesRegex(Blocked, 'owned.txt, which unfinished task bash claimed'):
+            self._run_bash_task_with_external_commit('overlap', ['owned.txt'])
+
     def test_settled_result_reused_after_crash_before_graph_checkpoint(self):
         project, calls = self.project, []
         class Worker:

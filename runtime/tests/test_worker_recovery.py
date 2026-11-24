@@ -252,11 +252,12 @@ class GraphRecoveryTests(ProjectTest):
                 graph = task_graph(runner, saver, review=True)
                 def retry(commit, reason=diagnosis):
                     return graph_recovery_action(runner, graph, config, 'fresh', diagnosis=reason, target_head=commit)
-                with self.assertRaisesRegex(Blocked, 'effects drifted'): retry(None)
                 if case == 'undeclared':
                     with self.assertRaisesRegex(Blocked, 'explicit empty owned_paths'): retry(target)
                     self.assertEqual(calls, ['producer', 'verify'])
                     return
+                # A verification task proves one exact HEAD: a new commit needs a pinned target.
+                with self.assertRaisesRegex(Blocked, 'effects drifted'): retry(None)
                 with self.assertRaisesRegex(Blocked, 'differs from HEAD'): retry(failed_head)
                 if case == 'second repair':
                     with self.assertRaisesRegex(Blocked, 'explicitly failed'): retry(target)

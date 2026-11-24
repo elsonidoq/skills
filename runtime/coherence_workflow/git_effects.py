@@ -1,6 +1,8 @@
 """Action-scoped Git checkpoints that preserve unrelated work."""
 from pathlib import Path
+import hashlib
 import os
+import stat
 import subprocess
 import tempfile
 
@@ -127,13 +129,62 @@ class FocusedGit:
                 path.read_bytes() != expected['bytes']):
             raise Blocked('cannot claim handoff path ' + name + ': operation claim found changed pre-transfer bytes; restore the authorized bytes or supply a current exact handoff_paths entry')
 
+    def _dirty_snapshot(self):
+        """Map each dirty, non-ignored task-scope file to its current content state."""
+        limits = self.task.get('owned_paths')
+        if limits is not None and not limits:
+            return {}
+        specs = [':(literal)' + name.rstrip('/') for name in limits or []]
+        raw = git(self.project, 'status', '--porcelain=v1', '-z', '--untracked-files=all',
+                  '--no-renames', '--', *specs)
+        result = {}
+        for entry in filter(None, raw.split(b'\0')):
+            name = os.fsdecode(entry[3:])
+            if name.split('/')[0] in ('.git', '.coherence'):
+                continue
+            try:
+                info = os.lstat(self.project / name)
+            except FileNotFoundError:
+                result[name] = None
+                continue
+            if stat.S_ISREG(info.st_mode):
+                result[name] = (hashlib.sha256((self.project / name).read_bytes()).hexdigest(), info.st_mode)
+            else:
+                result[name] = ('other', info.st_mode, info.st_mtime_ns)
+        return result
+
     def command(self, phase, call):
-        """Commands are never filesystem/Git admission points."""
+        """Claim files that a command (for example bash) created, changed or deleted.
+
+        Commands are not admission points: a changed file that this task may not
+        claim is reported and left uncommitted, as before, rather than stopping the run.
+        """
+        snapshots = self.__dict__.setdefault('_command_snapshots', {})
+        if phase == 'start':
+            snapshots[call] = self._dirty_snapshot()
+            return {'claimed': [], 'skipped': []}
+        before = snapshots.pop(call, None)
+        if before is None:
+            return {'claimed': [], 'skipped': []}
+        claimed, skipped = [], []
+        for name, state in sorted(self._dirty_snapshot().items()):
+            if before.get(name, 'clean') == state:
+                continue
+            if self._matches(name, self.task.get('generated_outputs', [])):
+                skipped.append({'path': name, 'reason': 'generated output; not committed'})
+                continue
+            try:
+                self.claim(name, clean_before=name not in before)
+            except Blocked as exc:
+                skipped.append({'path': name, 'reason': str(exc)})
+            else:
+                claimed.append(name)
+        return {'claimed': claimed, 'skipped': skipped}
 
     def _matches(self, name, paths):
         return any(name == path.rstrip('/') or name.startswith(path.rstrip('/') + '/') for path in paths)
 
-    def claim(self, name):
+    def claim(self, name, clean_before=False):
         handoff = name in self.handoff
         try:
             editable_path(self.project, name)
@@ -150,7 +201,8 @@ class FocusedGit:
         # belong to this task, but still pass the safe-path and scope checks above/below.
         if handoff and not known:
             self._verify_handoff(name)
-        if path_has_preexisting_changes(self.project, name) and not (known or handoff):
+        # clean_before: a command observed this path clean just before it changed it.
+        if not clean_before and path_has_preexisting_changes(self.project, name) and not (known or handoff):
             raise Blocked('cannot claim pre-existing dirty path ' + name + ': operation claim requires an exact handoff_paths entry; broad owned_paths coverage is not transfer authority')
         if limits is not None and not self._matches(name, limits) and not artifact:
             raise Blocked('path outside optional owned_paths: ' + name)

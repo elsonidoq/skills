@@ -107,10 +107,9 @@ _IMPLEMENTATION_AUTHORITY = (
 
 # Shared worker completion reporting. Keep stage ownership explicit without parsing summaries.
 _COMPLETION_REPORTING = (
-    'Create and change files only with the edit or write tools; the focused checkpoint includes only '
-    'files changed through them, so files made by bash commands or shell redirection are never committed. If a required '
-    'file already has correct content but was not written with edit/write, write it again with the write tool. Use bash '
-    'for commands and checks, not for file changes. '
+    'Prefer the edit and write tools for file changes. The focused checkpoint also includes files that a bash command '
+    'creates, changes or deletes inside this task\'s scope; files that were already dirty before the task or are outside '
+    'its owned paths are not committed. '
     'Work autonomously until the assigned implementation and worker-owned acceptance are complete, within the approved '
     'scope and safety/permission boundaries. Unfinished implementation, unrun checks, task complexity, and correctable or '
     'intermittent test failures are reasons to continue working, not reasons to return incomplete. Inspect actual failures, '

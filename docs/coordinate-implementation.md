@@ -443,7 +443,12 @@ connection with short transactions; no transaction or bookkeeping lock spans an 
 All siblings settle before serial checks, corrections, diff, stage and one focused commit per
 task. Dependents wait for accepted producer checkpoints. A failed branch retains successful
 sibling effects/checkpoints; inspected recovery continues only unfinished work. Source/index or
-unexplained HEAD drift stops affected continuation, never authorizes a provider/Git replay.
+unexplained HEAD drift stops affected continuation, never authorizes a provider/Git replay. A linear commit
+made outside the run (for example by the coordinator) is accepted for implementation-task effects when it does
+not change a path that an unfinished task claimed; history records it as `external_commit`, and later checks,
+checkpoints and the final review use the actual HEAD. A commit that includes such a claimed path stops with the
+path and task named. Rewritten history (reset, rebase, amend), verification tasks (`owned_paths: []`) and
+review/completion targets keep the strict rule.
 Questions are presented serially after siblings settle.
 
 Local-mechanism proof (real SDK fixture provider, temporary Git; not live-model judgment):
@@ -496,7 +501,11 @@ SHA remains separate from the metric artifact SHA; no artifact means no empty co
 A collision, malformed tail, drift, hook/signing failure, or abrupt process death retains bytes and reports
 an artifact gap separately without changing the task/review result or automatically recovering/replaying it.
 Optional `owned_paths` limits source file/directory scope. Explicit SDK edit/write selections identify
-source checkpoint paths; the runner never derives ownership by scanning a clean baseline. A task may
+source checkpoint paths; the runner never derives ownership by scanning a clean baseline. Around each worker
+command (for example bash), the runner compares non-ignored dirty files in the task scope (`owned_paths`, or the
+worktree without it) before and after the command, and claims each file the command created, changed or deleted.
+A changed file that the task cannot claim (dirty before the task, outside `owned_paths`, or a generated output)
+is not committed and does not stop the run; `tool_command` history records it as `uncommitted_changes`. A task may
 optionally provide `handoff_paths`, a list of exact explicitly authorized pre-existing dirty regular files.
 At task preparation the runner records each named file's bytes; at the actual claim it requires those
 same bytes, then permits the intended edit and focused checkpoint. A resumed task retains an already

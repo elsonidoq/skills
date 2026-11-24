@@ -217,11 +217,24 @@ class ProductionWaveTests(ProjectTest):
                             (self.project/'drift.txt').write_text('unexpected target\n')
                             git(self.project, 'add', '--', 'drift.txt')
                             git(self.project, 'commit', '-qm', 'unrelated target drift')
-                        with self.assertRaisesRegex(Blocked, 'effects changed'):
+                        if drift == 'source':
+                            with self.assertRaisesRegex(Blocked, 'effects changed'):
+                                graph.invoke(None, config, durability='sync')
+                            self.assertEqual(owner.store.completed_checkpoints(run), {})
+                        else:
+                            # A linear commit outside the run that leaves claimed paths alone is accepted.
                             graph.invoke(None, config, durability='sync')
-                        self.assertEqual((self.root/'events').read_text(), before)
-                        self.assertEqual(owner.store.completed_checkpoints(run), {})
-                        self.assertEqual(len(connections), 2)
+                            self.assertTrue(owner.store.completed_checkpoints(run))
+                            external = [json.loads(row[0])['paths'] for row in owner.store.db.execute(
+                                "SELECT details FROM execution_history WHERE run_id=? AND kind='external_commit'", (run,))]
+                            self.assertEqual(external, [['drift.txt']])
+                        after = (self.root/'events').read_text()
+                        # Settled wave workers A and B are never replayed.
+                        self.assertTrue(after.startswith(before))
+                        self.assertNotIn('start A', after[len(before):])
+                        self.assertNotIn('start B', after[len(before):])
+                        # Two wave workers, plus dependent task C after an accepted commit.
+                        self.assertEqual(len(connections), 2 if drift == 'source' else 3)
                         self.assertIsNot(connections[0], connections[1])
                 # Restore only these test-owned files for the next subcase.
                 for name in ('a.txt', 'b.txt'):
