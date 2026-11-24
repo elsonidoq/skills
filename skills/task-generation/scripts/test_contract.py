@@ -198,8 +198,11 @@ class TaskGenerationContractTests(unittest.TestCase):
     def test_manual_steps_are_gates_not_shell_checks(self):
         require_clauses(self, '## Encode the tasks for their consumer', (
             'The runner executes every `checks` entry as a shell command',
-            'put a manual or owner-confirmation step in the task `gates` list',
-            'never in `checks`',
+            'manual steps never go in `checks`',
+            "The runner asks `gates` before the task's worker starts",
+            'put an owner approval needed before the work in the task `gates` list',
+            'Keep a manual confirmation of finished work as acceptance prose',
+            'put that gate on the dependent task',
         ))
 
     def test_adapter_legacy_and_checkpoint_boundaries_remain(self):
