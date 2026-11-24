@@ -98,8 +98,14 @@ export async function createWorkflowSession({project, executor, readOnly = false
   await mkdir(sessionDir, {recursive: true});
   const canonicalSessionDir = await realpath(sessionDir);
   if (reuseKey !== null && typeof reuseKey !== 'string') throw new Error('saved session reuse key must be a string');
+  // Only explicitly selected extensions load, e.g. one that registers the provider.
+  const extensions = executor.extensions ?? [];
+  if (!Array.isArray(extensions) || extensions.some(item => typeof item !== 'string' || !item)) {
+    throw new Error('executor extensions must be a list of extension paths; correct the selected executor profile');
+  }
   const compatibility = {project: path.resolve(project), provider: executor.provider,
-    model: executor.model, effort: executor.effort, readOnly, reuseKey};
+    model: executor.model, effort: executor.effort, readOnly, reuseKey,
+    ...(extensions.length ? {extensions} : {})};
   // Only the runner's explicit review→repair handoff may enable mutation in a
   // previously read-only session. All other effective resources stay identical.
   if (reviewRepair && (readOnly || !savedSession || savedSession.compatibility?.readOnly !== true)) {
@@ -130,13 +136,13 @@ export async function createWorkflowSession({project, executor, readOnly = false
     ...(process.env.COHERENCE_AUTH_PATH ? {authPath: process.env.COHERENCE_AUTH_PATH} : {}),
     ...(process.env.COHERENCE_CATALOG_PATH ? {modelsStorePath: process.env.COHERENCE_CATALOG_PATH} : {}),
   });
-  const model = modelRuntime.getModel(executor.provider, executor.model);
-  if (!model) throw new Error(`Model not found: ${executor.provider}/${executor.model}`);
   const resourceLoader = new DefaultResourceLoader({
     cwd: project, agentDir: getAgentDir(),
     // No ambient extension may add a writer to the independent reviewer or
     // bypass the runner's focused checkpoint. Ordinary context/skills still load.
+    // Selected extensions load, but only the explicit tool list below is active.
     noExtensions: true,
+    additionalExtensionPaths: extensions,
     noSkills: reviewerContext,
     noPromptTemplates: true,
     extensionFactories: [pi => {
@@ -197,6 +203,19 @@ export async function createWorkflowSession({project, executor, readOnly = false
     }],
   });
   await resourceLoader.reload();
+  const loaded = resourceLoader.getExtensions();
+  if (loaded.errors.length) {
+    throw new Error('executor extension load failed: ' + loaded.errors.map(e => `${e.path}: ${e.error}`).join('; ') +
+      '. Correct the extension path in the selected executor profile.');
+  }
+  // Same provider flush as the SDK's createAgentSessionServices.
+  for (const {name, config} of loaded.runtime.pendingProviderRegistrations) modelRuntime.registerProvider(name, config);
+  loaded.runtime.pendingProviderRegistrations = [];
+  for (const {provider} of loaded.runtime.pendingNativeProviderRegistrations) modelRuntime.registerNativeProvider(provider);
+  loaded.runtime.pendingNativeProviderRegistrations = [];
+  if (extensions.length) await modelRuntime.refresh({allowNetwork: false});
+  const model = modelRuntime.getModel(executor.provider, executor.model);
+  if (!model) throw new Error(`Model not found: ${executor.provider}/${executor.model}`);
   ({session} = await createAgentSession({
     cwd: project, modelRuntime, model, thinkingLevel: executor.effort,
     tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'ask_owner', 'cleanup_artifact', 'report_task_outcome'],

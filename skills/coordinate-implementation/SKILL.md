@@ -53,6 +53,8 @@ Never search neighboring repositories, home directories, other worktrees or hist
 fall back after a failed override, create/copy configuration, authenticate providers or invoke a
 model merely to resolve it. Supply project, task file and executor JSON containing the
 owner-selected executor/effort (provider, model, effort), without silent substitutions.
+A provider registered by a Pi extension (for example `claude-bridge`) needs that profile's
+optional `extensions` path list; the host loads no other extension and activates none of their tools.
 An optional `implementation_fallback` profile permits stronger implementation recovery separately
 from the reviewer assignment; never infer that permission from `reviewer` alone. There is no owner catalog or binding
 assessment. SDK/dependency/authentication errors report the actual failed operation. Routine scoped technical

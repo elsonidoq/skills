@@ -41,6 +41,39 @@ test('actual SDK worker exposes ask_owner while independent reviewer remains rea
   } finally { await fs.rm(project, {recursive: true, force: true}); }
 });
 
+test('selected executor extension registers its provider without activating its tools', async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-extension-provider-'));
+  try {
+    // Offline fixture provider: no prompt or provider request is made.
+    const extension = path.join(project, 'fixture-provider.mjs');
+    await fs.writeFile(extension, `export default function (pi) {
+  pi.registerProvider('fixture-bridge', {baseUrl: 'fixture', apiKey: 'not-used', api: 'fixture-bridge',
+    models: [{id: 'fixture-model', name: 'Fixture', reasoning: true, input: ['text'],
+      cost: {input: 0, output: 0, cacheRead: 0, cacheWrite: 0}, contextWindow: 100000, maxTokens: 1000}],
+    streamSimple: () => { throw new Error('fixture provider must not be called'); }});
+  pi.registerTool({name: 'FixtureWriter', label: 'Fixture writer', description: 'must stay inactive',
+    parameters: {type: 'object', properties: {}}, execute: async () => ({content: [], details: {}})});
+}
+`);
+    const executor = {provider: 'fixture-bridge', model: 'fixture-model', effort: 'medium'};
+    await assert.rejects(createWorkflowSession({project, executor}, async () => ({})), /Model not found: fixture-bridge/);
+    for (const readOnly of [false, true]) {
+      const session = await createWorkflowSession({project, executor: {...executor, extensions: [extension]}, readOnly},
+        async () => ({answer: 'fixture'}));
+      try {
+        assert.equal(session.model.provider, 'fixture-bridge');
+        assert.equal(session.thinkingLevel, 'medium');
+        assert.ok(!session.getActiveToolNames().includes('FixtureWriter'), 'extension tools stay outside the explicit list');
+        assert.deepEqual(session.coherenceSavedSession.compatibility.extensions, [extension]);
+      } finally { session.dispose(); }
+    }
+    await assert.rejects(createWorkflowSession({project, executor: {...executor, extensions: [path.join(project, 'missing.mjs')]}},
+      async () => ({})), /executor extension load failed: .*missing\.mjs/);
+    await assert.rejects(createWorkflowSession({project, executor: {...executor, extensions: 'x'}}, async () => ({})),
+      /executor extensions must be a list/);
+  } finally { await fs.rm(project, {recursive: true, force: true}); }
+});
+
 test('exact SDK assignment rejects missing or clamped effort and post-construction drift before prompt', async () => {
   const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-exact-assignment-'));
   let promptCalls = 0;

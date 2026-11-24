@@ -338,6 +338,21 @@ An optional `implementation_fallback` object uses the same provider/model/effort
 explicitly permits a stronger implementation worker during inspected recovery. A reviewer profile
 alone grants no implementation fallback. Availability errors remain actual errors; do not install,
 authenticate or silently substitute another model.
+
+The host loads no ambient Pi extension. A provider that an extension registers, such as
+`claude-bridge` from `pi-claude-bridge`, needs an optional `extensions` list of extension paths
+in each profile that uses it (worker, `implementation_fallback`, `reviewer`). Relative paths
+resolve from the project root. The host loads only those paths, registers their providers, and
+keeps the same explicit worker/reviewer tool list; extension tools stay inactive. For example:
+
+```json
+{"provider":"claude-bridge","model":"claude-sonnet-5","effort":"medium",
+ "extensions":["/home/USER/.pi/agent/npm/node_modules/pi-claude-bridge/src/index.ts"],
+ "reviewer":{"provider":"claude-bridge","model":"claude-sonnet-5","effort":"medium",
+  "extensions":["/home/USER/.pi/agent/npm/node_modules/pi-claude-bridge/src/index.ts"]}}
+```
+
+A path that does not load stops the session with the path and the load error.
 For **this repository**, every launch (including continuations/corrections) supplies
 `--executor .pi/workflow-executor.json`, or that file's absolute path through the parent
 bridge: Sol 6.1/medium workers, implementation fallback and reviewers. Other projects retain their own
