@@ -3,6 +3,7 @@
 These records contain review findings, approval evidence and historical verification;
 their verdicts and validation limits belong to each linked record, not this index.
 
+- [Issue #53 — independent code review](issue-53-code-review.md): Opus 5.5 read-only review of `894ca3f`; ready; optional minors (store reads adapter text; store negative test added afterwards); no live provider run.
 - [Issues #51/#52 — independent code review](issues-51-52-code-review.md): Opus 5.5 read-only review of PR #54 at `ccc8019`; #52 ready, #51 gate-timing finding; monitor note superseded (monitor retired).
 - [Issues #51/#52 — repair review](issues-51-52-repair-review.md): Opus 5.5 repair-delta review of `232fdcb`; #51 finding resolved, PR verdict ready; end-to-end gate run and full runtime suite not run.
 - [ADR decisions and continuity — approval and independent review](adr-decisions-planning-review.md): exact source/task authority, full-range findings, separately approved reviewer configuration and fresh Sol 6.1/medium correction recheck; accepted within stated source-inspection/offline-test limits, not a claim of successful workflow-run history.

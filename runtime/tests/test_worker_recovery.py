@@ -684,6 +684,30 @@ class WorkerRecoveryTests(ProjectTest):
     def test_failed_external_completion_does_not_release_escalation_stop(self):
         self.external_completion_after_escalation(check_passes=False)
 
+    def test_only_attested_sessionless_sdk_error_releases_unbound_reservation(self):
+        settled = sdk_error_detail({'message': 'Model not found', 'settled': True}, True)
+        uncertain = sdk_error_detail({'message': 'Model not found'}, True)
+        with Authority(self.project) as owner:
+            for n, (state, error, session, allowed) in enumerate((
+                    ('failed', settled, None, True),
+                    ('failed', uncertain, None, False),
+                    ('failed', 'SDK host exited without a result (exit 1): ', None, False),
+                    ('interrupted', settled, None, False))):
+                run = 'sessionless-' + str(n)
+                with self.subTest(state=state, error=error):
+                    owner.store.start(run, self.base)
+                    owner.store.reserve_worker_dispatch(run, 'one', 'first', None)
+                    owner.store.history(run, 'one', 'worker_invocation', 'started', {'invocation_id': 'first'})
+                    owner.store.history(run, 'one', 'worker_invocation', state,
+                                        {'invocation_id': 'first', 'error': error, 'session': session})
+                    reserve = lambda: owner.store.reserve_worker_dispatch(run, 'one', 'second', None,
+                        recovery={'action': 'fresh', 'diagnosis': DIAGNOSIS, 'predecessor': 'first'})
+                    if allowed:
+                        reserve()
+                    else:
+                        with self.assertRaisesRegex(Blocked, 'unbound fresh session'):
+                            reserve()
+
     def test_recovery_requires_diagnosis_and_exact_settled_history(self):
         with Authority(self.project) as owner:
             for diagnosis in ('', 'retry', 'unknown'):
