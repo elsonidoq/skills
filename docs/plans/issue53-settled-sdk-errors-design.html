@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #53 — Settled SDK errors: high-level design</title>
+<style>
+  :root { --reused:#e8eef7; --reused-b:#5b7aa6; --changed:#fff1d6; --changed-b:#c9891a;
+          --ext:#eeeeee; --ext-b:#777; --ink:#1d2330; --muted:#555f70; --ok:#1f7a3a; --bad:#a32020; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink); background:#fafbfc; }
+  main { max-width:1080px; margin:0 auto; padding:1rem; }
+  h1 { font-size:1.4rem; margin:.5rem 0; } h2 { font-size:1.15rem; margin-top:2rem; border-bottom:1px solid #ddd; padding-bottom:.25rem; }
+  .status { background:#fff; border:1px solid #ccc; border-left:6px solid var(--changed-b); padding:.6rem .8rem; }
+  .legend { display:flex; flex-wrap:wrap; gap:.75rem; font-size:.9rem; margin:.5rem 0 1rem; }
+  .legend span { display:inline-flex; align-items:center; gap:.35rem; }
+  .sw { width:1rem; height:1rem; border:2px solid; display:inline-block; border-radius:3px; }
+  .lanes { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+  @media (max-width:760px) { .lanes { grid-template-columns:1fr; } }
+  .lane { background:#fff; border:1px solid #d6dae1; border-radius:8px; padding:.75rem; }
+  .lane h3 { margin:.1rem 0 .6rem; font-size:1rem; }
+  .flow { display:flex; flex-direction:column; align-items:stretch; }
+  button.box { font:inherit; text-align:left; cursor:pointer; padding:.55rem .7rem; border:2px solid; border-radius:6px; width:100%; }
+  button.box:focus-visible { outline:3px solid #2563eb; outline-offset:2px; }
+  button.box .tag { float:right; font-size:.75rem; font-weight:600; padding:0 .35rem; border-radius:3px; background:#fff; border:1px solid currentColor; }
+  .reused { background:var(--reused); border-color:var(--reused-b); }
+  .changed { background:var(--changed); border-color:var(--changed-b); }
+  .ext { background:var(--ext); border-color:var(--ext-b); }
+  .arrow { position:relative; margin:.15rem 0 .15rem 1.4rem; padding:.35rem 0 .35rem 1rem; border-left:2px solid #8a94a6; font-size:.85rem; color:var(--muted); }
+  .arrow::after { content:""; position:absolute; left:-7px; bottom:-2px; border:6px solid transparent; border-top-color:#8a94a6; }
+  .arrow.up::after { bottom:auto; top:-2px; border-top-color:transparent; border-bottom-color:#8a94a6; }
+  .arrow code { font-size:.8rem; }
+  table { border-collapse:collapse; width:100%; background:#fff; font-size:.92rem; }
+  th, td { border:1px solid #d6dae1; padding:.4rem .5rem; vertical-align:top; text-align:left; }
+  th { background:#eef1f5; }
+  .s { color:var(--ok); font-weight:600; } .u { color:var(--bad); font-weight:600; }
+  .tablewrap { overflow-x:auto; }
+  ul.exec li { margin:.25rem 0; }
+  dialog { max-width:min(36rem, 94vw); border:1px solid #888; border-radius:8px; padding:1rem 1.1rem; }
+  dialog::backdrop { background:rgba(0,0,0,.35); }
+  dialog h3 { margin-top:0; }
+  dialog .close { font:inherit; padding:.35rem .8rem; border-radius:5px; border:1px solid #666; background:#f3f4f6; cursor:pointer; }
+  .note { font-size:.85rem; color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<h1>Issue #53 — Settled SDK errors allow inspected worker recovery</h1>
+<p class="status"><strong>Status:</strong> PROPOSED high-level design, not implemented. Stage 1 of
+TinySpec <a href="issue53-settled-sdk-errors-tinyspec.md">issue53-settled-sdk-errors-tinyspec.md</a>.
+The owner gives design agreement in the conversation, not on this page. Nothing on this page grants approval.
+Issue: <a href="https://github.com/elsonidoq/skills/issues/53">elsonidoq/skills#53</a>.</p>
+
+<h2 id="schematic">Schematic</h2>
+<p class="note">Click or press Enter/Space on a box for details. Arrows show data that moves between components (data flow), not approvals.</p>
+<div class="legend" aria-label="Legend">
+  <span><i class="sw changed" style="border-color:var(--changed-b)"></i>Changed (proposed)</span>
+  <span><i class="sw reused" style="border-color:var(--reused-b)"></i>Reused, unchanged (implemented today)</span>
+  <span><i class="sw ext" style="border-color:var(--ext-b)"></i>External SDK, unchanged</span>
+</div>
+
+<div class="lanes">
+  <section class="lane" aria-labelledby="lane1">
+    <h3 id="lane1">1. Failure path (worker invocation)</h3>
+    <div class="flow">
+      <button class="box reused" data-c="graph-worker">Graph worker node <span class="tag">reused</span></button>
+      <div class="arrow">prompt, <code>pause_questions=True</code></div>
+      <button class="box changed" data-c="adapter">PiAdapter (<code>pi_adapter.py</code>) <span class="tag">changed</span></button>
+      <div class="arrow">JSON request on stdin</div>
+      <button class="box changed" data-c="host">SDK host <code>execute()</code>/<code>main()</code> (<code>host.mjs</code>) <span class="tag">changed</span></button>
+      <div class="arrow">create session, prompt, wait for idle</div>
+      <button class="box ext" data-c="sdk">SDK <code>AgentSession</code> <span class="tag">external</span></button>
+      <div class="arrow up">error, <code>isIdle</code>, pending question (observed by host)</div>
+      <button class="box changed" data-c="host">SDK host emits error record <span class="tag">changed</span></button>
+      <div class="arrow"><code>{type:'error', message, settled attestation}</code></div>
+      <button class="box changed" data-c="adapter">PiAdapter decides suffix <span class="tag">changed</span></button>
+      <div class="arrow"><code>Blocked</code> text — with "effects are uncertain" only when not attested</div>
+      <button class="box reused" data-c="history">Execution history (failed <code>worker_invocation</code> row) <span class="tag">reused</span></button>
+    </div>
+  </section>
+  <section class="lane" aria-labelledby="lane2">
+    <h3 id="lane2">2. Recovery path (explicit resume)</h3>
+    <div class="flow">
+      <button class="box reused" data-c="coordinator">Coordinator: <code>resume --recovery-action</code> <span class="tag">reused</span></button>
+      <div class="arrow">action + inspected diagnosis</div>
+      <button class="box reused" data-c="gate">Uncertain gate (<code>graph.py</code> L821) <span class="tag">reused</span></button>
+      <div class="arrow up">reads error text, effects, session from failed row</div>
+      <button class="box reused" data-c="history">Execution history <span class="tag">reused</span></button>
+      <div class="arrow">no uncertain text → continue to checks</div>
+      <button class="box reused" data-c="checks">Existing recovery checks (invocation, HEAD, source, index, escalation, saved session) <span class="tag">reused</span></button>
+      <div class="arrow">pass → new invocation id</div>
+      <button class="box reused" data-c="graph-worker">Graph worker node dispatches <span class="tag">reused</span></button>
+      <div class="arrow">documents the rule</div>
+      <button class="box changed" data-c="doc">Recovery guide sentence <span class="tag">changed</span></button>
+    </div>
+  </section>
+</div>
+
+<h2 id="exec">Executive summary</h2>
+<ul class="exec">
+  <li><strong>Goal:</strong> a worker SDK error that is provably settled must not block
+    <code>resume --recovery-action fresh|continue</code>. Today every graph worker SDK error blocks every action.</li>
+  <li><strong>Mechanism:</strong> the host, which alone sees the SDK session at error time, adds a settled
+    attestation to its <code>error</code> record. The adapter omits the "effects are uncertain" text only when
+    that attestation is present.</li>
+  <li><strong>Settled means:</strong> (a) no session was created, or (b) the session is idle and has no pending
+    question. In SDK 1.4.0, idle means no agent run is active, and tools run only inside an agent run.</li>
+  <li><strong>Safety property kept:</strong> never redispatch with a live writer. Errors during an active run or a
+    pending question get no attestation and stay blocked. Absent attestation (old host, unknown) stays blocked.</li>
+  <li><strong>Normal checks still decide:</strong> once the gate passes, the existing invocation, HEAD, source, index,
+    escalation and saved-session checks apply unchanged. No new gate; no check removed.</li>
+  <li><strong>Why an addition is needed:</strong> the adapter cannot tell a settled error from an uncertain one;
+    the existing <code>error</code> record has only <code>message</code>. Trade-off: one additive field on an existing
+    record and a host-side observation, instead of fragile message-text matching.</li>
+  <li><strong>Limits:</strong> local tests use fakes or SDK mocks; no live provider overflow is run. Detached background
+    processes started by a tool are not detected (same as for a successful return).</li>
+  <li><strong>Out of scope:</strong> bridge compaction (#18), the "host exited without a result" path, historical
+    failure rows (no backfill), provider message-text matching.</li>
+</ul>
+
+<h2 id="classify">Error classification (proposed)</h2>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Error at host</th><th>Example</th><th>Session state at error</th><th>Attestation</th><th>Recovery result</th></tr></thead>
+  <tbody>
+    <tr><td>Request read/parse fails before <code>execute()</code></td><td>"SDK transport input closed"</td><td>No session</td><td class="s">settled</td><td><code>fresh</code> after normal checks; <code>continue</code> blocked (no saved session)</td></tr>
+    <tr><td><code>createWorkflowSession</code> throws</td><td>"Model not found: p/m"; extension load failure; saved-session mismatch</td><td>No session returned (its own partial session is disposed)</td><td class="s">settled</td><td><code>fresh</code> after normal checks; <code>continue</code> blocked</td></tr>
+    <tr><td>Exact-assignment mismatch before prompt</td><td>"exact SDK assignment mismatch before provider prompt"</td><td>Session idle; no run started</td><td class="s">settled</td><td><code>fresh</code>/<code>continue</code> after normal checks</td></tr>
+    <tr><td>Last assistant <code>stopReason: error</code> after <code>waitForIdle</code></td><td>"Prompt is too long"</td><td>Idle, no pending question</td><td class="s">settled</td><td><code>fresh</code>/<code>continue</code> after normal checks</td></tr>
+    <tr><td>Error while agent run active</td><td>a rejection before idle</td><td>Not idle</td><td class="u">none (uncertain)</td><td>blocked, as today</td></tr>
+    <tr><td>Question pause did not initiate abort</td><td>"question pause did not initiate SDK abort"</td><td>Pending question</td><td class="u">none (uncertain)</td><td>blocked, as today</td></tr>
+    <tr><td>Question pause did not reach idle</td><td>"question pause did not reach SDK idle"</td><td>Not idle</td><td class="u">none (uncertain)</td><td>blocked, as today</td></tr>
+    <tr><td>Host-owned cancel (SIGTERM/SIGINT)</td><td>operator interrupt</td><td>Interrupted</td><td class="u">none (proposed)</td><td>blocked, as today</td></tr>
+    <tr><td>Host exited without a result</td><td>crash, kill</td><td>Unknown (no host record)</td><td class="u">not applicable</td><td>blocked, as today (out of scope)</td></tr>
+    <tr><td>Historical failure rows</td><td>runs before this change</td><td>—</td><td class="u">none</td><td>blocked; <code>recover-task</code> path unchanged</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="note">Row 3 (exact-assignment mismatch) is derived from <code>promptSession</code>, which checks assignment before <code>session.prompt</code>. Its exact detection path is confirmed in the detailed approach.</p>
+
+<h2 id="interfaces">Interfaces and compatibility</h2>
+<ul class="exec">
+  <li><strong>Host → adapter <code>error</code> record:</strong> additive settled field (exact name fixed in the detailed
+    approach). Only the literal attested value counts.</li>
+  <li><strong>Old adapter + new host:</strong> old adapters read only <code>message</code>; the extra field is ignored. Behavior unchanged.</li>
+  <li><strong>New adapter + old host:</strong> no field → strict, as today.</li>
+  <li><strong>Graph store / recovery:</strong> no schema change; the failed row stores the error text as today.
+    The existing gate reads that text.</li>
+  <li><strong>Dependencies:</strong> pi SDK <code>AgentSession.isIdle</code> and <code>waitForIdle</code> (verified in installed 1.4.0). No version pin.</li>
+</ul>
+
+<h2 id="risks">Material risks</h2>
+<ul class="exec">
+  <li><strong>Wrong attestation</strong> could let a redispatch race a live writer. Mitigation: observe SDK state
+    directly, strict default, tests for every strict case.</li>
+  <li><strong>Detached processes</strong> from tools are not seen by <code>isIdle</code>. Same exposure as a normal
+    successful return; existing effect checks still run. Proposed as an accepted limit.</li>
+  <li><strong>SDK semantics change</strong> in a later release. Mitigation: host tests use the installed SDK where the existing suite does.</li>
+</ul>
+
+<dialog id="detail" aria-labelledby="detail-title">
+  <h3 id="detail-title"></h3>
+  <ul id="detail-body"></ul>
+  <button class="close" type="button" id="detail-close">Close</button>
+</dialog>
+</main>
+<script>
+const details = {
+  'graph-worker': ['Graph worker node (reused)', [
+    'Purpose: dispatches one task worker invocation; on failure records a worker_invocation row with error, session, effects and prompt (graph.py L466-L485).',
+    'Inputs/outputs: task prompt in; result or failure row out.',
+    'Boundary: always calls workers with pause_questions=True (graph.py L469).',
+    'Change: none.']],
+  'adapter': ['PiAdapter (changed)', [
+    'Purpose: decodes host transport records and raises Blocked on SDK error records.',
+    'Today: every error record with pause_questions gets "settlement and effects are uncertain ... do not redispatch" (pi_adapter.py L498-L502).',
+    'Proposed: omit that text only when the record carries the settled attestation; any other value keeps it.',
+    'Boundary: the "host exited without a result" text (L537-L543) stays unchanged.',
+    'Choice: no message-text matching; the adapter trusts only the host attestation.']],
+  'host': ['SDK host execute()/main() (changed)', [
+    'Purpose: owns the SDK session for one invocation and emits transport records.',
+    'Today: main() emits {type:"error", message} after execute() threw; the session is already disposed (host.mjs L412-L420, L472).',
+    'Proposed: execute() observes, before disposal, whether a session exists, whether it is idle and whether a question is pending; main() adds the settled attestation only for the settled cases.',
+    'Boundary: question-pause failures, non-idle errors and host-owned cancel get no attestation.',
+    'Choice: observation of SDK state, not of the error message.']],
+  'sdk': ['SDK AgentSession (external, unchanged)', [
+    'Purpose: runs the agent loop and tools.',
+    'Fact (1.4.0): isIdle = !_isAgentRunActive && !isCompacting; the run flag is cleared when the run settles; tools execute inside the run.',
+    'Use: the host reads isIdle and the pending-question hook at error time.',
+    'Change: none; no version pin.']],
+  'history': ['Execution history (reused)', [
+    'Purpose: retains each worker_invocation with error text, session, effects (head, paths, source and index state).',
+    'Change: none. Historical rows keep their uncertain text and stay blocked.']],
+  'coordinator': ['Coordinator resume (reused)', [
+    'Purpose: explicit resume with --recovery-action continue|fresh|escalate and an inspected diagnosis.',
+    'Change: none. The coordinator still inspects the failure before choosing an action.']],
+  'gate': ['Uncertain gate (reused)', [
+    'Purpose: blocks recovery when the failed row error text contains "effects are uncertain" (graph.py L821-L822).',
+    'Change: none expected. A settled failure has no such text, so the gate passes.',
+    'Note: the gate is action-independent; escalate then meets its own existing checks.']],
+  'checks': ['Existing recovery checks (reused)', [
+    'Exact predecessor invocation and retained effects; HEAD, source state and index state must match; unresolved escalation stops; continue needs a saved session (graph.py L823-L845).',
+    'Pre-session errors have no saved session, so continue stays blocked and fresh is the path.',
+    'Change: none. These checks protect against drift and partial unknown work.']],
+  'doc': ['Recovery guide sentence (changed)', [
+    'Where: docs/coordinate-implementation.md, Coordinator-selected worker recovery.',
+    'Content: host-attested settled SDK errors are settled predecessors; other SDK errors and lost host results stay uncertain; historical rows unchanged.']]
+};
+const dlg = document.getElementById('detail');
+let opener = null;
+function openDetail(btn) {
+  const [title, items] = details[btn.dataset.c];
+  document.getElementById('detail-title').textContent = title;
+  const body = document.getElementById('detail-body');
+  body.replaceChildren(...items.map(t => { const li = document.createElement('li'); li.textContent = t; return li; }));
+  opener = btn;
+  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+  document.getElementById('detail-close').focus();
+}
+function closeDetail() {
+  if (typeof dlg.close === 'function') dlg.close(); else { dlg.removeAttribute('open'); if (opener) opener.focus(); }
+}
+dlg.addEventListener('close', () => { if (opener) opener.focus(); });
+document.getElementById('detail-close').addEventListener('click', closeDetail);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlg.hasAttribute('open')) { e.preventDefault(); closeDetail(); } });
+document.querySelectorAll('button.box').forEach(b => b.addEventListener('click', () => openDetail(b)));
+</script>
+</body>
+</html>
