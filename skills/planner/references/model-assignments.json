@@ -1,11 +1,11 @@
 {
   "assignments": {
     "brainstorming": {
-      "model": "openai-codex/gpt-6.1-terra",
+      "model": "claude-bridge/claude-sonnet-5-5",
       "effort": "medium"
     },
     "source-and-tasks": {
-      "model": "openai-codex/gpt-6.1-sol",
+      "model": "claude-bridge/claude-opus-5-5",
       "effort": "medium"
     },
     "standard-plan": {
@@ -13,7 +13,7 @@
       "effort": "medium"
     },
     "standard-review": {
-      "model": "openai-codex/gpt-6.1-sol",
+      "model": "claude-bridge/claude-opus-5-5",
       "effort": "medium"
     }
   },
