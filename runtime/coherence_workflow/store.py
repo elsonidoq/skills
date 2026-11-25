@@ -717,7 +717,8 @@ class Store:
                         raise ValueError('invalid intent')
                     for ref, check in zip(refs, checks):
                         check_row = self.db.execute("SELECT details FROM execution_history WHERE seq=? AND run_id=? AND task_id=? AND kind='check' AND state='passed'", (ref, run, row['task_id'])).fetchone()
-                        if not check_row or json.loads(check_row['details']) != check:
+                        # Check history also carries invocation links; the intent keeps only the result.
+                        if not check_row or {key: json.loads(check_row['details']).get(key) for key in check} != check:
                             raise ValueError('missing passing check reference')
                     focused = FocusedGit(self.authority.project, {})
                     if intent.get('no_change') is True and not paths:
