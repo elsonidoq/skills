@@ -170,6 +170,35 @@ class CheckpointRecoveryTests(ProjectTest):
         self.assertEqual(git(project, 'show', ':other.txt'), staged)
         self.assertEqual((project/'unrelated.txt').read_text(), 'untracked bytes\n')
 
+    def test_lost_checkpoint_history_rejects_a_check_reference_that_does_not_match(self):
+        project = self.project
+        class Worker:
+            def __init__(self, *args, **kwargs): pass
+            def prompt(self, prompt, **kwargs):
+                kwargs['claim']('owned.txt')
+                project.joinpath('owned.txt').write_text('actual checkpoint\n')
+                return 'finished semantic acceptance'
+        contract = admit([{'id': 'one', 'description': 'checkpoint', 'owned_paths': ['owned.txt'],
+                           'checks': [['python3', '-B', '-c', 'pass']]}])
+        for wrong in ({'command': ['python3', '-B', '-c', 'pass'], 'exit_code': 0, 'output': 'other'}, {}):
+            with self.subTest(wrong=wrong), Authority(project) as owner:
+                run = 'mismatch-' + str(len(wrong))
+                insert = owner.store._history_insert
+                def fail_pass(db, run, task, kind, state, details, recorded_at):
+                    if kind == 'checkpoint' and state == 'passed':
+                        raise sqlite3.OperationalError('fixture checkpoint history unavailable')
+                    return insert(db, run, task, kind, state, details, recorded_at)
+                with patch.object(owner.store, '_history_insert', side_effect=fail_pass):
+                    with self.assertRaisesRegex(Blocked, 'history unavailable'):
+                        Engine(owner, run, contract, EXECUTOR, adapter=Worker).invoke()
+                row = owner.store.db.execute("SELECT seq,details FROM execution_history WHERE run_id=? AND kind='checkpoint' AND state='started'", (run,)).fetchone()
+                intent = json.loads(row['details'])
+                intent['checks'] = [wrong]
+                owner.store.db.execute('UPDATE execution_history SET details=? WHERE seq=?', (json.dumps(intent), row['seq']))
+                owner.store.db.commit()
+                with self.assertRaisesRegex(Blocked, 'check references are invalid'):
+                    owner.store.completed_checkpoints(run)
+
     def test_repair_commit_history_loss_reconciles_after_head_advances(self):
         project, calls = self.project, []
         class Adapter:
