@@ -225,7 +225,8 @@ never ordinary-use provisioning or auth refresh. Explicit cross-repository activ
 `scripts/install-workflow.sh --prefix "$HOME/.local/share/coherence-workflow" --allow-network --global`.
 It links `coordinate-implementation`, `coherence-status`, and the Pi bridge globally. Use
 [`coherence-status RUN_NAME --watch`](docs/coordinate-implementation.md#watch-workflow-status)
-to see task progress in the terminal without activating a virtual environment. The bridge source is in `runtime/pi-extensions/`, not
+to see task progress in the terminal without activating a virtual environment, or the
+[Paseo plugin](docs/coordinate-implementation.md#in-paseo) to see it with one tap in Paseo. The bridge source is in `runtime/pi-extensions/`, not
 project auto-discovery, so new worktrees do not load a duplicate. Retain this suite checkout, put
 `~/.local/bin` on PATH, and start a fresh Pi/Paseo session. Existing bridge links need the
 [source-path update](docs/coordinate-implementation.md#setup-and-verification), not a runtime reinstall.

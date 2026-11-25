@@ -404,6 +404,24 @@ worktree, the command lists the matches so you can use `--project`. Press Ctrl+C
 this does not stop the workflow. Status reflects what the runner recorded, not proof that its
 process is still alive. Use `coordinate-implementation status` for detailed JSON.
 
+#### In Paseo
+
+The Paseo plugin in `paseo_plugins/coherence-status/` shows the same task states, plus each
+task's start time, on desktop and mobile. Install it once from a retained suite checkout, not a
+disposable worktree, because Paseo loads a directory plugin from its source path:
+
+```sh
+paseo plugin install /absolute/suite-checkout/paseo_plugins/coherence-status
+```
+
+In a workspace that has a workflow run, tap **Workflow** in the composer bar beside Tasks and
+Subagents, or select "Show workflow status" in the command center. The panel shows the running
+run, or else the run with the most recent activity, so it assumes one active run per worktree.
+Tasks that have not started show as `pending`; a resumed task shows its latest start time. After
+you change the plugin source, run `paseo plugin reload coherence-status`, then reopen the app.
+`npm install` and `npm run typecheck` in the plugin directory check the source; Paseo supplies
+the runtime modules. The daemon needs Node.js 22.13 or later for the built-in `node:sqlite`.
+
 ### Executor resolution and resume
 
 The resolver requires only Python's standard library, prints only the absolute selected path on

@@ -131,6 +131,12 @@ The project database remains `.coherence/workflow/workflow.sqlite`. New executio
 - append-only private `execution_history(run_id, task_id, kind, state, details, recorded_at)`; and
 - required chain rows: `execution_review_executions` (actual reviewer/fixer ID, ordinal/round, explicit trigger/predecessor and range), append-only `execution_review_attempts` (dispatch/outcome/uncertainty, private parsed findings and references), and `execution_review_suggestions` keyed to the attempt (optional parsed nonblocking suggestions). Review briefs derive task/repair attribution from retained checkpoint facts and actual Git commits/parents/paths, and private required-check attempts from existing `check`/`fixer_check` history (actual command, result and output) associated with those checkpoints. Reviewers treat retained passing execution, failed/missing required execution, and their read-only inability to rerun as distinct facts; they do not invent live checks. No-change records no commit changes, while intervening or missing attribution remains explicitly unrelated/unattributed context rather than ownership inference or a new registry. Initial and follow-up briefs separately include available completed task summaries as private worker-reported returns with task ID and result checkpoint; missing, empty or unusable historical returns are unavailable, and unsuccessful diagnostics are not completed acceptance. Returns do not prove checks or Git facts. Raw check output and returns never enter safe CLI/monitor projections or review references.
 
+A task row in `execution_tasks` exists only after the task starts; the run contract in
+`execution_run_inputs` lists every task. The read-only [Paseo status plugin](coordinate-implementation.md#in-paseo)
+(`paseo_plugins/coherence-status/server/status.ts`) depends on `execution_runs`, `execution_tasks`,
+`execution_run_inputs.contract` task IDs and `execution_history` rows with `kind='task'`,
+`state='running'` and `recorded_at`; keep it working when these change.
+
 Legacy `execution_usage_memberships` and `execution_usage_intervals` remain untouched when present; new runs do not write or read them.
 
 Optional launch delivery scope is stored unchanged as
