@@ -111,7 +111,7 @@ assert parent_question('Authorize the next pair?', owner_only=True, decision_con
   }
 });
 
-test('production engine consumes a bridge owner answer once per additional pair', {timeout: 15000}, async () => {
+test('production engine assigns additional review pairs without an owner question', {timeout: 15000}, async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'owner-engine-'));
   const tools = new Map(), messages = [], ownerQuestions = [];
   const pi = {
@@ -176,21 +176,11 @@ with Authority(project) as owner:
       }
     };
     await call('coordinate_implementation_start', {run: 'composed-owner', tasks: 'unused', executor: 'unused'});
-    for (let ordinal = 0; ordinal < 2; ordinal++) {
-      await until(() => messages.filter(item => item.message.customType === 'coordinate_implementation_question').length > ordinal);
-      const question = messages.filter(item => item.message.customType === 'coordinate_implementation_question')[ordinal];
-      assert.equal(question.message.details.owner_only, true);
-      assert.equal(question.options.triggerTurn, true);
-      assert.match(question.message.details.decision_context.effect, /exactly one.*no repeat/i);
-      const reply = {run: 'composed-owner', request_id: question.message.details.request_id, answer: 'yes'};
-      await assert.rejects(call('coordinate_implementation_reply', reply), /owner-only decision requires/);
-      const answer = await tools.get('ask_user').execute(question.message.details.decision_context);
-      await call('coordinate_implementation_owner_reply', {...reply, answer});
-    }
     await until(() => messages.some(item => item.message.customType === 'coordinate_implementation_complete'));
     assert.match(messages.find(item => item.message.customType === 'coordinate_implementation_complete').message.content, /exit 0/);
-    assert.equal(ownerQuestions.length, 2);
-    assert.notEqual(ownerQuestions[0].rejecting_execution, ownerQuestions[1].rejecting_execution);
+    // Routine repair rounds are assigned by default (166fe07): no owner question, no ask_user call.
+    assert.equal(messages.filter(item => item.message.customType === 'coordinate_implementation_question').length, 0);
+    assert.equal(ownerQuestions.length, 0);
   } finally {
     await pi.shutdown?.();
     await fs.rm(root, {recursive: true, force: true});
