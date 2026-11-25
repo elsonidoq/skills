@@ -1,0 +1,7 @@
+{
+  "id": "coherence-status",
+  "name": "Coherence workflow status",
+  "requirements": {
+    "paseo": ">=0.12.0"
+  }
+}

@@ -27,3 +27,7 @@ workflow_monitor/web/test-results/
 # node_modules/ and its build output dist/ stay ignored (owned by the port's own .gitignore).
 !opencode-claude-memory-v2-port/package.json
 !opencode-claude-memory-v2-port/bun.lock
+
+# Paseo plugin sources track their manifest and lockfile; node_modules/ stays ignored.
+!paseo_plugins/*/package.json
+!paseo_plugins/*/package-lock.json
