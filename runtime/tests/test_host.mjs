@@ -99,6 +99,34 @@ test('preflight resolves each profile without a session and names the missing pr
   } finally { await fs.rm(project, {recursive: true, force: true}); }
 });
 
+test('preflight host exits after its record even when an extension keeps the event loop alive', {timeout: 60000}, async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-preflight-exit-'));
+  try {
+    // Offline fixture provider with a referenced timer: without the explicit exit
+    // the host process would never end.
+    const extension = path.join(project, 'lingering-provider.mjs');
+    await fs.writeFile(extension, `export default function (pi) {
+  setInterval(() => {}, 1000);
+  pi.registerProvider('fixture-bridge', {baseUrl: 'fixture', apiKey: 'not-used', api: 'fixture-bridge',
+    models: [{id: 'fixture-model', name: 'Fixture', reasoning: true, input: ['text'],
+      cost: {input: 0, output: 0, cacheRead: 0, cacheWrite: 0}, contextWindow: 100000, maxTokens: 1000}],
+    streamSimple: () => { throw new Error('fixture provider must not be called'); }});
+}
+`);
+    const host = fileURLToPath(new URL('../pi-host/host.mjs', import.meta.url));
+    const child = spawn(process.execPath, [host], {cwd: project, stdio: ['pipe', 'pipe', 'inherit']});
+    let output = '';
+    child.stdout.on('data', chunk => { output += chunk; });
+    child.stdin.end(JSON.stringify({type: 'preflight', project,
+      executor: {provider: 'fixture-bridge', model: 'fixture-model', effort: 'medium', extensions: [extension]}}) + '\n');
+    const [code] = await new Promise(resolve => child.once('exit', (...result) => resolve(result)));
+    assert.equal(code, 0);
+    const record = JSON.parse(output.trim().split('\n').at(-1));
+    assert.equal(record.type, 'preflight');
+    assert.equal(record.ok, true);
+  } finally { await fs.rm(project, {recursive: true, force: true}); }
+});
+
 test('exact SDK assignment rejects missing or clamped effort and post-construction drift before prompt', async () => {
   const project = await fs.mkdtemp(path.join(os.tmpdir(), 'coherence-exact-assignment-'));
   let promptCalls = 0;

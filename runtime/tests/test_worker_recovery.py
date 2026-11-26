@@ -217,6 +217,14 @@ class GraphRecoveryTests(ProjectTest):
                             Blocked, 'stopped after it \\(next: checks\\).*correct the cause.*then use plain resume, '
                                      'without --recovery-action'):
                         graph_recovery_action(engine, graph, config, action, diagnosis=DIAGNOSIS)
+                # Back at the worker boundary for a new call: the last recorded call returned.
+                graph.update_state(config, {'invocation_id': 'not-dispatched', 'next_node': 'worker'}, as_node='ready')
+                with self.assertRaisesRegex(Blocked, 'the last worker call returned; reconcile it with plain resume'):
+                    graph_recovery_action(engine, graph, config, 'fresh', diagnosis=DIAGNOSIS)
+                # A started call without a result is uncertain: inspect, do not resume.
+                owner.store.history('after-boundary', 'one', 'worker_invocation', 'started', {'invocation_id': 'not-dispatched'})
+                with self.assertRaisesRegex(Blocked, 'last worker call is live or uncertain, so inspect its process and saved session'):
+                    graph_recovery_action(engine, graph, config, 'fresh', diagnosis=DIAGNOSIS)
         self.assertEqual(calls, ['worker', 'worker'])
 
     def test_effect_drift_and_unknown_diagnosis_stop_before_dispatch(self):

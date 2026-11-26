@@ -152,7 +152,9 @@ test('admitted launch scope reaches real CLI argv unchanged; resume cannot repla
   try {
     await fs.mkdir(path.join(root, 'scripts'));
     await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'),
-      `#!${process.execPath}\nrequire('node:fs').writeFileSync('argv.json', JSON.stringify(process.argv.slice(2)));\n`, {mode: 0o700});
+      // Dynamic import works whether Node reads this extensionless script as CommonJS or ESM
+      // (an ancestor package.json with "type": "module" selects ESM).
+      `#!${process.execPath}\nimport('node:fs').then(fs => fs.writeFileSync('argv.json', JSON.stringify(process.argv.slice(2))));\n`, {mode: 0o700});
     const {default: bridge} = await import(bridgeModule);
     bridge(pi);
     const tool = tools.get('coordinate_implementation_start');

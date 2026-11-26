@@ -369,7 +369,8 @@ briefs state this rule. Repairs that never reach approval stop at the graph step
 run and start a new one.
 For **this repository**, every launch (including continuations/corrections) supplies
 `--executor .pi/workflow-executor.json`, or that file's absolute path through the parent
-bridge: Sol 6.1/medium workers, implementation fallback and reviewers. Other projects retain their own
+bridge. That file is the current owner selection of worker, implementation fallback and reviewer
+models; this guide does not repeat it. Other projects retain their own
 configuration. Existing historical reviewer nodes are not changed retroactively.
 
 The canonical project-local configuration is `<project-root>/.pi/workflow-executor.json`.
@@ -945,7 +946,8 @@ Focused checks in the prepared environment:
 ```sh
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests \
   .pi/workflow-validation/venv/bin/python -B -m unittest discover -v -s runtime/tests
-COHERENCE_PYTHON=python3 node --test runtime/tests/test_sdk_resolution.mjs \
+# The bridge tests start the real CLI: COHERENCE_PYTHON must have the runtime dependencies.
+COHERENCE_PYTHON=.pi/workflow-validation/venv/bin/python node --test runtime/tests/test_sdk_resolution.mjs \
   runtime/tests/test_host.mjs runtime/tests/test_bridge.mjs \
   runtime/tests/test_global_bridge.mjs runtime/tests/test_saved_sessions.mjs
 ```
