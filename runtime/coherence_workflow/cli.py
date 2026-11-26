@@ -117,8 +117,9 @@ def baseline_checks(project, contract):
     for task in contract['tasks']:
         for value in commands(task):
             command = value.get('command', value.get('argv', value.get('check'))) if isinstance(value, dict) else value
-            if not isinstance(command, (str, list)) or not command:
-                raise Blocked('task ' + task['id'] + ' check needs a command string or argv list')
+            if not isinstance(command, (str, list)) or not command or (isinstance(command, list) and
+                    any(not isinstance(arg, str) for arg in command)):
+                raise Blocked('task ' + task['id'] + ' check needs a command string or argv list of strings')
             distinct.setdefault(canonical(command), {'command': command, 'tasks': []})['tasks'].append(task['id'])
     results = []
     for item in distinct.values():
@@ -446,6 +447,10 @@ def main(argv=None):
                 not isinstance(executor['reviewer'].get(key), str) or not executor['reviewer'][key]
                 for key in ('provider', 'model', 'effort')):
             raise Blocked('reviewer needs provider, model and effort strings; correct the reviewer profile in --executor JSON')
+        fallback = executor.get('implementation_fallback')
+        if fallback is not None and (not isinstance(fallback, dict) or any(
+                not isinstance(fallback.get(key), str) or not fallback[key] for key in ('provider', 'model', 'effort'))):
+            raise Blocked('implementation_fallback needs provider, model and effort strings; correct the selected executor')
         run_id = args.run or uuid.uuid4().hex
         question = attached_question(run_id)
         # Before the paid-scope question and any run state. Offline test adapters

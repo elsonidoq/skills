@@ -495,7 +495,9 @@ async function main() {
   try {
     const request = await next();
     if (request?.type === 'preflight') {
-      emit({type: 'preflight', ...await preflightExecutor(request)});
+      // Exit after the record: a loaded extension may keep the event loop alive.
+      const record = JSON.stringify({type: 'preflight', ...await preflightExecutor(request)}) + '\n';
+      process.stdout.write(record, () => process.exit(0));
       return;
     }
     // Old adapters retain their one-at-a-time uncorrelated callback protocol.

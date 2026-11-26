@@ -59,7 +59,7 @@ A provider registered by a Pi extension (for example `claude-bridge`) needs that
 optional `extensions` path list; the host loads no other extension and activates none of their tools.
 `start` checks every profile's provider and model in the run's host and SDK before run state, with
 no provider request; correct the reported profile and start again. The resolved SDK path and
-version appear in the `start` result and `status`; do not infer it from `runtime/pi-host/package.json`.
+version at launch appear in the `start` result and `status`; do not infer it from `runtime/pi-host/package.json`.
 An optional `implementation_fallback` profile permits stronger implementation recovery separately
 from the reviewer assignment; never infer that permission from `reviewer` alone. There is no owner catalog or binding
 assessment. SDK/dependency/authentication errors report the actual failed operation. Routine scoped technical
@@ -99,7 +99,8 @@ that work. Do not add a risk schema, scoring, admission checklist, or parent ack
   retained `implementation_fallback`. Neither needs renewed routine operational approval.
   Select by failure point: worker failed without a session → `fresh`; worker failed with a saved
   session → `continue`; worker returned and a later stage stopped (such as a failed required check)
-  or a question is pending → plain `resume`. A refused action names the one that applies.
+  → correct the cause, then plain `resume`; a question is pending → plain `resume`. A refused action
+  names the one that applies.
   For an explicitly failed offline verification with no write scope, the [source CLI guide](../../docs/coordinate-implementation.md#coordinator-selected-worker-recovery) documents `fresh --target-head COMMIT` for an inspected direct-child repair, not acceptance of old proof.
   The parent start tool accepts the equivalent `recovery_action` and `diagnosis` fields with `resume: true`.
 - `recover-task --project ROOT --run ID --recovery FILE --owner-authorized`: after actual owner authorization, accept an inspected external completion of the next unfinished same task. The exact working-byte/mode transfer, original checks/manual gates and focused checkpoint precede normal `resume`; no old SDK invocation is rewritten, allowance reset, fake edit required, or later executor changed. See the [supported transfer format and limits](../../docs/coordinate-implementation.md#accept-an-owner-authorized-external-same-task-completion). This launches no provider and does not replace independent final review. Unknown/live calls, changed transfer or failed checks remain blocked.

@@ -61,6 +61,14 @@ class LaunchPreflightTests(ProjectTest):
                 self.assertRegex(out, pattern)
                 self.assert_no_run_state()
 
+    def test_malformed_fallback_is_named_before_preflight(self):
+        listed = {**PROFILE, 'extensions': [str(self.extension)]}
+        with patch('coherence_workflow.cli.PiAdapter.preflight', side_effect=AssertionError('preflight ran')):
+            code, out, _err = self.start({**listed, 'reviewer': listed, 'implementation_fallback': {'provider': 'p'}})
+        self.assertEqual(code, 2, out)
+        self.assertIn('implementation_fallback needs provider, model and effort strings', out)
+        self.assert_no_run_state()
+
     def test_resolved_sdk_is_recorded_and_reported_in_status(self):
         listed = {**PROFILE, 'extensions': [str(self.extension)]}
 
@@ -130,3 +138,11 @@ class BaselineCheckTests(ProjectTest):
                          [(failing, ['one', 'two'], 3), (passing, ['one'], 0)])
         self.assertIn('pre-existing defect', report['checks'][0]['output'])
         self.assertFalse((self.project / '.coherence/workflow/workflow.sqlite').exists())
+
+    def test_malformed_argv_is_reported_not_raised(self):
+        tasks = self.root / 'tasks.json'
+        tasks.write_text(json.dumps([{'id': 'one', 'description': 'first', 'checks': [[sys.executable, 3]]}]))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            code = main(['baseline-checks', '--project', str(self.project), '--tasks', str(tasks)])
+        self.assertEqual(code, 2)
+        self.assertIn('argv list of strings', json.loads(out.getvalue())['reason'])

@@ -8,11 +8,11 @@ from unittest.mock import patch
 
 from langgraph.types import Command
 from coherence_workflow.engine import Engine
-from coherence_workflow.graph import answer_graph_question, graph_saver, task_graph
+from coherence_workflow.graph import answer_graph_question, graph_recovery_action, graph_saver, task_graph
 from coherence_workflow.intake import admit
 from coherence_workflow.pi_adapter import parent_question, terminal_question
 from coherence_workflow.cli import status
-from coherence_workflow.store import Authority, git
+from coherence_workflow.store import Authority, Blocked, git
 from coherence_workflow.trace_capture import optional_record, persist_parent_events, record_worker_question
 from fixtures.support import ProjectTest
 
@@ -45,6 +45,11 @@ class GraphQuestionTests(ProjectTest):
                         raise EOFError('cancelled')
                     self.assertIsNone(answer_graph_question(graph, config, cancel, trace_observer=trace_pending))
                     self.assertTrue(graph.get_state(config).interrupts)
+                    for action in ('continue', 'fresh', 'escalate'):
+                        with self.subTest(action=action), self.assertRaisesRegex(
+                                Blocked, 'worker question is pending; answer it with plain resume, without --recovery-action'):
+                            graph_recovery_action(engine, graph, config, action, diagnosis=(
+                                'Inspected the pending question; the owner must answer it before continuation.'))
                     unanswered = [(r['state'], json.loads(r['details'])) for r in owner.store.db.execute(
                         "SELECT state, details FROM execution_history WHERE run_id='question' AND kind='worker_question_trace' ORDER BY seq")]
                     self.assertEqual([s for s, _ in unanswered], ['requested', 'unanswered', 'unanswered'])

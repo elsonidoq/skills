@@ -812,7 +812,8 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, targ
     if tuple(snapshot.next) != ('worker',):
         raise Blocked('graph recovery needs the failed worker boundary, but the run stopped after it (next: ' +
                       (', '.join(snapshot.next) or 'none') + '), for example at a failed required check; '
-                      'use plain resume, without --recovery-action, to rerun that stage')
+                      'correct the cause (for example a defect outside the task\'s owned paths), then use plain '
+                      'resume, without --recovery-action, to rerun that stage')
     rows = list(store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker_invocation' ORDER BY seq", (run, task_id)))
     if rows and rows[-1]['state'] == 'returned':
         returned = json.loads(rows[-1]['details'])
@@ -820,9 +821,12 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, targ
             raise Blocked('verification needs a failed invocation; reconcile the returned call with plain resume')
         if returned.get('invocation_id') == state.get('invocation_id'):
             return graph.invoke(None, config, durability='sync')
+    if rows and rows[-1]['state'] == 'returned':
+        raise Blocked('graph recovery needs an inspected terminal worker failure, but the last worker call returned; '
+                      'reconcile it with plain resume, without --recovery-action')
     if not rows or rows[-1]['state'] not in ('failed', 'interrupted'):
-        raise Blocked('graph recovery needs an inspected terminal worker failure; reconcile any live or settled call first '
-                      'with plain resume, without --recovery-action')
+        raise Blocked('graph recovery needs an inspected terminal worker failure; the last worker call is live or '
+                      'uncertain, so inspect its process and saved session before continuation')
     failure = json.loads(rows[-1]['details'])
     if 'effects are uncertain' in failure.get('error', ''):
         raise Blocked('worker settlement and effects are uncertain; inspect the saved operation before any continuation')

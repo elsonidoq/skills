@@ -214,7 +214,8 @@ class GraphRecoveryTests(ProjectTest):
                 self.assertEqual(graph.get_state(config).next, ('checks',))
                 for action in ('continue', 'fresh', 'escalate'):
                     with self.subTest(action=action), self.assertRaisesRegex(
-                            Blocked, 'stopped after it \\(next: checks\\).*use plain resume, without --recovery-action'):
+                            Blocked, 'stopped after it \\(next: checks\\).*correct the cause.*then use plain resume, '
+                                     'without --recovery-action'):
                         graph_recovery_action(engine, graph, config, action, diagnosis=DIAGNOSIS)
         self.assertEqual(calls, ['worker', 'worker'])
 
@@ -549,7 +550,8 @@ class WorkerRecoveryTests(ProjectTest):
         with Authority(self.project) as owner:
             self.start_failure(owner, contract, adapter, executor)
             owner.store.resume('recovery')
-            with self.assertRaisesRegex(Blocked, 'no permitted fallback'):
+            with self.assertRaisesRegex(Blocked, 'no permitted fallback; configure it at launch, or use '
+                                                 '--recovery-action (continue|fresh) with the inspected diagnosis'):
                 Engine(owner, 'recovery', contract, executor, adapter=adapter, resume=True,
                        worker_recovery={'action': 'escalate', 'diagnosis': DIAGNOSIS}).invoke()
         self.assertEqual(calls, [('worker', 'worker')])

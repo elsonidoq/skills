@@ -359,7 +359,8 @@ profile, one host process with the run's Pi SDK loads only the listed extensions
 model; it sends no prompt or provider request. A missing provider names the profile and tells you to
 add the registering extension to its `extensions` list; a missing model names the provider's
 catalog, the SDK version and path, and the available models. Correct the executor file and start
-again. `start` prints the resolved SDK on stderr and adds `sdk` to its result; `status` shows it.
+again. `start` prints the resolved SDK on stderr and adds `sdk` to its result; `status` shows it
+as the SDK resolved at launch. A later `resume` loads the SDK installed at that time.
 
 Workers and fixers must create and change files with the `edit`/`write` tools: the focused
 checkpoint includes only files changed through them, never files written by `bash`. Their
@@ -726,8 +727,11 @@ Select the action from the failure point. A refused action names the one that ap
 
 - The worker failed and opened no session: `fresh`.
 - The worker failed and has a saved session: `continue` (or `fresh` when its context is not useful).
-- The worker returned and a later stage stopped, such as a failed required check, or a worker
-  question is pending: plain `resume` without `--recovery-action`.
+- The worker returned and a later stage stopped, such as a failed required check: correct the
+  cause first (for example a defect outside the task's owned paths), then plain `resume` without
+  `--recovery-action`. An unchanged failure stops again.
+- A worker question is pending: plain `resume` without `--recovery-action`.
+- The last worker call is live or uncertain: inspect its process and saved session first.
 
 Existing runs retain
 their launch configuration: no fallback is inferred from a later file change or reviewer profile.
@@ -880,7 +884,7 @@ The SDK version in `runtime/pi-host/package.json` and its lock applies only wher
 has `node_modules`, as in the explicit isolated installation. A source checkout without
 `node_modules` uses the installed Pi release, whatever the pin says. Do not read the pin as the
 running version: `start` prints the resolved SDK package directory and version, and `status`
-shows it as `sdk`.
+shows it as `sdk` (resolved at launch). A model-lookup error also names the SDK in use.
 
 Package discovery uses Node's package lookup; entry and SDK-dependency loading use Node's ESM
 resolver and public package exports, not constructed `dist/` paths or nested dependency paths.
