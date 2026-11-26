@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { constants } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { access, mkdir, readFile, writeFile, realpath } from 'node:fs/promises';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +12,73 @@ import { piSdk, piSdkPackageDir } from './sdk.mjs';
 export { piSdk, piSdkPackageDir } from './sdk.mjs';
 const { createAgentSession, createEditToolDefinition, createWriteToolDefinition,
   DefaultResourceLoader, getAgentDir, ModelRuntime, SessionManager } = piSdk;
+
+export function sdkIdentity() {
+  let version = null;
+  try { version = JSON.parse(readFileSync(path.join(piSdkPackageDir, 'package.json'), 'utf8')).version ?? null; }
+  catch { /* reported as unknown */ }
+  return {package_dir: piSdkPackageDir, version};
+}
+
+function executorExtensions(executor) {
+  const extensions = executor.extensions ?? [];
+  if (!Array.isArray(extensions) || extensions.some(item => typeof item !== 'string' || !item)) {
+    throw new Error('executor extensions must be a list of extension paths; correct the selected executor profile');
+  }
+  return extensions;
+}
+
+function createModelRuntime() {
+  return ModelRuntime.create({
+    ...(process.env.COHERENCE_AUTH_PATH ? {authPath: process.env.COHERENCE_AUTH_PATH} : {}),
+    ...(process.env.COHERENCE_CATALOG_PATH ? {modelsStorePath: process.env.COHERENCE_CATALOG_PATH} : {}),
+  });
+}
+
+// Register providers from the selected extensions only, then look up the exact
+// model. Local catalog work only: no prompt, provider request or auth refresh.
+async function resolveExecutorModel(resourceLoader, modelRuntime, executor, extensions) {
+  const loaded = resourceLoader.getExtensions();
+  if (loaded.errors.length) {
+    throw new Error('executor extension load failed: ' + loaded.errors.map(e => `${e.path}: ${e.error}`).join('; ') +
+      '. Correct the extension path in the selected executor profile.');
+  }
+  // Same provider flush as the SDK's createAgentSessionServices.
+  for (const {name, config} of loaded.runtime.pendingProviderRegistrations) modelRuntime.registerProvider(name, config);
+  loaded.runtime.pendingProviderRegistrations = [];
+  for (const {provider} of loaded.runtime.pendingNativeProviderRegistrations) modelRuntime.registerNativeProvider(provider);
+  loaded.runtime.pendingNativeProviderRegistrations = [];
+  if (extensions.length) await modelRuntime.refresh({allowNetwork: false});
+  const model = modelRuntime.getModel(executor.provider, executor.model);
+  if (model) return model;
+  const sdk = sdkIdentity();
+  const where = `Pi SDK ${sdk.version ?? 'unknown version'} at ${sdk.package_dir}`;
+  const models = modelRuntime.getModels(executor.provider).map(item => item.id);
+  if (!models.length) {
+    throw new Error(`Model not found: ${executor.provider}/${executor.model}. Provider ${executor.provider} is not registered in ${where}; ` +
+      'add the extension that registers it to this profile\'s "extensions" list.');
+  }
+  throw new Error(`Model not found: ${executor.provider}/${executor.model}. Model ${executor.model} is not in provider ` +
+    `${executor.provider}'s catalog (${where}; available: ${models.join(', ')}); select an available model.`);
+}
+
+// Resolve one selected profile as a session would, without a session, session
+// file or provider request. One profile per host process, like a session: some
+// provider extensions register only in the first loaded instance of a process.
+export async function preflightExecutor({project, executor}) {
+  try {
+    const extensions = executorExtensions(executor);
+    const resourceLoader = new DefaultResourceLoader({
+      cwd: project, agentDir: getAgentDir(), noExtensions: true, additionalExtensionPaths: extensions,
+      noSkills: true, noPromptTemplates: true,
+    });
+    await resourceLoader.reload();
+    await resolveExecutorModel(resourceLoader, await createModelRuntime(), executor, extensions);
+    return {sdk: sdkIdentity(), ok: true};
+  } catch (error) {
+    return {sdk: sdkIdentity(), ok: false, error: error.message};
+  }
+}
 
 function enforceExactAssignment(session, requested) {
   const observed = {provider: session.model?.provider, model: session.model?.id,
@@ -99,10 +167,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
   const canonicalSessionDir = await realpath(sessionDir);
   if (reuseKey !== null && typeof reuseKey !== 'string') throw new Error('saved session reuse key must be a string');
   // Only explicitly selected extensions load, e.g. one that registers the provider.
-  const extensions = executor.extensions ?? [];
-  if (!Array.isArray(extensions) || extensions.some(item => typeof item !== 'string' || !item)) {
-    throw new Error('executor extensions must be a list of extension paths; correct the selected executor profile');
-  }
+  const extensions = executorExtensions(executor);
   const compatibility = {project: path.resolve(project), provider: executor.provider,
     model: executor.model, effort: executor.effort, readOnly, reuseKey,
     ...(extensions.length ? {extensions} : {})};
@@ -132,10 +197,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
   } else {
     sessionManager = SessionManager.create(project, canonicalSessionDir);
   }
-  const modelRuntime = await ModelRuntime.create({
-    ...(process.env.COHERENCE_AUTH_PATH ? {authPath: process.env.COHERENCE_AUTH_PATH} : {}),
-    ...(process.env.COHERENCE_CATALOG_PATH ? {modelsStorePath: process.env.COHERENCE_CATALOG_PATH} : {}),
-  });
+  const modelRuntime = await createModelRuntime();
   const resourceLoader = new DefaultResourceLoader({
     cwd: project, agentDir: getAgentDir(),
     // No ambient extension may add a writer to the independent reviewer or
@@ -203,19 +265,7 @@ export async function createWorkflowSession({project, executor, readOnly = false
     }],
   });
   await resourceLoader.reload();
-  const loaded = resourceLoader.getExtensions();
-  if (loaded.errors.length) {
-    throw new Error('executor extension load failed: ' + loaded.errors.map(e => `${e.path}: ${e.error}`).join('; ') +
-      '. Correct the extension path in the selected executor profile.');
-  }
-  // Same provider flush as the SDK's createAgentSessionServices.
-  for (const {name, config} of loaded.runtime.pendingProviderRegistrations) modelRuntime.registerProvider(name, config);
-  loaded.runtime.pendingProviderRegistrations = [];
-  for (const {provider} of loaded.runtime.pendingNativeProviderRegistrations) modelRuntime.registerNativeProvider(provider);
-  loaded.runtime.pendingNativeProviderRegistrations = [];
-  if (extensions.length) await modelRuntime.refresh({allowNetwork: false});
-  const model = modelRuntime.getModel(executor.provider, executor.model);
-  if (!model) throw new Error(`Model not found: ${executor.provider}/${executor.model}`);
+  const model = await resolveExecutorModel(resourceLoader, modelRuntime, executor, extensions);
   ({session} = await createAgentSession({
     cwd: project, modelRuntime, model, thinkingLevel: executor.effort,
     tools: readOnly ? ['read', 'grep', 'find', 'ls'] : ['read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'ask_owner', 'cleanup_artifact', 'report_task_outcome'],
@@ -444,6 +494,10 @@ async function main() {
   const emit = value => process.stdout.write(JSON.stringify(value) + '\n');
   try {
     const request = await next();
+    if (request?.type === 'preflight') {
+      emit({type: 'preflight', ...await preflightExecutor(request)});
+      return;
+    }
     // Old adapters retain their one-at-a-time uncorrelated callback protocol.
     if (!validTarget(request.steering)) {
       const result = await execute(request, emit, async value => { emit(value); return next(); });

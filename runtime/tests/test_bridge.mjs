@@ -218,6 +218,9 @@ async function fixture({hold = false, paidScope = false, paidApis = []} = {}) {
   await fs.writeFile(host, hold ? `import os, pathlib, sys, time
 json = __import__('json')
 request=json.loads(input())
+if request.get('type') == 'preflight':
+ print(json.dumps({'type':'preflight','ok':True,'sdk':{'package_dir':'offline','version':'offline'}}), flush=True)
+ sys.exit()
 if request['readOnly']:
  print(json.dumps({'type':'result','text':'{"approved":true,"findings":[],"coverage":["offline fixture"],"coverage_gaps":[]}'}), flush=True)
 else:
@@ -225,6 +228,9 @@ else:
  time.sleep(1000)
 ` : `import json, sys
 request=json.loads(input())
+if request.get('type') == 'preflight':
+ print(json.dumps({'type':'preflight','ok':True,'sdk':{'package_dir':'offline','version':'offline'}}), flush=True)
+ sys.exit()
 if request['readOnly']:
  print(json.dumps({'type':'result','text':'{"approved":true,"findings":[],"coverage":["offline fixture"],"coverage_gaps":[]}'}), flush=True)
 else:

@@ -49,7 +49,8 @@ def _safe_history_details(value):
     details = json.loads(value)
     return {key: details[key] for key in ('command', 'exit_code', 'baseline', 'result', 'sha', 'parent',
                                            'paths', 'artifacts', 'generated_artifacts', 'no_change', 'error',
-                                           'invocation_id', 'recovery_id', 'external_recovery_id')
+                                           'invocation_id', 'recovery_id', 'external_recovery_id',
+                                           'sdk', 'executor_path', 'changed_fields', 'correction')
             if key in details}
 
 
@@ -75,6 +76,56 @@ def _metric_invocation_ids(db, run):
 
 class RunNotFound(Blocked):
     pass
+
+
+def _changed_fields(retained, current, prefix=''):
+    fields = []
+    for key in sorted(set(retained) | set(current)):
+        old, new = retained.get(key), current.get(key)
+        if isinstance(old, dict) and isinstance(new, dict):
+            fields.extend(_changed_fields(old, new, prefix + key + '.'))
+        elif old != new:
+            fields.append(prefix + key)
+    return fields
+
+
+def executor_drift(db, run, retained):
+    """Compare the launch executor file with the retained executor; report only."""
+    row = db.execute("SELECT details FROM execution_history WHERE run_id=? AND kind='launch_environment' "
+                     "ORDER BY seq DESC LIMIT 1", (run,)).fetchone()
+    path = json.loads(row['details']).get('executor_path') if row else None
+    if not path:
+        return None
+    correction = ('this run keeps its recorded executor; to use the changed file, start a new run '
+                  'for the remaining tasks')
+    try:
+        current = json.loads(Path(path).read_text())
+    except (OSError, ValueError) as exc:
+        return {'executor_path': path, 'error': 'cannot read the launch executor file: ' + str(exc),
+                'correction': correction}
+    if not isinstance(current, dict) or not isinstance(retained, dict):
+        return {'executor_path': path, 'changed_fields': ['<root>'], 'correction': correction}
+    changed = _changed_fields(retained, current)
+    return {'executor_path': path, 'changed_fields': changed, 'correction': correction} if changed else None
+
+
+def baseline_checks(project, contract):
+    """Run each distinct required check once at the current checkout; report only."""
+    from .store import git
+    from .verification import _run_check, commands
+    distinct = {}
+    for task in contract['tasks']:
+        for value in commands(task):
+            command = value.get('command', value.get('argv', value.get('check'))) if isinstance(value, dict) else value
+            if not isinstance(command, (str, list)) or not command:
+                raise Blocked('task ' + task['id'] + ' check needs a command string or argv list')
+            distinct.setdefault(canonical(command), {'command': command, 'tasks': []})['tasks'].append(task['id'])
+    results = []
+    for item in distinct.values():
+        code, output = _run_check(Path(project).resolve(), item['command'], None, lambda state, attempt: None)
+        results.append({**item, 'exit_code': code, 'output': output})
+    return {'head': git(Path(project).resolve(), 'rev-parse', 'HEAD').decode().strip(),
+            'failed': sum(1 for item in results if item['exit_code'] != 0), 'checks': results}
 
 
 def status(project, run, *, summary_only=False):
@@ -114,6 +165,10 @@ def status(project, run, *, summary_only=False):
                         {'task_id': item['task_id'], 'kind': item['kind'], 'state': item['state'],
                          'details': _safe_history_details(item['details'])}
                         for item in db.execute('SELECT task_id,kind,state,details FROM execution_history WHERE run_id=? ORDER BY seq', (run,))]
+                launch = next((item['details']['sdk'] for item in reversed(result.get('history', []))
+                               if item['kind'] == 'launch_environment' and 'sdk' in item['details']), None)
+                if launch is not None:
+                    result['sdk'] = launch
                 if row['state'] == 'interrupted' and row['error'] == 'waiting for owner answer':
                     waiting = db.execute("SELECT task_id,details FROM execution_history WHERE run_id=? AND kind='graph_wait' AND state='waiting' ORDER BY seq DESC LIMIT 1", (run,)).fetchone()
                     if waiting:
@@ -259,11 +314,11 @@ def _commit_id(value):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest='command', required=True)
-    for command in ('start', 'resume', 'intake', 'status', 'history', 'abandon', 'refresh-review-target', 'recover-task', 'recover-publication'):
+    for command in ('start', 'resume', 'intake', 'baseline-checks', 'status', 'history', 'abandon', 'refresh-review-target', 'recover-task', 'recover-publication'):
         sub = subs.add_parser(command)
         if command != 'intake':
             sub.add_argument('--project', required=True)
-        if command in ('start', 'intake'):
+        if command in ('start', 'intake', 'baseline-checks'):
             sub.add_argument('--tasks', required=True)
         if command == 'start':
             sub.add_argument('--executor', help='JSON file with provider, model and effort; no manifest or binding proof')
@@ -341,7 +396,11 @@ def main(argv=None):
                                 paid_scope=saved['authority']['paid_scope'], resume=True)
                 print(canonical(run_graph(engine, action='refresh-review-target')))
             return 0
-        contract = load_contract(args.tasks) if args.command in ('start', 'intake') else None
+        contract = load_contract(args.tasks) if args.command in ('start', 'intake', 'baseline-checks') else None
+        if args.command == 'baseline-checks':
+            report = baseline_checks(args.project, contract)
+            print(canonical(report))
+            return 1 if report['failed'] else 0
         if args.command == 'intake':
             print(canonical({'task_ids': [task['id'] for task in contract['tasks']],
                              'status': 'ready' if contract['tasks'] else 'no tasks'}))
@@ -365,10 +424,14 @@ def main(argv=None):
                 engine = Engine(authority, args.run, saved['contract'], saved['executor'], adapter=PiAdapter,
                                 paid_scope=paid_scope, resume=True, worker_recovery=recovery,
                                 **({'question': question} if question else {}))
+                drift = executor_drift(authority.store.db, args.run, saved['executor'])
+                if drift:
+                    authority.store.history(args.run, None, 'executor_drift', 'reported', drift)
+                    print('Executor drift: ' + canonical(drift), file=sys.stderr, flush=True)
                 authority.store.resume(args.run)
                 writer_entered = True
                 result = run_graph(engine, action=args.recovery_action, diagnosis=args.diagnosis, target_head=args.target_head)
-                print(canonical(result))
+                print(canonical({**result, 'executor_drift': drift} if drift and isinstance(result, dict) else result))
             return 0
         if not contract['tasks']:
             print(canonical({'status': 'no tasks'}))
@@ -385,6 +448,13 @@ def main(argv=None):
             raise Blocked('reviewer needs provider, model and effort strings; correct the reviewer profile in --executor JSON')
         run_id = args.run or uuid.uuid4().hex
         question = attached_question(run_id)
+        # Before the paid-scope question and any run state. Offline test adapters
+        # have no host to resolve; the production adapter always has preflight.
+        preflight = getattr(PiAdapter, 'preflight', None)
+        sdk = preflight(args.project, executor) if callable(preflight) else None
+        launch = {'executor_path': str(Path(args.executor).resolve()), **({'sdk': sdk} if isinstance(sdk, dict) else {})}
+        if 'sdk' in launch:
+            print('Pi SDK ' + str(sdk.get('version')) + ' at ' + str(sdk.get('package_dir')), file=sys.stderr, flush=True)
         paid_scope = settle_paid_scope(contract, executor, question or terminal_question)
         with Authority(args.project, wait=True, quarantine_unsupported=True) as authority:
             if authority.quarantined_database:
@@ -393,9 +463,9 @@ def main(argv=None):
             writer_entered = True
             engine = Engine(authority, run_id, contract, executor, adapter=PiAdapter,
                             paid_scope=paid_scope, parallel=args.parallel, delivery_scope=args.delivery_scope,
-                            **({'question': question} if question else {}))
+                            launch=launch, **({'question': question} if question else {}))
             result = run_graph(engine)
-            print(canonical(result))
+            print(canonical({**result, 'sdk': launch['sdk']} if 'sdk' in launch and isinstance(result, dict) else result))
         return 0
     except (Blocked, OSError, ValueError, sqlite3.Error) as exc:
         print(canonical({'status': 'failed', 'reason': str(exc), **({'run_id': run_id} if run_id else {})}))

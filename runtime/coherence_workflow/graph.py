@@ -806,8 +806,13 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, targ
             raise Blocked('verification task already checkpointed; inspect its result instead of retrying')
         graph.update_state(config, {'next_node': 'ready', 'recovery': None}, as_node='checkpoint')
         return graph.invoke(None, config, durability='sync')
-    if snapshot.interrupts or tuple(snapshot.next) != ('worker',):
-        raise Blocked('graph recovery needs the failed worker boundary; inspect the retained graph and pending effects')
+    if snapshot.interrupts:
+        raise Blocked('graph recovery needs the failed worker boundary, but a worker question is pending; '
+                      'answer it with plain resume, without --recovery-action')
+    if tuple(snapshot.next) != ('worker',):
+        raise Blocked('graph recovery needs the failed worker boundary, but the run stopped after it (next: ' +
+                      (', '.join(snapshot.next) or 'none') + '), for example at a failed required check; '
+                      'use plain resume, without --recovery-action, to rerun that stage')
     rows = list(store.db.execute("SELECT state,details FROM execution_history WHERE run_id=? AND task_id=? AND kind='worker_invocation' ORDER BY seq", (run, task_id)))
     if rows and rows[-1]['state'] == 'returned':
         returned = json.loads(rows[-1]['details'])
@@ -816,7 +821,8 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, targ
         if returned.get('invocation_id') == state.get('invocation_id'):
             return graph.invoke(None, config, durability='sync')
     if not rows or rows[-1]['state'] not in ('failed', 'interrupted'):
-        raise Blocked('graph recovery needs an inspected terminal worker failure; reconcile any live or settled call first')
+        raise Blocked('graph recovery needs an inspected terminal worker failure; reconcile any live or settled call first '
+                      'with plain resume, without --recovery-action')
     failure = json.loads(rows[-1]['details'])
     if 'effects are uncertain' in failure.get('error', ''):
         raise Blocked('worker settlement and effects are uncertain; inspect the saved operation before any continuation')
@@ -834,9 +840,11 @@ def graph_recovery_action(engine, graph, config, action, *, diagnosis=None, targ
     if escalations and escalations[-1]['state'] != 'completed':
         raise Blocked('implementation escalation is unresolved; stop and notify the owner; owner direction required')
     if action == 'continue' and not failure.get('session'):
-        raise Blocked('continued recovery needs the exact saved session; inspect the failure or select justified fresh recovery')
+        raise Blocked('continued recovery needs the exact saved session, but the failed worker opened no session; '
+                      'use --recovery-action fresh with the inspected diagnosis')
     if action == 'escalate' and engine.implementation_fallback is None:
-        raise Blocked('implementation escalation has no permitted fallback; configure it at launch')
+        raise Blocked('implementation escalation has no permitted fallback; configure it at launch, or use '
+                      '--recovery-action ' + ('continue' if failure.get('session') else 'fresh') + ' with the inspected diagnosis')
     identity = uuid.uuid4().hex
     recovery = {'id': identity, 'action': action, 'diagnosis': diagnosis, 'predecessor': predecessor}
     reference = {'invocation_id': predecessor, 'error': failure.get('error'),
@@ -963,6 +971,8 @@ def _run_graph(engine, *, action=None, diagnosis=None, target_head=None, transfe
                                'routine_authority': True, 'review_policy': 'owner-pair-v1',
                                **({'delivery_scope': engine.delivery_scope} if engine.delivery_scope is not None else {})},
                     review_base=review_base)
+        if getattr(engine, 'launch', None):
+            store.history(run, None, 'launch_environment', 'recorded', engine.launch)
     config = {'configurable': {'thread_id': run}, 'recursion_limit': max(100, len(engine.contract['tasks']) * 20 + 50)}
     may_have_pin = target_head is not None
     try:

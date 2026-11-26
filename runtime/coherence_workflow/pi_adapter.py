@@ -229,7 +229,53 @@ class _ParentSteering:
                 self.socket.close()
 
 
+def executor_profiles(executor):
+    """Selected launch profiles by role, as the engine dispatches them."""
+    profiles = [('worker', {key: value for key, value in executor.items()
+                            if key not in ('reviewer', 'implementation_fallback')})]
+    for role in ('implementation_fallback', 'reviewer'):
+        if isinstance(executor.get(role), dict):
+            profiles.append((role, executor[role]))
+    return profiles
+
+
 class PiAdapter:
+    @staticmethod
+    def preflight(project, executor):
+        """Resolve every selected profile in the run's host and SDK before run state.
+
+        Loads only each profile's listed extensions and looks up its model; no
+        prompt or provider request. Returns the SDK identity the host loaded.
+        """
+        sdk, problems = None, []
+        for role, profile in executor_profiles(executor):
+            request = {'type': 'preflight', 'project': str(Path(project).resolve()), 'executor': profile}
+            try:
+                proc = subprocess.run([os.environ.get('COHERENCE_NODE', 'node'), str(host_path())],
+                                      input=canonical(request) + '\n', capture_output=True, text=True,
+                                      encoding='utf-8', cwd=project)
+            except OSError as exc:
+                raise Blocked('executor preflight could not start the Pi host: ' + str(exc) +
+                              '; no run state was created') from exc
+            record = None
+            for line in proc.stdout.splitlines():
+                try:
+                    value = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(value, dict) and value.get('type') == 'preflight':
+                    record = value
+            if record is None:
+                detail = (proc.stderr.strip() or proc.stdout.strip() or 'no output')
+                raise Blocked('executor preflight failed in the Pi host (exit ' + str(proc.returncode) + '): ' +
+                              detail + '; correct the Pi SDK installation; no run state was created')
+            sdk = record.get('sdk')
+            if record.get('ok') is not True:
+                problems.append(role + ': ' + str(record.get('error')))
+        if problems:
+            raise Blocked('executor preflight failed; no run state was created. ' + ' | '.join(problems))
+        return sdk
+
     def __init__(self, project, executor, *, question=None, observe=None, observe_question=None,
                  steering_status=None, question_trace=None):
         self.project, self.executor = Path(project), executor

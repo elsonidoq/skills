@@ -33,6 +33,7 @@ class DeliveryScopeTests(ProjectTest):
             raise Blocked('controlled offline stop before worker')
 
         with patch('coherence_workflow.graph.task_graph', side_effect=stop), \
+             patch('coherence_workflow.cli.PiAdapter.preflight', return_value=None), \
              contextlib.redirect_stdout(io.StringIO()), patch.dict('os.environ', {
                  'COHERENCE_PARENT_BRIDGE_SOCKET': '', 'COHERENCE_PARENT_BRIDGE_TOKEN': '',
                  'COHERENCE_PARENT_BRIDGE_SESSION': '', 'COHERENCE_PARENT_BRIDGE_RUN': ''}):
