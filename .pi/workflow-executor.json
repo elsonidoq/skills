@@ -2,14 +2,23 @@
   "provider": "claude-bridge",
   "model": "claude-sonnet-5-5",
   "effort": "medium",
+  "extensions": [
+    "/home/dev/.pi/agent/npm/node_modules/pi-claude-bridge/src/index.ts"
+  ],
   "implementation_fallback": {
     "provider": "claude-bridge",
     "model": "claude-opus-5-5",
-    "effort": "medium"
+    "effort": "medium",
+    "extensions": [
+      "/home/dev/.pi/agent/npm/node_modules/pi-claude-bridge/src/index.ts"
+    ]
   },
   "reviewer": {
     "provider": "claude-bridge",
     "model": "claude-opus-5-5",
-    "effort": "medium"
+    "effort": "medium",
+    "extensions": [
+      "/home/dev/.pi/agent/npm/node_modules/pi-claude-bridge/src/index.ts"
+    ]
   }
 }
