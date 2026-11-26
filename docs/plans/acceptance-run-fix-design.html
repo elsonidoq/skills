@@ -3,47 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PROPOSED — Acceptance run-and-fix stage — high-level design (issue #56)</title>
+<title>PROPOSED — Default end-to-end acceptance task — high-level design (issue #56)</title>
 <style>
   :root {
-    --ink: #1d232b; --muted: #59636e; --bg: #f7f8fa; --card: #ffffff;
+    --ink: #1d232b; --muted: #59636e; --bg: #f7f8fa; --card: #fff;
     --reused: #e6e9ee; --reused-line: #8a94a0;
     --changed: #dcecff; --changed-line: #2f6fbf;
-    --new: #dcf5e3; --new-line: #23864a;
     --gate: #fff3d6; --gate-line: #b07a00;
   }
   * { box-sizing: border-box; }
   body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
-  main { max-width: 1100px; margin: 0 auto; padding: 1rem; }
-  h1 { font-size: 1.4rem; margin: .5rem 0; }
-  h2 { font-size: 1.15rem; margin: 1.6rem 0 .5rem; }
+  main { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+  h1 { font-size: 1.35rem; margin: .5rem 0; }
+  h2 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
   .banner { background: #fde8e8; border: 2px solid #b42318; color: #7a1a12; padding: .6rem .8rem; border-radius: 6px; font-weight: 600; }
   .legend { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin: .8rem 0; font-size: .9rem; }
   .legend span { display: inline-flex; align-items: center; gap: .35rem; }
   .sw { width: 1.1rem; height: 1.1rem; border-radius: 3px; border: 2px solid; display: inline-block; }
-  .sw.reused { background: var(--reused); border-color: var(--reused-line); }
-  .sw.changed { background: var(--changed); border-color: var(--changed-line); }
-  .sw.new { background: var(--new); border-color: var(--new-line); }
-  .sw.gate { background: var(--gate); border-color: var(--gate-line); border-style: dashed; }
-  .lane { background: var(--card); border: 1px solid #d5dae1; border-radius: 8px; padding: .8rem; margin: .6rem 0; }
-  .lane > h3 { margin: 0 0 .5rem; font-size: .95rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
-  .box { font: inherit; text-align: left; cursor: pointer; border-radius: 8px; border: 2px solid; padding: .5rem .7rem; min-width: 9rem; max-width: 16rem; color: var(--ink); }
+  .reused { background: var(--reused); border-color: var(--reused-line); }
+  .changed { background: var(--changed); border-color: var(--changed-line); }
+  .gate { background: var(--gate); border-color: var(--gate-line); border-style: dashed; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; background: var(--card); border: 1px solid #d5dae1; border-radius: 8px; padding: .8rem; }
+  .box { font: inherit; text-align: left; cursor: pointer; border-radius: 8px; border: 2px solid; padding: .5rem .7rem; min-width: 9rem; max-width: 15rem; color: var(--ink); }
   .box small { display: block; color: var(--muted); font-size: .78rem; }
   .box:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
-  .box:hover { filter: brightness(.96); }
-  .box.reused { background: var(--reused); border-color: var(--reused-line); }
-  .box.changed { background: var(--changed); border-color: var(--changed-line); }
-  .box.new { background: var(--new); border-color: var(--new-line); }
-  .box.gate { background: var(--gate); border-color: var(--gate-line); border-style: dashed; }
-  .arrow { font-size: .8rem; color: var(--muted); display: inline-flex; align-items: center; gap: .2rem; max-width: 11rem; }
+  .arrow { font-size: .8rem; color: var(--muted); display: inline-flex; align-items: center; gap: .2rem; max-width: 10rem; }
   .arrow b { font-size: 1.1rem; color: var(--ink); }
   .arrow.approval { color: var(--gate-line); font-style: italic; }
-  .loop { margin-top: .5rem; padding: .5rem; border-left: 4px solid var(--new-line); background: #f3fbf5; font-size: .9rem; }
+  .loop { margin-top: .5rem; padding: .5rem; border-left: 4px solid var(--reused-line); background: #f1f3f6; font-size: .9rem; }
   ul.exec li { margin: .3rem 0; }
-  table { border-collapse: collapse; width: 100%; background: var(--card); font-size: .92rem; }
-  th, td { border: 1px solid #d5dae1; padding: .4rem .5rem; text-align: left; vertical-align: top; }
-  th { background: #eef1f5; }
   dialog { max-width: min(36rem, 94vw); border: 2px solid #333; border-radius: 10px; padding: 1rem 1.1rem; }
   dialog::backdrop { background: rgba(0,0,0,.35); }
   dialog h3 { margin-top: 0; }
@@ -59,235 +47,96 @@
 </head>
 <body>
 <main>
-<p class="banner">PROPOSED / UNIMPLEMENTED design for owner design agreement. Nothing on this page is implemented. The buttons only open explanations. They do not approve, launch or authorize anything.</p>
-<h1>Acceptance run-and-fix stage — high-level design</h1>
-<p>Issue: <a href="https://github.com/elsonidoq/skills/issues/56">github.com/elsonidoq/skills#56</a>. Source: <a href="acceptance-run-fix-tinyspec.md">acceptance-run-fix-tinyspec.md</a> (stage 1). Select a box to see its purpose, inputs and outputs, boundaries and choices.</p>
+<p class="banner" role="note">PROPOSED design for owner agreement. Not implemented. This page cannot approve anything; its buttons only open explanations.</p>
+<h1>Default end-to-end acceptance task (issue #56)</h1>
+<p>Source: <a href="acceptance-run-fix-tinyspec.md">TinySpec stage 1</a> ·
+Issue: <a href="https://github.com/elsonidoq/skills/issues/56">elsonidoq/skills#56</a> ·
+Rejected larger design: Git commit <code>8293329</code>.</p>
 
 <div class="legend" aria-label="Legend">
+  <span><i class="sw changed"></i> Changed (planning text only)</span>
   <span><i class="sw reused"></i> Reused, no change</span>
-  <span><i class="sw changed"></i> Existing, changed</span>
-  <span><i class="sw new"></i> New</span>
-  <span><i class="sw gate"></i> Owner gate (workflow approval, not data flow)</span>
+  <span><i class="sw gate"></i> Owner approval gate (workflow, not data flow)</span>
 </div>
 
 <h2>Schematic</h2>
-
-<section class="lane" aria-label="Planning">
-  <h3>1. Planning (before the run)</h3>
-  <div class="flow">
-    <button class="box changed" data-id="planning">Planning skills<small>planner · tiny-spec · task-generation</small></button>
-    <span class="arrow"><b>→</b> "Acceptance scenarios" or "No acceptance scenarios" + reason</span>
-    <button class="box changed" data-id="specreview">Independent spec review<small>spec-review.md</small></button>
-    <span class="arrow approval"><b>→</b> brief line "Run-and-fix stage: ON (n) / OFF (reason)"</span>
-    <button class="box gate" data-id="approval">Owner approval<small>combined (TinySpec) / spec + final (Standard)</small></button>
-    <span class="arrow"><b>→</b> scenarios copied unchanged</span>
-    <button class="box new" data-id="block">Scenario block in task file<small>optional top-level key</small></button>
-  </div>
-</section>
-
-<section class="lane" aria-label="Runner tasks">
-  <h3>2. Runner: intake and tasks</h3>
-  <div class="flow">
-    <button class="box reused" data-id="intake">Runner intake<small>six checks; retains contract</small></button>
-    <span class="arrow"><b>→</b> retained contract (scenarios immutable for the run)</span>
-    <button class="box reused" data-id="tasks">Task nodes<small>ready · worker · checks · checkpoint</small></button>
-    <span class="arrow"><b>→</b> all checkpoints done; scenarios present?</span>
-    <button class="box new" data-id="route">Stage router<small>code, not an agent</small></button>
-    <span class="arrow"><b>→</b> no scenarios: go straight to review (as today)</span>
-  </div>
-</section>
-
-<section class="lane" aria-label="Acceptance stage">
-  <h3>3. Acceptance run-and-fix stage (new controller graph)</h3>
-  <div class="flow">
-    <button class="box gate" data-id="gates">Scenario effect gates<small>existing manual gates</small></button>
-    <span class="arrow approval"><b>→</b> "yes" only for declared live/paid/destructive effects</span>
-    <button class="box new" data-id="run">Run scenarios<small>reuses verification._run_check</small></button>
-    <span class="arrow"><b>→</b> exit code + output; fail → one rerun</span>
-    <button class="box new" data-id="confirm">Confirm rerun<small>flaky check</small></button>
-    <span class="arrow"><b>→</b> both failure outputs</span>
-    <button class="box new" data-id="diagnose">Diagnoser<small>read-only agent</small></button>
-    <span class="arrow"><b>→</b> hypothesis · evidence · classification</span>
-    <button class="box new" data-id="classify">Classify and route<small>code</small></button>
-    <span class="arrow"><b>→</b> implementation defect only</span>
-    <button class="box new" data-id="fixer">Fixer<small>agent, scoped write</small></button>
-    <span class="arrow"><b>→</b> changed paths</span>
-    <button class="box new" data-id="oracle">Oracle guard<small>code</small></button>
-    <span class="arrow"><b>→</b> allowed changes + task checks</span>
-    <button class="box reused" data-id="git">Focused Git checkpoint<small>task-commit contract</small></button>
-    <span class="arrow"><b>→</b> fix commit SHA → run again</span>
-  </div>
-  <div class="loop">Loop: <strong>run → (fail, confirmed) → diagnose → classify → fix → checkpoint → run</strong>, until pass, a stop path, or the bound (choice C2). Each step writes evidence first.</div>
-</section>
-
-<section class="lane" aria-label="Evidence and review">
-  <h3>4. Evidence, review, escalation and visibility</h3>
-  <div class="flow">
-    <button class="box changed" data-id="evidence">Evidence store<small>execution_history rows; no new table</small></button>
-    <span class="arrow"><b>→</b> failure outputs, diagnoses, fix commits</span>
-    <button class="box changed" data-id="review">Independent final review<small>existing review chain</small></button>
-    <span class="arrow"><b>→</b> verdict on review_base..HEAD</span>
-  </div>
-  <div class="flow" style="margin-top:.6rem">
-    <button class="box gate" data-id="escalate">Owner escalation<small>question channel / terminal stop</small></button>
-    <span class="arrow approval"><b>←</b> flaky, oracle defect, spec gap/scope, bound, no progress, invalid diagnosis</span>
-    <button class="box changed" data-id="visible">Status and tracing<small>history rows; new trace phase</small></button>
-    <span class="arrow"><b>←</b> stage rows and phase spans</span>
-  </div>
-</section>
+<p>Select a box (pointer, Enter or Space) to see its purpose, inputs/outputs, boundaries and choices.</p>
+<div class="flow">
+  <button class="box changed" data-key="planning">Planning skills<small>task-generation, planner, spec-review</small></button>
+  <span class="arrow"><b>→</b> ON + command, or OFF + reason</span>
+  <button class="box changed" data-key="task">Acceptance task in the task file<small>last task; existing fields</small></button>
+  <span class="arrow"><b>→</b> one brief line</span>
+  <button class="box gate" data-key="approval">Owner approval brief<small>existing gate</small></button>
+  <span class="arrow approval"><b>→</b> approval starts the existing run</span>
+  <button class="box reused" data-key="runner">Runner loop<small>worker → checks → checkpoint</small></button>
+  <span class="arrow"><b>→</b> commits + check evidence</span>
+  <button class="box reused" data-key="review">Independent final review<small>existing review + fixer</small></button>
+</div>
+<p class="loop">Inside the runner loop (reused): the check fails → the same worker gets the actual output and fixes → the runner reruns all checks → pass = focused commit (or no-change checkpoint). Same failure twice = stop. At most initial + two worker calls per session.</p>
 
 <h2>Executive summary</h2>
 <ul class="exec">
-  <li><strong>Goal.</strong> Detect and correct "every task passed, but the feature does not work" before the independent final review, with a fixed code controller and agents only inside nodes.</li>
-  <li><strong>Skip when no scenarios.</strong> The router enters the stage only when the retained contract has a scenario block. Without it, the graph goes from the last checkpoint to review on the same path as today (test A-SKIP).</li>
-  <li><strong>Oracle protection.</strong> Scenarios live in the retained contract, which the runner compares on resume, so the run cannot change them. The oracle guard rejects fixer changes to declared oracle paths and the task file before any commit (A-ORACLE). An "oracle defect" classification escalates; it never goes to the fixer.</li>
-  <li><strong>Scope stop.</strong> The fixer gets the existing repair scope text (original task contracts and owned paths). "Spec gap / scope" and any scope growth or paid/live/destructive need stop for the owner (A-SPEC-ESC).</li>
-  <li><strong>Bounded termination.</strong> A fix-iteration count (recommended default 3, plan override) and a no-progress stop (same scenario, same exit code, identical output after a fix). An uncertain or failed agent call is never replayed (A-CAP, A-NOPROGRESS).</li>
-  <li><strong>Flaky confirmation.</strong> Each failure runs once more before diagnosis. A failure that does not repeat is "environment/flaky": no diagnosis, no fix, never a pass. Recommended result: one owner question "rerun stage / stop" (A-FLAKY).</li>
-  <li><strong>Run safety.</strong> Each scenario declares allowed effects; default isolated/local. Declared live, production-write, paid or destructive effects need the existing manual gate. Stage approval grants no such authority. The runner does not sandbox commands (A-SAFETY).</li>
-  <li><strong>No-replay resume.</strong> Each run, diagnosis and fix writes a history row before and after the call, in the style of the existing dispatch reservations. Resume continues from settled rows and stops on an uncertain one (A-RESUME).</li>
-  <li><strong>Evidence to review.</strong> Failure outputs (private files), diagnoses and attributed fix commits go into a new section of the existing reviewer brief. The review range already covers all commits since review_base (A-E2E, A-EVIDENCE).</li>
-  <li><strong>Quiet iterations.</strong> Routine stage steps do not wake the parent. Only questions and terminal completion do (owner guidance, A-QUIET).</li>
-</ul>
-
-<h2>Material additions: what is missing today and the tradeoff</h2>
-<table>
-  <thead><tr><th>Addition</th><th>What the existing design lacks</th><th>Tradeoff</th></tr></thead>
-  <tbody>
-    <tr><td>Scenario block (new contract key)</td><td>No place to declare a runnable oracle for the integrated result.</td><td>One more planning field. No intake check (owner mandate), so shape errors appear at planning validation or stage start.</td></tr>
-    <tr><td>Stage router and run/confirm nodes</td><td>After the last checkpoint the graph goes directly to review.</td><td>Extra graph steps; the step limit must include the bound.</td></tr>
-    <tr><td>Read-only diagnoser</td><td>No separate classification before a fix; review findings are not runtime failures.</td><td>One more agent call per failure. It cannot run commands, so some failures can be unclassifiable and stop.</td></tr>
-    <tr><td>Fixer with oracle guard</td><td>The review fixer is tied to review-chain rows and has no oracle protection.</td><td>Must reuse the focused-commit pattern without review-chain rows; more code than calling run_fix directly.</td></tr>
-    <tr><td>Bound and no-progress rule</td><td>Per-task checks stop on an unchanged failure, but nothing bounds a stage loop.</td><td>A fixed default can stop work that one more fix would solve; the owner can override per plan.</td></tr>
-    <tr><td>Reviewer evidence section and trace phase</td><td>Review brief and tracing know only task, check, review and repair phases.</td><td>Small changes to existing outputs; no new status field.</td></tr>
-  </tbody>
-</table>
-
-<h2>Limits and open choices</h2>
-<ul class="exec">
-  <li>Command scenarios only (owner decision a). Agent-judged and owner-judged scenarios are out of scope.</li>
-  <li>Scenarios do not run again after a final-review repair (choice C6, recommended exclusion).</li>
-  <li>After an oracle defect or spec gap, the owner corrects through planning and starts a new run; a run cannot change its retained contract.</li>
-  <li>Open for the owner: C1 flaky result, C2 bound form and default, C3 no-progress signature. Routine (recommendations given in the source): C4 executors, C5 shape check location, C6–C8.</li>
-  <li>Tests use offline fake adapters and fixture projects. They prove runner logic, not live model behavior.</li>
+  <li><b>Goal:</b> a plan that changes behavior checks, without an owner request, that the integrated feature works end to end before the final review.</li>
+  <li><b>Automatic:</b> task generation adds the acceptance task by default. It depends on all other tasks in the plan, so it runs last.</li>
+  <li><b>Run and fix:</b> the existing check loop gives the fix, the rerun, the focused commit and the stop on no progress. No runtime code changes.</li>
+  <li><b>Oracle protection:</b> non-empty <code>owned_paths</code> without the command and scenario files block edit-tool writes to them. Shell writes are not blocked, so the check first runs <code>git diff --quiet HEAD -- &lt;scenario paths&gt;</code>.</li>
+  <li><b>Visibility:</b> one line in the existing approval brief: "Acceptance task: ON (command …)" or "OFF (reason …)". No new question. The owner can change it at that approval.</li>
+  <li><b>Safety:</b> live, production-write, paid or destructive effects stay under existing owner gates. Isolated/local resources are the default convention.</li>
+  <li><b>Limits (accepted):</b> the fixing worker also diagnoses; no automatic flaky rerun; an oracle defect or spec gap is found only if the worker asks the owner; one worker call even when the check passes first time; a fix outside <code>owned_paths</code> is refused; the final-review fixer can change oracle files that an earlier task owned (the reviewer sees it); new untracked scenario files are not detected by <code>git diff</code>.</li>
+  <li><b>Tradeoff vs. the rejected design:</b> no separate diagnoser, classifier or flaky rerun. Less protection against a wrong oracle, much less new machinery.</li>
+  <li><b>Open choices:</b> C1 — state the ON/OFF intent once in the planner source guidance (recommended) or also in tiny-spec. C2 — no simplicity-review edit (recommended).</li>
 </ul>
 
 <dialog id="popup" aria-labelledby="popup-title">
   <p class="kind" id="popup-kind"></p>
   <h3 id="popup-title"></h3>
-  <ul id="popup-body"></ul>
-  <button type="button" class="closebtn" id="popup-close">Close</button>
+  <ul id="popup-items"></ul>
+  <button class="closebtn" id="popup-close" type="button">Close</button>
 </dialog>
-</main>
 
 <script>
 const INFO = {
-  planning: {kind: 'Existing, changed', title: 'Planning skills', items: [
-    'Purpose: the plan source declares the oracle. Either "Acceptance scenarios" or "No acceptance scenarios" with a reason (owner decision b).',
-    'Inputs: owner request and source. Outputs: scenarios with id, command, environment, written pass/fail criteria, allowed effects, oracle paths.',
-    'Boundary: command scenarios only; exit 0 = pass (owner decision a). Docs-only work and pure refactors may write "No acceptance scenarios".',
-    'Choice: no new owner question; task-generation copies scenarios unchanged to the executable task file.']},
-  specreview: {kind: 'Existing, changed', title: 'Independent specification review', items: [
-    'Purpose: check the ON/OFF choice and that each scenario is a command with criteria and allowed effects.',
-    'Inputs: source. Outputs: findings only; the reviewer has no edit authority.',
-    'Boundary: does not approve; the owner gate does.']},
-  approval: {kind: 'Owner gate', title: 'Owner approval', items: [
-    'Purpose: existing approval; the brief adds one line "Run-and-fix stage: ON (n scenarios) / OFF (reason)".',
-    'TinySpec: combined source/task approval. Standard: specification approval, shown again at final approval.',
-    'Boundary: approving the stage grants no live, production-write, paid or destructive authority.',
-    'This is a workflow approval, not data flow. This page cannot grant it.']},
-  block: {kind: 'New', title: 'Scenario block in the task file', items: [
-    'Purpose: carry the oracle to the runner as one optional top-level contract key.',
-    'Inputs: planning output. Outputs: retained run contract.',
-    'Boundary: authorization-neutral (ADR-0003); no approval status text.',
-    'Choice: shape checked by the planning validator and at stage start, not by runner intake (choice C5).']},
-  intake: {kind: 'Reused, no change', title: 'Runner intake', items: [
-    'Purpose: the six existing startup checks; keeps other top-level keys.',
-    'Outputs: retained contract; resume compares it, so scenarios cannot change during a run.',
-    'Boundary: no new intake check (owner mandate).']},
-  tasks: {kind: 'Reused, no change', title: 'Task nodes', items: [
-    'Purpose: existing per-task worker, checks and focused checkpoint loop.',
-    'Outputs: completed checkpoints. The stage starts only after all of them.']},
-  route: {kind: 'New', title: 'Stage router (code)', items: [
-    'Purpose: choose the next node from retained history: run, diagnose, fix, escalate, or review.',
-    'Inputs: retained contract and stage history rows. Outputs: next node.',
-    'Boundary: no scenarios → review exactly as today. refresh-review-target must not skip an unfinished stage.',
-    'Choice: fixed controller in graph.py; agents never select the next step.']},
-  gates: {kind: 'Owner gate', title: 'Scenario effect gates', items: [
-    'Purpose: existing manual-gate question before a scenario with declared live, production-write, paid or destructive effects.',
-    'Boundary: default effects are isolated/local and need no gate. A "no" stops the stage.',
-    'Limit: the runner does not sandbox commands; safety depends on declared effects, review and gates.']},
-  run: {kind: 'New (reuses verification._run_check)', title: 'Run scenarios', items: [
-    'Purpose: run each scenario command in the project checkout; exit 0 = pass.',
-    'Inputs: scenario command. Outputs: exit code and private captured output, retained as history.',
-    'Boundary: no deadline or output cap is added (existing behavior).',
-    'All pass → stage complete → final review.']},
-  confirm: {kind: 'New', title: 'Confirm rerun (flaky check)', items: [
-    'Purpose: run a failed scenario once more before diagnosis (requirement 7).',
-    'Repeats → diagnose. Does not repeat → environment/flaky: no fix, never a pass.',
-    'Choice C1 (recommended): ask the owner "rerun stage (counts toward the bound) / stop" through the existing question channel.']},
-  diagnose: {kind: 'New', title: 'Diagnoser (read-only agent)', items: [
-    'Purpose: hypothesis, evidence and one classification: implementation defect, environment/flaky, oracle defect, spec gap/scope.',
-    'Inputs: both failure outputs, criteria, environment, code (read-only). Outputs: structured diagnosis.',
-    'Boundary: existing read-only session (read, grep, find, ls). It cannot run commands. Invalid or missing classification → stop.',
-    'Choice C4 (recommended): reviewer executor, fresh session, separate from the fixer.']},
-  classify: {kind: 'New', title: 'Classify and route (code)', items: [
-    'Purpose: map the classification to one route.',
-    'Implementation defect → fixer. Oracle defect or spec gap/scope → owner escalation. Environment/flaky → C1.',
-    'Boundary: only "implementation defect" reaches the fixer (requirement 3).']},
-  fixer: {kind: 'New (reuses the run_fix pattern)', title: 'Fixer (agent)', items: [
-    'Purpose: make a bounded fix for the diagnosed implementation defect.',
-    'Inputs: diagnosis, failure outputs, original task contracts. Outputs: changed files and a report.',
-    'Boundary: current authority, _ROUTINE_AUTHORITY and _DECISION_CONSTRAINTS in the prompt (ADR-0003, ADR-0004); scope growth or paid/live/destructive need → stop.',
-    'Choice: focused-commit pattern of run_fix, but no review-chain rows.']},
-  oracle: {kind: 'New', title: 'Oracle guard (code)', items: [
-    'Purpose: reject any fixer change to oracle paths (scenario scripts, fixtures, task file).',
-    'Inputs: changed paths. Outputs: allowed changes, or a stop with an actionable message.',
-    'Boundary: bytes are preserved; nothing is committed or deleted.']},
-  git: {kind: 'Reused, no change', title: 'Focused Git checkpoint', items: [
-    'Purpose: run the union of task checks, then make one focused commit per fix (task-commit contract).',
-    'Outputs: fix commit SHA with attribution. Then the stage runs the scenarios again.']},
-  evidence: {kind: 'Existing, changed', title: 'Evidence store', items: [
-    'Purpose: retain each iteration: both failure outputs, diagnosis, fix result and commit.',
-    'Choice: execution_history rows with new kinds; no new SQL table unless the detailed design proves a need.',
-    'Boundary: raw output stays private; status shows only safe keys.',
-    'Resume reads these rows; an uncertain call is never replayed.']},
-  review: {kind: 'Existing, changed', title: 'Independent final review', items: [
-    'Purpose: existing read-only review of review_base..HEAD, so it covers task and fix commits.',
-    'Change: the brief gets a section with stage evidence and fix attribution.',
-    'Limit: scenarios do not run again after a review repair (choice C6).']},
-  escalate: {kind: 'Owner gate', title: 'Owner escalation', items: [
-    'Purpose: stop and report when the loop must not continue on its own.',
-    'Causes: flaky (C1 question), oracle defect, spec gap/scope, bound reached, no progress, invalid diagnosis, oracle guard rejection.',
-    'Boundary: terminal stops keep all commits and evidence; correction goes through planning and a new run.',
-    'This is a workflow decision, not data flow.']},
-  visible: {kind: 'Existing, changed', title: 'Status and tracing', items: [
-    'Verified: status CLI snapshot and the Paseo plugin show tasks only, so they do not change.',
-    'Full status JSON history shows new stage rows without change.',
-    'Tracing has a closed phase list, so one new phase name is added.']}
+  planning: {kind: 'Changed — text only', title: 'Planning skills', items: [
+    'Purpose: make the acceptance task a default, so the owner need not ask for it.',
+    'Inputs: the request and source. Outputs: source states ON (command) or OFF (reason); tasks include the last acceptance task.',
+    'Boundary: task-generation covers TinySpec and Standard (SpecKit) tasks. Spec review checks the task is present, or the OFF reason names why the plan does not change behavior.',
+    'Choices: C1 — ON/OFF intent in the planner source guidance only (recommended). C2 — no simplicity-review edit (recommended).']},
+  task: {kind: 'Changed — convention in existing fields', title: 'Acceptance task in the task file', items: [
+    'Purpose: one last task whose required check uses the integrated feature. Exit 0 = pass.',
+    'Fields: depends = all other tasks; checks = "git diff --quiet HEAD -- <scenario paths> && <command>"; owned_paths = non-empty, normally the union of earlier tasks\u2019 paths, minus command and scenario files.',
+    'Boundary: never owned_paths: [] (cannot fix) and never omitted (no protection). Scenario files are not in generated_outputs. No new field or schema.',
+    'The command can already exist or an earlier task can write it. Docs-only work or a pure refactor writes "No acceptance task" + reason.']},
+  approval: {kind: 'Owner gate — existing', title: 'Owner approval brief', items: [
+    'Purpose: show one line: "Acceptance task: ON (command …)" or "OFF (reason …)".',
+    'Where: TinySpec combined approval; Standard specification approval and again at final approval.',
+    'Boundary: no new question. The owner can change ON/OFF in the same answer.',
+    'This is a workflow approval, not data flow. This page cannot give it.']},
+  runner: {kind: 'Reused — no change', title: 'Runner loop', items: [
+    'Purpose: run the task worker, then the required checks, then a focused commit.',
+    'On failure: the same worker gets the actual output, fixes, and the runner reruns the checks. Unchanged failure after a fix = stop. Initial + two worker calls per session.',
+    'Boundary: edit-tool writes outside owned_paths are refused; shell writes outside owned_paths are left uncommitted but stay in the worktree (hence the git diff guard).',
+    'If the check passes first time: one worker call, no-change checkpoint.']},
+  review: {kind: 'Reused — no change', title: 'Independent final review', items: [
+    'Purpose: read-only review of the full diff with the check evidence.',
+    'On rejection: the existing fixer, with all task checks (it reruns the acceptance command), then a fresh repair review.',
+    'Limit: the fixer\u2019s paths are the union of task owned_paths, so it can edit oracle files an earlier task owned; the reviewer sees that diff.']}
 };
 const dlg = document.getElementById('popup');
 let opener = null;
-function openInfo(btn) {
-  const info = INFO[btn.dataset.id];
-  if (!info) return;
-  opener = btn;
-  document.getElementById('popup-kind').textContent = info.kind + ' · PROPOSED';
+function openPopup(btn) {
+  const info = INFO[btn.dataset.key];
+  document.getElementById('popup-kind').textContent = info.kind;
   document.getElementById('popup-title').textContent = info.title;
-  const body = document.getElementById('popup-body');
-  body.replaceChildren(...info.items.map(t => { const li = document.createElement('li'); li.textContent = t; return li; }));
-  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+  const ul = document.getElementById('popup-items');
+  ul.replaceChildren(...info.items.map(t => { const li = document.createElement('li'); li.textContent = t; return li; }));
+  opener = btn;
+  dlg.showModal();
   document.getElementById('popup-close').focus();
 }
-function closeInfo() {
-  if (typeof dlg.close === 'function') dlg.close(); else { dlg.removeAttribute('open'); restore(); }
-}
-function restore() { if (opener) { opener.focus(); opener = null; } }
-document.querySelectorAll('button.box').forEach(b => b.addEventListener('click', () => openInfo(b)));
-document.getElementById('popup-close').addEventListener('click', closeInfo);
-dlg.addEventListener('close', restore);
-dlg.addEventListener('click', e => { if (e.target === dlg) closeInfo(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlg.hasAttribute('open')) { e.preventDefault(); closeInfo(); } });
+document.querySelectorAll('.box').forEach(b => b.addEventListener('click', () => openPopup(b)));
+document.getElementById('popup-close').addEventListener('click', () => dlg.close());
+dlg.addEventListener('close', () => { if (opener) opener.focus(); });
 </script>
+</main>
 </body>
 </html>
