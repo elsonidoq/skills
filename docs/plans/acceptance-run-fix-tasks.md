@@ -7,9 +7,16 @@ Delivery issue: https://github.com/elsonidoq/skills/issues/56
 Source: [TinySpec](acceptance-run-fix-tinyspec.md) at `2da2100` (independent specification
 review findings applied). Agreed design page: [acceptance-run-fix-design.html](acceptance-run-fix-design.html)
 at `3afa64d` (owner "Agree", 2026-11-26). Task production used the saved `tinyspec-tasks`
-operation, `claude-bridge/claude-opus-5-5`, medium. Final task review and combined owner
-approval of source and tasks are pending. This record holds approval status; the tasks below
+operation, `claude-bridge/claude-opus-5-5`, medium. This record holds approval status; the tasks below
 do not.
+
+Final task review (fresh correctness and simplicity reviewers) findings were applied in
+`949953b` (source) and `02ed732` (tasks). Combined owner approval: "Approve and implement"
+via `ask_user` on 2026-11-26, for the source, T001–T002 and the implementation scope at
+`02ed732` (sha256: TinySpec `d3743efa…09052`, tasks.md `2f0b778f…cd23d`, tasks.json
+`dbdb62e4…7cbc6`), including the changed lint criterion (no new failure beyond the recorded
+pre-existing set) and this delivery's acceptance task OFF. Approval starts implementation and
+the pre-approved branch/PR delivery.
 
 ## Shared worker brief
 
