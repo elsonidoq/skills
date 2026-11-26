@@ -48,13 +48,18 @@ resolved in the approved handoff. Add `--executor PATH` only for an explicit ove
 overrides are project-root-relative. Otherwise only `PROJECT_ROOT/.pi/workflow-executor.json`
 is selected. Pass the exact absolute stdout path as `--executor CONFIG` to the CLI or as `executor`
 to the parent start tool and unchanged to downstream work. Keep downstream configuration reads
-and validation; do not repeat discovery. Explicit resume retains its recorded executor input.
+and validation; do not repeat discovery. Explicit resume retains its recorded executor input;
+if the launch executor file changed, resume reports the changed fields and still uses the recorded
+executor. To use the changed file, start a new run for the remaining tasks.
 Never search neighboring repositories, home directories, other worktrees or historical task files,
 fall back after a failed override, create/copy configuration, authenticate providers or invoke a
 model merely to resolve it. Supply project, task file and executor JSON containing the
 owner-selected executor/effort (provider, model, effort), without silent substitutions.
 A provider registered by a Pi extension (for example `claude-bridge`) needs that profile's
 optional `extensions` path list; the host loads no other extension and activates none of their tools.
+`start` checks every profile's provider and model in the run's host and SDK before run state, with
+no provider request; correct the reported profile and start again. The resolved SDK path and
+version appear in the `start` result and `status`; do not infer it from `runtime/pi-host/package.json`.
 An optional `implementation_fallback` profile permits stronger implementation recovery separately
 from the reviewer assignment; never infer that permission from `reviewer` alone. There is no owner catalog or binding
 assessment. SDK/dependency/authentication errors report the actual failed operation. Routine scoped technical
@@ -83,6 +88,7 @@ that work. Do not add a risk schema, scoring, admission checklist, or parent ack
 ## Interface Actions
 
 - `intake --tasks FILE`: six checks only; task metadata is not an approval prerequisite.
+- `baseline-checks --project ROOT --tasks FILE`: optional, before `start`; run each distinct task check once and report pre-existing failures. It creates no run state and blocks nothing; a check for not-yet-implemented behavior can fail legitimately.
 - `start --project ROOT --tasks FILE --executor CONFIG [--run ID]`: execute dependency-ordered work; sequential by default, or path-disjoint waves only with explicit owner direction after cutover.
 - `status` / `history --project ROOT --run ID`: read progress or historical records without
   launching an agent or repairing old intent records.
@@ -91,6 +97,9 @@ that work. Do not add a risk schema, scoring, admission checklist, or parent ack
   Supply `--recovery-action continue|fresh|escalate --diagnosis TEXT` for a coordinator-selected
   cause-specific continuation. `fresh` replaces the unfinished task's context; `escalate` uses its
   retained `implementation_fallback`. Neither needs renewed routine operational approval.
+  Select by failure point: worker failed without a session → `fresh`; worker failed with a saved
+  session → `continue`; worker returned and a later stage stopped (such as a failed required check)
+  or a question is pending → plain `resume`. A refused action names the one that applies.
   For an explicitly failed offline verification with no write scope, the [source CLI guide](../../docs/coordinate-implementation.md#coordinator-selected-worker-recovery) documents `fresh --target-head COMMIT` for an inspected direct-child repair, not acceptance of old proof.
   The parent start tool accepts the equivalent `recovery_action` and `diagnosis` fields with `resume: true`.
 - `recover-task --project ROOT --run ID --recovery FILE --owner-authorized`: after actual owner authorization, accept an inspected external completion of the next unfinished same task. The exact working-byte/mode transfer, original checks/manual gates and focused checkpoint precede normal `resume`; no old SDK invocation is rewritten, allowance reset, fake edit required, or later executor changed. See the [supported transfer format and limits](../../docs/coordinate-implementation.md#accept-an-owner-authorized-external-same-task-completion). This launches no provider and does not replace independent final review. Unknown/live calls, changed transfer or failed checks remain blocked.
