@@ -272,6 +272,19 @@ class IssueAssociationWalkthroughTests(unittest.TestCase):
                     self.assertTrue(any(e.startswith('issue-' + key + ':')
                                         for e in checker.check_contracts(changed)))
 
+    def test_acceptance_task_carriers_cannot_be_rescued_by_inert_summary(self):
+        texts = checker.load_texts()
+        self.assertEqual(checker.check_acceptance_task(texts), [])
+        for key, heading, clauses in checker.ACCEPTANCE_TASK_CARRIERS:
+            body = checker.section(texts[key], heading)
+            for clause in clauses:
+                with self.subTest(carrier=key, removed=clause):
+                    changed = dict(texts)
+                    changed[key] = texts[key].replace(body, replace_clause(body, clause), 1)
+                    changed[key] += '\n## Inert acceptance summary\n' + clause
+                    self.assertTrue(any(e.startswith('acceptance-' + key + ':')
+                                        for e in checker.check_contracts(changed)))
+
     def test_coupled_tracker_lifecycle_fixtures_after_carrier_validation(self):
         # These authored transcripts check expected branch/order semantics only.
         # The actual skill prose is the production carrier; no model or remote is run.
