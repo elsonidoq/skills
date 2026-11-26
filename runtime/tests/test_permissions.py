@@ -67,6 +67,7 @@ class PaidScopeTests(ProjectTest):
         executor = {**EXECUTOR, 'reviewer': {**{key: value for key, value in EXECUTOR.items() if key != 'reviewer'},
                                               'provider': 'other'}}
         with patch('coherence_workflow.cli.Engine') as engine, \
+             patch('coherence_workflow.cli.PiAdapter.preflight', return_value=None), \
              patch('coherence_workflow.cli.run_graph', return_value={'status': 'completed'}) as run_graph, \
              patch.dict(os.environ, {key: '' for key in ('COHERENCE_PARENT_BRIDGE_SOCKET', 'COHERENCE_PARENT_BRIDGE_TOKEN',
                                                           'COHERENCE_PARENT_BRIDGE_SESSION', 'COHERENCE_PARENT_BRIDGE_RUN')}), \

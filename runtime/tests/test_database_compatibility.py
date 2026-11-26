@@ -250,7 +250,8 @@ os._exit(0)
         executor = self.root / 'executor.json'
         profile = {'provider': 'test', 'model': 'test', 'effort': 'medium'}
         executor.write_text(json.dumps({**profile, 'reviewer': profile}))
-        with patch('coherence_workflow.cli.Engine', side_effect=Blocked('stop before provider')) as engine:
+        with patch('coherence_workflow.cli.Engine', side_effect=Blocked('stop before provider')) as engine, \
+             patch('coherence_workflow.cli.PiAdapter.preflight', return_value=None):
             with contextlib.redirect_stdout(io.StringIO()) as output, contextlib.redirect_stderr(io.StringIO()) as diagnostics:
                 result = main(['start', '--project', str(self.project), '--tasks', str(tasks),
                                '--executor', str(executor), '--run', 'new'])

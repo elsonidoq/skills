@@ -354,6 +354,14 @@ keeps the same explicit worker/reviewer tool list; extension tools stay inactive
 
 A path that does not load stops the session with the path and the load error.
 
+`start` checks every profile before it creates run state or asks the paid-scope question. For each
+profile, one host process with the run's Pi SDK loads only the listed extensions and looks up the
+model; it sends no prompt or provider request. A missing provider names the profile and tells you to
+add the registering extension to its `extensions` list; a missing model names the provider's
+catalog, the SDK version and path, and the available models. Correct the executor file and start
+again. `start` prints the resolved SDK on stderr and adds `sdk` to its result; `status` shows it
+as the SDK resolved at launch. A later `resume` loads the SDK installed at that time.
+
 Workers and fixers must create and change files with the `edit`/`write` tools: the focused
 checkpoint includes only files changed through them, never files written by `bash`. Their
 briefs state this rule. Repairs that never reach approval stop at the graph step limit with a
@@ -361,7 +369,8 @@ briefs state this rule. Repairs that never reach approval stop at the graph step
 run and start a new one.
 For **this repository**, every launch (including continuations/corrections) supplies
 `--executor .pi/workflow-executor.json`, or that file's absolute path through the parent
-bridge: Sol 6.1/medium workers, implementation fallback and reviewers. Other projects retain their own
+bridge. That file is the current owner selection of worker, implementation fallback and reviewer
+models; this guide does not repeat it. Other projects retain their own
 configuration. Existing historical reviewer nodes are not changed retroactively.
 
 The canonical project-local configuration is `<project-root>/.pi/workflow-executor.json`.
@@ -372,12 +381,22 @@ executor=$(python3 scripts/resolve-workflow-executor.py --project /absolute/proj
 # Explicit override: add --executor config/custom.json (relative to the project, not cwd),
 # or --executor /absolute/selected.json. See --help.
 scripts/coordinate-implementation intake --tasks /tmp/tasks.json
+# Optional: run each distinct required check once on the current checkout (see below).
+scripts/coordinate-implementation baseline-checks --project /absolute/project --tasks /tmp/tasks.json
 scripts/coordinate-implementation start --project /absolute/project \
   --tasks /tmp/tasks.json --executor "$executor" --run fix-title
 scripts/coordinate-implementation status --project /absolute/project --run fix-title
 scripts/coordinate-implementation resume --project /absolute/project --run FAILED_OR_INTERRUPTED_RUN
 # status/history include monitoring recording version, stable occurrence IDs, and safe review ranges when available
 ```
+
+`baseline-checks` runs each distinct task check command once at the current checkout and prints
+the command, the task IDs that require it, its exit code and output. It exits 1 if a check fails.
+It creates no run state and blocks nothing. Use it before `start` to find pre-existing failures,
+for example a defect in a file that no task owns, before a worker spends a run on it. A failure is
+not always a defect: a check for behavior that a task adds can fail until that task is done. The
+cost is one run of every distinct check; skip it when checks are expensive. Do not run it while a
+workflow run is active in the same checkout.
 
 If an unreserved pair grant was stopped by target drift, do not rebind it. Refresh the independent review of the current committed target over the retained original range first; a rejected refresh leaves the run stopped for normal explicit resume and a new exact pair, while an approval completes it:
 
@@ -429,8 +448,13 @@ success, and sends actionable failures to stderr with a nonzero exit. It reads e
 checks nonempty provider/model/effort strings, including an optional reviewer profile; it never
 creates/copies configuration, searches outside the selected path, falls back after an explicit
 override fails, authenticates providers or invokes a model. Downstream reads/validation still
-apply; resolution does not prove runtime/provider availability. Resume uses retained executor
-input rather than selecting new configuration.
+apply; resolution does not prove runtime/provider availability; the `start` preflight does.
+
+Resume uses the retained executor, not the current file. `start` records the executor file path.
+If that file changed since launch, `resume` reports the changed fields (for example
+`reviewer.model`) on stderr, in its result as `executor_drift`, and in `status` history. The run
+still uses its recorded executor. To use the changed file, start a new run for the remaining
+tasks. There is no action that changes the executor of an existing run.
 
 The wrapper uses `runtime/.venv/bin/python` when it exists (install: `python3 -m venv runtime/.venv && runtime/.venv/bin/pip install -r runtime/requirements.lock && runtime/.venv/bin/pip install -e runtime`). Set `COHERENCE_PYTHON` only to select a different environment. Source execution
 uses the suite-relative SDK host; installed execution uses its packaged host. `COHERENCE_NODE`
@@ -698,7 +722,19 @@ are not adopted. An SDK error is a settled predecessor only when the host attest
 on its `error` record: no session was created, or the session was idle with no pending question,
 so no tool call was in flight. A settled error that opened no session needs `fresh`, not
 `continue`. Other SDK errors, a lost host result and historical failure rows stay uncertain.
-Rerun affected required checks and keep independent review. Existing runs retain
+Rerun affected required checks and keep independent review.
+
+Select the action from the failure point. A refused action names the one that applies:
+
+- The worker failed and opened no session: `fresh`.
+- The worker failed and has a saved session: `continue` (or `fresh` when its context is not useful).
+- The worker returned and a later stage stopped, such as a failed required check: correct the
+  cause first (for example a defect outside the task's owned paths), then plain `resume` without
+  `--recovery-action`. An unchanged failure stops again.
+- A worker question is pending: plain `resume` without `--recovery-action`.
+- The last worker call is live or uncertain: inspect its process and saved session first.
+
+Existing runs retain
 their launch configuration: no fallback is inferred from a later file change or reviewer profile.
 
 **Fresh offline verification at a repaired commit (source CLI only).** Inspect the failed call,
@@ -845,6 +881,11 @@ package reports its actual error rather than silently switching SDKs.
 A stale local `runtime/pi-host/node_modules` (for example, from an earlier `npm ci`) takes
 precedence over the installed Pi, so its older model catalog applies, also to extension
 providers such as `claude-bridge`. Remove it to follow the installed Pi release.
+The SDK version in `runtime/pi-host/package.json` and its lock applies only where that directory
+has `node_modules`, as in the explicit isolated installation. A source checkout without
+`node_modules` uses the installed Pi release, whatever the pin says. Do not read the pin as the
+running version: `start` prints the resolved SDK package directory and version, and `status`
+shows it as `sdk` (resolved at launch). A model-lookup error also names the SDK in use.
 
 Package discovery uses Node's package lookup; entry and SDK-dependency loading use Node's ESM
 resolver and public package exports, not constructed `dist/` paths or nested dependency paths.
@@ -905,7 +946,8 @@ Focused checks in the prepared environment:
 ```sh
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=runtime:runtime/tests \
   .pi/workflow-validation/venv/bin/python -B -m unittest discover -v -s runtime/tests
-COHERENCE_PYTHON=python3 node --test runtime/tests/test_sdk_resolution.mjs \
+# The bridge tests start the real CLI: COHERENCE_PYTHON must have the runtime dependencies.
+COHERENCE_PYTHON=.pi/workflow-validation/venv/bin/python node --test runtime/tests/test_sdk_resolution.mjs \
   runtime/tests/test_host.mjs runtime/tests/test_bridge.mjs \
   runtime/tests/test_global_bridge.mjs runtime/tests/test_saved_sessions.mjs
 ```

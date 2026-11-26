@@ -183,11 +183,49 @@ class GraphRecoveryTests(ProjectTest):
                             self.assertEqual(calls, ['worker'])
                             continue
                         if not opened:
-                            with self.assertRaisesRegex(Blocked, 'needs the exact saved session'):
+                            with self.assertRaisesRegex(Blocked, 'needs the exact saved session.*opened no session; '
+                                                                 'use --recovery-action fresh'):
                                 graph_recovery_action(engine, graph, config, 'continue', diagnosis=DIAGNOSIS)
                         graph_recovery_action(engine, graph, config, 'fresh', diagnosis=DIAGNOSIS)
                         self.assertIn('one', owner.store.completed_checkpoints(thread))
                         self.assertEqual(calls, ['worker', 'worker'])
+
+    def test_refused_recovery_after_worker_boundary_names_plain_resume(self):
+        project, calls = self.project, []
+        class Adapter:
+            def __init__(self, *_args, **_kwargs): self.saved_session = None
+            def prompt(self, _prompt, **kwargs):
+                calls.append('worker')
+                self.saved_session = self.opened_session = {'id': 'saved', 'file': '/fixture/saved'}
+                kwargs['claim']('owned.txt')
+                (project/'owned.txt').write_text('worker\n')
+                return 'complete'
+        # The worker returns, but a required check fails the same way after correction.
+        contract = admit([{'id': 'one', 'description': 'parser', 'owned_paths': ['owned.txt'],
+                           'checks': [[sys.executable, '-c', 'raise SystemExit(7)']]}])
+        config = {'configurable': {'thread_id': 'after-boundary'}}
+        with Authority(project) as owner:
+            owner.store.start('after-boundary', self.base, contract=contract, executor=EXECUTOR)
+            engine = Engine(owner, 'after-boundary', contract, EXECUTOR, adapter=Adapter, resume=True)
+            with graph_saver(owner) as saver:
+                graph = task_graph(engine, saver)
+                with self.assertRaisesRegex(Blocked, 'remains unchanged after scoped correction'):
+                    graph.invoke({}, config, durability='sync')
+                self.assertEqual(graph.get_state(config).next, ('checks',))
+                for action in ('continue', 'fresh', 'escalate'):
+                    with self.subTest(action=action), self.assertRaisesRegex(
+                            Blocked, 'stopped after it \\(next: checks\\).*correct the cause.*then use plain resume, '
+                                     'without --recovery-action'):
+                        graph_recovery_action(engine, graph, config, action, diagnosis=DIAGNOSIS)
+                # Back at the worker boundary for a new call: the last recorded call returned.
+                graph.update_state(config, {'invocation_id': 'not-dispatched', 'next_node': 'worker'}, as_node='ready')
+                with self.assertRaisesRegex(Blocked, 'the last worker call returned; reconcile it with plain resume'):
+                    graph_recovery_action(engine, graph, config, 'fresh', diagnosis=DIAGNOSIS)
+                # A started call without a result is uncertain: inspect, do not resume.
+                owner.store.history('after-boundary', 'one', 'worker_invocation', 'started', {'invocation_id': 'not-dispatched'})
+                with self.assertRaisesRegex(Blocked, 'last worker call is live or uncertain, so inspect its process and saved session'):
+                    graph_recovery_action(engine, graph, config, 'fresh', diagnosis=DIAGNOSIS)
+        self.assertEqual(calls, ['worker', 'worker'])
 
     def test_effect_drift_and_unknown_diagnosis_stop_before_dispatch(self):
         calls, project = [], self.project
@@ -520,7 +558,8 @@ class WorkerRecoveryTests(ProjectTest):
         with Authority(self.project) as owner:
             self.start_failure(owner, contract, adapter, executor)
             owner.store.resume('recovery')
-            with self.assertRaisesRegex(Blocked, 'no permitted fallback'):
+            with self.assertRaisesRegex(Blocked, 'no permitted fallback; configure it at launch, or use '
+                                                 '--recovery-action (continue|fresh) with the inspected diagnosis'):
                 Engine(owner, 'recovery', contract, executor, adapter=adapter, resume=True,
                        worker_recovery={'action': 'escalate', 'diagnosis': DIAGNOSIS}).invoke()
         self.assertEqual(calls, [('worker', 'worker')])

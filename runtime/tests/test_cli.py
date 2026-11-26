@@ -60,6 +60,8 @@ else:
         # writer lock, terminal input, read-only reviewer and Git are real.
         entry = ('import sys; from pathlib import Path; from coherence_workflow import cli, pi_adapter; '
                  'pi_adapter.host_path=lambda: Path(sys.argv[1]); '
+                 # The fixture host answers prompts only; preflight has its own focused test.
+                 'pi_adapter.PiAdapter.preflight=staticmethod(lambda *a: None); '
                  'raise SystemExit(cli.main(sys.argv[2:]))')
         env = {**os.environ, 'PYTHONPATH': str(ROOT/'runtime'), 'PYTHONDONTWRITEBYTECODE': '1',
                'COHERENCE_NODE': sys.executable,
@@ -423,7 +425,7 @@ else:
         tasks.write_text('{"paid_scope":{"approved":true,"agent_providers":["fixture"],"apis":["fixture test API"]},"tasks":[{"id":"fix","description":"Fix"}]}')
         executor = self.root/'executor.json'
         executor.write_text('{"provider":"fixture","model":"offline-no-provider-call","effort":"medium","reviewer":{"provider":"fixture","model":"offline-reviewer","effort":"medium"}}')
-        code = "from pathlib import Path; import coherence_workflow.pi_adapter as a; a.host_path=lambda:Path(" + repr(str(host)) + "); from coherence_workflow.cli import main; raise SystemExit(main())"
+        code = "from pathlib import Path; import coherence_workflow.pi_adapter as a; a.host_path=lambda:Path(" + repr(str(host)) + "); a.PiAdapter.preflight=staticmethod(lambda *a: None); from coherence_workflow.cli import main; raise SystemExit(main())"
         process = subprocess.Popen([sys.executable, '-B', '-c', code, 'start', '--project', str(self.project),
                                     '--tasks', str(tasks), '--executor', str(executor), '--run', 'cancelled'],
                                    env=dict(os.environ, COHERENCE_NODE=sys.executable,
