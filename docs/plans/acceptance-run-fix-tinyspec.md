@@ -1,8 +1,7 @@
-# Default end-to-end acceptance task — TinySpec (stage 1)
+# Default end-to-end acceptance task — TinySpec
 
-**Status:** PROPOSED stage-1 source (what, scope, decisions, acceptance). The detailed how
-waits for explicit owner design agreement on the
-[high-level design page](acceptance-run-fix-design.html). Not implemented. No tasks yet.
+**Status:** source with detailed how, after owner design agreement (section 9). Not
+implemented. Separate tasks pending; specification review and combined approval pending.
 
 - **Qualified issue:** https://github.com/elsonidoq/skills/issues/56 (authoritative scope).
 - **Planning depth:** TinySpec (owner selection).
@@ -166,10 +165,81 @@ it as more complexity than needed (D1).
 - R3 Over-application to small changes. The opt-out (A2) and the brief line (A5) let the
   owner see and change it.
 
-## 8. Open choices
+## 8. Resolved choices
 
-- **C1 Where the source records ON/OFF intent.** (a) **Recommended:** one clause in the
-  planner source-creation bullet (covers TinySpec and Standard; no `tiny-spec` edit).
-  (b) Also edit `tiny-spec` "Acceptance" bullet (duplicate text).
-- **C2 Simplicity review.** (a) **Recommended:** no edit; `simplicity-review.md` already
-  preserves required acceptance. (b) Add an explicit clause that the default task is required.
+- **C1:** state the ON/OFF intent once in the planner source-creation guidance (covers TinySpec
+  and Standard); no `tiny-spec` edit.
+- **C2:** no `simplicity-review.md` edit; it already preserves required acceptance (`:25`).
+
+Both were the recommendations shown on the agreed page; the owner did not object.
+
+## 9. Design agreement
+
+- **Shown content:** `docs/plans/acceptance-run-fix-design.html` at commit `3afa64d`, with this
+  source's stage-1 content at the same commit.
+- **Answer:** "Agree", via `ask_user`, 2026-11-26. Scope as shown, including C1/C2
+  recommendations.
+- **Ordering:** agreement came before this detailed how. The page is unchanged since.
+
+## 10. Approach (detailed how)
+
+Text changes are additions of a few sentences in existing sections. Final wording belongs to
+the implementing task. Global skill text stays portable: no project command names.
+
+### 10.1 Acceptance-task template (convention in existing fields, no new schema)
+
+- **Position and `depends`:** last task; `depends` lists every other task ID in the plan.
+- **`owned_paths`:** non-empty. Normally the union of the earlier tasks' `owned_paths`, minus
+  the acceptance command and its scenario files. Never `[]`; never omitted. Scenario files
+  are not in `generated_outputs`.
+- **`checks`:** one required command:
+  `git diff --quiet HEAD -- <scenario paths> && <command>`. Exit 0 = pass. The command uses
+  the integrated feature. It can already exist or an earlier task can author it (then that
+  earlier task owns the scenario files).
+- **`gates`:** empty by default. If the command has a live, production-write, paid or
+  destructive effect, put the existing owner-approval question in `gates`. Isolated/local
+  resources are the default convention.
+- **Description:** authorization-neutral (ADR-0003). States the scenario, the pass meaning, and
+  that a failure is fixed inside `owned_paths`, or the worker asks the owner when the oracle or
+  the specification looks wrong.
+- **Opt-out:** when the plan does not change behavior, the task file has no acceptance task
+  and states "No acceptance task: <reason>" (for example docs-only, pure refactor).
+
+### 10.2 Per-file changes
+
+| File | Section / anchor | Required content |
+| --- | --- | --- |
+| `skills/task-generation/SKILL.md` | `## Give each task sufficient proof` (after the composed-acceptance paragraph, `:109-114`) | A1–A4: the default last acceptance task and its template (10.1); opt-out with reason; state that it is the explicit exception to "check commands are optional" (`:133-137`) and that the existing check loop runs and fixes it. Covers both adapters (F7). |
+| `skills/task-generation/SKILL.md` | `## Encode the tasks for their consumer` (`owned_paths` paragraph, `:164-167`) | One sentence: the acceptance task needs non-empty `owned_paths` without scenario files, not `[]`, not omitted; scenario files not in `generated_outputs`. |
+| `skills/planner/SKILL.md` | `### Give producers the inputs their owners require`, source-creation bullet (`:144-148`) | A6/C1: the source states acceptance intent: ON with the scenario command, or OFF with a reason that names why the plan does not change behavior. |
+| `skills/planner/references/approval-and-recovery.md` | `## Executive brief before approval` bullet list | A5: one bullet: "Acceptance task: ON (command …)" or "OFF (reason …)"; the owner can change it in the same approval answer; no separate question. Applies at TinySpec combined approval and Standard specification and final approval. |
+| `skills/planner/references/spec-review.md` | `## Definition of done and intent alignment` and `## Design and task proof review` (final task paragraph) | A7: source review checks the ON/OFF intent; final task review checks that the acceptance task is present and follows 10.1, or that the OFF reason names why the plan does not change behavior. |
+| `scripts/check-planner-workflow.py` | new `ACCEPTANCE_TASK_CARRIERS` tuple `(key, heading, clauses)` next to `ISSUE_ASSOCIATION_CARRIERS` (`:559`), checked from `check_contracts` (`:593-595`) | A8: require the key clauses of A1–A7 in their sections (keys `tasks`, `planner`, `approval`, `spec_review_prompt`). |
+| `scripts/test-planner-workflow.py` | new test beside `IssueAssociationWalkthroughTests` (`:253-273`), same pattern | A8: current texts pass; removing each clause from its section, even with an inert summary appended elsewhere, produces an error. |
+
+No change: `skills/tiny-spec/SKILL.md` (C1), `simplicity-review.md` (C2), SpecKit templates
+(task-generation covers the SpecKit adapter, F7), `README.md` (its validation section names
+`check-skills-lint.sh` generically; no new command), `docs/coordinate-implementation.md`
+(runtime behavior unchanged), `runtime/` (A9).
+
+### 10.3 Sequencing
+
+One planning-text change and its contract check are coupled: the checker fails until the text
+exists. Either one task (text + checker + test) or two (text first, then checker/test that
+depends on it). Task generation decides by executor sizing. This delivery changes only
+planning text, so its own acceptance task is OFF: "No acceptance task: planning-text and
+static-check change; behavior is checked by the contract test (A8)."
+
+### 10.4 Check-to-criterion mapping
+
+| Criterion | Check | Pass condition |
+| --- | --- | --- |
+| A1, A2, A3, A4 | `python3 scripts/check-planner-workflow.py` (task-generation carriers) | exit 0 |
+| A5 | same (approval carrier) | exit 0 |
+| A6 | same (planner carrier) | exit 0 |
+| A7 | same (spec-review carrier) | exit 0 |
+| A8 | `python3 scripts/test-planner-workflow.py`; `scripts/check-skills-lint.sh` | exit 0; new negative test fails on clause removal |
+| A9 | `git diff --name-only <base>..HEAD -- runtime/` | empty output |
+
+Limits: these are static text checks; they do not prove model obedience or a live run.
+Final independent review judges semantic fit of the wording to 10.1.
