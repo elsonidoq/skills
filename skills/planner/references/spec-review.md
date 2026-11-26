@@ -71,6 +71,9 @@ would count as done when a material decision is unresolved; do not invent thresh
 requirements or an additional approval gate.
 
 Include definition-of-done gaps in the same ranked findings, not an extra questionnaire.
+
+Check that the source states the acceptance intent: ON with the scenario command, or OFF
+with a reason that names why no command can use the integrated behavior.
 If existing criteria already establish observable completion aligned with user intent,
 do not manufacture a question.
 
@@ -96,6 +99,9 @@ repeat routine consent, invent historical answers or override current launch aut
 For final task review, every task needs observable acceptance, meaningful completion evidence,
 validation and real manual/permission gates through whole REQUIRED mappings, not a new schema
 or startup gate. Worker return alone is not accepted completion. Report actual evidence limits.
+At final task review, check that the acceptance task is present and follows the
+task-generation template, or that the OFF reason names why no command can use the integrated
+behavior (docs-only work, a pure refactor, or guidance text that needs a live agent run).
 
 ## Fresh-context input boundary
 

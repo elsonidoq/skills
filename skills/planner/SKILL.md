@@ -146,6 +146,9 @@ For both paths, consume these existing owners at the relevant operation:
   approach, constraints and observable acceptance. TinySpec/specification is requirements truth;
   the plan supplies derived sequencing only. Do not forward or reread SDD as downstream
   requirements input. Governing instructions, memory and permission/safety rules still apply.
+  Require the source to state its acceptance intent: ON with the scenario command, or OFF with
+  a reason that names why no command can use the integrated behavior. One statement covers
+  TinySpec and Standard.
 - Use [early risk reduction](references/early-risk-reduction.md) for consequential uncertainty.
   Consume justified proof selection/omission, actual evidence and limits, necessary dependencies,
   applicability/lifetime, production acceptance and disproof/renewal results. Failed or unrun proof

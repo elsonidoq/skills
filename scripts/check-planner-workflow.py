@@ -598,6 +598,14 @@ ACCEPTANCE_TASK_CARRIERS = (
         'live, production-write, paid or destructive effect')),
     ('tasks', '## Encode the tasks for their consumer', (
         'never `[]` and never omitted',)),
+    ('planner', '### Give producers the inputs their owners require', (
+        'Require the source to state its acceptance intent',)),
+    ('approval', '## Executive brief before approval', (
+        'Acceptance task: ON (command ...) or OFF (reason ...)',)),
+    ('spec_review_prompt', '## Definition of done and intent alignment', (
+        'Check that the source states the acceptance intent',)),
+    ('spec_review_prompt', '## Design and task proof review', (
+        'check that the acceptance task is present and follows the task-generation template',)),
 )
 
 
