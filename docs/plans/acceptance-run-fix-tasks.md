@@ -43,18 +43,20 @@ Shared constraints:
   after the composed-acceptance paragraph: default last task (depends on all others, required
   command check, exit 0, no owner request, the scenario-unchanged guard form, command may
   pre-exist or come from an earlier task), the explicit exception to "Check commands are
-  optional", the existing check loop fixes failures, opt-out with reason, run safety in
-  `gates` with isolated/local resources as convention. In `## Encode the tasks for their
+  optional", the existing check loop fixes failures, opt-out with reason, one run-safety
+  sentence that points to the existing `gates` rule for live, production-write, paid or
+  destructive commands (isolated/local resources is an unenforced convention, no carrier
+  phrase). In `## Encode the tasks for their
   consumer` (`owned_paths` paragraph): the non-empty `owned_paths` sentence, including the
   "every implementation path" case and no scenario files in `generated_outputs`. Add
   `ACCEPTANCE_TASK_CARRIERS` and its check to `check_contracts`, with `tasks` entries; add the
   negative test beside `IssueAssociationWalkthroughTests`.
-- **REQUIRED:** A1–A4 clauses present and enforced; removal of each clause fails the check
-  even with an inert summary elsewhere.
+- **REQUIRED:** A1–A4 content present (final review judges semantic fit); `check_contracts`
+  requires one key phrase per criterion A1, A2, A3 and A4, not every sub-clause; removal of
+  each key phrase fails the check even with an inert summary elsewhere.
 - **Checks:** `python3 scripts/check-planner-workflow.py`;
   `python3 scripts/test-planner-workflow.py`;
-  `python3 skills/task-generation/scripts/test_contract.py`;
-  `git diff --quiet 2da2100 HEAD -- runtime/`.
+  `python3 skills/task-generation/scripts/test_contract.py`.
 
 ### T002 — planner intent, approval brief line, review check and their contract check
 
@@ -70,9 +72,16 @@ Shared constraints:
   specification and final approval. Spec review: intent at source review; presence and
   template fit, or OFF reason, at final task review. Append `planner`, `approval` and
   `spec_review_prompt` carrier entries and extend the negative test.
-- **REQUIRED:** A5–A7 clauses present and enforced; T001 carriers still pass; removal of each
-  new clause fails the check even with an inert summary elsewhere.
-- **Checks:** same four commands as T001.
+- **REQUIRED:** A5–A7 content present (final review judges semantic fit); `check_contracts`
+  requires one key phrase per criterion A5, A6 and A7 (A7: one per spec-review section);
+  T001 key phrases still pass; removal of each new key phrase fails the check even with an
+  inert summary elsewhere.
+- **Checks:** same three commands as T001.
+- **Execution note:** other checks read the edited planner files.
+  `scripts/test-task-commit-contract.py` reads clauses from `approval-and-recovery.md`, and
+  `skills/planning-brainstorming/scripts/test_contract.py` needs the anchor
+  `../planner/SKILL.md#saved-planner-assignments`. Make additions only and keep every
+  existing sentence and heading.
 
 No acceptance task: planning-guidance text and its static contract check only; no command can
 use the integrated planning behavior without a live model run (outside the Definition of Done);
@@ -90,10 +99,11 @@ the last task's required checks already run the composed contract check. (TinySp
 | A6 source intent | T002 | same (planner carrier) |
 | A7 review | T002 | same (spec-review carriers) |
 | A8 tests | T001, T002 | `python3 scripts/test-planner-workflow.py`, `python3 skills/task-generation/scripts/test_contract.py`; `bash scripts/check-skills-lint.sh` report-only (below) |
-| A9 no runtime change | T001, T002 | `git diff --quiet 2da2100 HEAD -- runtime/` |
+| A9 no runtime change | final review | `git diff --name-only <review_base>..HEAD -- runtime/` is empty |
 
-`2da2100` is the source commit. `runtime/` has no change from it to this task commit, so the
-check covers the whole delivery. The run `review_base` stays the default run baseline.
+A9 is verified once at final review over the delivery range. It is not a task check: the
+runner commits only claimed paths inside `owned_paths`, and no task owns `runtime/`. The run
+`review_base` stays the default run baseline. Do not rebase the branch before the run.
 
 ## Report-only observation: `bash scripts/check-skills-lint.sh`
 
