@@ -105,8 +105,9 @@ def project_trace(store, run, *, source=None, known_credentials=()):
         details = decode(row['details'], 'history:' + str(row['seq']))
         _privacy_values(details, credentials, paths)
         if row['kind'] not in _KINDS:
-            # Session selection and optional accounting are not factual trace bodies.
-            if row['kind'] not in {'session', 'metric_artifact'}:
+            # Session selection, optional accounting and local launch diagnostics
+            # (executor file and SDK paths) are not factual trace bodies.
+            if row['kind'] not in {'session', 'metric_artifact', 'launch_environment', 'executor_drift'}:
                 gaps.add('history:' + str(row['seq']) + ': unsupported event kind ' + row['kind'])
             continue
         history.append({**row, 'details': details})

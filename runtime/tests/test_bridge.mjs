@@ -152,7 +152,9 @@ test('admitted launch scope reaches real CLI argv unchanged; resume cannot repla
   try {
     await fs.mkdir(path.join(root, 'scripts'));
     await fs.writeFile(path.join(root, 'scripts/coordinate-implementation'),
-      `#!${process.execPath}\nrequire('node:fs').writeFileSync('argv.json', JSON.stringify(process.argv.slice(2)));\n`, {mode: 0o700});
+      // Dynamic import works whether Node reads this extensionless script as CommonJS or ESM
+      // (an ancestor package.json with "type": "module" selects ESM).
+      `#!${process.execPath}\nimport('node:fs').then(fs => fs.writeFileSync('argv.json', JSON.stringify(process.argv.slice(2))));\n`, {mode: 0o700});
     const {default: bridge} = await import(bridgeModule);
     bridge(pi);
     const tool = tools.get('coordinate_implementation_start');
@@ -218,6 +220,9 @@ async function fixture({hold = false, paidScope = false, paidApis = []} = {}) {
   await fs.writeFile(host, hold ? `import os, pathlib, sys, time
 json = __import__('json')
 request=json.loads(input())
+if request.get('type') == 'preflight':
+ print(json.dumps({'type':'preflight','ok':True,'sdk':{'package_dir':'offline','version':'offline'}}), flush=True)
+ sys.exit()
 if request['readOnly']:
  print(json.dumps({'type':'result','text':'{"approved":true,"findings":[],"coverage":["offline fixture"],"coverage_gaps":[]}'}), flush=True)
 else:
@@ -225,6 +230,9 @@ else:
  time.sleep(1000)
 ` : `import json, sys
 request=json.loads(input())
+if request.get('type') == 'preflight':
+ print(json.dumps({'type':'preflight','ok':True,'sdk':{'package_dir':'offline','version':'offline'}}), flush=True)
+ sys.exit()
 if request['readOnly']:
  print(json.dumps({'type':'result','text':'{"approved":true,"findings":[],"coverage":["offline fixture"],"coverage_gaps":[]}'}), flush=True)
 else:

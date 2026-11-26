@@ -148,8 +148,10 @@ _ROUTINE_AUTHORITY = (
 
 
 class Engine:
-    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False, worker_recovery=None, parallel=False, delivery_scope=None):
+    def __init__(self, authority, run, contract, executor, *, adapter=PiAdapter, question=terminal_question, paid_scope=None, resume=False, worker_recovery=None, parallel=False, delivery_scope=None, launch=None):
         self.delivery_scope = delivery_scope
+        # Launch facts (executor file, resolved SDK) for status and resume drift reports.
+        self.launch = launch
         self.parallel = parallel
         self.worker_recovery = worker_recovery
         if worker_recovery is not None:
