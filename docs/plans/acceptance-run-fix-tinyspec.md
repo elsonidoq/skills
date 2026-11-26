@@ -110,10 +110,12 @@ relied-on runtime behavior is known and covered by existing runtime tests; no pr
   task by default, depending on every other task in the plan, whose required `checks` entry
   is a command that uses the integrated feature (exit 0 = pass). The owner need not ask.
 - **A2 Opt-out.** Docs-only work, pure refactors and similar work write "No acceptance task"
-  with a reason instead.
+  with a reason instead. Similar work includes instruction or guidance-text changes whose only
+  integrated use is a live agent run.
 - **A3 Oracle.** The acceptance task declares non-empty `owned_paths` (normally the union of
-  the earlier tasks' `owned_paths`) minus the command and scenario files; never `[]`, never
-  omitted; scenario files not in `generated_outputs`. Its required check first verifies the
+  the earlier tasks' `owned_paths`; when earlier tasks omit them, every implementation path
+  the delivery changes) minus the command and scenario files; never `[]`, never omitted;
+  scenario files not in `generated_outputs`. Its required check first verifies the
   committed scenario files are unchanged (`git diff --quiet HEAD -- <scenario paths> &&
   <command>`). The command may already exist or come from an earlier task.
 - **A4 Run safety.** A live, production-write, paid or destructive effect in the command stays
@@ -125,8 +127,8 @@ relied-on runtime behavior is known and covered by existing runtime tests; no pr
 - **A6 Source intent.** The planner source-creation guidance requires the source to state the
   acceptance intent (ON with the command or scenario, or OFF with reason).
 - **A7 Review.** `spec-review.md` checks, at source review and at final task review, that the
-  task is present, or that an OFF reason is present and names why the plan does not change
-  behavior.
+  task is present, or that an OFF reason is present and names why no command can use the
+  integrated behavior (docs-only, pure refactor, or guidance text that needs a live agent run).
 - **A8 Tests.** An existing contract check (`scripts/check-planner-workflow.py`,
   `check_contracts`) requires the A1–A7 phrases, with a negative case in
   `scripts/test-planner-workflow.py`. `python3 scripts/check-planner-workflow.py`,
@@ -146,9 +148,14 @@ Done).
 - One worker call happens even when the check passes the first time (F3: no-change checkpoint).
 - If a needed fix is outside the acceptance task's `owned_paths`, the edit is refused (F4);
   the worker must ask or return blocked.
-- The final-review fixer can edit oracle files that an earlier task owned (F6); the reviewer
-  sees that diff, and the acceptance check compares scenario files with HEAD, so a committed
-  oracle change passes that guard.
+- The final-review fixer scope is the union of declared task `owned_paths` (F6), only when
+  any task declares them (`engine.py:495-507`). If earlier tasks omit `owned_paths`, the
+  acceptance task's list becomes the whole fixer scope. So that list must then name every
+  implementation path the delivery changes (10.1).
+- The final-review fixer reruns the acceptance check before its checkpoint
+  (`engine.py:654`, `:689`). The guard therefore also fails an uncommitted fixer edit to
+  scenario files: a correct oracle correction during final review stops for owner direction.
+  Scenario changes that earlier tasks committed are visible to the reviewer in the diff.
 - `git diff --quiet HEAD` sees changes to tracked scenario files only; a new untracked file in
   a scenario directory is not detected.
 
@@ -190,8 +197,9 @@ the implementing task. Global skill text stays portable: no project command name
 
 - **Position and `depends`:** last task; `depends` lists every other task ID in the plan.
 - **`owned_paths`:** non-empty. Normally the union of the earlier tasks' `owned_paths`, minus
-  the acceptance command and its scenario files. Never `[]`; never omitted. Scenario files
-  are not in `generated_outputs`.
+  the acceptance command and its scenario files. When earlier tasks omit `owned_paths`, list
+  every implementation path the delivery changes; this list also becomes the final-review
+  fixer's scope (§5). Never `[]`; never omitted. Scenario files are not in `generated_outputs`.
 - **`checks`:** one required command:
   `git diff --quiet HEAD -- <scenario paths> && <command>`. Exit 0 = pass. The command uses
   the integrated feature. It can already exist or an earlier task can author it (then that
@@ -203,17 +211,18 @@ the implementing task. Global skill text stays portable: no project command name
   that a failure is fixed inside `owned_paths`, or the worker asks the owner when the oracle or
   the specification looks wrong.
 - **Opt-out:** when the plan does not change behavior, the task file has no acceptance task
-  and states "No acceptance task: <reason>" (for example docs-only, pure refactor).
+  and states "No acceptance task: <reason>" (for example docs-only, pure refactor, or
+  instruction/guidance text whose only integrated use is a live agent run).
 
 ### 10.2 Per-file changes
 
 | File | Section / anchor | Required content |
 | --- | --- | --- |
 | `skills/task-generation/SKILL.md` | `## Give each task sufficient proof` (after the composed-acceptance paragraph, `:109-114`) | A1–A4: the default last acceptance task and its template (10.1); opt-out with reason; state that it is the explicit exception to "check commands are optional" (`:133-137`) and that the existing check loop runs and fixes it. Covers both adapters (F7). |
-| `skills/task-generation/SKILL.md` | `## Encode the tasks for their consumer` (`owned_paths` paragraph, `:164-167`) | One sentence: the acceptance task needs non-empty `owned_paths` without scenario files, not `[]`, not omitted; scenario files not in `generated_outputs`. |
-| `skills/planner/SKILL.md` | `### Give producers the inputs their owners require`, source-creation bullet (`:144-148`) | A6/C1: the source states acceptance intent: ON with the scenario command, or OFF with a reason that names why the plan does not change behavior. |
+| `skills/task-generation/SKILL.md` | `## Encode the tasks for their consumer` (`owned_paths` paragraph, `:164-167`) | One sentence: the acceptance task needs non-empty `owned_paths` without scenario files, not `[]`, not omitted; when earlier tasks omit `owned_paths`, it lists every implementation path the delivery changes, because this list also becomes the final-review fixer's scope; scenario files not in `generated_outputs`. |
+| `skills/planner/SKILL.md` | `### Give producers the inputs their owners require`, source-creation bullet (`:144-148`) | A6/C1: the source states acceptance intent: ON with the scenario command, or OFF with a reason that names why no command can use the integrated behavior. |
 | `skills/planner/references/approval-and-recovery.md` | `## Executive brief before approval` bullet list | A5: one bullet: "Acceptance task: ON (command …)" or "OFF (reason …)"; the owner can change it in the same approval answer; no separate question. Applies at TinySpec combined approval and Standard specification and final approval. |
-| `skills/planner/references/spec-review.md` | `## Definition of done and intent alignment` and `## Design and task proof review` (final task paragraph) | A7: source review checks the ON/OFF intent; final task review checks that the acceptance task is present and follows 10.1, or that the OFF reason names why the plan does not change behavior. |
+| `skills/planner/references/spec-review.md` | `## Definition of done and intent alignment` and `## Design and task proof review` (final task paragraph) | A7: source review checks the ON/OFF intent; final task review checks that the acceptance task is present and follows 10.1, or that the OFF reason names why no command can use the integrated behavior. |
 | `scripts/check-planner-workflow.py` | new `ACCEPTANCE_TASK_CARRIERS` tuple `(key, heading, clauses)` next to `ISSUE_ASSOCIATION_CARRIERS` (`:559`), checked from `check_contracts` (`:593-595`) | A8: require the key clauses of A1–A7 in their sections (keys `tasks`, `planner`, `approval`, `spec_review_prompt`). |
 | `scripts/test-planner-workflow.py` | new test beside `IssueAssociationWalkthroughTests` (`:253-273`), same pattern | A8: current texts pass; removing each clause from its section, even with an inert summary appended elsewhere, produces an error. |
 
@@ -227,8 +236,10 @@ No change: `skills/tiny-spec/SKILL.md` (C1), `simplicity-review.md` (C2), SpecKi
 One planning-text change and its contract check are coupled: the checker fails until the text
 exists. Either one task (text + checker + test) or two (text first, then checker/test that
 depends on it). Task generation decides by executor sizing. This delivery changes only
-planning text, so its own acceptance task is OFF: "No acceptance task: planning-text and
-static-check change; behavior is checked by the contract test (A8)."
+planning text, so its own acceptance task is OFF: "No acceptance task: planning-guidance
+text and its static contract check only; no command can use the integrated planning behavior
+without a live model run (outside the Definition of Done); the last task's required checks
+already run the composed contract check."
 
 ### 10.4 Check-to-criterion mapping
 
