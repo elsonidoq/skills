@@ -168,6 +168,12 @@ Request → Planner → Choose│                                               
   as requirements truth, approved Standard plan as derived sequencing, not direct SDD input.
   Governing instructions, contracts, memory and permission/safety still apply. Both use the shared
   `task-generation` contract and durable current-content approval evidence.
+  A behavior-changing plan automatically gets one last acceptance task: its required check
+  runs a command that uses the integrated feature, and the existing check/correction loop
+  fixes a failure before the final review. Plans that no command can exercise (docs-only work,
+  pure refactors, guidance text) state "No acceptance task" with a reason. The approval brief
+  shows "Acceptance task: ON/OFF"; change it in that answer. See
+  [task-generation](skills/task-generation/SKILL.md#give-each-task-sufficient-proof).
   Before every artifact approval or renewal, planner presents a brief bullet-list executive
   summary in the conversation, then calls `ask_user`. You may approve, request changes or
   withhold approval. The brief names concrete included scope, every actual ordered plan stage
