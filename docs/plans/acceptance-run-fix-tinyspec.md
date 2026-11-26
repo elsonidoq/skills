@@ -118,9 +118,10 @@ relied-on runtime behavior is known and covered by existing runtime tests; no pr
   scenario files not in `generated_outputs`. Its required check first verifies the
   committed scenario files are unchanged (`git diff --quiet HEAD -- <scenario paths> &&
   <command>`). The command may already exist or come from an earlier task.
-- **A4 Run safety.** A live, production-write, paid or destructive effect in the command stays
-  under existing owner gates (task `gates`). The text names isolated/local resources as the
-  default convention, not as an owner requirement.
+- **A4 Run safety.** One sentence points to the existing `gates` rule: a live,
+  production-write, paid or destructive command puts its owner-approval question in the task
+  `gates`. Isolated/local resources stay an unenforced convention, not an owner requirement
+  (no checker phrase for it).
 - **A5 Brief line.** The executive-brief list includes "Acceptance task: ON (command …)" or
   "OFF (reason …)" at TinySpec combined approval and at Standard specification and final
   approval. The owner can change it there. No new question.
@@ -131,10 +132,17 @@ relied-on runtime behavior is known and covered by existing runtime tests; no pr
   integrated behavior (docs-only, pure refactor, or guidance text that needs a live agent run).
 - **A8 Tests.** An existing contract check (`scripts/check-planner-workflow.py`,
   `check_contracts`) requires the A1–A7 phrases, with a negative case in
-  `scripts/test-planner-workflow.py`. `python3 scripts/check-planner-workflow.py`,
-  `python3 scripts/test-planner-workflow.py` and `scripts/check-skills-lint.sh` pass. Report
-  any check not run.
-- **A9 No runtime change.** The delivery diff has no change under `runtime/`.
+  `scripts/test-planner-workflow.py`. `python3 scripts/check-planner-workflow.py` and
+  `python3 scripts/test-planner-workflow.py` pass. `scripts/check-skills-lint.sh` passes, or
+  shows no new failure beyond the pre-existing set recorded below; its result is reported at
+  final review; it is not a task check. Report any check not run.
+  Pre-existing lint failures (at `2da2100` and `main` `9ab5d19`, unrelated files):
+  `scripts/check-task-commit-contract.py` architectural-planning guard (3);
+  `skills/initialize-coherence/scripts/test_contract.py` (2 failures);
+  `scripts/test-task-commit-contract.py` (6 failures).
+- **A9 No runtime change.** The delivery diff has no change under `runtime/`. Verified once
+  over the delivery range at final review, not as a per-task check (a task's check runs before
+  its own commit, so a per-task commit diff cannot see that change).
 
 Static text checks prove the text, not model obedience or a live run (repository Definition of
 Done).
@@ -204,9 +212,9 @@ the implementing task. Global skill text stays portable: no project command name
   `git diff --quiet HEAD -- <scenario paths> && <command>`. Exit 0 = pass. The command uses
   the integrated feature. It can already exist or an earlier task can author it (then that
   earlier task owns the scenario files).
-- **`gates`:** empty by default. If the command has a live, production-write, paid or
-  destructive effect, put the existing owner-approval question in `gates`. Isolated/local
-  resources are the default convention.
+- **`gates`:** empty by default. Existing rule: a live, production-write, paid or destructive
+  command puts its owner-approval question in `gates`. Isolated/local resources are an
+  unenforced convention.
 - **Description:** authorization-neutral (ADR-0003). States the scenario, the pass meaning, and
   that a failure is fixed inside `owned_paths`, or the worker asks the owner when the oracle or
   the specification looks wrong.
@@ -249,8 +257,12 @@ already run the composed contract check."
 | A5 | same (approval carrier) | exit 0 |
 | A6 | same (planner carrier) | exit 0 |
 | A7 | same (spec-review carrier) | exit 0 |
-| A8 | `python3 scripts/test-planner-workflow.py`; `scripts/check-skills-lint.sh` | exit 0; new negative test fails on clause removal |
-| A9 | `git diff --name-only <base>..HEAD -- runtime/` | empty output |
+| A8 | `python3 scripts/test-planner-workflow.py` (task check) | exit 0; new negative test fails on clause removal |
+| A8 | `scripts/check-skills-lint.sh` (reported at final review; not a task check) | exit 0, or no new failure beyond the pre-existing set in A8 |
+| A9 | `git diff --name-only <review_base>..HEAD -- runtime/` (once at final review; not a task check) | empty output |
+
+The contract check requires one key phrase per criterion (A1–A7), not every sub-clause. No
+phrase is required for the isolated/local convention.
 
 Limits: these are static text checks; they do not prove model obedience or a live run.
-Final independent review judges semantic fit of the wording to 10.1.
+Final independent review judges the semantic fit of the wording to 10.1.
