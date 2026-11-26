@@ -64,6 +64,9 @@ A brief only in tool arguments or after the question is insufficient. Cover all 
   use catch-alls or empty headings. TinySpec has no plan; specification-only approval
   requires no nonexistent tasks. This adds no plan approval gate.
 - Exclusions and implementation boundaries.
+- Acceptance task: ON (command ...) or OFF (reason ...). The owner can change it in the
+  same approval answer; ask no separate question. This applies at TinySpec combined approval
+  and at Standard specification and final approval.
 - Important settled decisions and material alternatives resolved.
 - Risks, unresolved gates and intentional deferrals.
 - Actual review/validation results, including failures and UNAVAILABLE/NOT RUN checks.

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROPOSED — Default end-to-end acceptance task — high-level design (issue #56)</title>
+<style>
+  :root {
+    --ink: #1d232b; --muted: #59636e; --bg: #f7f8fa; --card: #fff;
+    --reused: #e6e9ee; --reused-line: #8a94a0;
+    --changed: #dcecff; --changed-line: #2f6fbf;
+    --gate: #fff3d6; --gate-line: #b07a00;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+  h1 { font-size: 1.35rem; margin: .5rem 0; }
+  h2 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
+  .banner { background: #fde8e8; border: 2px solid #b42318; color: #7a1a12; padding: .6rem .8rem; border-radius: 6px; font-weight: 600; }
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin: .8rem 0; font-size: .9rem; }
+  .legend span { display: inline-flex; align-items: center; gap: .35rem; }
+  .sw { width: 1.1rem; height: 1.1rem; border-radius: 3px; border: 2px solid; display: inline-block; }
+  .reused { background: var(--reused); border-color: var(--reused-line); }
+  .changed { background: var(--changed); border-color: var(--changed-line); }
+  .gate { background: var(--gate); border-color: var(--gate-line); border-style: dashed; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; background: var(--card); border: 1px solid #d5dae1; border-radius: 8px; padding: .8rem; }
+  .box { font: inherit; text-align: left; cursor: pointer; border-radius: 8px; border: 2px solid; padding: .5rem .7rem; min-width: 9rem; max-width: 15rem; color: var(--ink); }
+  .box small { display: block; color: var(--muted); font-size: .78rem; }
+  .box:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+  .arrow { font-size: .8rem; color: var(--muted); display: inline-flex; align-items: center; gap: .2rem; max-width: 10rem; }
+  .arrow b { font-size: 1.1rem; color: var(--ink); }
+  .arrow.approval { color: var(--gate-line); font-style: italic; }
+  .loop { margin-top: .5rem; padding: .5rem; border-left: 4px solid var(--reused-line); background: #f1f3f6; font-size: .9rem; }
+  ul.exec li { margin: .3rem 0; }
+  dialog { max-width: min(36rem, 94vw); border: 2px solid #333; border-radius: 10px; padding: 1rem 1.1rem; }
+  dialog::backdrop { background: rgba(0,0,0,.35); }
+  dialog h3 { margin-top: 0; }
+  dialog .kind { font-size: .82rem; font-weight: 700; text-transform: uppercase; }
+  .closebtn { font: inherit; margin-top: .6rem; padding: .4rem .9rem; border-radius: 6px; border: 1px solid #333; background: #fff; cursor: pointer; }
+  @media (max-width: 640px) {
+    .flow { flex-direction: column; align-items: stretch; }
+    .box { max-width: none; }
+    .arrow { max-width: none; justify-content: center; }
+    .arrow b { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+<main>
+<p class="banner" role="note">PROPOSED design for owner agreement. Not implemented. This page cannot approve anything; its buttons only open explanations.</p>
+<h1>Default end-to-end acceptance task (issue #56)</h1>
+<p>Source: <a href="acceptance-run-fix-tinyspec.md">TinySpec stage 1</a> ·
+Issue: <a href="https://github.com/elsonidoq/skills/issues/56">elsonidoq/skills#56</a> ·
+Rejected larger design: Git commit <code>8293329</code>.</p>
+
+<div class="legend" aria-label="Legend">
+  <span><i class="sw changed"></i> Changed (planning text only)</span>
+  <span><i class="sw reused"></i> Reused, no change</span>
+  <span><i class="sw gate"></i> Owner approval gate (workflow, not data flow)</span>
+</div>
+
+<h2>Schematic</h2>
+<p>Select a box (pointer, Enter or Space) to see its purpose, inputs/outputs, boundaries and choices.</p>
+<div class="flow">
+  <button class="box changed" data-key="planning">Planning skills<small>task-generation, planner, spec-review</small></button>
+  <span class="arrow"><b>→</b> ON + command, or OFF + reason</span>
+  <button class="box changed" data-key="task">Acceptance task in the task file<small>last task; existing fields</small></button>
+  <span class="arrow"><b>→</b> one brief line</span>
+  <button class="box gate" data-key="approval">Owner approval brief<small>existing gate</small></button>
+  <span class="arrow approval"><b>→</b> approval starts the existing run</span>
+  <button class="box reused" data-key="runner">Runner loop<small>worker → checks → checkpoint</small></button>
+  <span class="arrow"><b>→</b> commits + check evidence</span>
+  <button class="box reused" data-key="review">Independent final review<small>existing review + fixer</small></button>
+</div>
+<p class="loop">Inside the runner loop (reused): the check fails → the same worker gets the actual output and fixes → the runner reruns all checks → pass = focused commit (or no-change checkpoint). Same failure twice = stop. At most initial + two worker calls per session.</p>
+
+<h2>Executive summary</h2>
+<ul class="exec">
+  <li><b>Goal:</b> a plan that changes behavior checks, without an owner request, that the integrated feature works end to end before the final review.</li>
+  <li><b>Automatic:</b> task generation adds the acceptance task by default. It depends on all other tasks in the plan, so it runs last.</li>
+  <li><b>Run and fix:</b> the existing check loop gives the fix, the rerun, the focused commit and the stop on no progress. No runtime code changes.</li>
+  <li><b>Oracle protection:</b> non-empty <code>owned_paths</code> without the command and scenario files block edit-tool writes to them. Shell writes are not blocked, so the check first runs <code>git diff --quiet HEAD -- &lt;scenario paths&gt;</code>.</li>
+  <li><b>Visibility:</b> one line in the existing approval brief: "Acceptance task: ON (command …)" or "OFF (reason …)". No new question. The owner can change it at that approval.</li>
+  <li><b>Safety:</b> live, production-write, paid or destructive effects stay under existing owner gates. Isolated/local resources are the default convention.</li>
+  <li><b>Limits (accepted):</b> the fixing worker also diagnoses; no automatic flaky rerun; an oracle defect or spec gap is found only if the worker asks the owner; one worker call even when the check passes first time; a fix outside <code>owned_paths</code> is refused; the final-review fixer can change oracle files that an earlier task owned (the reviewer sees it); new untracked scenario files are not detected by <code>git diff</code>.</li>
+  <li><b>Tradeoff vs. the rejected design:</b> no separate diagnoser, classifier or flaky rerun. Less protection against a wrong oracle, much less new machinery.</li>
+  <li><b>Open choices:</b> C1 — state the ON/OFF intent once in the planner source guidance (recommended) or also in tiny-spec. C2 — no simplicity-review edit (recommended).</li>
+</ul>
+
+<dialog id="popup" aria-labelledby="popup-title">
+  <p class="kind" id="popup-kind"></p>
+  <h3 id="popup-title"></h3>
+  <ul id="popup-items"></ul>
+  <button class="closebtn" id="popup-close" type="button">Close</button>
+</dialog>
+
+<script>
+const INFO = {
+  planning: {kind: 'Changed — text only', title: 'Planning skills', items: [
+    'Purpose: make the acceptance task a default, so the owner need not ask for it.',
+    'Inputs: the request and source. Outputs: source states ON (command) or OFF (reason); tasks include the last acceptance task.',
+    'Boundary: task-generation covers TinySpec and Standard (SpecKit) tasks. Spec review checks the task is present, or the OFF reason names why the plan does not change behavior.',
+    'Choices: C1 — ON/OFF intent in the planner source guidance only (recommended). C2 — no simplicity-review edit (recommended).']},
+  task: {kind: 'Changed — convention in existing fields', title: 'Acceptance task in the task file', items: [
+    'Purpose: one last task whose required check uses the integrated feature. Exit 0 = pass.',
+    'Fields: depends = all other tasks; checks = "git diff --quiet HEAD -- <scenario paths> && <command>"; owned_paths = non-empty, normally the union of earlier tasks\u2019 paths, minus command and scenario files.',
+    'Boundary: never owned_paths: [] (cannot fix) and never omitted (no protection). Scenario files are not in generated_outputs. No new field or schema.',
+    'The command can already exist or an earlier task can write it. Docs-only work or a pure refactor writes "No acceptance task" + reason.']},
+  approval: {kind: 'Owner gate — existing', title: 'Owner approval brief', items: [
+    'Purpose: show one line: "Acceptance task: ON (command …)" or "OFF (reason …)".',
+    'Where: TinySpec combined approval; Standard specification approval and again at final approval.',
+    'Boundary: no new question. The owner can change ON/OFF in the same answer.',
+    'This is a workflow approval, not data flow. This page cannot give it.']},
+  runner: {kind: 'Reused — no change', title: 'Runner loop', items: [
+    'Purpose: run the task worker, then the required checks, then a focused commit.',
+    'On failure: the same worker gets the actual output, fixes, and the runner reruns the checks. Unchanged failure after a fix = stop. Initial + two worker calls per session.',
+    'Boundary: edit-tool writes outside owned_paths are refused; shell writes outside owned_paths are left uncommitted but stay in the worktree (hence the git diff guard).',
+    'If the check passes first time: one worker call, no-change checkpoint.']},
+  review: {kind: 'Reused — no change', title: 'Independent final review', items: [
+    'Purpose: read-only review of the full diff with the check evidence.',
+    'On rejection: the existing fixer, with all task checks (it reruns the acceptance command), then a fresh repair review.',
+    'Limit: the fixer\u2019s paths are the union of task owned_paths, so it can edit oracle files an earlier task owned; the reviewer sees that diff.']}
+};
+const dlg = document.getElementById('popup');
+let opener = null;
+function openPopup(btn) {
+  const info = INFO[btn.dataset.key];
+  document.getElementById('popup-kind').textContent = info.kind;
+  document.getElementById('popup-title').textContent = info.title;
+  const ul = document.getElementById('popup-items');
+  ul.replaceChildren(...info.items.map(t => { const li = document.createElement('li'); li.textContent = t; return li; }));
+  opener = btn;
+  dlg.showModal();
+  document.getElementById('popup-close').focus();
+}
+document.querySelectorAll('.box').forEach(b => b.addEventListener('click', () => openPopup(b)));
+document.getElementById('popup-close').addEventListener('click', () => dlg.close());
+dlg.addEventListener('close', () => { if (opener) opener.focus(); });
+</script>
+</main>
+</body>
+</html>

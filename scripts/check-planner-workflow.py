@@ -590,9 +590,39 @@ def check_issue_association(texts):
     return errors
 
 
+ACCEPTANCE_TASK_CARRIERS = (
+    ('tasks', '## Give each task sufficient proof', (
+        'add one last task that depends on every other task',
+        'No acceptance task: <reason>',
+        'git diff --quiet HEAD -- <scenario paths> && <command>',
+        'live, production-write, paid or destructive effect')),
+    ('tasks', '## Encode the tasks for their consumer', (
+        'never `[]` and never omitted',)),
+    ('planner', '### Give producers the inputs their owners require', (
+        'Require the source to state its acceptance intent',)),
+    ('approval', '## Executive brief before approval', (
+        'Acceptance task: ON (command ...) or OFF (reason ...)',)),
+    ('spec_review_prompt', '## Definition of done and intent alignment', (
+        'Check that the source states the acceptance intent',)),
+    ('spec_review_prompt', '## Design and task proof review', (
+        'check that the acceptance task is present and follows the task-generation template',)),
+)
+
+
+def check_acceptance_task(texts):
+    errors = []
+    for key, heading, clauses in ACCEPTANCE_TASK_CARRIERS:
+        body = ' '.join(section(texts[key], heading).split())
+        for clause in clauses:
+            if clause not in body:
+                errors.append(f'acceptance-{key}: {heading} missing {clause!r}; restore it in that section of the source')
+    return errors
+
+
 def check_contracts(texts):
     errors = (check_workflow_ownership(texts) + check_planner(texts["planner"])
-              + check_design_contracts(texts) + check_issue_association(texts))
+              + check_design_contracts(texts) + check_issue_association(texts)
+              + check_acceptance_task(texts))
     def require(label, text, *phrases):
         for phrase in phrases:
             if " ".join(phrase.split()) not in " ".join(text.split()):

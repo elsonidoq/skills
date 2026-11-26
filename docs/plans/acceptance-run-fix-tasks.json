@@ -1,0 +1,61 @@
+{
+  "delivery_issue": "https://github.com/elsonidoq/skills/issues/56",
+  "tasks": [
+    {
+      "id": "T001",
+      "outcome": "task-generation states the default last acceptance task, its opt-out, owned_paths rule and run-safety default, and the planner contract check enforces it",
+      "depends": [],
+      "description": "Read docs/plans/acceptance-run-fix-tasks.md#shared-worker-brief and the TinySpec docs/plans/acceptance-run-fix-tinyspec.md (sections 1, 4, 5, 10.1, 10.2) in full before work. (1) In skills/task-generation/SKILL.md section '## Give each task sufficient proof', after the composed-acceptance paragraph, add a few sentences for A1-A4 per TinySpec 10.1: for a behavior-changing plan add by default one last task that depends on every other task, whose required checks entry is a command that uses the integrated feature (exit 0 = pass), without an owner request; the check form `git diff --quiet HEAD -- <scenario paths> && <command>`; the command can already exist or come from an earlier task; this is the explicit exception to 'Check commands are optional task context' and the existing check/correction loop runs and fixes it; the description is authorization-neutral and says a failure is fixed inside owned_paths or the worker asks the owner when the oracle or specification looks wrong; docs-only work, pure refactors and similar work (including instruction or guidance-text changes whose only integrated use is a live agent run) write 'No acceptance task' with a reason instead; one sentence points to the existing gates rule for a command with a live, production-write, paid or destructive effect; it may name isolated/local resources as the default convention (not an owner requirement), which gets no carrier phrase. (2) In section '## Encode the tasks for their consumer', in the owned_paths paragraph, add one sentence: the acceptance task needs non-empty owned_paths (normally the union of earlier tasks' owned_paths) without the command and scenario files, never [] and never omitted; when earlier tasks omit owned_paths it lists every implementation path the delivery changes, because this list also becomes the final-review fixer's scope; scenario files are not in generated_outputs. Keep every existing sentence (existing carriers and test_contract.py depend on them); additions only, portable text with no project command names. (3) In scripts/check-planner-workflow.py add an ACCEPTANCE_TASK_CARRIERS tuple of (key, heading, clauses) next to ISSUE_ASSOCIATION_CARRIERS, with 'tasks' entries that hold one key phrase per criterion A1, A2, A3 and A4 as actually written, each in the section where it lives (not every sub-clause), a check_acceptance_task(texts) function producing errors prefixed 'acceptance-<key>:' with a corrective action, called from check_contracts. Shape the tuple so T002 can append 'planner', 'approval' and 'spec_review_prompt' entries. (4) In scripts/test-planner-workflow.py add a test class beside IssueAssociationWalkthroughTests using the same pattern: current texts give no errors; removing each key phrase from its section, even with an inert summary appended elsewhere, produces an 'acceptance-<key>:' error from check_contracts. Do not change runtime/, other skills, README.md or docs/coordinate-implementation.md.",
+      "owned_paths": [
+        "skills/task-generation/SKILL.md",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py"
+      ],
+      "required": [
+        {
+          "id": "T001/A1-A4",
+          "description": "REQUIRED - task-generation text in the two named sections carries the A1-A4 content listed in the description (final review judges semantic fit to TinySpec 10.1). check_contracts requires one key phrase per criterion A1, A2, A3 and A4 in its section; the new negative test removes each key phrase, with an inert summary appended elsewhere, and gets an 'acceptance-tasks:' error."
+        },
+        {
+          "id": "T001/A8",
+          "description": "REQUIRED - the three commands in checks exit 0."
+        }
+      ],
+      "checks": [
+        "python3 scripts/check-planner-workflow.py",
+        "python3 scripts/test-planner-workflow.py",
+        "python3 skills/task-generation/scripts/test_contract.py"
+      ]
+    },
+    {
+      "id": "T002",
+      "outcome": "planner source guidance, the approval brief and spec review carry the acceptance intent, brief line and review check, and the planner contract check enforces them",
+      "depends": [
+        "T001"
+      ],
+      "description": "Read docs/plans/acceptance-run-fix-tasks.md#shared-worker-brief, the TinySpec docs/plans/acceptance-run-fix-tinyspec.md (sections 2 D5/D6, 4, 8, 10.1, 10.2) and the T001 additions in skills/task-generation/SKILL.md before work. (1) skills/planner/SKILL.md, '### Give producers the inputs their owners require', source-creation bullet: add A6 - the source states the acceptance intent: ON with the scenario command, or OFF with a reason that names why no command can use the integrated behavior; one statement covers TinySpec and Standard (do not edit skills/tiny-spec). (2) skills/planner/references/approval-and-recovery.md, '## Executive brief before approval' bullet list: add A5 - one bullet 'Acceptance task: ON (command ...)' or 'OFF (reason ...)'; the owner can change it in the same approval answer; no separate question; applies at TinySpec combined approval and at Standard specification and final approval. (3) skills/planner/references/spec-review.md: in '## Definition of done and intent alignment' source review checks the ON/OFF intent; in '## Design and task proof review' (final task paragraph) final task review checks that the acceptance task is present and follows the task-generation template, or that the OFF reason names why no command can use the integrated behavior (docs-only, pure refactor, or guidance text that needs a live agent run) - A7. Do not edit simplicity-review.md. Keep every existing sentence; additions only, a few sentences each, portable text. (4) In scripts/check-planner-workflow.py append to ACCEPTANCE_TASK_CARRIERS entries for keys 'planner', 'approval' and 'spec_review_prompt' (two spec-review sections) with one key phrase per criterion A5, A6 and A7 as actually written (A7: one per spec-review section), not every sub-clause; keep T001 entries. (5) Extend the T001 negative test so it covers the new entries (each key phrase removal from its section, with an inert summary appended, produces an 'acceptance-<key>:' error). Do not change runtime/, other skills, README.md or docs/coordinate-implementation.md.",
+      "owned_paths": [
+        "skills/planner/SKILL.md",
+        "skills/planner/references/approval-and-recovery.md",
+        "skills/planner/references/spec-review.md",
+        "scripts/check-planner-workflow.py",
+        "scripts/test-planner-workflow.py"
+      ],
+      "required": [
+        {
+          "id": "T002/A5-A7",
+          "description": "REQUIRED - planner SKILL.md, approval-and-recovery.md and spec-review.md carry the A5-A7 content listed in the description (final review judges semantic fit). check_contracts requires one key phrase per criterion A5, A6 and A7 (A7: one per spec-review section) in its section; the negative test removes each key phrase, with an inert summary appended elsewhere, and gets an 'acceptance-<key>:' error; T001 key phrases still pass."
+        },
+        {
+          "id": "T002/A8",
+          "description": "REQUIRED - the three commands in checks exit 0."
+        }
+      ],
+      "checks": [
+        "python3 scripts/check-planner-workflow.py",
+        "python3 scripts/test-planner-workflow.py",
+        "python3 skills/task-generation/scripts/test_contract.py"
+      ]
+    }
+  ]
+}

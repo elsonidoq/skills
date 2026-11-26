@@ -113,6 +113,20 @@ already observes it. Place composed acceptance at the first boundary with the ne
 prerequisites; a separate proof task is needed only for an independently necessary prerequisite.
 Preserve required security, durability and owner checks.
 
+For a behavior-changing plan, add one last task that depends on every other task, without an
+owner request. Its required `checks` entry is a command that uses the integrated feature
+(exit 0 = pass), in the form `git diff --quiet HEAD -- <scenario paths> && <command>`, so the
+committed scenario files stay unchanged. The command can already exist or come from an earlier
+task. This is the explicit exception to the optional-check rule below: the
+existing check and correction loop runs the command and fixes a failure. The description is
+authorization-neutral and says a failure is fixed inside `owned_paths`, or the worker asks the
+owner when the oracle or specification looks wrong. For docs-only work, pure refactors and
+similar work, including instruction or guidance-text changes whose only integrated use is a
+live agent run, write "No acceptance task: <reason>" instead. A command with a live,
+production-write, paid or destructive effect puts its owner-approval question in the task
+`gates`, as the `gates` rule below states. Isolated or local resources are the default
+convention for the command, not an owner requirement.
+
 Apply [early risk reduction](../planner/references/early-risk-reduction.md) in both routes,
 including direct entry; verify it is readable or stop affected planning with a missing-install
 report. Use its selection and proof-lifetime rules to decide whether ordinary actual-helper tests
@@ -163,7 +177,11 @@ old tasks merely to remove metadata. Markdown may remain the human presentation.
 
 Dedicated paths, interfaces, acceptance and shared-context fields are optional; descriptions
 can carry them. Optional `owned_paths` restricts mutation when supplied; omitting it does not
-authorize adoption of dirty files or arbitrary staging. When `owned_paths` is absent, hand off
+authorize adoption of dirty files or arbitrary staging. The acceptance task needs non-empty `owned_paths`, normally the union of
+the earlier tasks' `owned_paths` without the command and scenario files; never `[]` and never
+omitted. When earlier tasks omit `owned_paths`, it lists every implementation path the delivery
+changes, because this list also becomes the final-review fixer's scope. Scenario files are not
+in `generated_outputs`. When `owned_paths` is absent, hand off
 edit-time ownership to the runner under [Coordinate Implementation's execution contract](../coordinate-implementation/SKILL.md#execute-and-integrate).
 Existing `required` check mappings remain
 consumed when supplied. Put an authored deterministic required command once in an existing
